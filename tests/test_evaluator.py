@@ -163,6 +163,39 @@ class TestFarSignChangeDetection:
         )
 
 
+class TestBestSolution:
+    """Validate our submitted #1 solution."""
+
+    BEST_ROOTS = [
+        3.0886658942606733, 4.435156861236376, 6.034127890108831,
+        30.945538933257353, 36.84167838791129, 42.20424571337132,
+        47.682624801878234, 51.92315504790176, 57.58188043903107,
+        100.7501292924569, 115.43881608340484, 123.02406833559513,
+        140.04812478845042,
+    ]
+    BEST_SCORE = 0.3183526316601804
+
+    def test_best_score_beats_sota(self):
+        score = fast_evaluate(self.BEST_ROOTS)
+        assert score < K13_EXPECTED, (
+            f"Best solution {score} should beat REDACTED {K13_EXPECTED}"
+        )
+
+    def test_best_score_accuracy(self):
+        score = fast_evaluate(self.BEST_ROOTS)
+        assert abs(score - self.BEST_SCORE) < 1e-6, (
+            f"Best solution score {score} != expected {self.BEST_SCORE}"
+        )
+
+    @pytest.mark.slow
+    def test_best_fast_matches_exact(self):
+        fast_score = fast_evaluate(self.BEST_ROOTS)
+        exact_score = evaluate({"laguerre_double_roots": self.BEST_ROOTS})
+        assert abs(fast_score - exact_score) < 1e-6, (
+            f"fast={fast_score}, exact={exact_score}"
+        )
+
+
 class TestFastVsExactVerifier:
     """Ensure fast_evaluate agrees with the exact SymPy verifier."""
 
