@@ -15,6 +15,9 @@ wheels/
 # Competition results
 results/
 
+# Runtime logs
+logs/
+
 # CMA-ES output
 outcmaes/
 

@@ -69,41 +69,68 @@ def record_learning(msg):
 
 
 def read_strategy_stats():
-    """Parse progress.txt to compute strategy win/loss/reject stats.
+    """Parse progress.txt to compute per-strategy performance stats.
 
-    Returns dict: {strategy_name: {"improved": N, "rejected": N, "no_better": N, "winner": N}}
+    Tracks every strategy's outcome every iteration:
+      - RESULT lines: score, rank, delta vs best for every strategy
+      - VERIFIED/REJECTED lines: verification outcomes for winning candidate
+      - WINNER lines: which strategy won each iteration
+
+    Returns dict: {strategy_name: {
+        "wins": N,       # times this strategy had the best score
+        "top3": N,       # times in top 3
+        "rejected": N,   # times verified and rejected (fake result)
+        "improved": N,   # times it led to a verified improvement
+        "runs": N,       # total runs
+        "avg_rank": float,  # average rank across iterations
+    }}
     """
-    stats = defaultdict(lambda: {"improved": 0, "rejected": 0, "no_better": 0, "winner": 0})
+    stats = defaultdict(lambda: {
+        "wins": 0, "top3": 0, "rejected": 0, "improved": 0,
+        "runs": 0, "ranks": [],
+    })
     if not PROGRESS_FILE.exists():
         return stats
     for line in PROGRESS_FILE.read_text().splitlines():
-        m = re.search(r"strategy=(\w+)\s+(IMPROVED|REJECTED|verified but not better)", line)
+        # Per-strategy result: RESULT strategy=X rank=N score=Y delta=Z
+        m = re.search(r"RESULT strategy=(\w+) rank=(\d+)", line)
         if m:
-            name, outcome = m.group(1), m.group(2)
+            name, rank = m.group(1), int(m.group(2))
+            stats[name]["runs"] += 1
+            stats[name]["ranks"].append(rank)
+            if rank == 1:
+                stats[name]["wins"] += 1
+            if rank <= 3:
+                stats[name]["top3"] += 1
+        # Verification outcomes
+        m2 = re.search(r"strategy=(\w+)\s+(IMPROVED|REJECTED)", line)
+        if m2:
+            name, outcome = m2.group(1), m2.group(2)
             if outcome == "IMPROVED":
                 stats[name]["improved"] += 1
             elif outcome == "REJECTED":
                 stats[name]["rejected"] += 1
-            else:
-                stats[name]["no_better"] += 1
-        # Track which strategy won each iteration
-        m2 = re.search(r"WINNER=(\w+)", line)
-        if m2:
-            stats[m2.group(1)]["winner"] += 1
     return stats
 
 
 def compute_strategy_weights(stats):
-    """Convert stats into sampling weights. Winners get more runs.
+    """Convert stats into sampling weights. Strategies that rank well get more weight.
 
-    Scoring: improved=+3, winner=+2, no_better=+0.5, rejected=-1
-    Minimum weight of 1 ensures every strategy gets tried sometimes.
+    Scoring:
+      improved=+5, win=+2, top3=+1, rejected=-3
+      Average rank bonus: lower avg rank → higher weight
+    Minimum weight of 1 ensures exploration.
     """
     weights = {}
     for name in STRATEGY_NAMES:
         s = stats[name]
-        score = (s["improved"] * 3 + s["winner"] * 2
-                 + s["no_better"] * 0.5 - s["rejected"] * 1)
+        if s["runs"] == 0:
+            weights[name] = 2.0  # unexplored → neutral
+            continue
+        avg_rank = sum(s["ranks"]) / len(s["ranks"]) if s["ranks"] else 4.0
+        rank_bonus = max(0, (5.0 - avg_rank))  # rank 1 → +4, rank 5 → 0
+        score = (s["improved"] * 5 + s["wins"] * 2 + s["top3"] * 1
+                 - s["rejected"] * 3 + rank_bonus)
         weights[name] = max(1.0, 2.0 + score)
     return weights
 
@@ -366,12 +393,15 @@ def main():
         stats = read_strategy_stats()
         weights = compute_strategy_weights(stats)
         total_w = sum(weights.values())
-        log(f"  Strategy weights (from {sum(s['improved'] + s['rejected'] + s['no_better'] for s in stats.values())} past outcomes):")
+        total_runs = sum(s['runs'] for s in stats.values())
+        log(f"  Strategy weights (from {total_runs} past runs):")
         for name in STRATEGY_NAMES:
             s = stats[name]
             pct = weights[name] / total_w * 100
+            avg_r = f"{sum(s['ranks'])/len(s['ranks']):.1f}" if s['ranks'] else "-"
             log(f"    {name:25s}: w={weights[name]:.1f} ({pct:.0f}%) "
-                f"[won={s['improved']}, ok={s['no_better']}, rej={s['rejected']}]")
+                f"[runs={s['runs']}, wins={s['wins']}, top3={s['top3']}, "
+                f"rej={s['rejected']}, improved={s['improved']}, avg_rank={avg_r}]")
 
         # Run ALL 8 strategies in parallel — one per core
         chosen = list(STRATEGY_NAMES)
@@ -401,12 +431,16 @@ def main():
             record_learning(f"iter={iteration} NO_CANDIDATES")
             continue
 
-        # Sort by score, try to verify the best one
+        # Sort by score and record EVERY strategy's outcome
         candidates.sort(key=lambda x: x[2])
-        cand_name, cand_roots, cand_score, cand_time = candidates[0]
+        for rank, (name, r, s, dt) in enumerate(candidates, 1):
+            delta = s - best_score
+            record_learning(
+                f"iter={iteration} RESULT strategy={name} rank={rank}/{len(candidates)} "
+                f"score={s:.10f} delta={delta:+.2e} time={dt:.0f}s"
+            )
 
-        # Record which strategy won this iteration (even if no improvement)
-        record_learning(f"iter={iteration} WINNER={cand_name} score={cand_score:.10f} time={cand_time:.0f}s")
+        cand_name, cand_roots, cand_score, cand_time = candidates[0]
 
         if cand_score >= best_score - 1e-15:
             log(f"  No improvement this iteration (best: {cand_name} = {cand_score:.16f})")
