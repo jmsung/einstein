@@ -286,3 +286,66 @@ Snapshot date: 2026-03-30. Our agent: **JSAgent**.
 | Analytic Combinatorics | #11 | 1 |
 | Number Theory | #7 | 1 |
 | Combinatorics | #18 | 1 |
+
+## Ranking — Expected Value Analysis
+
+Ranking date: 2026-03-30.
+
+### Criteria
+
+Each problem scored on three axes (1–5 each):
+
+- **Opportunity** (O): How beatable is the current SOTA?
+  - 5 = open gap, few competitors near top
+  - 3 = tight cluster, small improvement needed
+  - 1 = saturated (multiple agents tied at likely theoretical limit)
+- **Feasibility** (F): How well do our tools/skills transfer?
+  - 5 = directly reusable (same problem type as #18, continuous optimization)
+  - 3 = partially transferable (new domain but standard optimization)
+  - 1 = requires specialized domain knowledge we lack
+- **Impact** (I): Strategic value of solving this problem.
+  - 5 = demonstrates breadth (new category), publishable insight
+  - 3 = solid win, incremental
+  - 1 = marginal improvement, not interesting
+
+**Expected Value = O × F × I** (max 125).
+
+### Rankings
+
+| Rank | Problem | API ID | O | F | I | EV | Rationale |
+|------|---------|--------|---|---|---|-----|-----------|
+| **1** | **Second Autocorrelation** | 3 | **5** | **4** | **5** | **100** | Widest gap among beatable problems. ClaudeExplorer leads alone (0.9620), #3 drops to 0.9616. Generous minImprovement (1e-4). Same functional analysis family as #18 — discretized function optimization with convolution scoring. Maximize L2²/(L1·L∞) rewards peaky functions. New category win = publishable. |
+| **2** | **Erdős Minimum Overlap** | 1 | **4** | **4** | **4** | **64** | Top 5 within 3e-4 but not saturated. Cross-correlation scoring is structurally similar to autocorrelation problems. Together-AI leads — beating them twice is a strong signal. minImprovement 1e-6 means even small gains count. |
+| **3** | **Flat Polynomials** | 12 | **4** | **3** | **4** | **48** | Big gap between #2 (1.281) and #3 (1.341). Combinatorial (±1 coefficients) — different from our continuous toolkit but 2^70 is searchable with smart enumeration. Littlewood conjecture territory = publishable. |
+| **4** | **Min Distance Ratio** | 5 | **3** | **4** | **3** | **36** | Top 4 within 1e-5. 2D point configuration — our Nelder-Mead/hillclimb toolkit transfers well. Known two-ring structure guides initialization. Tight but beatable with good local search. |
+| **5** | **Hexagon Packing** | 17 | **3** | **3** | **3** | **27** | GradientExpert leads by slim margin. Geometric packing with rotation — interesting but complex solution format. Medium transferability. |
+| 6 | Thomson Problem | 10 | 2 | 4 | 3 | 24 | 3-way tie at top. Sphere point optimization transfers well (gradient on sphere). But saturated. |
+| 7 | Tammes Problem | 11 | 2 | 4 | 3 | 24 | Dual of Thomson. Same tools but equally saturated. |
+| 8 | Prime Number Theorem | 7 | 4 | 2 | 5 | 40 | High opportunity (gap to theoretical max 1.0) and high impact, but requires deep number theory (Selberg sieve). Feasibility is the bottleneck. |
+| 9 | Third Autocorrelation | 4 | 2 | 4 | 3 | 24 | Same family as #3 but saturated (3-way tie). |
+| 10 | Kissing Number | 6 | 3 | 2 | 4 | 24 | Exact lattice solution (score=0) is the real prize but requires specialized algebraic construction. |
+| 11 | Edges vs Triangles | 13 | 3 | 2 | 4 | 24 | Tight cluster. Requires graph theory domain knowledge. |
+| 12 | Circles in Rectangle | 18 | 2 | 3 | 2 | 12 | Tight, dominated by AlphaEvolve. |
+| 13 | Circle Packing | 14 | 1 | 3 | 2 | 6 | Saturated. |
+| 14 | Heilbronn Triangles | 15 | 1 | 3 | 2 | 6 | Saturated. |
+| 15 | Heilbronn Convex | 16 | 1 | 3 | 2 | 6 | Saturated. |
+| 16 | Difference Bases | 19 | 1 | 2 | 2 | 4 | 5-way tie at theoretical limit. |
+| 17 | First Autocorrelation | 2 | 1 | 4 | 2 | 8 | Machine-precision tie. Essentially solved. |
+| 18 | Uncertainty Principle | 9 | — | — | — | — | Already #1. |
+
+### Selection: Problem 3 — Second Autocorrelation Inequality
+
+**Why this problem:**
+
+1. **Highest expected value (100)** — strong on all three axes.
+2. **Widest accessible gap**: ClaudeExplorer at 0.96199, #3 at 0.96157 — a 4e-4 gap with minImprovement of 1e-4 means we only need to beat 0.96199 by 0.0001 to claim #1.
+3. **Toolkit overlap**: Discretized non-negative function optimization with convolution-based scoring. Our Nelder-Mead + hillclimb + adaptive strategy selection framework transfers directly.
+4. **Scoring structure is approachable**: Maximize L2²/(L1·L∞) of f★f. This rewards functions whose autoconvolution is "peaky" — concentrated rather than spread out. Delta-like functions are a natural starting point.
+5. **New category**: Harmonic analysis win + Fourier analysis (#18) = two categories dominated = strong publication story.
+6. **Low barrier**: Simple verifier (numpy convolution + norms), simple solution format (array of non-negative floats), no complex constraints.
+
+**Approach sketch for Goal 4:**
+- Start with known functional forms: peaked functions (Gaussians, triangular, truncated cosine)
+- Optimize discretization resolution (more points = finer control)
+- Use our generic optimizer with hillclimb + Nelder-Mead + perturbation
+- Verify locally with the provided numpy verifier before submitting
