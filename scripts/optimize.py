@@ -1,14 +1,18 @@
-"""Hillclimb optimizer for the Uncertainty Principle problem.
+"""Optimizer for the Uncertainty Principle problem.
 
-Starts from the best known k=13 solution (Together-AI) and applies
-coordinate-wise perturbations + random multi-coordinate moves.
+Strategies:
+  1. CMA-ES (primary) — global search per k-value
+  2. Coordinate hillclimb — local refinement
+  3. Multi-start k-scanning — try k=5..20 with random initializations
 """
+
 import sys
 sys.path.insert(0, "src")
 
 import json
 import time
 import numpy as np
+import cma
 from pathlib import Path
 from einstein.fast_eval import fast_evaluate
 
@@ -41,17 +45,76 @@ def save_result(roots, score, tag=""):
     print(f"  Saved to {fname}")
 
 
+def random_sorted_roots(k, lo=0.5, hi=250.0):
+    """Generate k random sorted roots in (lo, hi) with minimum spacing."""
+    roots = sorted(np.random.uniform(lo, hi, k))
+    # Ensure minimum spacing of 0.5
+    for i in range(1, k):
+        if roots[i] - roots[i - 1] < 0.5:
+            roots[i] = roots[i - 1] + 0.5
+    if roots[-1] > 300:
+        return None
+    return roots
+
+
+def cma_objective(x):
+    """CMA-ES objective: roots encoded as sorted cumulative gaps."""
+    # x[0] = first root position, x[i>0] = gap to next root
+    roots = np.cumsum(np.abs(x))
+    roots = list(roots)
+    if any(z <= 0 or z > 300 for z in roots):
+        return 1e6
+    if any(roots[i + 1] - roots[i] < 0.01 for i in range(len(roots) - 1)):
+        return 1e6
+    score = fast_evaluate(roots)
+    return score if np.isfinite(score) else 1e6
+
+
+def roots_to_gaps(roots):
+    """Convert sorted roots to gap encoding for CMA-ES."""
+    gaps = [roots[0]]
+    for i in range(1, len(roots)):
+        gaps.append(roots[i] - roots[i - 1])
+    return gaps
+
+
+def gaps_to_roots(gaps):
+    """Convert gap encoding back to sorted roots."""
+    return list(np.cumsum(np.abs(gaps)))
+
+
+def run_cma(roots, sigma=2.0, max_evals=1000, tag="cma"):
+    """Run CMA-ES optimization starting from given roots."""
+    k = len(roots)
+    x0 = roots_to_gaps(roots)
+
+    opts = cma.CMAOptions()
+    opts["maxfevals"] = max_evals
+    opts["tolfun"] = 1e-14
+    opts["tolx"] = 1e-12
+    opts["verbose"] = -1  # quiet
+    opts["bounds"] = [[0.01] * k, [300.0] + [299.0] * (k - 1)]
+
+    es = cma.CMAEvolutionStrategy(x0, sigma, opts)
+    es.optimize(cma_objective)
+
+    best_gaps = es.result.xbest
+    best_roots = gaps_to_roots(best_gaps)
+    best_score = es.result.fbest
+
+    print(f"  CMA-ES k={k}: score={best_score:.15f} ({es.result.evaluations} evals)")
+    return best_roots, best_score
+
+
 def coordinate_hillclimb(roots, step_sizes=None, max_iters=500):
     """Coordinate-wise hillclimbing with adaptive step sizes."""
     roots = list(roots)
     k = len(roots)
     best_score = fast_evaluate(roots)
-    print(f"Initial score: {best_score:.15f}")
 
     if step_sizes is None:
         step_sizes = [0.01] * k
 
-    improved_count = 0
     for iteration in range(max_iters):
         any_improved = False
         for i in range(k):
@@ -62,7 +125,6 @@ def coordinate_hillclimb(roots, step_sizes=None, max_iters=500):
                     trial[i] += delta
                     if trial[i] <= 0 or trial[i] > 300:
                         continue
-                    # Keep roots sorted
                     if i > 0 and trial[i] <= trial[i - 1] + 0.01:
                         continue
                     if i < k - 1 and trial[i] >= trial[i + 1] - 0.01:
@@ -74,155 +136,103 @@ def coordinate_hillclimb(roots, step_sizes=None, max_iters=500):
                         best_score = score
                         roots = trial
                         any_improved = True
-                        improved_count += 1
-                        print(f"  iter {iteration}, root[{i}] += {delta:+.6f} -> {best_score:.15f} (improvement: {improvement:.2e})")
+                        print(f"  iter {iteration}, root[{i}] += {delta:+.6f} -> {best_score:.15f} (Δ={improvement:.2e})")
                         break
                 if any_improved:
                     break
 
         if not any_improved:
-            # Shrink step sizes
             step_sizes = [s * 0.5 for s in step_sizes]
             if max(step_sizes) < 1e-12:
-                print(f"Converged after {iteration} iterations, {improved_count} improvements")
+                print(f"  Converged after {iteration} iterations")
                 break
-            print(f"  iter {iteration}: shrinking steps, max={max(step_sizes):.2e}")
 
     return roots, best_score
 
 
-def random_perturbation_search(roots, n_trials=500, sigma=0.1):
-    """Random perturbation search - perturb multiple roots at once."""
-    roots = list(roots)
-    k = len(roots)
-    best_score = fast_evaluate(roots)
-    print(f"\nRandom perturbation search (sigma={sigma}, {n_trials} trials)")
-    print(f"Starting score: {best_score:.15f}")
+def scan_k_values(k_range=range(5, 21), starts_per_k=3, cma_evals=500):
+    """Scan different k values with multi-start CMA-ES."""
+    print("\n=== K-value scan ===")
+    results = {}
 
-    improved = 0
-    for t in range(n_trials):
-        trial = list(roots)
-        # Perturb 1-4 random roots
-        n_perturb = np.random.randint(1, min(5, k + 1))
-        indices = np.random.choice(k, n_perturb, replace=False)
-        for i in indices:
-            trial[i] += np.random.randn() * sigma * (1 + abs(trial[i]) * 0.01)
+    for k in k_range:
+        print(f"\n--- k={k} ---")
+        best_roots, best_score = None, float("inf")
 
-        # Ensure validity
-        trial.sort()
-        if any(z <= 0 or z > 300 for z in trial):
-            continue
-        if any(trial[i + 1] - trial[i] < 0.01 for i in range(len(trial) - 1)):
-            continue
+        for start in range(starts_per_k):
+            init = random_sorted_roots(k)
+            if init is None:
+                continue
+            try:
+                roots, score = run_cma(init, sigma=5.0, max_evals=cma_evals, tag=f"scan_k{k}")
+                if score < best_score:
+                    best_score = score
+                    best_roots = roots
+            except Exception as e:
+                print(f"  start {start} failed: {e}")
 
-        score = fast_evaluate(trial)
-        if score < best_score - 1e-14:
-            improvement = best_score - score
-            best_score = score
-            roots = trial
-            improved += 1
-            print(f"  trial {t}: score={best_score:.15f} (improvement: {improvement:.2e})")
+        if best_roots is not None:
+            results[k] = (best_roots, best_score)
+            print(f"  Best k={k}: {best_score:.15f}")
+            save_result(best_roots, best_score, f"scan_k{k}")
 
-    print(f"  {improved} improvements in {n_trials} trials")
-    return roots, best_score
+    # Summary
+    print("\n=== K-scan summary ===")
+    for k in sorted(results):
+        _, score = results[k]
+        print(f"  k={k:2d}: {score:.15f}")
 
-
-def try_add_root(roots, best_score):
-    """Try adding a root at various positions to see if k+1 helps."""
-    k = len(roots)
-    print(f"\nTrying k={k+1} by adding a root...")
-
-    # Scan candidate positions
-    candidates = []
-    # Between existing roots
-    for i in range(k - 1):
-        mid = (roots[i] + roots[i + 1]) / 2
-        candidates.append(mid)
-    # Before first root
-    candidates.append(roots[0] / 2)
-    # After last root
-    for offset in [10, 20, 30, 50, 70]:
-        if roots[-1] + offset <= 300:
-            candidates.append(roots[-1] + offset)
-    # In the gap regions
-    for x in np.linspace(60, 200, 30):
-        if all(abs(x - r) > 1 for r in roots):
-            candidates.append(x)
-
-    best_new = None
-    best_new_score = best_score
-
-    for c in candidates:
-        trial = sorted(roots + [c])
-        if any(trial[i + 1] - trial[i] < 0.01 for i in range(len(trial) - 1)):
-            continue
-        score = fast_evaluate(trial)
-        if score < best_new_score:
-            best_new_score = score
-            best_new = trial
-            print(f"  k={k+1}, new root at {c:.3f}: score={score:.15f}")
-
-    if best_new is not None:
-        print(f"  Best k={k+1} score: {best_new_score:.15f}")
-        return best_new, best_new_score
-    else:
-        print(f"  No improvement found with k={k+1}")
-        return roots, best_score
+    return results
 
 
 def main():
     print("=" * 60)
-    print("Uncertainty Principle - Hillclimb Optimizer")
+    print("Uncertainty Principle — Optimizer")
     print("=" * 60)
 
+    # Phase 1: CMA-ES from the best known k=13 solution
+    print("\n--- Phase 1: CMA-ES from best known k=13 ---")
     roots = list(BEST_K13)
     score = fast_evaluate(roots)
-    print(f"\nStarting from Together-AI's k=13 solution")
-    print(f"Score: {score:.15f}")
-    print(f"Roots: {roots}")
+    print(f"Starting score: {score:.15f}")
 
-    # Phase 1: Coordinate hillclimb from the best known solution
-    print("\n--- Phase 1: Coordinate hillclimb ---")
-    roots, score = coordinate_hillclimb(
-        roots,
-        step_sizes=[0.05, 0.05, 0.05,  # near cluster
-                    0.1, 0.1, 0.1, 0.1, 0.1, 0.1,  # mid cluster
-                    0.5, 0.5, 0.5, 1.0],  # far cluster
-        max_iters=200,
+    roots, score = run_cma(roots, sigma=1.0, max_evals=2000)
+    save_result(roots, score, "phase1_cma")
+
+    # Phase 2: Fine coordinate hillclimb
+    print("\n--- Phase 2: Fine hillclimb ---")
+    roots, score = coordinate_hillclimb(roots, step_sizes=[0.001] * len(roots), max_iters=200)
+    save_result(roots, score, "phase2_fine")
+
+    # Phase 3: CMA-ES again with tighter sigma
+    print("\n--- Phase 3: CMA-ES refinement ---")
+    roots, score = run_cma(roots, sigma=0.5, max_evals=2000)
+    save_result(roots, score, "phase3_cma_refine")
+
+    # Phase 4: Scan other k values
+    print("\n--- Phase 4: K-value scan ---")
+    scan_results = scan_k_values(k_range=range(8, 18), starts_per_k=3, cma_evals=1000)
+
+    # Find global best across all k
+    all_results = {13: (roots, score)}
+    all_results.update(scan_results)
+
+    global_best_k = min(all_results, key=lambda k: all_results[k][1])
+    best_roots, best_score = all_results[global_best_k]
+
+    # Phase 5: Final refinement of global best
+    print(f"\n--- Phase 5: Final refinement (k={global_best_k}) ---")
+    best_roots, best_score = run_cma(best_roots, sigma=0.3, max_evals=3000)
+    best_roots, best_score = coordinate_hillclimb(
+        best_roots, step_sizes=[0.0001] * len(best_roots), max_iters=300
     )
-    save_result(roots, score, "phase1_coord")
-
-    # Phase 2: Random perturbation
-    print("\n--- Phase 2: Random perturbation ---")
-    for sigma in [0.5, 0.1, 0.05, 0.01]:
-        roots, score = random_perturbation_search(roots, n_trials=300, sigma=sigma)
-    save_result(roots, score, "phase2_random")
-
-    # Phase 3: Fine coordinate hillclimb
-    print("\n--- Phase 3: Fine coordinate hillclimb ---")
-    roots, score = coordinate_hillclimb(
-        roots,
-        step_sizes=[0.001] * len(roots),
-        max_iters=200,
-    )
-    save_result(roots, score, "phase3_fine")
-
-    # Phase 4: Try adding a root
-    print("\n--- Phase 4: Try k+1 ---")
-    new_roots, new_score = try_add_root(roots, score)
-    if new_score < score:
-        roots, score = new_roots, new_score
-        # Hillclimb the new root set
-        roots, score = coordinate_hillclimb(roots, max_iters=200)
-        save_result(roots, score, "phase4_k_plus_1")
+    save_result(best_roots, best_score, "final")
 
     print("\n" + "=" * 60)
     print(f"FINAL RESULT")
-    print(f"k={len(roots)}, score={score:.15f}")
-    print(f"Roots: {roots}")
+    print(f"k={len(best_roots)}, score={best_score:.15f}")
+    print(f"Roots: {best_roots}")
     print("=" * 60)
-
-    save_result(roots, score, "final")
 
 
 if __name__ == "__main__":
