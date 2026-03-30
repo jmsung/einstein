@@ -1,0 +1,130 @@
+# Einstein Arena — Knowledge Base
+#
+# Structured learnings that carry forward across problem solves.
+# Read by the optimizer to inform strategy selection for new problems.
+# Updated after each solve with post-mortem insights.
+
+strategies:
+  nelder_mead:
+    description: "Simplex method — good for non-smooth, low-dimensional landscapes"
+    best_for: [continuous, non-smooth, low-dimensional]
+    notes: "Champion on uncertainty-principle (7 wins, avg rank 1.5). No gradient needed."
+
+  hillclimb:
+    description: "Coordinate-wise perturbation with adaptive step sizes"
+    best_for: [continuous, refinement, any-dimension]
+    notes: "Reliable for polishing. Adaptive steps shrink on plateau. Cheap per eval."
+
+  cma_es:
+    description: "Covariance Matrix Adaptation Evolution Strategy — population-based"
+    best_for: [continuous, exploration, medium-dimensional]
+    notes: "Good for escaping local optima. Expensive (many evals per generation)."
+
+  lbfgsb:
+    description: "Quasi-Newton with box constraints"
+    best_for: [continuous, smooth, gradient-friendly]
+    notes: "Fast convergence on smooth landscapes. Struggles with non-smooth or deceptive."
+
+  basin_hopping:
+    description: "Global optimizer — random jumps + local minimization"
+    best_for: [continuous, multi-modal, exploration]
+    notes: "Good for rough landscapes with many local optima."
+
+  differential_evolution:
+    description: "Population-based global optimizer with crossover"
+    best_for: [continuous, global-search, bounded]
+    notes: "Sobol initialization helps. Polish=True for final refinement."
+
+  perturbation:
+    description: "Random perturbation of subset of variables + refinement"
+    best_for: [continuous, escape-local-optima]
+    notes: "Perturb 2-5 variables, then hillclimb. Good for exploring nearby basins."
+
+  pairwise:
+    description: "Move pairs of variables together — exploits correlations"
+    best_for: [continuous, correlated-variables]
+    notes: "Useful when variables interact (e.g., root clusters in #18)."
+
+  simulated_annealing:
+    description: "Temperature-based acceptance of worse solutions"
+    best_for: [continuous, combinatorial, rough-landscape]
+    notes: "Not yet tried. Consider for discrete/combinatorial problems."
+
+  genetic_algorithm:
+    description: "Population-based with crossover and mutation"
+    best_for: [combinatorial, discrete, large-search-space]
+    notes: "Not yet tried. Consider for flat-polynomials (±1 coefficients)."
+
+  gradient_descent:
+    description: "Direct gradient descent on differentiable objectives"
+    best_for: [continuous, smooth, differentiable]
+    notes: "Not yet tried. Consider for sphere point placement (Thomson, Tammes)."
+
+problems:
+  uncertainty-principle:
+    api_id: 9
+    category: fourier-analysis
+    direction: minimize
+    solution_type: continuous  # continuous variables (root positions)
+    dimensionality: 13  # k=13 roots
+    our_score: 0.318353
+    our_rank: 1
+    strategies_ranked:
+      - nelder_mead      # 7 wins, avg rank 1.5 — clear champion
+      - hillclimb         # reliable refinement, avg rank 2.5
+      - cma_es            # good exploration but expensive
+      - lbfgsb            # ok on smooth regions
+      - basin_hopping     # mixed results
+      - pairwise          # occasional wins on correlated root pairs
+      - perturbation      # good for escaping, rare wins
+      - differential_evolution  # worst for this problem
+    insights:
+      - "Landscape is extremely deceptive — optimizers report improvements that are fake"
+      - "Two-tier verification (fast numerical + exact symbolic) is critical"
+      - "Hidden sign changes at x >> max(roots) invalidate naive grid scans"
+      - "Three-cluster root structure (near/mid/far) is confirmed optimal for k=13"
+      - "Nelder-Mead thrives on non-smooth landscapes where gradient methods fail"
+      - "Diminishing returns set in after ~19 iterations (improvements drop to 1e-8)"
+      - "Verification gate is more important than the optimizer itself"
+    pitfalls:
+      - "Far sign changes at x=379, 800, 9600, 126000+ caught by exponential scan"
+      - "Laguerre polynomial coefficients are ill-conditioned — need mpmath (dps≥20)"
+      - "Roots too close together (<0.01) cause numerical instability"
+      - "Standard 15k-point grid scan misses sign changes beyond grid boundary"
+
+patterns:
+  - name: two-tier-verification
+    description: "Fast numerical scorer for optimization loop + exact verifier as quality gate"
+    when_to_use: "When the scoring function can produce numerically deceptive results"
+    learned_from: uncertainty-principle
+    details: >
+      The fast evaluator runs ~20 evals/sec and catches 99% of cases.
+      The exact verifier (SymPy) runs once per candidate improvement and catches
+      edge cases like hidden far sign changes. Without the exact gate,
+      most 'improvements' are fake.
+
+  - name: adaptive-strategy-selection
+    description: "RALPH-style: run multiple strategies, track performance, adapt selection"
+    when_to_use: "Always — the optimal strategy varies by problem and phase of search"
+    learned_from: uncertainty-principle
+    details: >
+      Each iteration: pick top 3 performers + 2 random from rest.
+      Track wins, rejections, avg rank per strategy.
+      First iteration runs all strategies (exploration).
+      Unexplored strategies get high priority (explore before exploit).
+
+  - name: exponential-far-scan
+    description: "Check for unexpected behavior far from the 'interesting' region"
+    when_to_use: "When the objective involves polynomials, special functions, or unbounded domains"
+    learned_from: uncertainty-principle
+    details: >
+      Exponentially-spaced checkpoints from grid edge to 100,000.
+      Cheap O(k) per point. Catches sign changes that dense grids miss.
+
+  - name: constraint-aware-perturbation
+    description: "Perturbations respect problem constraints (bounds, ordering, minimum gaps)"
+    when_to_use: "Always — blind perturbation wastes evals on infeasible points"
+    learned_from: uncertainty-principle
+    details: >
+      Check 0 < z ≤ 300, z_i < z_{i+1}, min gap 0.01 before evaluating.
+      Return penalty (inf) immediately for infeasible solutions.
