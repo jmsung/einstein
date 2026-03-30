@@ -33,7 +33,19 @@ uv sync
 | 15 | The Prime Number Theorem | - | |
 | 16 | Third Autocorrelation Inequality | - | |
 | 17 | Thomson Problem (n=282) | - | |
-| 18 | Uncertainty Principle | In progress | Hillclimb optimizer with fast numerical evaluator |
+| 18 | Uncertainty Principle | **#1** | S=0.31835 — beats REDACTED SOTA (0.31885) |
+
+## Problem 18: Uncertainty Principle
+
+**Score: 0.31835263** (verified exact) — **#1 on leaderboard**, beating REDACTED's 0.31885459.
+
+Approach:
+- **Laguerre double roots** (k=13) following Cohn & Goncalves (2017)
+- **Numba-JIT fast evaluator** with 20k-point grid scan + exponential far-out sign-change detection to x=100,000
+- **Exact SymPy verification** as quality gate — rejects results with hidden far sign changes
+- **RALPH-style adaptive optimization loop** — 8 strategies (CMA-ES, hillclimb, Nelder-Mead, L-BFGS-B, basin-hopping, pairwise, perturbation, differential evolution) compete each iteration; top 3 + 2 random selected adaptively based on recorded performance history
+
+Key insight: most optimizer "improvements" produce parasitic sign changes at x >> max(roots) that the standard grid scan misses. The two-tier verification pipeline (fast numerical + exact SymPy) is critical for correctness.
 
 ## License
 
