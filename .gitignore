@@ -14,3 +14,9 @@ wheels/
 
 # Competition results
 results/
+
+# CMA-ES output
+outcmaes/
+
+# Workbench symlink
+.mb

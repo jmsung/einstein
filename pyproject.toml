@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Einstein Arena competition solver"
 requires-python = ">=3.13"
 dependencies = [
+    "cma>=4.4.4",
+    "mpmath>=1.3.0",
     "numpy>=2.4.3",
     "scipy>=1.17.1",
     "sympy>=1.14.0",
@@ -11,3 +13,11 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
+
+[tool.pytest.ini_options]
+markers = ["slow: slow tests (e.g. exact sympy verifier)"]
