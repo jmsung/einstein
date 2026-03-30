@@ -25,7 +25,6 @@ import time
 import numpy as np
 import cma
 from collections import defaultdict
-from multiprocessing import Pool
 from scipy.optimize import minimize, basinhopping
 from pathlib import Path
 from einstein.fast_eval import fast_evaluate
@@ -87,17 +86,18 @@ def read_strategy_stats():
     """
     stats = defaultdict(lambda: {
         "wins": 0, "top3": 0, "rejected": 0, "improved": 0,
-        "runs": 0, "ranks": [],
+        "runs": 0, "ranks": [], "times": [],
     })
     if not PROGRESS_FILE.exists():
         return stats
     for line in PROGRESS_FILE.read_text().splitlines():
-        # Per-strategy result: RESULT strategy=X rank=N score=Y delta=Z
-        m = re.search(r"RESULT strategy=(\w+) rank=(\d+)", line)
+        # Per-strategy result: RESULT strategy=X rank=N score=Y delta=Z time=Ts
+        m = re.search(r"RESULT strategy=(\w+) rank=(\d+).*time=(\d+)s", line)
         if m:
-            name, rank = m.group(1), int(m.group(2))
+            name, rank, t = m.group(1), int(m.group(2)), int(m.group(3))
             stats[name]["runs"] += 1
             stats[name]["ranks"].append(rank)
+            stats[name]["times"].append(t)
             if rank == 1:
                 stats[name]["wins"] += 1
             if rank <= 3:
@@ -113,26 +113,44 @@ def read_strategy_stats():
     return stats
 
 
-def compute_strategy_weights(stats):
-    """Convert stats into sampling weights. Strategies that rank well get more weight.
-
-    Scoring:
-      improved=+5, win=+2, top3=+1, rejected=-3
-      Average rank bonus: lower avg rank → higher weight
-    Minimum weight of 1 ensures exploration.
+def pick_strategies(stats, rng):
+    """Pick strategies for next iteration. Adaptive selection:
+    - First iteration: run all (explore)
+    - After that: keep top 3 + drop 2 worst + random 2 from rest
+    Performance > speed, but consistently slow losers get dropped.
     """
-    weights = {}
+    total_runs = sum(s["runs"] for s in stats.values())
+    if total_runs == 0:
+        return list(STRATEGY_NAMES)  # first iteration: try all
+
+    # Score each strategy: performance-weighted, with time penalty for losers
+    scores = {}
     for name in STRATEGY_NAMES:
         s = stats[name]
         if s["runs"] == 0:
-            weights[name] = 2.0  # unexplored → neutral
+            scores[name] = 5.0  # unexplored → high priority
             continue
-        avg_rank = sum(s["ranks"]) / len(s["ranks"]) if s["ranks"] else 4.0
-        rank_bonus = max(0, (5.0 - avg_rank))  # rank 1 → +4, rank 5 → 0
-        score = (s["improved"] * 5 + s["wins"] * 2 + s["top3"] * 1
-                 - s["rejected"] * 3 + rank_bonus)
-        weights[name] = max(1.0, 2.0 + score)
-    return weights
+        avg_rank = sum(s["ranks"]) / len(s["ranks"])
+        avg_time = sum(s["times"]) / len(s["times"]) if s["times"] else 300
+        # Core score: rank performance + verified improvements
+        perf = (s["improved"] * 10 + s["wins"] * 3 + s["top3"] * 1
+                - s["rejected"] * 5)
+        rank_score = max(0, 9.0 - avg_rank)  # rank 1 → 8, rank 8 → 1
+        # Time penalty only for bad performers (slow + bad rank)
+        time_penalty = 0
+        if avg_rank > 5 and avg_time > 500:
+            time_penalty = 2  # slow AND bad → penalize
+        scores[name] = perf + rank_score - time_penalty
+
+    # Sort by score
+    ranked = sorted(STRATEGY_NAMES, key=lambda n: scores[n], reverse=True)
+    top3 = ranked[:3]
+    rest = ranked[3:]
+    # Random 2 from the rest (exploration)
+    n_random = min(2, len(rest))
+    random_picks = list(rng.choice(rest, n_random, replace=False))
+    chosen = top3 + random_picks
+    return chosen
 
 
 def load_best_verified():
@@ -300,9 +318,9 @@ def strategy_basin_hop(roots, rng):
     step = rng.choice([0.1, 0.3, 0.5, 1.0])
     k = len(roots)
     bounds = [(0.01, 300.0)] * k
-    res = basinhopping(obj, roots, niter=10, stepsize=step,
+    res = basinhopping(obj, roots, niter=5, stepsize=step,
                        minimizer_kwargs={"method": "L-BFGS-B", "bounds": bounds,
-                                         "options": {"maxiter": 150, "ftol": 1e-16}},
+                                         "options": {"maxiter": 100, "ftol": 1e-16}},
                        seed=int(rng.randint(0, 10000)))
     return sorted(res.x), res.fun
 
@@ -331,7 +349,7 @@ def strategy_differential_evolution(roots, rng):
     # Tight bounds around current best
     margin = 3.0
     bounds = [(max(0.01, r - margin), min(300.0, r + margin)) for r in roots]
-    res = de(obj, bounds, maxiter=100, seed=int(rng.randint(0, 10000)),
+    res = de(obj, bounds, maxiter=50, seed=int(rng.randint(0, 10000)),
              tol=1e-16, polish=True, init="sobol")
     return sorted(res.x), res.fun
 
@@ -346,23 +364,6 @@ STRATEGY_MAP = {
     "nelder_mead": strategy_nelder_mead,
     "differential_evolution": strategy_differential_evolution,
 }
-
-
-def _run_strategy(args):
-    """Worker function for multiprocessing. Runs one strategy and returns result."""
-    name, roots, seed = args
-    rng = np.random.RandomState(seed)
-    strategy_fn = STRATEGY_MAP[name]
-    try:
-        t0 = time.time()
-        r, s = strategy_fn(list(roots), rng)
-        dt = time.time() - t0
-        return (name, list(r), float(s), dt, None)
-    except Exception as e:
-        return (name, None, float("inf"), 0.0, str(e))
-
-
-NUM_WORKERS = min(8, os.cpu_count() or 4)
 
 
 # ── Main loop ───────────────────────────────────────────────────────────────
@@ -385,46 +386,44 @@ def main():
 
     while True:
         iteration += 1
-        rng = np.random.RandomState(iteration * 31 + int(time.time()) % 10000)
         log(f"\n{'='*60}")
         log(f"--- Iteration {iteration} ---")
 
         # ── RALPH: read learnings and adapt ──
         stats = read_strategy_stats()
-        weights = compute_strategy_weights(stats)
-        total_w = sum(weights.values())
+        iter_rng = np.random.RandomState(iteration * 31 + int(time.time()) % 10000)
+        chosen = pick_strategies(stats, iter_rng)
+
         total_runs = sum(s['runs'] for s in stats.values())
-        log(f"  Strategy weights (from {total_runs} past runs):")
+        log(f"  Stats ({total_runs} past runs):")
         for name in STRATEGY_NAMES:
             s = stats[name]
-            pct = weights[name] / total_w * 100
             avg_r = f"{sum(s['ranks'])/len(s['ranks']):.1f}" if s['ranks'] else "-"
-            log(f"    {name:25s}: w={weights[name]:.1f} ({pct:.0f}%) "
-                f"[runs={s['runs']}, wins={s['wins']}, top3={s['top3']}, "
-                f"rej={s['rejected']}, improved={s['improved']}, avg_rank={avg_r}]")
+            avg_t = f"{sum(s['times'])/len(s['times']):.0f}s" if s['times'] else "-"
+            picked = " <<<" if name in chosen else ""
+            log(f"    {name:25s}: runs={s['runs']}, wins={s['wins']}, top3={s['top3']}, "
+                f"rej={s['rejected']}, avg_rank={avg_r}, avg_time={avg_t}{picked}")
 
-        # Run ALL 8 strategies in parallel — one per core
-        chosen = list(STRATEGY_NAMES)
+        log(f"  Running {len(chosen)} strategies sequentially: {', '.join(chosen)}")
 
-        log(f"  Running {len(chosen)} strategies in parallel ({NUM_WORKERS} workers): {', '.join(chosen)}")
-
-        # ── Run strategies in parallel across CPU cores ──
-        base_seed = iteration * 31 + int(time.time()) % 10000
-        work = [(name, list(best_roots), base_seed + i) for i, name in enumerate(chosen)]
-        t_iter = time.time()
-        with Pool(processes=min(NUM_WORKERS, len(chosen))) as pool:
-            results = pool.map(_run_strategy, work)
-
+        # ── Run strategies sequentially (reliable, no deadlock) ──
         candidates = []
-        for name, r, s, dt, err in results:
-            if err:
-                log(f"  {name:25s}: FAILED ({err})")
-                record_learning(f"iter={iteration} strategy={name} CRASHED: {err}")
-            else:
+        t_iter = time.time()
+        for name in chosen:
+            strategy_fn = STRATEGY_MAP[name]
+            seed = iteration * 31 + hash(name) % 10000 + int(time.time()) % 10000
+            rng = np.random.RandomState(seed)
+            try:
+                t0 = time.time()
+                r, s = strategy_fn(list(best_roots), rng)
+                dt = time.time() - t0
                 candidates.append((name, r, s, dt))
                 marker = " <-- improvement!" if s < best_score - 1e-15 else ""
                 log(f"  {name:25s}: {s:.16f} ({dt:.1f}s){marker}")
-        log(f"  Parallel wall time: {time.time() - t_iter:.1f}s")
+            except Exception as e:
+                log(f"  {name:25s}: FAILED ({e})")
+                record_learning(f"iter={iteration} strategy={name} CRASHED: {e}")
+        log(f"  Total wall time: {time.time() - t_iter:.1f}s")
 
         if not candidates:
             log("  No candidates produced")
