@@ -3,6 +3,10 @@
 Uses FFT-based convolution (O(n log n)) instead of np.convolve (O(n²)).
 Matches arena verifier to ~1e-15. Designed for optimization loops.
 
+Exact scoring formula (from arena discussion, equivalent to Simpson rule):
+    C = (2·Σc_i² + Σc_i·c_{i+1}) / (3 · Σc_i · max(c_i))
+where c = np.convolve(f, f, mode='full').
+
 Typical speed:
     n=100k  → 3ms/eval
     n=500k  → 20ms/eval
@@ -53,6 +57,24 @@ def fast_evaluate(values: np.ndarray | list[float]) -> float:
         return 0.0
 
     return float(l2_sq / (l1 * l_inf))
+
+
+def score_from_conv(conv: np.ndarray) -> float:
+    """Compute C directly from an autoconvolution array.
+
+    Uses the exact closed-form formula equivalent to the arena Simpson rule:
+        C = (2·Σc² + Σc·c_shift) / (3 · Σc · max(c))
+
+    This avoids recomputing the convolution when only values change locally.
+    """
+    if conv.size == 0:
+        return 0.0
+    c_sum = np.sum(conv)
+    c_max = np.max(conv)
+    if c_sum == 0.0 or c_max == 0.0:
+        return 0.0
+    numerator = 2.0 * np.sum(conv * conv) + np.sum(conv[:-1] * conv[1:])
+    return float(numerator / (3.0 * c_sum * c_max))
 
 
 def diagnose(values: np.ndarray | list[float]) -> dict:
