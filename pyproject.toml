@@ -1,0 +1,13 @@
+[project]
+name = "einstein"
+version = "0.1.0"
+description = "Einstein Arena competition solver"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.4.3",
+    "scipy>=1.17.1",
+    "sympy>=1.14.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
