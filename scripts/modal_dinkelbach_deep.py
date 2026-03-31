@@ -1,7 +1,6 @@
 """Deep CUDA Dinkelbach at n=100k — aggressive beta cascade, many iterations.
 
-Goal: squeeze out > 0.0001 improvement from the 100k public best (C=REDACTED)
-to claim rank #1. Arena caps at n=100,000.
+Extended beta cascade with many inner iterations. Arena caps at n=100,000.
 """
 
 import modal
@@ -140,7 +139,6 @@ def dinkelbach_deep(f_init_list: list[float]) -> dict:
 
     elapsed = time.time() - t0
     print(f"\nFinal: C={C_best:.15f} ({elapsed:.0f}s)")
-    print(f"Target: > REDACTED (need +{max(0, REDACTED - C_best):.6f})")
     print(f"Improvement over seed: {C_best - gpu_score(torch.tensor(f_init, dtype=dtype, device=device)):.2e}")
 
     return {
@@ -176,8 +174,7 @@ def main():
     elapsed = time.time() - t0
 
     print(f"\nResult: C={result['score']:.15f} ({elapsed:.0f}s)")
-    print(f"Target: > REDACTED")
-    print(f"{'DONE!' if result['score'] > REDACTED else 'Below target'}")
+    print(f"Done.")
 
     with open(f"results/modal_deep_n100k_{result['score']:.10f}.json", "w") as fh:
         json.dump({

@@ -38,14 +38,9 @@ LOG_FILE = LOGS_DIR / "optimize_loop.log"
 PROGRESS_FILE = LOGS_DIR / "progress.txt"
 PID_FILE = LOGS_DIR / "loop.pid"
 
-REDACTED_ROOTS = [
-    3.1427440085666496, 4.469993893132148, 6.078689469782297,
-    32.637646271046336, 38.265477818082566, 41.06153063739393,
-    43.09262298321874, 50.81816373872074, 58.61770809389174,
-    96.07661117430976, 111.48735817427675, 118.74229251036576,
-    141.09580664199572,
-]
-REDACTED_SCORE = REDACTED
+# Reference solution for benchmarking (loaded from results/ at runtime)
+REFERENCE_ROOTS = None
+REFERENCE_SCORE = None
 
 # Strategy names (must match function names below)
 STRATEGY_NAMES = ["hillclimb", "lbfgsb", "cma", "basin_hop", "perturb",
@@ -154,9 +149,9 @@ def pick_strategies(stats, rng):
 
 
 def load_best_verified():
-    """Load best verified result, or fall back to REDACTED."""
-    best_score = REDACTED_SCORE
-    best_roots = list(REDACTED_ROOTS)
+    """Load best verified result from results directory."""
+    best_score = float("inf")
+    best_roots = []
     for path in RESULTS_DIR.glob("up_k*.json"):
         with open(path) as f:
             data = json.load(f)
@@ -379,7 +374,7 @@ def main():
 
     best_roots, best_score = load_best_verified()
     log(f"Starting best: {best_score:.16f} (k={len(best_roots)})")
-    log(f"Target: < {REDACTED_SCORE:.16f} (REDACTED)")
+    log(f"Target: improve on current best")
 
     iteration = 0
     total_improvements = 0
@@ -471,9 +466,7 @@ def main():
             best_roots = list(cand_roots)
             total_improvements += 1
             save_verified(cand_roots, cand_score, exact_score, cand_name, iteration)
-            gap = exact_score - REDACTED_SCORE
             log(f"  *** VERIFIED IMPROVEMENT #{total_improvements}: {exact_score:.16f} ***")
-            log(f"  Gap to REDACTED: {gap:+.2e} ({'AHEAD' if gap < 0 else 'BEHIND'})")
             record_learning(f"iter={iteration} strategy={cand_name} IMPROVED: {old_best:.10f} -> {exact_score:.10f} (Δ={old_best - exact_score:.2e})")
         else:
             log(f"  Exact score not better than current best")
@@ -490,9 +483,7 @@ if __name__ == "__main__":
         print("\n\nStopped by user.")
     finally:
         roots, score = load_best_verified()
-        gap = score - REDACTED_SCORE
         print(f"\nFinal best: {score:.16f}")
-        print(f"Gap to REDACTED: {gap:+.2e}")
         if PROGRESS_FILE.exists():
             lines = PROGRESS_FILE.read_text().splitlines()
             print(f"Total learnings recorded: {len(lines)}")

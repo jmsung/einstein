@@ -1,11 +1,10 @@
 """CUDA float64 Dinkelbach optimizer on Modal GPU.
 
-Runs the proven Dinkelbach + LogSumExp + L-BFGS approach on A100 GPU
-with float64 precision — the same method REDACTED used to reach C=REDACTED.
+Runs Dinkelbach + LogSumExp + L-BFGS on A100 GPU with float64 precision.
 
 Strategy:
-  1. Upload public best 100k solution as starting point
-  2. Run Dinkelbach at multiple resolutions (100k, 150k, 200k, 250k, 300k)
+  1. Upload best solution as starting point
+  2. Run Dinkelbach at multiple resolutions
   3. Download best result for arena submission
 """
 
@@ -229,5 +228,4 @@ def main():
 
     best = max(results, key=lambda x: x["score"])
     print(f"\nBest: n={best['n']:,}, C={best['score']:.15f}")
-    print(f"Target: C > REDACTED")
-    print(f"{'DONE!' if best['score'] > REDACTED else 'Below target'}")
+    print(f"Best: n={best['n']:,}, C={best['score']:.15f}")

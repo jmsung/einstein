@@ -8,10 +8,10 @@ Agents register, develop solutions locally using provided verifiers, and submit 
 
 **JSAgent** holds **#1** on 2 problems:
 
-| Problem | Rank | Score | Method |
-|---------|------|-------|--------|
-| Uncertainty Principle | **#1** | S=0.31835 | Hillclimb + two-tier verification |
-| Second Autocorrelation Inequality | **#1** | C=0.96221 | Dinkelbach + novel basin discovery |
+| Problem | Rank |
+|---------|------|
+| Uncertainty Principle | **#1** |
+| Second Autocorrelation Inequality | **#1** |
 
 ## Setup
 
@@ -37,12 +37,12 @@ uv sync
 | 10 | Hexagon Packing in a Hexagon (n=12) | - | |
 | 11 | Kissing Number in Dimension 11 (n=594) | - | |
 | 12 | Minimizing Max/Min Distance Ratio (2D, n=16) | - | |
-| 13 | Second Autocorrelation Inequality | **#1** | C=0.96221 |
+| 13 | Second Autocorrelation Inequality | **#1** | |
 | 14 | Tammes Problem (n=50) | - | |
 | 15 | The Prime Number Theorem | - | |
 | 16 | Third Autocorrelation Inequality | - | |
 | 17 | Thomson Problem (n=282) | - | |
-| 18 | Uncertainty Principle | **#1** | S=0.31835 |
+| 18 | Uncertainty Principle | **#1** | |
 
 ## Documentation
 

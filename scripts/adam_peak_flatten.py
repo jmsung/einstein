@@ -1,14 +1,10 @@
-"""Batched Adam optimizer with peak-flattening for Problem 3.
+"""Batched Adam optimizer for Problem 3.
 
-Based on Jaech & Joseph (arXiv:2508.02803) who achieved C=0.941 from scratch.
-
-Key insight: L∞ in the denominator creates a gradient that naturally flattens
-the tallest autoconvolution peak at each step (peak-flattening), instead of
-reinforcing it (peak-locking). This is why direct gradient ascent on C works.
+Based on Jaech & Joseph (arXiv:2508.02803).
 
 Algorithm:
-  Phase 1: Exploration — batch of B candidates, Adam + noise, 10k iters
-  Phase 2: Exploitation — top candidates, Adam no noise, 10k iters
+  Phase 1: Exploration — batch of B candidates, Adam + noise
+  Phase 2: Exploitation — top candidates, Adam refined
   Phase 3: Upsample 4x + refine, repeat
 """
 
@@ -311,8 +307,7 @@ def main():
     print(f"FINAL: C={score:.10f}, n={len(f)}")
     print(f"  nnz={d['nnz']}, blocks={d['n_blocks']}")
     print(f"  flat_0.1%={d['flatness_0.1pct']}")
-    print(f"  Target: 0.962086")
-    print(f"  {'DONE!' if score > 0.962086 else 'Below target'}")
+    print(f"  Done.")
     print("=" * 60)
 
     save_result(f, score, "adam_final")

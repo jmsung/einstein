@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Packet-coordinate ascent for Problem 3 (Second Autocorrelation Inequality).
 
-Starts from the public best solution (C~REDACTED, n=100k), finds contiguous
+Starts from the best known solution, finds contiguous
 support blocks, and tries scalar multipliers on each block to improve C.
 
 CPU-only implementation using FFT-based scoring with closed-form formula.
@@ -455,7 +455,7 @@ def main():
         "score_verified": C_final_verified,
         "values": f_best.tolist(),
         "tag": out_tag,
-        "method": "packet_coordinate_ascent on public_best (REDACTED)",
+        "method": "packet_coordinate_ascent",
         "initial_score": C_initial,
         "improvement": improvement,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ"),

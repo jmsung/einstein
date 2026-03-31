@@ -1,12 +1,10 @@
-"""Aggressive H100 optimizer — find new basins at n=100k to beat SOTA.
+"""H100 optimizer — explore diverse basins at n=100k.
 
-The existing 100k basin is proven exhausted. We need a NEW basin.
 Strategy:
-  1. Batched Adam from scratch at n=768 (find diverse structures)
-  2. Upsample best to 100k
-  3. Dinkelbach refinement at 100k
-  4. Repeat with many random seeds — search for better basins
-  5. Also try: Adam directly at n=100k from the public best (different optimizer = different basin?)
+  1. Batched Adam from scratch at small n (find diverse structures)
+  2. Upsample best to target resolution
+  3. Dinkelbach refinement
+  4. Repeat with many random seeds
 """
 
 import modal
@@ -337,9 +335,6 @@ def aggressive_search(f_seed_list: list[float]) -> dict:
 
     best = all_results[0]
     print(f"\nBest: C={best['score']:.15f}")
-    print(f"Target: > REDACTED")
-    print(f"{'DONE!' if best['score'] > REDACTED else 'Below target'}")
-
     return best
 
 
@@ -365,8 +360,7 @@ def main():
     elapsed = time.time() - t0
 
     print(f"\nFinal: C={result['score']:.15f} ({elapsed:.0f}s)")
-    print(f"Target: > REDACTED")
-    print(f"{'DONE!' if result['score'] > REDACTED else 'Below target'}")
+    print(f"Done.")
 
     with open(f"results/modal_h100_{result['score']:.10f}.json", "w") as fh:
         json.dump({

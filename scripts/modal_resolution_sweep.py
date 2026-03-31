@@ -1,9 +1,6 @@
 """Sweep n from 50k to 100k — find the best resolution under the arena cap.
 
-Key insight: resolution is non-monotonic. n=200k beats n=100k.
-What about n=60k? n=80k? n=95k? Nobody has checked.
-
-For each n: interpolate 100k seed → Dinkelbach optimize → report C.
+For each n: interpolate seed → Dinkelbach optimize → report C.
 """
 
 import modal
@@ -188,10 +185,7 @@ def main():
     print("\n" + "=" * 60)
     print("Resolution sweep results:")
     for r in sorted(results, key=lambda x: x["score"], reverse=True):
-        beats = " *** DONE" if r["score"] > REDACTED else ""
-        print(f"  n={r['n']:>6,}: C={r['score']:.13f} (init={r['score_init']:.6f}){beats}")
+        print(f"  n={r['n']:>6,}: C={r['score']:.13f} (init={r['score_init']:.6f})")
 
     best = max(results, key=lambda x: x["score"])
     print(f"\nBest: n={best['n']:,}, C={best['score']:.15f}")
-    print(f"Target: > REDACTED")
-    print(f"{'DONE!' if best['score'] > REDACTED else 'Below target'}")

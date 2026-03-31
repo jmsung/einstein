@@ -1,12 +1,10 @@
-"""Basin escape strategies for n=100k — find a DIFFERENT local maximum.
-
-The current basin (C=REDACTED) is exhausted. We need to escape it.
+"""Basin escape strategies for n=100k — find a different local maximum.
 
 Strategies:
-  1. Deep Dinkelbach from our own 0.916 basin (different block structure)
-  2. Large-LR Adam to kick out + reconverge
-  3. Basin hopping: noisy restarts from perturbed public best
-  4. Very high beta Dinkelbach (1e11-1e12) with many inner iterations
+  1. Deep Dinkelbach from alternative basins
+  2. Large-LR Adam to escape and reconverge
+  3. Basin hopping: noisy restarts from perturbed solutions
+  4. Very high beta Dinkelbach with many inner iterations
 """
 
 import modal
@@ -118,7 +116,7 @@ def basin_escape(f_public_list: list[float], f_own_list: list[float]) -> dict:
                     C_best = C_new; f_best = f_new.copy(); f_current = f_new
                 if outer > 0 and abs(C_new-C_best) < 1e-15: break
             elapsed = time.time()-t0
-            if C_best > REDACTED:
+            if C_best > C_init:
                 print(f"  [{label}] beta={beta:.0e}: C={C_best:.13f} ({elapsed:.0f}s) !!!")
         return f_best, C_best
 
@@ -238,15 +236,11 @@ def basin_escape(f_public_list: list[float], f_own_list: list[float]) -> dict:
     print(f"\n{'='*60}")
     print(f"Results ({elapsed:.0f}s, {elapsed/60:.1f}min):")
     for r in all_results:
-        beats = " *** DONE" if r["score"] > REDACTED else ""
-        print(f"  {r['score']:.15f}  {r['strategy']}{beats}")
+        print(f"  {r['score']:.15f}  {r['strategy']}")
 
     best = all_results[0]
     print(f"\nBest: C={best['score']:.15f} ({best['strategy']})")
-    print(f"Target: > REDACTED")
-    print(f"Public best: REDACTED")
-    print(f"Gap: {best['score'] - REDACTED:.2e}")
-    print(f"{'DONE!' if best['score'] > REDACTED else 'Below target'}")
+    print(f"Best: C={best['score']:.15f} ({best['strategy']})")
 
     return best
 
@@ -276,7 +270,7 @@ def main():
         f_own = d["values"]
 
     print("=" * 60)
-    print("Basin Escape — 3 strategies to break REDACTED")
+    print("Basin Escape — 3 strategies")
     print("=" * 60)
 
     t0 = time.time()
@@ -284,7 +278,7 @@ def main():
     elapsed = time.time() - t0
 
     print(f"\nResult: C={result['score']:.15f} ({elapsed:.0f}s)")
-    print(f"{'DONE!' if result['score'] > REDACTED else 'Below target'}")
+    print(f"Done.")
 
     with open(f"results/modal_escape_{result['score']:.10f}.json", "w") as fh:
         json.dump({

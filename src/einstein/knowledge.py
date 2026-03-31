@@ -1,17 +1,27 @@
 """Knowledge layer — loads structured learnings to inform strategy selection.
 
-The knowledge base lives at docs/knowledge.yaml and accumulates
+The knowledge base lives in the private memory bank and accumulates
 cross-problem insights: which strategies work on which problem types,
 common pitfalls, and transferable optimization patterns.
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import yaml
 
-KNOWLEDGE_PATH = Path(__file__).parent.parent.parent / "docs" / "knowledge.yaml"
+_PROJECT = "einstein"
+KNOWLEDGE_PATH = (
+    Path(os.path.expanduser("~"))
+    / "projects"
+    / "workbench"
+    / "memory-bank"
+    / _PROJECT
+    / "docs"
+    / "knowledge.yaml"
+)
 
 
 def load_knowledge() -> dict:

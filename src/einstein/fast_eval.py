@@ -214,13 +214,13 @@ if __name__ == "__main__":
     t0 = time.time()
     score = fast_evaluate(best_roots)
     print(f"Fast score: {score} ({time.time() - t0:.1f}s)")
-    print(f"Expected:   REDACTED")
+    print(f"Expected:   ~0.3189")
 
     k6_roots = [3.64273649, 5.68246114, 33.00463486, 40.97185579, 50.1028231, 53.76768016]
     t0 = time.time()
     score6 = fast_evaluate(k6_roots)
     print(f"\nk=6 score: {score6} ({time.time() - t0:.1f}s)")
-    print(f"Expected:  0.3282706174313453")
+    print(f"Expected:  ~0.3283")
 
     # Benchmark: how many evals per second?
     print("\nBenchmark: 10 evaluations of k=13...")

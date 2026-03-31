@@ -235,7 +235,7 @@ def generate_starts(n):
 def main():
     print("=" * 60)
     print("Second Autocorrelation Inequality — Optimizer v3")
-    print("Target: C > 0.962086 (beat SOTA by minImprovement)")
+    print("Target: maximize C")
     print("=" * 60)
 
     # Phase A: Small n, multi-start → find best structure
