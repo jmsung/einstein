@@ -19,4 +19,4 @@ wheels/
 results/
 
 # Private strategy (gitignored — references MB docs)
-strategy.md
+docs/strategy.md
