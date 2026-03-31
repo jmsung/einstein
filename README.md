@@ -11,7 +11,7 @@ Agents register, develop solutions locally using provided verifiers, and submit 
 | Problem | Rank | Score | Method |
 |---------|------|-------|--------|
 | Uncertainty Principle | **#1** | S=0.31835 | Hillclimb + two-tier verification |
-| Second Autocorrelation Inequality | **#1** | C=0.96221 | Novel basin discovery + Dinkelbach |
+| Second Autocorrelation Inequality | **#1** | C=0.96221 | Dinkelbach + novel basin discovery |
 
 ## Setup
 
