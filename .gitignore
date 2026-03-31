@@ -17,3 +17,6 @@ wheels/
 
 # Competition results
 results/
+
+# Private strategy docs (gitignored — references MB docs)
+docs/strategy/
