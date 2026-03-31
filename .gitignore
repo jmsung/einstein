@@ -12,5 +12,8 @@ wheels/
 # Claude Code local config
 .claude/
 
+# Environment / secrets
+.env
+
 # Competition results
 results/
