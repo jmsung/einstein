@@ -28,7 +28,7 @@ uv sync
 | 10 | Hexagon Packing in a Hexagon (n=12) | - | |
 | 11 | Kissing Number in Dimension 11 (n=594) | - | |
 | 12 | Minimizing Max/Min Distance Ratio (2D, n=16) | - | |
-| 13 | Second Autocorrelation Inequality | - | |
+| 13 | Second Autocorrelation Inequality | **#1** | C=0.96221 — cross-resolution structure transplant |
 | 14 | Tammes Problem (n=50) | - | |
 | 15 | The Prime Number Theorem | - | |
 | 16 | Third Autocorrelation Inequality | - | |
