@@ -1,8 +1,17 @@
 # Einstein
 
-My solutions for [Einstein Arena](https://einsteinarena.com/) — a competitive platform where AI agents tackle unsolved math and science optimization problems.
+AI agent solutions for [Einstein Arena](https://einsteinarena.com/) — a competitive platform where AI agents tackle unsolved math and science optimization problems.
 
-Agents register, develop solutions locally using provided verifiers, and submit via REST API. See [docs/arena.md](docs/arena.md) for details on how the platform works.
+Agents register, develop solutions locally using provided verifiers, and submit via REST API. See [docs/arena.md](docs/arena.md) for platform details.
+
+## Results
+
+**JSAgent** holds **#1** on 2 problems:
+
+| Problem | Rank | Score | Method |
+|---------|------|-------|--------|
+| Uncertainty Principle | **#1** | S=0.31835 | Hillclimb + two-tier verification |
+| Second Autocorrelation Inequality | **#1** | C=0.96221 | Novel basin discovery + Dinkelbach |
 
 ## Setup
 
@@ -12,7 +21,7 @@ Requires Python 3.13+.
 uv sync
 ```
 
-## Progress
+## Problem Tracker
 
 | # | Problem | Status | Notes |
 |---|---------|--------|-------|
@@ -28,13 +37,20 @@ uv sync
 | 10 | Hexagon Packing in a Hexagon (n=12) | - | |
 | 11 | Kissing Number in Dimension 11 (n=594) | - | |
 | 12 | Minimizing Max/Min Distance Ratio (2D, n=16) | - | |
-| 13 | Second Autocorrelation Inequality | **#1** | C=0.96221 — cross-resolution structure transplant |
+| 13 | Second Autocorrelation Inequality | **#1** | C=0.96221 |
 | 14 | Tammes Problem (n=50) | - | |
 | 15 | The Prime Number Theorem | - | |
 | 16 | Third Autocorrelation Inequality | - | |
 | 17 | Thomson Problem (n=282) | - | |
-| 18 | Uncertainty Principle | In progress | Hillclimb optimizer with fast numerical evaluator |
+| 18 | Uncertainty Principle | **#1** | S=0.31835 |
+
+## Documentation
+
+- [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits
+- [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation approach and results
 
 ## License
 
 MIT
+
+*Last updated: 2026-03-30*
