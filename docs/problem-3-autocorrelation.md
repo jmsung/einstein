@@ -20,8 +20,8 @@ Higher C means a tighter lower bound on the inequality. No upper bound below C=1
 
 1. **Literature review**: 6 key papers studied, 5 optimization recipes extracted
 2. **Breadth-first exploration**: 11 experiments across 5 methods (Adam, Dinkelbach, deautoconvolution, Fourier projections, Chebyshev basis)
-3. **GPU optimization**: CUDA float64 Dinkelbach on Modal A100/H100
-4. **Novel basin discovery**: novel technique that escaped the known local maximum
+3. **GPU optimization**: CUDA float64 Dinkelbach on cloud GPUs
+4. **Novel basin discovery**: technique that escaped the known local maximum
 
 ## Key Findings
 
@@ -35,7 +35,7 @@ Higher C means a tighter lower bound on the inequality. No upper bound below C=1
 
 - `src/einstein/autocorrelation.py` — arena-matching evaluator (70 tests)
 - `src/einstein/autocorrelation_fast.py` — FFT evaluator (100x+ speedup)
-- `scripts/` — Dinkelbach, Adam, multi-scale, transplant optimizers
+- `scripts/` — multiple optimization approaches
 - Verification: 3 independent scoring methods agree to 1e-12
 
 ## References
