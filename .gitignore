@@ -12,14 +12,17 @@ wheels/
 # Claude Code local config
 .claude/
 
+# Environment / secrets
+.env
+
 # Competition results
 results/
 
-# Runtime logs
-logs/
+# Private strategy (gitignored — references MB docs)
+docs/strategy.md
 
-# CMA-ES output
-outcmaes/
+# Secret scripts (symlinks to MB — gitignored)
+scripts/secret/
 
 # Workbench symlink
 .mb
