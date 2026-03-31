@@ -18,5 +18,5 @@ wheels/
 # Competition results
 results/
 
-# Private strategy docs (gitignored — references MB docs)
-docs/strategy/
+# Private strategy (gitignored — references MB docs)
+strategy.md
