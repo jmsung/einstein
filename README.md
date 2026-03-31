@@ -48,9 +48,10 @@ uv sync
 
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits
 - [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation approach and results
+- [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle approach and results
 
 ## License
 
 MIT
 
-*Last updated: 2026-03-30*
+*Last updated: 2026-03-31*
