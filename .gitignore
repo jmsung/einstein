@@ -23,3 +23,6 @@ docs/strategy.md
 
 # Secret scripts (symlinks to MB — gitignored)
 scripts/secret/
+
+# Workbench symlink
+.mb
