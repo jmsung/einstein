@@ -1,7 +1,7 @@
 """Tests for the Uncertainty Principle evaluator.
 
 Covers:
-  - Known-good scores (REDACTED k=13, k=6)
+  - Known-good scores (reference k=13, k=6)
   - Input validation (empty, negative, out-of-bounds, too close)
   - Far sign change detection (parasitic roots at x≈379 and x≈800)
   - Monotonicity (small perturbations don't cause wild score swings)
@@ -13,7 +13,7 @@ import numpy as np
 from einstein.fast_eval import fast_evaluate
 from einstein.verifier import evaluate
 
-# REDACTED's best k=13 roots
+# reference's best k=13 roots
 K13_ROOTS = [
     3.1427440085666496, 4.469993893132148, 6.078689469782297,
     32.637646271046336, 38.265477818082566, 41.06153063739393,
@@ -156,7 +156,7 @@ class TestFarSignChangeDetection:
         )
 
     def test_good_roots_unaffected(self):
-        """REDACTED roots should NOT trigger false positives."""
+        """reference roots should NOT trigger false positives."""
         score = fast_evaluate(K13_ROOTS)
         assert abs(score - K13_EXPECTED) < 1e-6, (
             f"Good roots wrongly penalized: score={score}, expected {K13_EXPECTED}"
@@ -178,7 +178,7 @@ class TestBestSolution:
     def test_best_score_beats_sota(self):
         score = fast_evaluate(self.BEST_ROOTS)
         assert score < K13_EXPECTED, (
-            f"Best solution {score} should beat REDACTED {K13_EXPECTED}"
+            f"Best solution {score} should beat reference {K13_EXPECTED}"
         )
 
     def test_best_score_accuracy(self):

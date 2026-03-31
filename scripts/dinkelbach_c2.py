@@ -8,9 +8,7 @@ Approach:
   - Full-space Dinkelbach + L-BFGS with progressive beta annealing
   - Random perturbation restarts to escape local optima
   - Ultra-high beta refinement at the end
-  - Best achieved: C~0.858 at n=2000
-
-Target: C > 0.90 at n=2000 on CPU.
+  - Iterative refinement with progressive beta annealing
 """
 
 import sys

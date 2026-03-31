@@ -255,8 +255,7 @@ def main():
         print(f"FINAL: C={final_score:.8f}, n={len(f_current)}")
         print(f"  nnz={d['nnz']}, blocks={d['n_blocks']}")
         print(f"  flat_0.1%={d['flatness_0.1pct']}, flat_1%={d['flatness_1pct']}")
-        print(f"  Target: 0.962086")
-        print(f"  {'DONE!' if final_score > 0.962086 else 'Below target'}")
+        print(f"  Done.")
     print("=" * 60)
 
 

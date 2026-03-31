@@ -5,7 +5,7 @@ import yaml
 from pathlib import Path
 
 
-KNOWLEDGE_PATH = Path(__file__).parent.parent / "docs" / "knowledge.yaml"
+from einstein.knowledge import KNOWLEDGE_PATH
 
 
 class TestKnowledgeSchema:

@@ -71,7 +71,7 @@ def _find_laguerre_combination(zs):
 
 
 if __name__ == "__main__":
-    # REDACTED's best k=13 roots (score REDACTED)
+    # Reference k=13 roots for testing
     best_roots = [
         3.1427440085666496,
         4.469993893132148,

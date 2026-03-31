@@ -10,7 +10,7 @@ from einstein.verifier import evaluate as exact_evaluate
 from einstein.fast_eval import fast_evaluate
 
 
-# Known k=13 roots (REDACTED's solution, score ~0.3189)
+# Reference k=13 roots for testing
 KNOWN_ROOTS = [
     3.1427440085666496, 4.469993893132148, 6.078689469782297,
     32.637646271046336, 38.265477818082566, 41.06153063739393,

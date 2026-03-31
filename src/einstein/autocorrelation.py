@@ -3,7 +3,7 @@
 Exact replica of the arena verifier. Given a non-negative function f discretized
 as an array of values, computes C = ||f★f||₂² / (||f★f||₁ · ||f★f||∞).
 
-Higher C is better. SOTA is 0.961986 (REDACTED).
+Higher C is better.
 """
 
 import numpy as np
