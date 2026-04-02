@@ -12,8 +12,11 @@ import pytest
 from einstein.flat_poly import (
     compute_score,
     evaluate,
+    fast_score,
     fekete,
+    genetic_algorithm,
     rudin_shapiro,
+    simulated_annealing,
     turyn,
 )
 
@@ -329,3 +332,126 @@ class TestBaselineScores:
         assert best_structured < avg_random, (
             f"Best structured {best_structured:.4f} >= avg random {avg_random:.4f}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Fast scorer (FFT-based, for optimization loops)
+# ---------------------------------------------------------------------------
+class TestFastScore:
+    """FFT-based fast scorer for optimization."""
+
+    def test_matches_compute_score(self):
+        """fast_score should agree with compute_score within tolerance."""
+        rng = np.random.default_rng(42)
+        for _ in range(5):
+            ascending = rng.choice([-1, 1], size=70).tolist()
+            descending = ascending[::-1]
+            exact = compute_score(descending)
+            fast = fast_score(ascending, n_points=1_000_000)
+            assert fast == pytest.approx(exact, rel=1e-4), (
+                f"fast={fast}, exact={exact}"
+            )
+
+    def test_various_n_points(self):
+        """Should work at different evaluation resolutions."""
+        ascending = [1] * 70
+        for n in [10_000, 100_000, 1_000_000]:
+            score = fast_score(ascending, n_points=n)
+            expected = 70.0 / np.sqrt(71)
+            assert score == pytest.approx(expected, rel=1e-3)
+
+    def test_faster_than_poly1d(self):
+        """FFT at 100K should be faster than poly1d at 1M."""
+        ascending = list(np.random.default_rng(0).choice([-1, 1], size=70))
+        descending = ascending[::-1]
+
+        t0 = time.perf_counter()
+        for _ in range(5):
+            fast_score(ascending, n_points=100_000)
+        fast_time = (time.perf_counter() - t0) / 5
+
+        t0 = time.perf_counter()
+        for _ in range(5):
+            compute_score(descending)
+        slow_time = (time.perf_counter() - t0) / 5
+
+        assert fast_time < slow_time, f"fast={fast_time:.4f}s >= slow={slow_time:.4f}s"
+
+
+# ---------------------------------------------------------------------------
+# Simulated annealing
+# ---------------------------------------------------------------------------
+class TestSimulatedAnnealing:
+    """Simulated annealing optimizer."""
+
+    def test_improves_from_random(self):
+        """SA should improve a random starting point."""
+        rng = np.random.default_rng(42)
+        init = rng.choice([-1, 1], size=70).tolist()
+        init_score = fast_score(init)
+        best_coeffs, best_score = simulated_annealing(
+            init, n_iters=10_000, seed=42,
+        )
+        assert best_score < init_score
+
+    def test_improves_from_turyn(self):
+        """SA should improve the Turyn baseline."""
+        init = turyn(shift=22)
+        init_score = fast_score(init)
+        best_coeffs, best_score = simulated_annealing(
+            init, n_iters=200_000, seed=7,
+        )
+        assert best_score < init_score
+
+    def test_output_valid(self):
+        """Output must be 70 ±1 values."""
+        init = turyn(shift=22)
+        best_coeffs, _ = simulated_annealing(init, n_iters=1_000, seed=0)
+        assert len(best_coeffs) == 70
+        assert all(c in (-1, 1) for c in best_coeffs)
+
+    def test_deterministic(self):
+        """Same seed gives same result."""
+        init = [1] * 70
+        _, s1 = simulated_annealing(init, n_iters=5_000, seed=123)
+        _, s2 = simulated_annealing(init, n_iters=5_000, seed=123)
+        assert s1 == s2
+
+
+# ---------------------------------------------------------------------------
+# Genetic algorithm
+# ---------------------------------------------------------------------------
+class TestGeneticAlgorithm:
+    """Genetic algorithm optimizer."""
+
+    def test_improves_from_random(self):
+        """GA should improve over random population."""
+        rng = np.random.default_rng(42)
+        # Average random score
+        random_scores = [
+            fast_score(rng.choice([-1, 1], size=70).tolist())
+            for _ in range(20)
+        ]
+        avg_random = np.mean(random_scores)
+
+        best_coeffs, best_score = genetic_algorithm(
+            pop_size=50, n_gens=30, seed=42,
+        )
+        assert best_score < avg_random
+
+    def test_warm_start(self):
+        """GA with warm start from constructions should work."""
+        warm = [turyn(shift=22), rudin_shapiro()]
+        best_coeffs, best_score = genetic_algorithm(
+            pop_size=50, n_gens=20, warm_start=warm, seed=42,
+        )
+        assert best_score > 0
+        assert len(best_coeffs) == 70
+
+    def test_output_valid(self):
+        """Output must be 70 ±1 values."""
+        best_coeffs, _ = genetic_algorithm(
+            pop_size=20, n_gens=10, seed=0,
+        )
+        assert len(best_coeffs) == 70
+        assert all(c in (-1, 1) for c in best_coeffs)
