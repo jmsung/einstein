@@ -11,12 +11,17 @@ import numpy as np
 import pytest
 from einstein.flat_poly import (
     compute_score,
+    crt_tensor,
     evaluate,
     fast_score,
     fekete,
     genetic_algorithm,
+    kloosterman_sign,
+    legendre_sidelnikov,
+    memetic_tabu_search,
     rudin_shapiro,
     simulated_annealing,
+    tabu_search,
     turyn,
 )
 
@@ -334,6 +339,44 @@ class TestBaselineScores:
         )
 
 
+class TestNovelConstructions:
+    """Novel constructions from mathematician council research."""
+
+    def test_crt_tensor_length(self):
+        assert len(crt_tensor([1, -1], [1, 1, -1, -1, 1], [1, 1, -1, 1, -1, -1, 1])) == 70
+
+    def test_crt_tensor_all_pm1(self):
+        seq = crt_tensor([1, -1], [1, 1, -1, -1, 1], [1, 1, -1, 1, -1, -1, 1])
+        assert all(c in (-1, 1) for c in seq)
+
+    def test_crt_tensor_valid_score(self):
+        seq = crt_tensor([1, -1], [1, 1, -1, -1, 1], [1, 1, -1, 1, -1, -1, 1])
+        score = compute_score(seq[::-1])
+        assert 0.99 < score < 10
+
+    def test_kloosterman_sign_length(self):
+        assert len(kloosterman_sign()) == 70
+
+    def test_kloosterman_sign_all_pm1(self):
+        seq = kloosterman_sign()
+        assert all(c in (-1, 1) for c in seq)
+
+    def test_kloosterman_sign_valid_score(self):
+        score = compute_score(kloosterman_sign()[::-1])
+        assert 0.99 < score < 10
+
+    def test_legendre_sidelnikov_length(self):
+        assert len(legendre_sidelnikov()) == 70
+
+    def test_legendre_sidelnikov_all_pm1(self):
+        seq = legendre_sidelnikov()
+        assert all(c in (-1, 1) for c in seq)
+
+    def test_legendre_sidelnikov_valid_score(self):
+        score = compute_score(legendre_sidelnikov()[::-1])
+        assert 0.99 < score < 10
+
+
 # ---------------------------------------------------------------------------
 # Fast scorer (FFT-based, for optimization loops)
 # ---------------------------------------------------------------------------
@@ -452,6 +495,91 @@ class TestGeneticAlgorithm:
         """Output must be 70 ±1 values."""
         best_coeffs, _ = genetic_algorithm(
             pop_size=20, n_gens=10, seed=0,
+        )
+        assert len(best_coeffs) == 70
+        assert all(c in (-1, 1) for c in best_coeffs)
+
+
+# ---------------------------------------------------------------------------
+# Tabu search
+# ---------------------------------------------------------------------------
+class TestTabuSearch:
+    """Tabu search optimizer (steepest descent with tabu list)."""
+
+    def test_improves_from_random(self):
+        """Tabu search should improve a random start."""
+        rng = np.random.default_rng(42)
+        init = rng.choice([-1, 1], size=70).tolist()
+        init_score = fast_score(init, n_points=4096)
+        best_coeffs, best_score = tabu_search(
+            init, max_iter=500, n_eval_points=4096, seed=42,
+        )
+        assert best_score < init_score
+
+    def test_output_valid(self):
+        """Output must be 70 ±1 values."""
+        rng = np.random.default_rng(0)
+        init = rng.choice([-1, 1], size=70).tolist()
+        best_coeffs, _ = tabu_search(init, max_iter=100, seed=0)
+        assert len(best_coeffs) == 70
+        assert all(c in (-1, 1) for c in best_coeffs)
+
+    def test_deterministic(self):
+        """Same seed gives same result."""
+        init = [1] * 70
+        _, s1 = tabu_search(init, max_iter=200, seed=77)
+        _, s2 = tabu_search(init, max_iter=200, seed=77)
+        assert s1 == s2
+
+    def test_beats_sa_same_evals(self):
+        """Tabu should beat SA given similar evaluation budget.
+        Tabu: 200 iters x 70 neighbors = 14K evals.
+        SA: 14K iters x 1 neighbor = 14K evals."""
+        rng = np.random.default_rng(42)
+        init = rng.choice([-1, 1], size=70).tolist()
+        _, tabu_score = tabu_search(
+            init, max_iter=200, n_eval_points=4096, seed=42,
+        )
+        _, sa_score = simulated_annealing(
+            init, n_iters=14_000, n_eval_points=4096, seed=42,
+        )
+        assert tabu_score <= sa_score
+
+
+# ---------------------------------------------------------------------------
+# Memetic tabu search
+# ---------------------------------------------------------------------------
+class TestMemeticTabuSearch:
+    """Memetic Tabu Search with population crossover."""
+
+    def test_improves_from_random(self):
+        """MTS should improve over random population."""
+        rng = np.random.default_rng(42)
+        random_scores = [
+            fast_score(rng.choice([-1, 1], size=70).tolist(), n_points=4096)
+            for _ in range(20)
+        ]
+        avg_random = np.mean(random_scores)
+        best_coeffs, best_score = memetic_tabu_search(
+            pop_size=20, n_rounds=10, max_iter_per_round=200,
+            n_eval_points=4096, seed=42,
+        )
+        assert best_score < avg_random
+
+    def test_warm_start(self):
+        """MTS with warm start should work."""
+        warm = [turyn(shift=22)]
+        best_coeffs, best_score = memetic_tabu_search(
+            pop_size=20, n_rounds=5, max_iter_per_round=100,
+            warm_start=warm, seed=42,
+        )
+        assert best_score > 0
+        assert len(best_coeffs) == 70
+
+    def test_output_valid(self):
+        """Output must be 70 ±1 values."""
+        best_coeffs, _ = memetic_tabu_search(
+            pop_size=10, n_rounds=3, max_iter_per_round=50, seed=0,
         )
         assert len(best_coeffs) == 70
         assert all(c in (-1, 1) for c in best_coeffs)

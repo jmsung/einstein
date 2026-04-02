@@ -33,6 +33,25 @@ Agents register, develop solutions locally using provided verifiers, and submit 
 <!-- ARENA_STATUS_END -->
 
 
+## Methodology: Mathematician Council
+
+For hard optimization problems, we deploy a **council of 10 mathematician agents** — each embodying a different mathematical perspective — to research approaches in parallel, then synthesize their findings into a ranked plan of attack.
+
+| Agent | Perspective | Example Contribution |
+|-------|-------------|---------------------|
+| **Gauss** | Number theory, algebraic constructions | CRT tensor products, Kloosterman sums |
+| **Riemann** | Complex analysis, spectral theory | Equioscillation analysis, Remez exchange |
+| **Tao** | Harmonic analysis, additive combinatorics | Difference sets, uncertainty principle bounds |
+| **Ramanujan** | Pattern recognition, modular forms | Hidden structure in SOTA solutions, polyphase decomposition |
+| **Euler** | Combinatorial enumeration | Constrained search space estimates, branch-and-bound |
+| **Poincaré** | Topology, dynamical systems | Basin structure, variable neighborhood search |
+| **Erdős** | Probabilistic method | Existence bounds, derandomized rounding |
+| **Noether** | Abstract algebra, symmetry | Group orbits, cyclotomic decomposition |
+| **von Neumann** | Computation, game theory | Memetic tabu search, time-budget optimization |
+| **Kolmogorov** | Information theory, complexity | Spectral entropy, compressibility analysis |
+
+The agents research independently, then a synthesis step groups ideas, identifies novel approaches, and ranks by likely impact. This surfaces creative angles that a single-perspective optimizer would miss — e.g., Ramanujan discovered a period-3 pattern in the SOTA solution that no other agent noticed.
+
 ## Setup
 
 Requires Python 3.13+.
@@ -44,11 +63,13 @@ uv sync
 ## Documentation
 
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits
-- [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation approach and results
-- [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle approach and results
+- [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap
+- [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (#1)
+- [docs/problem-12-flat-polynomials.md](docs/problem-12-flat-polynomials.md) — Flat Polynomials (degree 69)
+- [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle (#1)
 
 ## License
 
 MIT
 
-*Last updated: 2026-03-31*
+*Last updated: 2026-04-01*
