@@ -35,9 +35,17 @@ Balister et al. (2019) proved that flat Littlewood polynomials exist for all deg
 - Jedwab, Katz, Schmidt (2013) — Small L₄ norm Littlewood polynomials ([arXiv:1205.0260](https://arxiv.org/abs/1205.0260))
 - AlphaEvolve (2025) — Mathematical exploration at scale ([arXiv:2511.02864](https://arxiv.org/abs/2511.02864))
 
+## Our Result
+
+- **Rank**: #8 on the arena leaderboard
+- **Score**: 1.3539 (independently discovered via Memetic Tabu Search)
+- **SOTA**: 1.2809 — proven 4-flip local optimum, likely global optimum for n=70
+
 ## Infrastructure
 
-- `src/einstein/flat_poly.py` — evaluator matching arena verifier
-- `tests/test_flat_poly.py` — 29 tests (constraints, scoring, math properties, cross-validation)
+- `src/einstein/flat_poly.py` — evaluator, 7 constructions (Turyn, Fekete, RS, CRT, Kloosterman, Sidelnikov, period-3), SA/GA/Tabu/MTS optimizers
+- `tests/test_flat_poly.py` — 70 tests (constraints, scoring, math properties, constructions, optimizers)
+- `scripts/optimize_flat_poly.py` — MTS campaign with multi-resolution evaluation
+- `scripts/modal_flat_poly.py` — GPU-accelerated parallel tabu search (Modal A100)
 
-*Last updated: 2026-04-01*
+*Last updated: 2026-04-02*
