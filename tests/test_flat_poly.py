@@ -9,7 +9,13 @@ import time
 
 import numpy as np
 import pytest
-from einstein.flat_poly import compute_score, evaluate
+from einstein.flat_poly import (
+    compute_score,
+    evaluate,
+    fekete,
+    rudin_shapiro,
+    turyn,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -207,3 +213,119 @@ class TestPerformance:
             evaluate({"coefficients": coeffs})
         elapsed = (time.perf_counter() - t0) / 3
         assert elapsed < 0.2, f"Single eval took {elapsed:.4f}s (target < 200ms)"
+
+
+# ---------------------------------------------------------------------------
+# Constructions — known polynomial families
+# ---------------------------------------------------------------------------
+class TestRudinShapiro:
+    """Rudin-Shapiro sequence construction."""
+
+    def test_length(self):
+        assert len(rudin_shapiro()) == 70
+
+    def test_all_pm1(self):
+        rs = rudin_shapiro()
+        assert all(c in (-1, 1) for c in rs)
+
+    def test_known_prefix(self):
+        """First 8 RS values: r(n) = (-1)^(count of '11' in binary of n).
+        n=0: 0b0 -> 0 -> 1
+        n=1: 0b1 -> 0 -> 1
+        n=2: 0b10 -> 0 -> 1
+        n=3: 0b11 -> 1 -> -1
+        n=4: 0b100 -> 0 -> 1
+        n=5: 0b101 -> 0 -> 1
+        n=6: 0b110 -> 1 -> -1
+        n=7: 0b111 -> 2 -> 1"""
+        rs = rudin_shapiro()
+        assert rs[:8] == [1, 1, 1, -1, 1, 1, -1, 1]
+
+    def test_valid_score(self):
+        """RS construction produces a valid, finite score."""
+        rs = rudin_shapiro()
+        # Reverse to descending order for compute_score
+        score = compute_score(rs[::-1])
+        assert 0.99 < score < 10
+
+    def test_custom_length(self):
+        assert len(rudin_shapiro(n=128)) == 128
+
+
+class TestFekete:
+    """Fekete polynomial (Legendre symbol) construction."""
+
+    def test_length(self):
+        assert len(fekete()) == 70
+
+    def test_all_pm1(self):
+        """All coefficients must be ±1 (no zeros)."""
+        fk = fekete()
+        assert all(c in (-1, 1) for c in fk)
+
+    def test_valid_score(self):
+        fk = fekete()
+        score = compute_score(fk[::-1])
+        assert 0.99 < score < 10
+
+    def test_prime_67(self):
+        """Fekete for p=67 should return 66 coefficients."""
+        fk = fekete(p=67, n=66)
+        assert len(fk) == 66
+        assert all(c in (-1, 1) for c in fk)
+
+
+class TestTuryn:
+    """Turyn (shifted Fekete) polynomial construction."""
+
+    def test_length(self):
+        assert len(turyn()) == 70
+
+    def test_all_pm1(self):
+        ty = turyn()
+        assert all(c in (-1, 1) for c in ty)
+
+    def test_valid_score(self):
+        ty = turyn()
+        score = compute_score(ty[::-1])
+        assert 0.99 < score < 10
+
+    def test_different_shifts_differ(self):
+        """Different shift values should produce different polynomials."""
+        t1 = turyn(shift=10)
+        t2 = turyn(shift=18)
+        assert t1 != t2
+
+
+class TestBaselineScores:
+    """Evaluate all constructions and verify scores are reasonable."""
+
+    def test_all_constructions_beat_all_ones(self):
+        """All constructions should beat the trivial all-ones (score ≈ 8.3)."""
+        all_ones_score = 70.0 / np.sqrt(71)
+        for name, coeffs in [
+            ("rudin_shapiro", rudin_shapiro()),
+            ("fekete", fekete()),
+            ("turyn", turyn()),
+        ]:
+            score = compute_score(coeffs[::-1])
+            assert score < all_ones_score, f"{name}: {score} >= {all_ones_score}"
+
+    def test_structured_beats_random_avg(self):
+        """Best structured construction should beat average random score."""
+        random_scores = []
+        for seed in range(50):
+            rng = np.random.default_rng(seed)
+            coeffs = rng.choice([-1, 1], size=70).tolist()
+            random_scores.append(compute_score(coeffs))
+        avg_random = np.mean(random_scores)
+
+        structured_scores = [
+            compute_score(rudin_shapiro()[::-1]),
+            compute_score(fekete()[::-1]),
+            compute_score(turyn()[::-1]),
+        ]
+        best_structured = min(structured_scores)
+        assert best_structured < avg_random, (
+            f"Best structured {best_structured:.4f} >= avg random {avg_random:.4f}"
+        )
