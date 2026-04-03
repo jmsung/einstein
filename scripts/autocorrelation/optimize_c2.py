@@ -312,8 +312,7 @@ def main():
     d = diagnose(best_f)
     print(f"  Blocks: {d['n_blocks']}, mean width: {d['mean_block_width']:.1f}")
     print(f"  Flatness (0.1%): {d['flatness_0.1pct']}, (1%): {d['flatness_1pct']}")
-    print(f"  Target: 0.962086")
-    print(f"  {'BEATS SOTA!' if arena_score > 0.962086 else 'Below target'}")
+    print(f"  Score: {arena_score:.10f}")
     print("=" * 60)
 
     save_result(best_f, arena_score, "final")

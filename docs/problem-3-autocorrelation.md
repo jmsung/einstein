@@ -22,9 +22,9 @@ Higher C means a tighter lower bound on the inequality. No upper bound below C=1
 
 ## Infrastructure
 
-- `src/einstein/autocorrelation.py` — arena-matching evaluator (70 tests)
-- `src/einstein/autocorrelation_fast.py` — FFT evaluator (100x+ speedup)
-- `scripts/` — multiple optimization approaches
+- `src/einstein/autocorrelation/evaluator.py` — arena-matching evaluator (70 tests)
+- `src/einstein/autocorrelation/fast.py` — FFT evaluator (100x+ speedup)
+- `scripts/autocorrelation/` — multiple optimization approaches
 - Verification: 3 independent scoring methods agree to 1e-12
 
 ## References
@@ -34,4 +34,4 @@ Higher C means a tighter lower bound on the inequality. No upper bound below C=1
 - Martin & O'Bryant (arXiv:0807.5121) — Sidon set connection
 - Rechnitzer (arXiv:2602.07292) — High-precision dual minimizer
 
-*Last updated: 2026-03-31*
+*Last updated: 2026-04-03*

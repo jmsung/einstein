@@ -255,40 +255,6 @@ def try_pairwise_rescale(
 
 
 # ------------------------------------------------------------------
-# Arena-specific multipliers
-# ------------------------------------------------------------------
-def try_arena_specific_multipliers(
-    f: np.ndarray, blocks: list[tuple[int, int]]
-) -> tuple[np.ndarray, float]:
-    """Try specific multipliers mentioned in arena discussions."""
-    # These are approximate position ranges and suggested multipliers
-    arena_runs = [
-        (27030, 27032, 1.513),
-        (31255, 31257, 1.922),
-        (61318, 61320, 0.401),
-    ]
-
-    f_best = f.copy()
-    C_best = score(f)
-    print("\n  Trying arena-specific multipliers...")
-
-    for approx_start, approx_end, mult in arena_runs:
-        for bi, (s, e) in enumerate(blocks):
-            if s <= approx_start < e or s <= approx_end <= e:
-                f_trial = f_best.copy()
-                f_trial[s:e] *= mult
-                C_trial = score(f_trial)
-                tag = "IMPROVED" if C_trial > C_best else "no gain"
-                print(f"    block {bi} [{s}:{e}] * {mult:.3f}: C={C_trial:.13f} ({tag})")
-                if C_trial > C_best:
-                    C_best = C_trial
-                    f_best = f_trial
-                break
-
-    return f_best, C_best
-
-
-# ------------------------------------------------------------------
 # Verify score matches arena verifier
 # ------------------------------------------------------------------
 def verify_score(f: np.ndarray) -> float:
@@ -333,14 +299,6 @@ def main():
     f_best = f.copy()
 
     # ------------------------------------------------------------------
-    # Phase 0: Arena-specific multipliers
-    # ------------------------------------------------------------------
-    f_new, C_new = try_arena_specific_multipliers(f_best, blocks)
-    if C_new > C_best:
-        C_best = C_new
-        f_best = f_new
-
-    # ------------------------------------------------------------------
     # Phase 1: Packet ascent with standard multipliers
     # ------------------------------------------------------------------
     print(f"\n{'='*60}")
@@ -379,10 +337,10 @@ def main():
     print(f"{'='*60}")
 
     extended_alphas = np.array([
-        0.0, 0.1, 0.2, 0.3, 0.401, 0.5, 0.6, 0.7, 0.8,
+        0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,
         0.9, 0.95, 0.99, 0.995, 0.999,
         1.001, 1.005, 1.01, 1.05, 1.1,
-        1.2, 1.3, 1.5, 1.513, 1.7, 1.922, 2.0, 3.0, 5.0,
+        1.2, 1.3, 1.5, 1.7, 2.0, 3.0, 5.0,
     ])
 
     blocks = find_blocks(f_best, threshold=1e-10)
