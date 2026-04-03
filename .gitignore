@@ -18,8 +18,5 @@ wheels/
 # Competition results
 results/
 
-# Secret scripts (symlinks to MB — gitignored)
-scripts/secret/
-
 # Workbench symlink
 .mb
