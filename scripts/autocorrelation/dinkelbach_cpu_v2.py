@@ -27,7 +27,7 @@ from scipy.optimize import minimize
 from scipy.signal import fftconvolve
 
 from einstein.autocorrelation import evaluate
-from einstein.autocorrelation_fast import diagnose, fast_evaluate, score_from_conv
+from einstein.autocorrelation.fast import diagnose, fast_evaluate, score_from_conv
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)

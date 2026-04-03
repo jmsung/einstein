@@ -32,10 +32,10 @@ the distribution of primes.
 
 ## Infrastructure
 
-- `src/einstein/prime.py` -- arena-matching evaluator with MC constraint validation
-- `scripts/optimize_prime.py` -- cutting-plane LP optimizer
-- `scripts/modal_prime_lp.py` -- cloud LP solver on Modal
-- `tests/test_prime.py` -- evaluator tests and arena cross-validation
+- `src/einstein/prime/evaluator.py` -- arena-matching evaluator with MC constraint validation
+- `scripts/prime/optimize_prime.py` -- cutting-plane LP optimizer
+- `scripts/prime/modal_prime_lp.py` -- cloud LP solver on Modal
+- `tests/prime/test_prime.py` -- evaluator tests and arena cross-validation
 
 ## References
 

@@ -8,7 +8,7 @@ import time
 import numpy as np
 import pytest
 from einstein.autocorrelation import evaluate as arena_evaluate
-from einstein.autocorrelation_fast import diagnose, fast_evaluate
+from einstein.autocorrelation.fast import diagnose, fast_evaluate
 
 
 # ---------------------------------------------------------------------------

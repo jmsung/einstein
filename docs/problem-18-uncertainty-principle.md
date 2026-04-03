@@ -26,9 +26,9 @@ Given a set of "double roots" z₁, ..., zₖ (positive reals ≤ 300), construc
 
 ## Infrastructure
 
-- `src/einstein/verifier.py` — exact symbolic verifier (sympy)
-- `src/einstein/fast_eval.py` — fast numerical evaluator (mpmath + numpy)
-- `scripts/optimize_loop.py` — adaptive optimization loop
+- `src/einstein/uncertainty/verifier.py` — exact symbolic verifier (sympy)
+- `src/einstein/uncertainty/fast.py` — fast numerical evaluator (mpmath + numpy)
+- `scripts/uncertainty/optimize_loop.py` — adaptive optimization loop
 
 ## References
 
@@ -36,4 +36,4 @@ Given a set of "double roots" z₁, ..., zₖ (positive reals ≤ 300), construc
 - Laguerre polynomial combination with α = -1/2
 - Solution format: `{"laguerre_double_roots": [z1, z2, ..., zk]}`
 
-*Last updated: 2026-03-31*
+*Last updated: 2026-04-03*

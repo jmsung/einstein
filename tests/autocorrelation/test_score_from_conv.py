@@ -8,7 +8,7 @@ import pytest
 from scipy.signal import fftconvolve
 
 from einstein.autocorrelation import evaluate as arena_evaluate
-from einstein.autocorrelation_fast import fast_evaluate, score_from_conv
+from einstein.autocorrelation.fast import fast_evaluate, score_from_conv
 
 
 class TestScoreFromConv:

@@ -9,7 +9,7 @@ import time
 
 import numpy as np
 import pytest
-from einstein.erdos import _normalize_sum_constraint, compute_upper_bound, evaluate
+from einstein.erdos.evaluator import _normalize_sum_constraint, compute_upper_bound, evaluate
 
 
 # ---------------------------------------------------------------------------

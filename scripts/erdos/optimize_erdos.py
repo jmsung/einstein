@@ -26,7 +26,7 @@ import numpy as np
 import torch
 
 from einstein.erdos import evaluate as exact_evaluate
-from einstein.erdos_fast import fast_evaluate
+from einstein.erdos.fast import fast_evaluate
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)

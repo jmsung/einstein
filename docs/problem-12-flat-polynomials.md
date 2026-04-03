@@ -43,9 +43,9 @@ Balister et al. (2019) proved that flat Littlewood polynomials exist for all deg
 
 ## Infrastructure
 
-- `src/einstein/flat_poly.py` — evaluator, 7 constructions (Turyn, Fekete, RS, CRT, Kloosterman, Sidelnikov, period-3), SA/GA/Tabu/MTS optimizers
-- `tests/test_flat_poly.py` — 70 tests (constraints, scoring, math properties, constructions, optimizers)
-- `scripts/optimize_flat_poly.py` — MTS campaign with multi-resolution evaluation
-- `scripts/modal_flat_poly.py` — GPU-accelerated parallel tabu search (Modal A100)
+- `src/einstein/flat_poly/evaluator.py` — evaluator, 7 constructions (Turyn, Fekete, RS, CRT, Kloosterman, Sidelnikov, period-3), SA/GA/Tabu/MTS optimizers
+- `tests/flat_poly/test_flat_poly.py` — 70 tests (constraints, scoring, math properties, constructions, optimizers)
+- `scripts/flat_poly/optimize_flat_poly.py` — MTS campaign with multi-resolution evaluation
+- `scripts/flat_poly/modal_flat_poly.py` — GPU-accelerated parallel tabu search (Modal A100)
 
-*Last updated: 2026-04-02*
+*Last updated: 2026-04-03*
