@@ -236,9 +236,6 @@ def _incremental_loss(vecs: np.ndarray, idx: int, old_total: float, old_vec: np.
 
     Only recalculates pairs involving idx (O(n) instead of O(n²)).
     """
-    # Remove old contributions
-    old_cos = old_vec @ np.delete(vecs, idx, axis=0).T
-    # Wait, vecs[idx] is already updated. Need old_vec paired with all others.
     others = np.concatenate([vecs[:idx], vecs[idx+1:]], axis=0)
 
     old_cos_vals = np.clip(old_vec @ others.T, -1.0, 1.0)

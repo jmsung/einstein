@@ -133,13 +133,14 @@ def main():
     best_vecs = vecs.copy()
     best_score = initial_score
 
-    # Heavy 1e-12 runs then 1e-13
+    # Progressive fine-scale optimization
+    scales = [1e-12, 1e-13, 1e-14]
+    iters_per_round = 5_000_000
+    n_rounds = 5
+    rng = np.random.default_rng(42)
     configs = [
-        (1e-12, 5_000_000, 3001),
-        (1e-13, 5_000_000, 4001),
-        (1e-12, 5_000_000, 5001),
-        (1e-13, 5_000_000, 6001),
-        (1e-14, 5_000_000, 7001),
+        (scales[i % len(scales)], iters_per_round, int(rng.integers(10000)))
+        for i in range(n_rounds)
     ]
 
     for i, (scale, iters, seed) in enumerate(configs):
@@ -160,7 +161,7 @@ def main():
     print(f"Final:   {final:.14f}")
     print(f"Start:   {initial_score:.14f}")
     print(f"Delta:   {initial_score - final:.2e}")
-    print(f"vs SOTA: {0.15613316241364 - final:.2e}")
+    print(f"Delta from start: {initial_score - final:.2e}")
     print(f"{'=' * 70}")
 
 

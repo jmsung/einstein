@@ -145,16 +145,14 @@ def main():
     best_vecs = vecs.copy()
     best_score = initial_score
 
-    # Strategy: alternate targeted perturbation at 1e-10 and 1e-11
-    # with different seeds, for many rounds
+    # Alternate scales with different seeds
+    scales = [1e-10, 1e-11, 1e-12]
+    iters_per_round = 2_000_000
+    n_rounds = 7
+    rng = np.random.default_rng(42)
     configs = [
-        (1e-10, 2_000_000, 42),
-        (1e-11, 2_000_000, 137),
-        (1e-10, 2_000_000, 256),
-        (1e-11, 2_000_000, 512),
-        (1e-10, 2_000_000, 789),
-        (1e-11, 2_000_000, 1024),
-        (1e-12, 2_000_000, 2048),
+        (scales[i % len(scales)], iters_per_round, int(rng.integers(10000)))
+        for i in range(n_rounds)
     ]
 
     for i, (scale, iters, seed) in enumerate(configs):

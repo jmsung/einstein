@@ -66,8 +66,6 @@ def main():
     vectors, local_score = load_solution()
     print(f"Solution: {len(vectors)} vectors x {len(vectors[0])} dims")
     print(f"Local score: {local_score:.15f}")
-    print(f"SOTA #1:     0.156133162413640")
-    print(f"Improvement: {0.156133162413640 - local_score:.2e}")
     print()
 
     result = submit(vectors, dry_run=dry_run)

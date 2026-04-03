@@ -123,11 +123,13 @@ def main():
     print(f"Start: {initial:.15f}")
     best_vecs, best_score = vecs.copy(), initial
 
+    scales = [1e-13, 1e-14]
+    iters_per_round = 10_000_000
+    n_rounds = 4
+    rng = np.random.default_rng(42)
     configs = [
-        (1e-13, 10_000_000, 9001),
-        (1e-14, 10_000_000, 9002),
-        (1e-13, 10_000_000, 9003),
-        (1e-14, 10_000_000, 9004),
+        (scales[i % len(scales)], iters_per_round, int(rng.integers(10000)))
+        for i in range(n_rounds)
     ]
 
     for i, (scale, iters, seed) in enumerate(configs):
@@ -144,7 +146,7 @@ def main():
     print(f"\n{'='*70}")
     print(f"Final:   {final:.15f}")
     print(f"Start:   {initial:.15f}")
-    print(f"vs SOTA: {0.15613316241364 - final:.2e}")
+    print(f"Delta from start: {initial - final:.2e}")
     print(f"{'='*70}")
 
 
