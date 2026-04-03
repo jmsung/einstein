@@ -5,8 +5,6 @@ solutions. Covers: geometry helpers, overlap detection (SAT), containment,
 input validation, and cross-validation against known arena solutions.
 """
 
-import math
-
 import numpy as np
 import pytest
 from einstein.hexagon import (
