@@ -152,7 +152,5 @@ def main():
                 json.dump(sol, f)
             print(f"  Saved to results/problem-7-prime/modal_N{N}.json")
 
-        if result["mc_score"] > 0.99424:
-            print(f"  *** RANK 3+ ***")
-        if result["mc_score"] > 0.99426:
-            print(f"  *** RANK 1 ***")
+        if result["mc_score"] > 0:
+            print(f"  Solution validated (MC passed)")

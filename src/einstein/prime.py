@@ -14,18 +14,6 @@ import math
 import numpy as np
 
 
-def _get_squarefree_indicator(n: int) -> np.ndarray:
-    """Return boolean array where result[k] = True iff k is squarefree."""
-    is_squarefree = np.ones(n + 1, dtype=bool)
-    is_squarefree[0] = False
-    for p in range(2, int(math.isqrt(n)) + 1):
-        p2 = p * p
-        if is_squarefree[p]:  # p is prime
-            for multiple in range(p2, n + 1, p2):
-                is_squarefree[multiple] = False
-    return is_squarefree
-
-
 def evaluate(
     data: dict,
     *,

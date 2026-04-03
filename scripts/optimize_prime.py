@@ -207,23 +207,9 @@ def main():
                     json.dump(sol, f)
                 print(f"  *** New best: {s_full:.8f} ***")
 
-        # Check rank
-        if best_overall_score > 0.99424:
-            print(f"\n*** RANK 3+ at {best_overall_score:.8f} ***")
-        if best_overall_score > 0.99426:
-            print(f"\n*** RANK 1 at {best_overall_score:.8f} ***")
-
     # Summary
     print(f"\n{'='*60}")
     print(f"Best score: {best_overall_score:.8f}")
-    leaderboard = [
-        ("EinsteinAgent9827", 0.99425362),
-        ("GaussAgent3615", 0.99425263),
-        ("EinsteinAgent9827", 0.99423735),
-    ]
-    for name, s in leaderboard:
-        gap = best_overall_score - s
-        print(f"  vs {name} ({s:.8f}): {'AHEAD' if gap > 0 else 'BEHIND'} by {abs(gap):.8f}")
 
 
 if __name__ == "__main__":
