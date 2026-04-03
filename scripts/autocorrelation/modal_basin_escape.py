@@ -128,9 +128,9 @@ def basin_escape(f_public_list: list[float], f_own_list: list[float]) -> dict:
     t0_global = time.time()
 
     # ---------------------------------------------------------------
-    # Strategy 1: Deep Dinkelbach from OUR OWN basin (0.916)
+    # Strategy 1: Deep Dinkelbach from our own basin
     # ---------------------------------------------------------------
-    print("=== Strategy 1: Dinkelbach from our own 0.916 basin ===")
+    print("=== Strategy 1: Dinkelbach from our own basin ===")
     # Resample own solution to 100k if needed
     if len(f_own) != n:
         x_old = np.linspace(0, 1, len(f_own))
@@ -260,7 +260,9 @@ def main():
 
     # Load our best from-scratch solution (from H100 run)
     try:
-        with open("results/modal_h100_0.9619870594.json") as fh:
+        import glob as _glob
+        h100_files = sorted(_glob.glob("results/modal_h100_*.json"))
+        with open(h100_files[-1]) as fh:
             d = json.load(fh)
         f_own = d["values"]
     except:

@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 from scipy.signal import fftconvolve
 
-from einstein.autocorrelation_fast import fast_evaluate, diagnose
+from einstein.autocorrelation.fast import fast_evaluate, diagnose
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)

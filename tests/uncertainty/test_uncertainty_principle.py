@@ -6,8 +6,8 @@ Validates both the exact symbolic verifier and the fast numerical evaluator.
 import numpy as np
 import pytest
 
-from einstein.verifier import evaluate as exact_evaluate
-from einstein.fast_eval import fast_evaluate
+from einstein.uncertainty.verifier import evaluate as exact_evaluate
+from einstein.uncertainty.fast import fast_evaluate
 
 
 # Reference k=13 roots for testing
