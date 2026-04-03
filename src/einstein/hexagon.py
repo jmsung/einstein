@@ -64,7 +64,7 @@ def polygons_overlap(verts_a: np.ndarray, verts_b: np.ndarray) -> bool:
 
 
 def polygon_contained(
-    inner: np.ndarray, outer: np.ndarray, tol: float = 1e-9
+    inner: np.ndarray, outer: np.ndarray, tol: float = 0.0
 ) -> bool:
     """Check if inner polygon is fully contained within outer convex polygon.
 
