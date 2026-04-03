@@ -18,9 +18,6 @@ wheels/
 # Competition results
 results/
 
-# Private strategy (gitignored — references MB docs)
-docs/strategy.md
-
 # Secret scripts (symlinks to MB — gitignored)
 scripts/secret/
 

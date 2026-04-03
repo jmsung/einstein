@@ -27,8 +27,8 @@ import cma
 from collections import defaultdict
 from scipy.optimize import minimize, basinhopping
 from pathlib import Path
-from einstein.fast_eval import fast_evaluate
-from einstein.verifier import evaluate as exact_evaluate
+from einstein.uncertainty.fast import fast_evaluate
+from einstein.uncertainty.verifier import evaluate as exact_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)

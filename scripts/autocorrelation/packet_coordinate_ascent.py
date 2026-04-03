@@ -294,7 +294,7 @@ def try_arena_specific_multipliers(
 def verify_score(f: np.ndarray) -> float:
     """Verify using the full Simpson's rule formula (arena-compatible)."""
     sys.path.insert(0, str(ROOT / "src"))
-    from einstein.autocorrelation_fast import fast_evaluate
+    from einstein.autocorrelation.fast import fast_evaluate
     return fast_evaluate(f)
 
 

@@ -10,8 +10,8 @@ Covers:
 
 import pytest
 import numpy as np
-from einstein.fast_eval import fast_evaluate
-from einstein.verifier import evaluate
+from einstein.uncertainty.fast import fast_evaluate
+from einstein.uncertainty.verifier import evaluate
 
 # reference's best k=13 roots
 K13_ROOTS = [

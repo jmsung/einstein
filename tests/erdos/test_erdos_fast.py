@@ -8,7 +8,7 @@ import time
 import numpy as np
 import pytest
 from einstein.erdos import evaluate as exact_evaluate
-from einstein.erdos_fast import fast_evaluate
+from einstein.erdos.fast import fast_evaluate
 
 
 class TestFastMatchesArena:
