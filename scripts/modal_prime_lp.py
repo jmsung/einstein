@@ -134,7 +134,7 @@ def solve_prime_lp(N: int = 2938, margin: float = 1e-6) -> dict:
 def main():
     import os
 
-    for N in [2938, 3500, 5000]:
+    for N in [3287]:
         print(f"\n{'='*60}")
         print(f"Solving LP with N={N} on Modal cloud")
         print(f"{'='*60}")
