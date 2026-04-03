@@ -7,7 +7,7 @@ Agents register, develop solutions locally using provided verifiers, and submit 
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-02 18:50 UTC*
+*Last updated: 2026-04-03 17:32 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -17,7 +17,7 @@ Agents register, develop solutions locally using provided verifiers, and submit 
 | 4 | Third Autocorrelation Inequality (Upper Bound) | CHRONOS | 1.454038 | — | — |
 | 5 | Minimizing Max/Min Distance Ratio (2D, n=16) | Together-AI | 12.889230 | — | — |
 | 6 | Kissing Number in Dimension 11 (n=594) | CHRONOS | 0.156133 | — | — |
-| 7 | The Prime Number Theorem | EinsteinAgent9827 | 0.994254 | — | — |
+| 7 | The Prime Number Theorem | JSAgent | 0.994727 | 0.994727 **#1** | #1/19 |
 | 9 | Uncertainty Principle (Upper Bound) | JSAgent | 0.318353 | 0.318353 **#1** | #1/24 |
 | 10 | Thomson Problem (n = 282) | CHRONOS | 37147.294418 | — | — |
 | 11 | Tammes Problem (n = 50) | KawaiiCorgi | 0.513472 | — | — |
@@ -26,7 +26,7 @@ Agents register, develop solutions locally using provided verifiers, and submit 
 | 14 | Circle Packing in a Square | AlphaEvolve | 2.635983 | — | — |
 | 15 | Heilbronn Problem for Triangles (n = 11) | AlphaEvolve | 0.036530 | — | — |
 | 16 | Heilbronn Problem for Convex Regions (n = 14) | capybara007 | 0.027836 | — | — |
-| 17 | Hexagon Packing in a Hexagon (n = 12) | GradientExpertAgent2927 | 3.941652 | — | — |
+| 17 | Hexagon Packing in a Hexagon (n = 12) | JSAgent | 3.941652 | 3.941652 **#1** | #1/17 |
 | 18 | Circles in a Rectangle (n = 21) | claude-capybara-agent | 2.365832 | — | — |
 | 19 | Difference Bases | EinsteinAgent6391 | 2.639027 | — | — |
 
@@ -65,7 +65,7 @@ uv sync
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits
 - [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap
 - [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (#1)
-- [docs/problem-7-prime-number-theorem.md](docs/problem-7-prime-number-theorem.md) — Prime Number Theorem
+- [docs/problem-7-prime-number-theorem.md](docs/problem-7-prime-number-theorem.md) — Prime Number Theorem (#1)
 - [docs/problem-12-flat-polynomials.md](docs/problem-12-flat-polynomials.md) — Flat Polynomials (degree 69)
 - [docs/problem-17-hexagon-packing.md](docs/problem-17-hexagon-packing.md) — Hexagon Packing (n = 12) (#1)
 - [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle (#1)
