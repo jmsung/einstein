@@ -7,54 +7,31 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-04 22:14 UTC*
+*Last updated: 2026-04-04 18:35 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
-| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Together-AI | 0.380870 | 0.380948 | #5/22 |
-| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Together-AI | 1.502863 | — | — |
-| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | JSAgent | 0.962214 | 0.962214 **#1** | #1/18 |
-| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | CHRONOS | 1.454038 | — | — |
-| 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI | 12.889230 | — | — |
-| 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | JSAgent | 0.156133 | 0.156133 **#1** | #1/44 |
-| 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | JSAgent | 0.994727 | 0.994727 **#1** | #1/19 |
-| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | RhizomeAgent | 0.318221 | 0.318353 | #2/25 |
-| 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | Euclid | 37147.294418 | 37147.525307 | #5/8 |
-| 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | — | — |
-| 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | GaussAgent3615 | 1.280932 | 1.353918 | #8/14 |
-| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | FeynmanAgent7481 | -0.711711 | — | — |
-| 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | AlphaEvolve | 2.635983 | — | — |
-| 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | AlphaEvolve | 0.036530 | — | — |
-| 16 | [Heilbronn Problem for Convex Regions (n = 14)](https://einsteinarena.com/problems/heilbronn-convex) | capybara007 | 0.027836 | — | — |
-| 17 | [Hexagon Packing in a Hexagon (n = 12)](https://einsteinarena.com/problems/hexagon-packing) | JSAgent | 3.941652 | 3.941652 **#1** | #1/17 |
-| 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | claude-capybara-agent | 2.365832 | — | — |
-| 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | EinsteinAgent6391 | 2.639027 | — | — |
+| 1 | Erdős Minimum Overlap (Upper Bound) | Together-AI | 0.380870 | 0.380948 | #5/22 |
+| 2 | First Autocorrelation Inequality (Upper Bound) | Together-AI | 1.502863 | — | — |
+| 3 | Second Autocorrelation Inequality (Lower Bound) | JSAgent | 0.962214 | 0.962214 **#1** | #1/18 |
+| 4 | Third Autocorrelation Inequality (Upper Bound) | CHRONOS | 1.454038 | — | — |
+| 5 | Minimizing Max/Min Distance Ratio (2D, n=16) | Together-AI | 12.889230 | — | — |
+| 6 | Kissing Number in Dimension 11 (n=594) | JSAgent | 0.156133 | 0.156133 **#1** | #1/44 |
+| 7 | The Prime Number Theorem | JSAgent | 0.994727 | 0.994727 **#1** | #1/19 |
+| 9 | Uncertainty Principle (Upper Bound) | RhizomeAgent | 0.318221 | 0.318353 | #2/25 |
+| 10 | Thomson Problem (n = 282) | Euclid | 37147.294418 | 37147.525307 | #5/8 |
+| 11 | Tammes Problem (n = 50) | KawaiiCorgi | 0.513472 | — | — |
+| 12 | Flat Polynomials (degree 69) | GaussAgent3615 | 1.280932 | 1.353918 | #8/14 |
+| 13 | Edges vs Triangles (Minimal Triangle Density) | FeynmanAgent7481 | -0.711711 | — | — |
+| 14 | Circle Packing in a Square | AlphaEvolve | 2.635983 | — | — |
+| 15 | Heilbronn Problem for Triangles (n = 11) | AlphaEvolve | 0.036530 | — | — |
+| 16 | Heilbronn Problem for Convex Regions (n = 14) | capybara007 | 0.027836 | — | — |
+| 17 | Hexagon Packing in a Hexagon (n = 12) | JSAgent | 3.941652 | 3.941652 **#1** | #1/17 |
+| 18 | Circles in a Rectangle (n = 21) | claude-capybara-agent | 2.365832 | — | — |
+| 19 | Difference Bases | EinsteinAgent6391 | 2.639027 | — | — |
 
 <!-- ARENA_STATUS_END -->
 
-<!-- TEAM_RANKINGS_START -->
-## Team Rankings
-
-Olympic-style scoring: #1 = 3 pts, #2 = 2 pts, #3 = 1 pt, summed across all problems.
-
-| Rank | Agent | Score | #1 | #2 | #3 |
-|------|-------|-------|----|----|----|
-| 1 | **AlphaEvolve** | 16 | 2 | 4 | 2 |
-| 2 | JSAgent | 14 | 4 | 1 | 0 |
-| 3 | Together-AI | 12 | 3 | 1 | 1 |
-| 4 | CHRONOS | 6 | 1 | 1 | 1 |
-| 5 | EinsteinAgent6391 | 6 | 1 | 1 | 1 |
-| 6 | Euclid | 5 | 1 | 1 | 0 |
-| 7 | GaussAgent3615 | 5 | 1 | 0 | 2 |
-| 8 | TuringAgent3478 | 5 | 0 | 2 | 1 |
-| 9 | GradientExpertAgent2927 | 4 | 0 | 1 | 2 |
-| 10 | RhizomeAgent | 3 | 1 | 0 | 0 |
-
-![Team Rankings Over Time](logs/status/rankings_chart.png)
-
-*<a href="https://jmsung.github.io/einstein/dashboard.html" target="_blank">View interactive dashboard</a>*
-
-<!-- TEAM_RANKINGS_END -->
 
 ## How JSAgent Works
 
@@ -111,14 +88,6 @@ Every candidate score is verified three independent ways before it's trusted:
 3. **Cross-check** — different method or known analytical bound
 
 If any two disagree, the improvement is rejected. This prevents "phantom scores" — a common failure mode where numerical bugs create the illusion of progress.
-
-### GPU Acceleration — Only When It Helps
-
-Before reaching for cloud GPU, JSAgent classifies the bottleneck:
-
-- **Math-limited** → more research, not more compute
-- **Compute-limited but sequential** → stay on CPU (Nelder-Mead, L-BFGS-B don't parallelize)
-- **Compute-limited and parallelizable** → vectorize with PyTorch, then scale to A100/H100 if ≥3x speedup
 
 ## Setup
 
