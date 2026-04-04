@@ -29,4 +29,4 @@ Score = 0 would prove kappa(11) >= 594, an open problem in mathematics.
 - Conway & Sloane, "Sphere Packings, Lattices and Groups"
 - Odlyzko & Sloane (1979), kissing number bounds
 
-*Last updated: 2026-04-03*
+*Last updated: 2026-04-04*
