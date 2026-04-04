@@ -1,8 +1,8 @@
 # Einstein
 
-AI agent solutions for [Einstein Arena](https://einsteinarena.com/) — a competitive platform where AI agents tackle unsolved math and science optimization problems.
+**JSAgent** — an AI agent that solves hard math and science optimization problems on [Einstein Arena](https://einsteinarena.com/).
 
-Agents register, develop solutions locally using provided verifiers, and submit via REST API. See [docs/arena.md](docs/arena.md) for platform details.
+Einstein Arena is a competitive platform where AI agents tackle unsolved optimization problems spanning number theory, combinatorics, geometry, and analysis. Agents develop solutions locally using provided verifiers and submit via REST API. See [docs/arena.md](docs/arena.md) for platform details.
 
 <!-- ARENA_STATUS_START -->
 ## Arena Status
@@ -33,24 +33,69 @@ Agents register, develop solutions locally using provided verifiers, and submit 
 <!-- ARENA_STATUS_END -->
 
 
-## Methodology: Mathematician Council
+## How JSAgent Works
 
-For hard optimization problems, we deploy a **council of 10 mathematician agents** — each embodying a different mathematical perspective — to research approaches in parallel, then synthesize their findings into a ranked plan of attack.
+JSAgent combines **deep mathematical research** with an **adaptive optimization loop** that learns what works across problems. Three core ideas make it effective on hard unsolved problems:
+
+### 1. Mathematician Council — Multi-Perspective Research
+
+Before writing any optimizer, JSAgent deploys a **council of 10 mathematician agents** — each embodying a different mathematical school of thought — to research the problem in parallel.
 
 | Agent | Perspective | Example Contribution |
 |-------|-------------|---------------------|
 | **Gauss** | Number theory, algebraic constructions | CRT tensor products, Kloosterman sums |
 | **Riemann** | Complex analysis, spectral theory | Equioscillation analysis, Remez exchange |
 | **Tao** | Harmonic analysis, additive combinatorics | Difference sets, uncertainty principle bounds |
-| **Ramanujan** | Pattern recognition, modular forms | Hidden structure in SOTA solutions, polyphase decomposition |
-| **Euler** | Combinatorial enumeration | Constrained search space estimates, branch-and-bound |
+| **Ramanujan** | Pattern recognition, modular forms | Hidden structure in SOTA solutions |
+| **Euler** | Combinatorial enumeration | Search space estimates, branch-and-bound |
 | **Poincaré** | Topology, dynamical systems | Basin structure, variable neighborhood search |
 | **Erdős** | Probabilistic method | Existence bounds, derandomized rounding |
 | **Noether** | Abstract algebra, symmetry | Group orbits, cyclotomic decomposition |
-| **von Neumann** | Computation, game theory | Memetic tabu search, time-budget optimization |
+| **von Neumann** | Computation, game theory | Memetic search, time-budget optimization |
 | **Kolmogorov** | Information theory, complexity | Spectral entropy, compressibility analysis |
 
-The agents research independently, then a synthesis step groups ideas, identifies novel approaches, and ranks by likely impact. This surfaces creative angles that a single-perspective optimizer would miss — e.g., Ramanujan discovered a period-3 pattern in the SOTA solution that no other agent noticed.
+Each agent researches independently — scanning literature, analyzing SOTA solutions, and proposing approaches. A synthesis step then groups ideas, identifies novel angles, and ranks by likely impact. This surfaces creative strategies that a single-perspective optimizer would miss.
+
+### 2. Adaptive Optimizer — Learn What Works
+
+The core optimizer is **problem-agnostic**: one loop handles continuous, discrete, manifold-constrained, and ratio objectives alike.
+
+```
+┌─────────────────────────────────────────┐
+│           Adaptive Optimizer            │
+│                                         │
+│  1. Load best solution                  │
+│  2. Select strategies (knowledge-based) │
+│  3. Run each strategy → candidates      │
+│  4. Verify with exact evaluator         │
+│  5. Update history & strategy weights   │
+│  6. Loop                                │
+└─────────────────────────────────────────┘
+```
+
+**Strategy selection adapts each iteration**: strategies that recently improved the score get boosted; stale ones get deprioritized. The optimizer ships with general-purpose strategies (hill climbing, Nelder-Mead, L-BFGS-B, perturbation) and accepts **problem-specific strategies as plugins** — Riemannian gradient descent for sphere problems, Dinkelbach for fractional programs, memetic tabu search for combinatorial landscapes, and more.
+
+### 3. Knowledge Layer — Transfer Across Problems
+
+A structured knowledge base tracks **which strategies work for which problem categories**. When JSAgent encounters a new problem, it loads priors from similar solved problems — so a new Fourier analysis problem immediately benefits from lessons learned on earlier ones. This cross-problem transfer means JSAgent gets stronger with every problem it solves.
+
+### Quality Gates — Triple Verification
+
+Every candidate score is verified three independent ways before it's trusted:
+
+1. **Fast evaluator** — for optimization loop speed
+2. **Exact reimplementation** — catches numerical drift and edge cases
+3. **Cross-check** — different method or known analytical bound
+
+If any two disagree, the improvement is rejected. This prevents "phantom scores" — a common failure mode where numerical bugs create the illusion of progress.
+
+### GPU Acceleration — Only When It Helps
+
+Before reaching for cloud GPU, JSAgent classifies the bottleneck:
+
+- **Math-limited** → more research, not more compute
+- **Compute-limited but sequential** → stay on CPU (Nelder-Mead, L-BFGS-B don't parallelize)
+- **Compute-limited and parallelizable** → vectorize with PyTorch, then scale to A100/H100 if ≥3x speedup
 
 ## Setup
 
@@ -76,4 +121,4 @@ uv sync
 
 MIT
 
-*Last updated: 2026-04-03*
+*Last updated: 2026-04-04*
