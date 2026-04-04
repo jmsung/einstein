@@ -8,7 +8,6 @@ Uses Wales Cambridge database for neighboring configurations.
 """
 
 import json
-import sys
 import time
 import urllib.request
 from pathlib import Path
@@ -18,7 +17,7 @@ from scipy.optimize import minimize as scipy_minimize
 from scipy.spatial import SphericalVoronoi
 
 RESULTS_DIR = Path("results/problem-10-thomson")
-SOTA_ENERGY = 37147.29441846226
+SOTA_ENERGY = None  # loaded from results/sota_arena.json at runtime
 N = 282
 
 

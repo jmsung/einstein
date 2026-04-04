@@ -17,7 +17,6 @@ Total: 20*12 + 30*1 + 12 = 282.
 """
 
 import json
-import sys
 import time
 from pathlib import Path
 
@@ -26,9 +25,6 @@ from scipy.optimize import minimize as scipy_minimize
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 RESULTS_DIR = PROJECT_ROOT / "results" / "problem-10-thomson"
-
-sys.path.insert(0, str(PROJECT_ROOT))
-from src.einstein.thomson.evaluator import coulomb_energy_fast
 
 N = 282
 H, K = 4, 2
@@ -298,7 +294,13 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
 # ---------------------------------------------------------------------------
 
 def main():
-    SOTA = 37147.29441846226
+    # Load SOTA from data file
+    sota_path = RESULTS_DIR / "sota_arena.json"
+    if sota_path.exists():
+        with open(sota_path) as f:
+            SOTA = json.load(f)["score"]
+    else:
+        SOTA = float("inf")
     print("=" * 70)
     print("Icosadeltahedral Seed Generator for Thomson Problem n=282")
     print(f"(h,k) = ({H},{K}), T = {T}, n = 10*{T}+2 = {10*T+2}")

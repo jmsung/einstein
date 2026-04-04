@@ -19,7 +19,7 @@ from scipy.optimize import minimize
 # Constants
 # ---------------------------------------------------------------------------
 N = 282
-SOTA_ENERGY = 37147.29441846226
+SOTA_ENERGY = None  # loaded from results/sota_arena.json at runtime
 SAVE_THRESHOLD = 37148.0
 RESULTS_DIR = Path(__file__).resolve().parents[2] / "results" / "problem-10-thomson"
 TIME_LIMIT_DEFAULT = 5  # minutes

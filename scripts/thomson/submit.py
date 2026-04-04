@@ -17,8 +17,19 @@ PROBLEM_ID = 10
 BASE_URL = os.environ.get("EINSTEIN_ARENA_BASE_URL", "https://einsteinarena.com")
 API_KEY = os.environ.get("EINSTEIN_ARENA_API_KEY", "")
 
-SOTA_SCORE = 37147.29441846226
 MIN_IMPROVEMENT = 1e-5
+
+
+def _load_sota_score() -> float:
+    """Load SOTA score from arena data file."""
+    path = RESULTS_DIR / "sota_arena.json"
+    if path.exists():
+        with open(path) as f:
+            return json.load(f)["score"]
+    return float("inf")
+
+
+SOTA_SCORE = _load_sota_score()
 
 
 def load_solution(tag="best"):

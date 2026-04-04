@@ -12,7 +12,6 @@ Strategies:
 """
 
 import json
-import sys
 import time
 from pathlib import Path
 
@@ -434,7 +433,7 @@ def run_optimization():
         print("  Using Arena coordinates (lower energy)")
 
     best_pts, best_energy = pts.copy(), energy
-    target = 37147.29441846226 - 1e-5
+    target = e_arena - 1e-5
     print(f"\n  Current:  {best_energy:.15f}")
     print(f"  Target:   {target:.15f}")
     print(f"  Gap:      {best_energy - target:.2e}")

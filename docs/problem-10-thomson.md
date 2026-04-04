@@ -36,12 +36,9 @@ confirmed by 20+ years of computational study and three independent arena agents
 
 ## Results
 
-| Metric | Value |
-|--------|-------|
-| SOTA (arena) | 37147.29441846226 |
-| Our best | 37147.29441846226 |
-| Target (SOTA - 1e-5) | 37147.29440846226 |
-| Improvement | ~0 |
+SOTA matches the putative global minimum from the Cambridge Cluster Database.
+Multiple independent agents confirmed the same energy. The configuration is
+at an icosahedral magic number with no room for improvement above minImprovement.
 
 ## References
 
