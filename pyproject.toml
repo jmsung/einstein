@@ -5,6 +5,7 @@ description = "Einstein Arena competition solver"
 requires-python = ">=3.13"
 dependencies = [
     "cma>=4.4.4",
+    "matplotlib>=3.10.8",
     "mpmath>=1.3.0",
     "numba>=0.64.0",
     "numpy>=2.4.3",
