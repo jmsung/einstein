@@ -40,12 +40,12 @@ def load_api_key():
 
 def submit_solution(roots, api_key, problem_id=PROBLEM_ID):
     """Submit to arena API. Returns response dict."""
-    url = "https://www.einsteinarena.ai/api/solutions/submit"
+    url = "https://einsteinarena.com/api/solutions"
     payload = {
         "problem_id": problem_id,
         "solution": {"laguerre_double_roots": roots},
     }
-    headers = {"x-api-key": api_key, "Content-Type": "application/json"}
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     resp = requests.post(url, json=payload, headers=headers, timeout=30)
     resp.raise_for_status()
     return resp.json()
