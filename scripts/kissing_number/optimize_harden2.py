@@ -1,10 +1,13 @@
-"""Deep optimizer: fine-scale perturbation.
+"""Extended optimization — deeper perturbation rounds.
+
+Continues from solution_best.json with configurable scales and iterations.
 
 Usage:
-    uv run python scripts/kissing_number/optimize_deep.py
+    PYTHONUNBUFFERED=1 uv run python scripts/kissing_number/optimize_harden2.py
 """
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -13,21 +16,17 @@ import numpy as np
 RESULTS_DIR = Path("results/problem-6-kissing-number")
 N = 594
 D = 11
+BASELINE_SCORE = float(os.environ.get("BASELINE_SCORE", "0"))
 
 
 def load_best():
-    for name in ["solution_best.json", "sota_vectors.json"]:
-        path = RESULTS_DIR / name
-        if path.exists():
-            with open(path) as f:
-                data = json.load(f)
-            vecs = np.array(data["vectors"], dtype=np.float64)
-            norms = np.linalg.norm(vecs, axis=1, keepdims=True)
-            vecs = vecs / norms
-            score = overlap_loss_exact(vecs)
-            print(f"Loaded {name}: {score:.14f}")
-            return vecs, score
-    raise FileNotFoundError
+    path = RESULTS_DIR / "solution_best.json"
+    with open(path) as f:
+        data = json.load(f)
+    vecs = np.array(data["vectors"], dtype=np.float64)
+    norms = np.linalg.norm(vecs, axis=1, keepdims=True)
+    print(f"Loaded {path.name}")
+    return vecs / norms
 
 
 def overlap_loss_exact(unit_vecs):
@@ -49,7 +48,7 @@ def overlap_loss_fast(unit_vecs):
 
 
 def incremental_loss(vecs, idx, old_total, old_vec):
-    others = np.concatenate([vecs[:idx], vecs[idx+1:]], axis=0)
+    others = np.concatenate([vecs[:idx], vecs[idx + 1 :]], axis=0)
     old_cos = np.clip(old_vec @ others.T, -1.0, 1.0)
     old_d = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - old_cos))
     old_p = np.maximum(0.0, 2.0 - old_d)
@@ -72,14 +71,13 @@ def vector_contributions(vecs):
     return c
 
 
-def run_perturbation(vecs, scale, n_iters, seed=42):
+def run_perturbation(vecs, scale, n_iters, seed):
     rng = np.random.default_rng(seed)
     best_vecs = vecs.copy()
     current_loss = overlap_loss_fast(vecs)
     best_loss = current_loss
     improvements = 0
     t0 = time.time()
-
     contribs = vector_contributions(vecs)
     probs = contribs / contribs.sum() if contribs.sum() > 0 else np.ones(N) / N
 
@@ -103,13 +101,13 @@ def run_perturbation(vecs, scale, n_iters, seed=42):
         else:
             vecs[idx] = old_vec
 
-        if (it + 1) % 500_000 == 0:
+        if (it + 1) % 1_000_000 == 0:
             elapsed = time.time() - t0
             rate = improvements / (it + 1) * 100
             exact = overlap_loss_exact(best_vecs)
             print(
-                f"  [{scale:.0e}] {it+1:>9,d} | exact {exact:.14f} | "
-                f"impr {improvements:>5d} ({rate:.3f}%) | {elapsed:.0f}s"
+                f"  [{scale:.0e}] {it+1:>10,d} | exact {exact:.15f} | "
+                f"impr {improvements:>6d} ({rate:.3f}%) | {elapsed:.0f}s"
             )
 
     return best_vecs, best_loss, improvements
@@ -120,49 +118,56 @@ def save_solution(vecs, score, tag="best"):
     data = {"vectors": vecs.tolist(), "score": score, "tag": tag}
     with open(path, "w") as f:
         json.dump(data, f)
-    print(f"  Saved {path} (score={score:.14f})")
+    print(f"  Saved {tag} (score={score:.15f})")
 
 
 def main():
     print("=" * 70)
-    print("Deep Optimizer: Kissing Number")
+    print("HARDEN #1 — BATCH 2: Deeper optimization")
     print("=" * 70)
 
-    vecs, initial_score = load_best()
+    vecs = load_best()
+    initial = overlap_loss_exact(vecs)
+    print(f"Start:   {initial:.15f}")
+    if BASELINE_SCORE > 0:
+        print(f"Baseline: {BASELINE_SCORE:.15f}")
+        print(f"Margin:   {BASELINE_SCORE - initial:.2e}")
+    best_vecs, best_score = vecs.copy(), initial
 
-    best_vecs = vecs.copy()
-    best_score = initial_score
-
-    # Progressive fine-scale optimization
-    scales = [1e-12, 1e-13, 1e-14]
-    iters_per_round = 5_000_000
-    n_rounds = 5
-    rng = np.random.default_rng(42)
+    # Configurable rounds
+    rng = np.random.default_rng(9999)
     configs = [
-        (scales[i % len(scales)], iters_per_round, int(rng.integers(10000)))
-        for i in range(n_rounds)
+        (1e-12, 10_000_000, int(rng.integers(100000))),
+        (1e-13, 10_000_000, int(rng.integers(100000))),
+        (1e-12, 10_000_000, int(rng.integers(100000))),
+        (1e-13, 10_000_000, int(rng.integers(100000))),
+        (1e-14, 10_000_000, int(rng.integers(100000))),
+        (1e-12, 10_000_000, int(rng.integers(100000))),
+        (1e-13, 10_000_000, int(rng.integers(100000))),
+        (1e-14, 10_000_000, int(rng.integers(100000))),
     ]
 
     for i, (scale, iters, seed) in enumerate(configs):
-        print(f"\n--- Round {i+1}/{len(configs)}: scale={scale:.0e}, {iters:,} iters ---")
-        new_vecs, new_loss, n_impr = run_perturbation(
-            best_vecs.copy(), scale=scale, n_iters=iters, seed=seed,
-        )
+        print(f"\n--- Round {i+1}/{len(configs)}: {scale:.0e}, {iters:,}, seed={seed} ---")
+        new_vecs, _, n_impr = run_perturbation(best_vecs.copy(), scale, iters, seed)
         exact = overlap_loss_exact(new_vecs)
-        print(f"  Final exact: {exact:.14f} ({n_impr} improvements)")
-
+        delta = best_score - exact
+        print(f"  Exact: {exact:.15f} (delta={delta:.2e}, {n_impr} improvements)")
         if exact < best_score:
             best_score = exact
             best_vecs = new_vecs.copy()
             save_solution(best_vecs, best_score)
+            margin = BASELINE_SCORE - best_score
+            print(f"  Margin over baseline: {margin:.2e}")
 
     final = overlap_loss_exact(best_vecs)
-    print(f"\n{'=' * 70}")
-    print(f"Final:   {final:.14f}")
-    print(f"Start:   {initial_score:.14f}")
-    print(f"Delta:   {initial_score - final:.2e}")
-    print(f"Delta from start: {initial_score - final:.2e}")
-    print(f"{'=' * 70}")
+    margin = BASELINE_SCORE - final
+    print(f"\n{'='*70}")
+    print(f"Final:   {final:.15f}")
+    print(f"Start:   {initial:.15f}")
+    print(f"Delta:   {initial - final:.2e}")
+    print(f"Margin:  {margin:.2e}")
+    print(f"{'='*70}")
 
 
 if __name__ == "__main__":
