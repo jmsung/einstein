@@ -152,6 +152,62 @@ class TestParallelTemperingSA:
         assert result.total_perturbations == 100 * 4 * 5
 
 
-# Ensure __init__.py exists
+class TestFusedStep:
+    def test_fused_step_runs(self):
+        """Smoke test: fused step runs without error."""
+        from einstein.gpu_tempering.fused_step import fused_sa_step
+
+        R, N, D, K = 4, 20, 5, 3
+        replicas = torch.randn(R, N, D, dtype=torch.float64)
+        replicas = replicas / replicas.norm(dim=2, keepdim=True)
+        losses = torch.tensor([HingeOverlapLoss().full_loss(replicas[r]).item() for r in range(R)],
+                              dtype=torch.float64)
+        temps = torch.tensor([1e-12, 1e-8, 1e-4, 1e-2], dtype=torch.float64)
+        probs = torch.ones(N, dtype=torch.float64) / N
+
+        new_losses, n_acc = fused_sa_step(replicas, losses, temps, probs, 1e-3, K, "hinge")
+
+        assert new_losses.shape == (R,)
+        assert 0 <= n_acc <= R * K
+
+    def test_fused_step_coulomb(self):
+        """Fused step works with Coulomb loss."""
+        from einstein.gpu_tempering.fused_step import fused_sa_step
+
+        R, N, D, K = 4, 20, 3, 5
+        replicas = torch.randn(R, N, D, dtype=torch.float64)
+        replicas = replicas / replicas.norm(dim=2, keepdim=True)
+        losses = torch.tensor([CoulombLoss().full_loss(replicas[r]).item() for r in range(R)],
+                              dtype=torch.float64)
+        temps = torch.tensor([1e-12, 1e-8, 1e-4, 1e-2], dtype=torch.float64)
+        probs = torch.ones(N, dtype=torch.float64) / N
+
+        new_losses, n_acc = fused_sa_step(replicas, losses, temps, probs, 1e-3, K, "coulomb")
+        assert new_losses.shape == (R,)
+
+    def test_fused_custom_loss(self):
+        """Can register and use a custom loss type."""
+        from einstein.gpu_tempering.fused_step import DELTA_FNS, fused_sa_step
+
+        # Register a dummy loss that always returns 0 delta
+        def dummy_delta(old_dots, new_dots, flat_indices, RK, device):
+            return torch.zeros(RK, device=device, dtype=old_dots.dtype)
+
+        DELTA_FNS["dummy"] = dummy_delta
+
+        R, N, D, K = 2, 10, 3, 2
+        replicas = torch.randn(R, N, D, dtype=torch.float64)
+        replicas = replicas / replicas.norm(dim=2, keepdim=True)
+        losses = torch.zeros(R, dtype=torch.float64)
+        temps = torch.tensor([1e-12, 1e-4], dtype=torch.float64)
+        probs = torch.ones(N, dtype=torch.float64) / N
+
+        new_losses, n_acc = fused_sa_step(replicas, losses, temps, probs, 1e-3, K, "dummy")
+        # All deltas are 0, so all should be accepted
+        assert n_acc == R * K
+
+        del DELTA_FNS["dummy"]
+
+
 def test_init():
     pass
