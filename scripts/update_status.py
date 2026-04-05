@@ -267,7 +267,12 @@ def generate_chart(history: list[dict], top_n: int = 5) -> None:
     dates = [datetime.strptime(d, "%Y-%m-%d") for d in date_strs]
     latest = history[-1]["rankings"]
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    bg_color = "#0d1117"
+    text_color = "#c9d1d9"
+    grid_color = "#21262d"
+
+    fig, ax = plt.subplots(figsize=(10, 5), facecolor=bg_color)
+    ax.set_facecolor(bg_color)
 
     date_nums = mdates.date2num(dates)
 
@@ -286,16 +291,20 @@ def generate_chart(history: list[dict], top_n: int = 5) -> None:
             ax.plot(dates, scores, linewidth=2.5, label=label)
         ax.scatter(dates, scores, s=20, zorder=5)
 
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Score (3/2/1 for rank 1/2/3)")
-    ax.set_title("Einstein Arena — Team Rankings Over Time")
-    ax.legend(loc="upper left", fontsize=8)
+    ax.set_xlabel("Date", color=text_color)
+    ax.set_ylabel("Score (3/2/1 for rank 1/2/3)", color=text_color)
+    ax.set_title("Einstein Arena — Team Rankings Over Time", color=text_color)
+    ax.legend(loc="upper left", fontsize=8, facecolor=bg_color, edgecolor=grid_color,
+              labelcolor=text_color)
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
     ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-    ax.grid(True, alpha=0.3)
+    ax.tick_params(colors=text_color)
+    ax.grid(True, alpha=0.3, color=grid_color)
+    for spine in ax.spines.values():
+        spine.set_color(grid_color)
     fig.autofmt_xdate()
     fig.tight_layout()
-    fig.savefig(CHART_PATH, dpi=150)
+    fig.savefig(CHART_PATH, dpi=150, facecolor=bg_color)
     plt.close(fig)
     print(f"Chart saved: {CHART_PATH}")
 
