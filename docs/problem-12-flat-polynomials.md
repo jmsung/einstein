@@ -39,7 +39,7 @@ Balister et al. (2019) proved that flat Littlewood polynomials exist for all deg
 
 - **Rank**: #8 on the arena leaderboard
 - **Score**: 1.3539 (independently discovered via Memetic Tabu Search)
-- **SOTA**: 1.2809 — proven 4-flip local optimum, likely global optimum for n=70
+- **SOTA**: 1.2809 — appears to be at or near the global optimum for n=70
 
 ## Infrastructure
 

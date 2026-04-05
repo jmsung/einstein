@@ -13,21 +13,35 @@ from pathlib import Path
 import yaml
 
 _PROJECT = "einstein"
-KNOWLEDGE_PATH = (
-    Path(os.path.expanduser("~"))
-    / "projects"
-    / "workbench"
-    / "memory-bank"
-    / _PROJECT
-    / "docs"
-    / "knowledge.yaml"
-)
+
+# Resolve knowledge.yaml: prefer .mb symlink in repo root, then env var, then hardcoded MB path.
+_REPO_ROOT = Path(__file__).parent.parent.parent
+_MB_SYMLINK = _REPO_ROOT / ".mb" / "docs" / "knowledge.yaml"
+_ENV_PATH = os.environ.get("EINSTEIN_MB_PATH")
+KNOWLEDGE_PATH: Path | None
+if _MB_SYMLINK.exists():
+    KNOWLEDGE_PATH = _MB_SYMLINK
+elif _ENV_PATH:
+    KNOWLEDGE_PATH = Path(_ENV_PATH)
+else:
+    _fallback = (
+        Path(os.path.expanduser("~"))
+        / "projects"
+        / "workbench"
+        / "memory-bank"
+        / _PROJECT
+        / "docs"
+        / "knowledge.yaml"
+    )
+    KNOWLEDGE_PATH = _fallback if _fallback.exists() else None
 
 
 def load_knowledge() -> dict:
-    """Load the knowledge base from YAML."""
+    """Load the knowledge base from YAML, returning empty dict if unavailable."""
+    if KNOWLEDGE_PATH is None or not KNOWLEDGE_PATH.exists():
+        return {"strategies": {}, "problems": {}, "patterns": []}
     with open(KNOWLEDGE_PATH) as f:
-        return yaml.safe_load(f)
+        return yaml.safe_load(f) or {}
 
 
 def get_strategy_priors(category: str) -> list[tuple[str, float]]:

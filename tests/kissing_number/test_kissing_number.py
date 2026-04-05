@@ -1,6 +1,7 @@
 """Tests for the Kissing Number evaluator (Problem 6)."""
 
 import json
+import pathlib
 
 import numpy as np
 import pytest
@@ -13,6 +14,12 @@ from einstein.kissing_number.evaluator import (
 )
 
 RESULTS_DIR = "results/problem-6-kissing-number"
+
+_SOTA_FILE = (
+    pathlib.Path(__file__).parent.parent.parent
+    / "results" / "problem-6-kissing-number" / "sota_vectors.json"
+)
+_sota_data = json.loads(_SOTA_FILE.read_text()) if _SOTA_FILE.exists() else None
 
 
 # --- Input validation ---
@@ -111,44 +118,45 @@ def test_fast_matches_standard():
 
 # --- SOTA validation ---
 
-
-@pytest.fixture
-def sota_vectors():
-    with open(f"{RESULTS_DIR}/sota_vectors.json") as f:
-        data = json.load(f)
-    return np.array(data["vectors"], dtype=np.float64)
+_SKIP_SOTA = pytest.mark.skipif(
+    _sota_data is None,
+    reason="results/problem-6-kissing-number/sota_vectors.json not found",
+)
 
 
-@pytest.fixture
-def sota_score():
-    with open(f"{RESULTS_DIR}/sota_vectors.json") as f:
-        data = json.load(f)
-    return data["score"]
+@_SKIP_SOTA
+def test_sota_shape():
+    vecs = np.array(_sota_data["vectors"], dtype=np.float64)
+    assert vecs.shape == (594, 11)
 
 
-def test_sota_shape(sota_vectors):
-    assert sota_vectors.shape == (594, 11)
-
-
-def test_sota_reproduces_score(sota_vectors, sota_score):
+@_SKIP_SOTA
+def test_sota_reproduces_score():
     """Our evaluator must match the arena score for the SOTA solution."""
-    our_score = evaluate({"vectors": sota_vectors.tolist()})
+    vecs = np.array(_sota_data["vectors"], dtype=np.float64)
+    score = _sota_data["score"]
+    our_score = evaluate({"vectors": vecs.tolist()})
     # Match to 8 decimal places (arena uses float64)
-    assert abs(our_score - sota_score) < 1e-8, (
-        f"Our score {our_score} != arena score {sota_score}"
+    assert abs(our_score - score) < 1e-8, (
+        f"Our score {our_score} != arena score {score}"
     )
 
 
-def test_sota_fast_matches(sota_vectors, sota_score):
+@_SKIP_SOTA
+def test_sota_fast_matches():
     """Fast evaluator should also match SOTA score."""
-    fast_score = overlap_loss_fast(sota_vectors)
-    assert abs(fast_score - sota_score) < 1e-6, (
-        f"Fast score {fast_score} != arena score {sota_score}"
+    vecs = np.array(_sota_data["vectors"], dtype=np.float64)
+    score = _sota_data["score"]
+    fast_score = overlap_loss_fast(vecs)
+    assert abs(fast_score - score) < 1e-6, (
+        f"Fast score {fast_score} != arena score {score}"
     )
 
 
-def test_determinism(sota_vectors):
+@_SKIP_SOTA
+def test_determinism():
     """Same input must always produce the same score."""
-    s1 = evaluate({"vectors": sota_vectors.tolist()})
-    s2 = evaluate({"vectors": sota_vectors.tolist()})
+    vecs = np.array(_sota_data["vectors"], dtype=np.float64)
+    s1 = evaluate({"vectors": vecs.tolist()})
+    s2 = evaluate({"vectors": vecs.tolist()})
     assert s1 == s2

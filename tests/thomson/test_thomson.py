@@ -5,6 +5,7 @@ Coulomb energy E = sum_{i<j} 1/||p_i - p_j||.
 """
 
 import json
+import pathlib
 
 import numpy as np
 import pytest
@@ -18,6 +19,12 @@ from einstein.thomson.evaluator import (
 RESULTS_DIR = "results/problem-10-thomson"
 N_POINTS = 282
 DIMENSION = 3
+
+_RESULTS_PATH = pathlib.Path(__file__).parent.parent.parent / "results" / "problem-10-thomson"
+_ARENA_FILE = _RESULTS_PATH / "sota_arena.json"
+_WALES_FILE = _RESULTS_PATH / "sota_wales.json"
+_sota_arena = json.loads(_ARENA_FILE.read_text()) if _ARENA_FILE.exists() else None
+_sota_wales = json.loads(_WALES_FILE.read_text()) if _WALES_FILE.exists() else None
 
 
 # --- Input validation ---
@@ -106,52 +113,54 @@ def test_coincident_points_clamped():
 
 # --- SOTA validation ---
 
-
-@pytest.fixture
-def sota_arena():
-    with open(f"{RESULTS_DIR}/sota_arena.json") as f:
-        return json.load(f)
-
-
-@pytest.fixture
-def sota_wales():
-    with open(f"{RESULTS_DIR}/sota_wales.json") as f:
-        return json.load(f)
+_SKIP_ARENA = pytest.mark.skipif(
+    _sota_arena is None,
+    reason="results/problem-10-thomson/sota_arena.json not found",
+)
+_SKIP_WALES = pytest.mark.skipif(
+    _sota_wales is None,
+    reason="results/problem-10-thomson/sota_wales.json not found",
+)
 
 
-def test_sota_arena_shape(sota_arena):
-    vecs = np.array(sota_arena["vectors"])
+@_SKIP_ARENA
+def test_sota_arena_shape():
+    vecs = np.array(_sota_arena["vectors"])
     assert vecs.shape == (282, 3)
 
 
-def test_sota_arena_reproduces_score(sota_arena):
+@_SKIP_ARENA
+def test_sota_arena_reproduces_score():
     """Our evaluator must match the arena score for the SOTA solution."""
-    our_score = evaluate({"vectors": sota_arena["vectors"]})
-    arena_score = sota_arena["score"]
+    our_score = evaluate({"vectors": _sota_arena["vectors"]})
+    arena_score = _sota_arena["score"]
     assert abs(our_score - arena_score) < 1e-6, (
         f"Our score {our_score} != arena score {arena_score}"
     )
 
 
-def test_sota_wales_energy(sota_wales):
+@_SKIP_WALES
+def test_sota_wales_energy():
     """Wales database coordinates should give near-SOTA energy."""
-    our_score = evaluate({"vectors": sota_wales["vectors"]})
+    our_score = evaluate({"vectors": _sota_wales["vectors"]})
     # Wales coordinates may have limited precision, so allow wider tolerance
     assert our_score < 37148.0, f"Wales energy {our_score} too high"
 
 
-def test_fast_matches_sota(sota_arena):
+@_SKIP_ARENA
+def test_fast_matches_sota():
     """Fast evaluator should match SOTA score."""
-    vecs = np.array(sota_arena["vectors"], dtype=np.float64)
+    vecs = np.array(_sota_arena["vectors"], dtype=np.float64)
     fast_score = coulomb_energy_fast(vecs)
-    arena_score = sota_arena["score"]
+    arena_score = _sota_arena["score"]
     assert abs(fast_score - arena_score) < 1e-4, (
         f"Fast score {fast_score} != arena score {arena_score}"
     )
 
 
-def test_determinism(sota_arena):
+@_SKIP_ARENA
+def test_determinism():
     """Same input must always produce the same score."""
-    s1 = evaluate({"vectors": sota_arena["vectors"]})
-    s2 = evaluate({"vectors": sota_arena["vectors"]})
+    s1 = evaluate({"vectors": _sota_arena["vectors"]})
+    s2 = evaluate({"vectors": _sota_arena["vectors"]})
     assert s1 == s2
