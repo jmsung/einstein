@@ -5,6 +5,9 @@ solutions. Covers: geometry helpers, overlap detection (SAT), containment,
 input validation, and cross-validation against known arena solutions.
 """
 
+import json
+import pathlib
+
 import numpy as np
 import pytest
 from einstein.hexagon import (
@@ -13,6 +16,12 @@ from einstein.hexagon import (
     polygon_contained,
     polygons_overlap,
 )
+
+_SOLUTION_FILE = (
+    pathlib.Path(__file__).parent.parent.parent
+    / "results" / "problem-17-hexagon" / "solution.json"
+)
+_solution = json.loads(_SOLUTION_FILE.read_text()) if _SOLUTION_FILE.exists() else None
 
 # ---------------------------------------------------------------------------
 # Geometry helpers
@@ -211,54 +220,18 @@ class TestEvaluateScoring:
         score = evaluate(data)
         assert score > 100  # large penalty
 
+    @pytest.mark.skipif(_solution is None, reason="results/problem-17-hexagon/solution.json not found")
     def test_sota_solution_valid(self):
-        """SOTA solution from arena should return its outer_side_length."""
-        data = {
-            "hexagons": [
-                [-4.1889477721133925, 1.8193659318987065, 27.152383860458485],
-                [-4.176365298250621, 7.064286739333613, 267.15307297468655],
-                [-2.742925127197792, 3.9063064100510863, 27.152295363759663],
-                [-6.19452803077041, 4.243911804858563, 87.15309565612368],
-                [-2.4736456713958086, 6.430973974132181, 27.15401730858583],
-                [-3.8734691291241257, 5.273045963044315, 207.15243890310342],
-                [-1.0402159579350443, 3.2730031821868337, 147.15377782773592],
-                [-1.3431091093200929, 5.064242326800299, 27.153739808315176],
-                [-5.891640010974447, 2.452676281499172, 207.15225576459596],
-                [-4.491828745108932, 3.6105962682946204, 327.1524783972399],
-                [-2.440041856362029, 2.115076005121041, 147.15240126221158],
-                [-5.576170365728103, 5.90635785785185, 207.15301813652604],
-            ],
-            "outer_center": [-3.702741154677494, 4.263318785977133],
-            "outer_angle_deg": 219.59740708327715,
-            "outer_side_length": 3.9416523,
-        }
-        score = evaluate(data)
-        assert score == pytest.approx(3.9416523, abs=1e-6)
+        """Known solution should return its outer_side_length."""
+        score = evaluate(_solution)
+        assert score == pytest.approx(_solution["outer_side_length"], abs=1e-6)
 
 
 class TestEvaluateProperties:
     """Mathematical properties of the scoring function."""
 
+    @pytest.mark.skipif(_solution is None, reason="results/problem-17-hexagon/solution.json not found")
     def test_deterministic(self):
-        data = {
-            "hexagons": [
-                [-4.1889477721133925, 1.8193659318987065, 27.152383860458485],
-                [-4.176365298250621, 7.064286739333613, 267.15307297468655],
-                [-2.742925127197792, 3.9063064100510863, 27.152295363759663],
-                [-6.19452803077041, 4.243911804858563, 87.15309565612368],
-                [-2.4736456713958086, 6.430973974132181, 27.15401730858583],
-                [-3.8734691291241257, 5.273045963044315, 207.15243890310342],
-                [-1.0402159579350443, 3.2730031821868337, 147.15377782773592],
-                [-1.3431091093200929, 5.064242326800299, 27.153739808315176],
-                [-5.891640010974447, 2.452676281499172, 207.15225576459596],
-                [-4.491828745108932, 3.6105962682946204, 327.1524783972399],
-                [-2.440041856362029, 2.115076005121041, 147.15240126221158],
-                [-5.576170365728103, 5.90635785785185, 207.15301813652604],
-            ],
-            "outer_center": [-3.702741154677494, 4.263318785977133],
-            "outer_angle_deg": 219.59740708327715,
-            "outer_side_length": 3.9416523,
-        }
-        s1 = evaluate(data)
-        s2 = evaluate(data)
+        s1 = evaluate(_solution)
+        s2 = evaluate(_solution)
         assert s1 == s2

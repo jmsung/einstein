@@ -8,11 +8,20 @@ Covers:
   - Consistency (fast vs exact verifier agreement)
 """
 
+import json
+import pathlib
+
 import pytest
 import numpy as np
 from einstein.uncertainty.fast import fast_evaluate
 from einstein.uncertainty.verifier import evaluate
 from einstein.uncertainty.hybrid import hybrid_evaluate
+
+_BEST_ROOTS_FILE = (
+    pathlib.Path(__file__).parent.parent.parent
+    / "results" / "problem-9-uncertainty" / "best_roots.json"
+)
+_best_solution = json.loads(_BEST_ROOTS_FILE.read_text()) if _BEST_ROOTS_FILE.exists() else None
 
 # reference's best k=13 roots
 K13_ROOTS = [
@@ -164,34 +173,30 @@ class TestFarSignChangeDetection:
         )
 
 
+@pytest.mark.skipif(_best_solution is None, reason="results/problem-9-uncertainty/best_roots.json not found")
 class TestBestSolution:
-    """Validate our submitted #1 solution."""
-
-    BEST_ROOTS = [
-        3.0886658942606733, 4.435156861236376, 6.034127890108831,
-        30.945538933257353, 36.84167838791129, 42.20424571337132,
-        47.682624801878234, 51.92315504790176, 57.58188043903107,
-        100.7501292924569, 115.43881608340484, 123.02406833559513,
-        140.04812478845042,
-    ]
-    BEST_SCORE = 0.3183526316601804
+    """Validate our submitted #1 solution (loaded from results file)."""
 
     def test_best_score_beats_sota(self):
-        score = fast_evaluate(self.BEST_ROOTS)
+        roots = _best_solution["roots"]
+        score = fast_evaluate(roots)
         assert score < K13_EXPECTED, (
             f"Best solution {score} should beat reference {K13_EXPECTED}"
         )
 
     def test_best_score_accuracy(self):
-        score = fast_evaluate(self.BEST_ROOTS)
-        assert abs(score - self.BEST_SCORE) < 1e-6, (
-            f"Best solution score {score} != expected {self.BEST_SCORE}"
+        roots = _best_solution["roots"]
+        expected = _best_solution["score"]
+        score = fast_evaluate(roots)
+        assert abs(score - expected) < 1e-6, (
+            f"Best solution score {score} != expected {expected}"
         )
 
     @pytest.mark.slow
     def test_best_fast_matches_exact(self):
-        fast_score = fast_evaluate(self.BEST_ROOTS)
-        exact_score = evaluate({"laguerre_double_roots": self.BEST_ROOTS})
+        roots = _best_solution["roots"]
+        fast_score = fast_evaluate(roots)
+        exact_score = evaluate({"laguerre_double_roots": roots})
         assert abs(fast_score - exact_score) < 1e-6, (
             f"fast={fast_score}, exact={exact_score}"
         )
