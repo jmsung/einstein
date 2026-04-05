@@ -116,6 +116,16 @@ Every candidate score is verified three independent ways before it's trusted:
 
 If any two disagree, the improvement is rejected. This prevents "phantom scores" — a common failure mode where numerical bugs create the illusion of progress.
 
+### GPU Acceleration — Only When It Helps
+
+Before reaching for cloud GPU, JSAgent classifies the bottleneck:
+
+- **Math-limited** → more research, not more compute
+- **Compute-limited but sequential** → stay on CPU (Nelder-Mead, L-BFGS-B don't parallelize)
+- **Compute-limited and parallelizable** → vectorize with PyTorch, then scale to A100/H100 if ≥3x speedup
+- **GPU util > 50%** → use `torch.compile`, you're compute-bound
+- **GPU util < 50%** → custom Triton kernels fuse the entire SA inner loop into a single kernel launch — zero Python overhead per perturbation
+
 ## Setup
 
 Requires Python 3.13+.
