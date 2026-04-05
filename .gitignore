@@ -12,11 +12,18 @@ wheels/
 # Claude Code local config
 .claude/
 
+# GitHub Actions (run via separate config)
+.github/
+
 # Environment / secrets
 .env
 
 # Competition results
 results/
+
+# Optimizer logs and CMA output
+logs/
+outcmaes/
 
 # Workbench symlink
 .mb
