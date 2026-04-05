@@ -1,16 +1,7 @@
 """Exact hillclimb using the sympy verifier.
 
-Key insight: the fast evaluator has 90%+ false positive rate for improvements.
-The sympy verifier is the ground truth (exact rational arithmetic).
-By using the exact verifier directly in the hillclimb, EVERY improvement is real.
-
-Trade-off: each evaluation takes ~minutes instead of ~0.2s.
-But we only need to close a gap of 1.3e-4, so a few real improvements suffice.
-
-Strategy:
-1. Use fast evaluator to SCREEN candidates (accept only improvements > 1e-6)
-2. Use exact verifier to VALIDATE candidates
-3. Fine per-root hillclimb with adaptive steps
+Screens candidates with fast evaluator, validates with exact sympy.
+Loads starting roots from results/ (gitignored).
 """
 import sys
 sys.path.insert(0, "src")
@@ -25,15 +16,20 @@ from einstein.uncertainty.verifier import evaluate as exact_evaluate
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
 
-TARGET = 0.318221
 
-BEST = [
-    3.0886658942606733, 4.435156861236376, 6.034127890108831,
-    30.945538933257353, 36.84167838791129, 42.20424571337132,
-    47.682624801878234, 51.92315504790176, 57.58188043903107,
-    100.75022929245691, 115.44761608340504, 123.04406833559523,
-    140.04812478845042,
-]
+def _load_best():
+    best_score = float("inf")
+    best_roots = None
+    for p in RESULTS_DIR.glob("up_k*.json"):
+        with open(p) as f:
+            d = json.load(f)
+        if d.get("verified") and d["score"] < best_score:
+            best_score = d["score"]
+            best_roots = d["laguerre_double_roots"]
+    return best_roots, best_score
+
+
+BEST, _ = _load_best() or ([], float("inf"))
 
 
 def log(msg):

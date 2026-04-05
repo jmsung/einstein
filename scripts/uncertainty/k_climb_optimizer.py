@@ -25,15 +25,20 @@ from einstein.uncertainty.hybrid import hybrid_evaluate
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
 
-TARGET = 0.318221
+def _load_best():
+    """Load best verified roots from results/ (gitignored)."""
+    best_score = float("inf")
+    best_roots = None
+    for p in RESULTS_DIR.glob("up_k*.json"):
+        with open(p) as f:
+            d = json.load(f)
+        if d.get("verified") and d["score"] < best_score:
+            best_score = d["score"]
+            best_roots = d["laguerre_double_roots"]
+    return best_roots, best_score
 
-BEST_K13 = [
-    3.0886658942606733, 4.435156861236376, 6.034127890108831,
-    30.945538933257353, 36.84167838791129, 42.20424571337132,
-    47.682624801878234, 51.92315504790176, 57.58188043903107,
-    100.7501292924569, 115.43881608340484, 123.02406833559513,
-    140.04812478845042,
-]
+
+BEST_K13, _ = _load_best() or ([], float("inf"))
 
 
 def log(msg):
