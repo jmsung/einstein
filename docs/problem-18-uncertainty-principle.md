@@ -28,7 +28,11 @@ Given a set of "double roots" z₁, ..., zₖ (positive reals ≤ 300), construc
 
 - `src/einstein/uncertainty/verifier.py` — exact symbolic verifier (sympy)
 - `src/einstein/uncertainty/fast.py` — fast numerical evaluator (mpmath + numpy)
+- `src/einstein/uncertainty/hybrid.py` — hybrid evaluator (sympy polynomial + numpy root-finding)
 - `scripts/uncertainty/optimize_loop.py` — adaptive optimization loop
+- `scripts/uncertainty/exact_hillclimb.py` — exact hill-climbing optimizer
+- `scripts/uncertainty/k_climb_optimizer.py` — k-climb optimizer
+- `scripts/uncertainty/submit.py` — arena submission script
 
 ## References
 
@@ -36,4 +40,4 @@ Given a set of "double roots" z₁, ..., zₖ (positive reals ≤ 300), construc
 - Laguerre polynomial combination with α = -1/2
 - Solution format: `{"laguerre_double_roots": [z1, z2, ..., zk]}`
 
-*Last updated: 2026-04-03*
+*Last updated: 2026-04-04*

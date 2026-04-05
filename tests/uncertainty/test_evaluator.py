@@ -12,6 +12,7 @@ import pytest
 import numpy as np
 from einstein.uncertainty.fast import fast_evaluate
 from einstein.uncertainty.verifier import evaluate
+from einstein.uncertainty.hybrid import hybrid_evaluate
 
 # reference's best k=13 roots
 K13_ROOTS = [
@@ -194,6 +195,38 @@ class TestBestSolution:
         assert abs(fast_score - exact_score) < 1e-6, (
             f"fast={fast_score}, exact={exact_score}"
         )
+
+
+class TestHybridEvaluate:
+    """Hybrid evaluator: sympy polynomial construction + numpy.roots.
+
+    Should match exact verifier but be ~9x faster (~9s vs ~85s).
+    Catches ALL far sign changes (no grid sampling).
+    """
+
+    @pytest.mark.slow
+    def test_k13_matches_exact(self):
+        hybrid = hybrid_evaluate(K13_ROOTS)
+        exact = evaluate({"laguerre_double_roots": K13_ROOTS})
+        assert abs(hybrid - exact) < 1e-10, f"hybrid={hybrid}, exact={exact}"
+
+    @pytest.mark.slow
+    def test_k6_matches_exact(self):
+        hybrid = hybrid_evaluate(K6_ROOTS)
+        exact = evaluate({"laguerre_double_roots": K6_ROOTS})
+        assert abs(hybrid - exact) < 1e-10, f"hybrid={hybrid}, exact={exact}"
+
+    @pytest.mark.slow
+    def test_catches_far_sign_change_379(self):
+        bad_roots = TestFarSignChangeDetection.BAD_ROOTS_379
+        score = hybrid_evaluate(bad_roots)
+        assert score > 10.0, f"Missed far sign change: {score}"
+
+    @pytest.mark.slow
+    def test_catches_far_sign_change_800(self):
+        bad_roots = TestFarSignChangeDetection.BAD_ROOTS_800
+        score = hybrid_evaluate(bad_roots)
+        assert score > 10.0, f"Missed far sign change: {score}"
 
 
 class TestFastVsExactVerifier:
