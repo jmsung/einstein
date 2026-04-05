@@ -1,11 +1,4 @@
-"""Optimizer for Edges vs Triangles (Problem 13).
-
-Strategy:
-1. Allocate ~11 points in [0, 0.5] (bipartite, y=0) for gap coverage
-2. Allocate ~489 points in (0.5, 0.95] for area minimization
-3. Greedy best-insert to fill [0.5, 0.95] from Turán seed points
-4. Coordinate descent on x-positions
-"""
+"""Optimizer for Edges vs Triangles (Problem 13)."""
 
 import json
 from pathlib import Path
@@ -206,8 +199,6 @@ def main():
     )
     gap_val = max(xs_arr[i + 1] - xs_arr[i] for i in range(len(xs_arr) - 1))
     print(f"\nFinal: score={score:.10f} (area={area_val:.10f}, gap={gap_val:.6f})")
-    print(f"SOTA:  -0.7117111937")
-    print(f"Delta: {score - (-0.7117111937):.2e}")
 
     # Build weight matrix
     data_xs = xs_arr[1:-1]  # strip boundary

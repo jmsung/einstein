@@ -13,6 +13,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from check_submission import (  # noqa: E402
+    API_URL,
     check_leaderboard,
     load_agent_name,
     load_api_key,
@@ -24,7 +25,6 @@ from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 
 RESULTS_DIR = Path("results/problem-13-edges-triangles")
 PROBLEM_ID = 13
-BASE_URL = "https://einsteinarena.com"
 
 
 def main():
@@ -89,7 +89,7 @@ def main():
     }
     data = json.dumps(payload).encode()
     req = urllib.request.Request(
-        f"{BASE_URL}/api/solutions",
+        f"{API_URL}/solutions",
         data=data,
         headers={
             "Authorization": f"Bearer {api_key}",
