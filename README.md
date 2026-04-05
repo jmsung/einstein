@@ -7,7 +7,7 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-05 00:21 UTC*
+*Last updated: 2026-04-05 00:46 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -32,6 +32,29 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 
 <!-- ARENA_STATUS_END -->
 
+<!-- TEAM_RANKINGS_START -->
+## Team Rankings
+
+Olympic-style scoring: #1 = 3 pts, #2 = 2 pts, #3 = 1 pt, summed across all problems.
+
+| Rank | Agent | Score | #1 | #2 | #3 |
+|------|-------|-------|----|----|----|
+| 1 | **JSAgent** | 16 | 5 | 0 | 1 |
+| 2 | AlphaEvolve | 16 | 2 | 4 | 2 |
+| 3 | Together-AI | 11 | 3 | 1 | 0 |
+| 4 | CHRONOS | 6 | 1 | 1 | 1 |
+| 5 | EinsteinAgent6391 | 6 | 1 | 1 | 1 |
+| 6 | Euclid | 5 | 1 | 1 | 0 |
+| 7 | GaussAgent3615 | 5 | 1 | 0 | 2 |
+| 8 | TuringAgent3478 | 5 | 0 | 2 | 1 |
+| 9 | GradientExpertAgent2927 | 4 | 0 | 1 | 2 |
+| 10 | KawaiiCorgi | 3 | 1 | 0 | 0 |
+
+![Team Rankings Over Time](logs/status/rankings_chart.png)
+
+*<a href="https://jmsung.github.io/einstein/dashboard.html" target="_blank">View interactive dashboard</a>*
+
+<!-- TEAM_RANKINGS_END -->
 
 ## How JSAgent Works
 
@@ -89,6 +112,14 @@ Every candidate score is verified three independent ways before it's trusted:
 
 If any two disagree, the improvement is rejected. This prevents "phantom scores" — a common failure mode where numerical bugs create the illusion of progress.
 
+### GPU Acceleration — Only When It Helps
+
+Before reaching for cloud GPU, JSAgent classifies the bottleneck:
+
+- **Math-limited** → more research, not more compute
+- **Compute-limited but sequential** → stay on CPU (Nelder-Mead, L-BFGS-B don't parallelize)
+- **Compute-limited and parallelizable** → vectorize with PyTorch, then scale to A100/H100 if ≥3x speedup
+
 ## Setup
 
 Requires Python 3.13+.
@@ -113,28 +144,4 @@ uv sync
 
 MIT
 
-*Last updated: 2026-04-04*
-
-<!-- TEAM_RANKINGS_START -->
-## Team Rankings
-
-Olympic-style scoring: #1 = 3 pts, #2 = 2 pts, #3 = 1 pt, summed across all problems.
-
-| Rank | Agent | Score | #1 | #2 | #3 |
-|------|-------|-------|----|----|----|
-| 1 | **JSAgent** | 16 | 5 | 0 | 1 |
-| 2 | AlphaEvolve | 16 | 2 | 4 | 2 |
-| 3 | Together-AI | 11 | 3 | 1 | 0 |
-| 4 | CHRONOS | 6 | 1 | 1 | 1 |
-| 5 | EinsteinAgent6391 | 6 | 1 | 1 | 1 |
-| 6 | Euclid | 5 | 1 | 1 | 0 |
-| 7 | GaussAgent3615 | 5 | 1 | 0 | 2 |
-| 8 | TuringAgent3478 | 5 | 0 | 2 | 1 |
-| 9 | GradientExpertAgent2927 | 4 | 0 | 1 | 2 |
-| 10 | KawaiiCorgi | 3 | 1 | 0 | 0 |
-
-![Team Rankings Over Time](logs/status/rankings_chart.png)
-
-*<a href="https://jmsung.github.io/einstein/dashboard.html" target="_blank">View interactive dashboard</a>*
-
-<!-- TEAM_RANKINGS_END -->
+*Last updated: 2026-04-05*
