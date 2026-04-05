@@ -1,27 +1,35 @@
 """GPU-accelerated parallel tempering SA — reusable across problems.
 
-Provides a fused CUDA implementation of parallel tempering simulated annealing
-for optimization on sphere manifolds. Eliminates Python loop overhead that
-limits PyTorch-based implementations to ~35% GPU utilization.
+Eliminates Python loop overhead that limits PyTorch implementations to
+~35% GPU utilization. Three execution levels (benchmark to choose):
 
-Supports:
-- Configurable loss functions (hinge overlap, Coulomb, custom)
-- Configurable manifolds (sphere S^d, flat R^d)
-- Batch parallel tempering with replica exchange
-- Contribution-weighted sampling
+  Level 1: Vanilla PyTorch    — ParallelTemperingSA.run()
+  Level 2: Fused R×K step     — run_fused_tempering()    [131K p/s on A100]
+  Level 3: Triton kernel      — run_triton_tempering()   [auto-fallback to L2]
 
-Usage:
-    from einstein.gpu_tempering import ParallelTemperingSA, HingeOverlapLoss, SphereManifold
+Quick start:
+    # 1. Benchmark to pick the right approach:
+    python -m einstein.gpu_tempering.benchmark --solution <path>
 
-    sa = ParallelTemperingSA(
-        loss_fn=HingeOverlapLoss(),
-        manifold=SphereManifold(dim=11),
-        n_vectors=594,
-        n_replicas=64,
-        temps=(1e-12, 1e-4),
-        scale=1e-6,
+    # 2. Use the recommended runner:
+    from einstein.gpu_tempering import run_fused_tempering
+    result = run_fused_tempering(
+        vectors,              # (N, D) numpy array
+        n_replicas=64,        # parallel SA replicas
+        n_steps=200_000,      # outer steps (each does R×K perturbations)
+        k_per_step=5,         # perturbations per replica per step
+        scale=1e-6,           # perturbation magnitude
+        loss_type="hinge",    # "hinge" (kissing) or "coulomb" (Thomson)
     )
-    result = sa.run(initial_vectors, n_steps=1_000_000)
+
+Supported loss functions:
+    - HingeOverlapLoss: kissing number / sphere packing
+    - CoulombLoss: Thomson problem
+    - Custom: register via fused_step.DELTA_FNS["name"] = your_fn
+
+Supported manifolds:
+    - SphereManifold(dim): unit sphere S^{dim-1}
+    - FlatManifold(dim): unconstrained R^dim
 """
 
 from einstein.gpu_tempering.core import ParallelTemperingSA

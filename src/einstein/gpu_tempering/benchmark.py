@@ -243,6 +243,66 @@ def run_benchmark(
             print(f"    FAILED: {e}\n")
             results["gpu_compiled"] = None
 
+    if device == "cuda":
+        # Level 2b: Fused step (batched R×K)
+        print(f"  [GPU L2b] Fused R×K step (K=5, {n_replicas} replicas)...")
+        try:
+            from einstein.gpu_tempering.fused_step import fused_sa_step
+            from einstein.gpu_tempering.losses import HingeOverlapLoss
+            loss_fn = HingeOverlapLoss()
+
+            f_replicas = vecs_t.unsqueeze(0).expand(n_replicas, -1, -1).clone()
+            f_losses = torch.stack([loss_fn.full_loss(f_replicas[r]) for r in range(n_replicas)])
+            f_probs = loss_fn.contributions(f_replicas[0])
+            f_probs = f_probs / f_probs.sum()
+
+            K_bench = 5
+            f_perts = 0
+            f_t0 = time.time()
+            while time.time() - f_t0 < duration_sec:
+                f_losses, na = fused_sa_step(f_replicas, f_losses, temps, f_probs, scale, K_bench, "hinge")
+                f_perts += n_replicas * K_bench
+            f_elapsed = time.time() - f_t0
+            f_pps = f_perts / f_elapsed
+            f_util = _get_gpu_util()
+            results["gpu_fused"] = {"perts": f_perts, "time": f_elapsed, "pps": f_pps, "gpu_util": f_util}
+            print(f"    {f_pps:.0f} perturbations/sec, GPU util: {f_util}%\n")
+        except Exception as e:
+            print(f"    FAILED: {e}\n")
+            results["gpu_fused"] = None
+
+        # Level 3: Triton kernel
+        print(f"  [GPU L3] Triton kernel (K=5, {n_replicas} replicas)...")
+        try:
+            from einstein.gpu_tempering.triton_kernel import triton_sa_step, HAS_TRITON
+            if not HAS_TRITON:
+                print("    SKIPPED: Triton not installed\n")
+                results["gpu_triton"] = None
+            else:
+                t_replicas = vecs_t.unsqueeze(0).expand(n_replicas, -1, -1).clone()
+                t_losses = torch.stack([loss_fn.full_loss(t_replicas[r]) for r in range(n_replicas)])
+                t_probs = loss_fn.contributions(t_replicas[0])
+                t_probs = t_probs / t_probs.sum()
+
+                # Warmup
+                for _ in range(3):
+                    t_losses, _ = triton_sa_step(t_replicas, t_losses, temps, t_probs, scale, K_bench, "hinge")
+                torch.cuda.synchronize()
+
+                t_perts = 0
+                t_t0 = time.time()
+                while time.time() - t_t0 < duration_sec:
+                    t_losses, na = triton_sa_step(t_replicas, t_losses, temps, t_probs, scale, K_bench, "hinge")
+                    t_perts += n_replicas * K_bench
+                t_elapsed = time.time() - t_t0
+                t_pps = t_perts / t_elapsed
+                t_util = _get_gpu_util()
+                results["gpu_triton"] = {"perts": t_perts, "time": t_elapsed, "pps": t_pps, "gpu_util": t_util}
+                print(f"    {t_pps:.0f} perturbations/sec, GPU util: {t_util}%\n")
+        except Exception as e:
+            print(f"    FAILED: {e}\n")
+            results["gpu_triton"] = None
+
     # Analysis and recommendation
     print("=" * 60)
     print("RESULTS")
@@ -271,29 +331,59 @@ def run_benchmark(
             recommendation = "gpu_compiled"
             best_pps = g2["pps"]
 
+    if results.get("gpu_fused"):
+        gf = results["gpu_fused"]
+        speedup = gf["pps"] / cpu_pps
+        print(f"  GPU fused:    {gf['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {gf['gpu_util']}% util)")
+        if gf["pps"] > best_pps:
+            recommendation = "gpu_fused"
+            best_pps = gf["pps"]
+
+    if results.get("gpu_triton"):
+        gt = results["gpu_triton"]
+        speedup = gt["pps"] / cpu_pps
+        print(f"  GPU Triton:   {gt['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {gt['gpu_util']}% util)")
+        if gt["pps"] > best_pps:
+            recommendation = "gpu_triton"
+            best_pps = gt["pps"]
+
     print()
 
     # Decision logic
-    gpu_util = results.get("gpu_compiled", results.get("gpu_vanilla", {})).get("gpu_util", 0)
+    gpu_util = 0
+    for key in ["gpu_triton", "gpu_fused", "gpu_compiled", "gpu_vanilla"]:
+        if results.get(key):
+            gpu_util = results[key]["gpu_util"]
+            break
 
     if recommendation == "cpu":
         verdict = "STAY ON CPU — GPU speedup < 3x, not worth cloud cost"
+    elif recommendation == "gpu_triton":
+        verdict = f"USE TRITON — best throughput ({best_pps:,.0f} p/s, {gpu_util}% util)"
+    elif recommendation == "gpu_fused":
+        verdict = f"USE FUSED STEP — good throughput ({best_pps:,.0f} p/s, {gpu_util}% util)"
     elif gpu_util > 70:
-        verdict = f"USE {recommendation.upper()} — good utilization ({gpu_util}%), Triton kernel not needed"
+        verdict = f"USE {recommendation.upper()} — good utilization ({gpu_util}%)"
     elif gpu_util > 50:
-        verdict = f"USE {recommendation.upper()} — moderate utilization ({gpu_util}%), Triton optional"
+        verdict = f"USE {recommendation.upper()} — moderate utilization ({gpu_util}%), fused step may help"
     else:
-        verdict = f"USE {recommendation.upper()} — low utilization ({gpu_util}%), consider Triton kernel for 2-5x more"
+        verdict = f"USE {recommendation.upper()} — low utilization ({gpu_util}%), try fused step or Triton"
 
     print(f"RECOMMENDATION: {verdict}")
-    print()
 
-    # Triton assessment
-    if gpu_util < 50 and recommendation != "cpu":
-        theoretical_max = best_pps / (gpu_util / 100) if gpu_util > 0 else best_pps * 10
-        print(f"  Triton potential: ~{theoretical_max:,.0f} perts/sec (theoretical at 100% util)")
-        print(f"  Effort: 1-3 days of kernel development")
-        print(f"  Worth it if: you need >10x more iterations than current approach allows")
+    # Quick reference
+    print()
+    print("QUICK REFERENCE — how to run the recommended approach:")
+    if "fused" in recommendation or "triton" in recommendation:
+        runner = "run_triton_tempering" if "triton" in recommendation else "run_fused_tempering"
+        print(f"  from einstein.gpu_tempering import {runner}")
+        print(f"  result = {runner}(vectors, n_replicas=64, n_steps=200000, k_per_step=5)")
+    elif "gpu" in recommendation:
+        print("  from einstein.gpu_tempering import ParallelTemperingSA, HingeOverlapLoss, SphereManifold")
+        print("  sa = ParallelTemperingSA(HingeOverlapLoss(), SphereManifold(D), N)")
+        print("  result = sa.run(vectors)")
+    else:
+        print("  Use CPU micro-perturbation — no GPU benefit for this problem size.")
 
     results["recommendation"] = recommendation
     results["verdict"] = verdict
