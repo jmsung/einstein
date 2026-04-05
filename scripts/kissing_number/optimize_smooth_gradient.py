@@ -1,11 +1,7 @@
 """Smooth gradient optimization: softplus-smoothed overlap loss + PyTorch L-BFGS.
 
-The hinge loss max(0, 2-d) blinds gradient methods — only 700/176121 pairs
-contribute gradient signal. Replacing with softplus(beta*(2-d))/beta enables
-gradient flow through ALL pairs, unlocking new descent directions.
-
-Strategy: anneal beta (100 → 10000) to converge smooth loss to true hinge.
-After each beta stage, verify with exact hinge loss.
+Replaces hinge loss with softplus approximation to enable gradient flow.
+Anneal beta (smoothing sharpness) to converge toward true hinge loss.
 
 Usage:
     PYTHONUNBUFFERED=1 uv run python scripts/kissing_number/optimize_smooth_gradient.py

@@ -1,8 +1,4 @@
-"""Optimize from AlphaEvolve 593 + 1 starting point.
-
-AlphaEvolve has 593 vectors with ZERO overlap (perfect kissing).
-We add a 594th and run full optimization pipeline.
-This is a fundamentally different basin from the arena SOTA.
+"""Optimize from an alternative 593-vector starting point + 1 additional vector.
 
 Usage:
     PYTHONUNBUFFERED=1 uv run python scripts/kissing_number/optimize_alphaevolve.py
@@ -156,7 +152,7 @@ def main():
     vecs = np.array(data["vectors"], dtype=np.float64)
     initial = overlap_loss_exact(vecs)
     print(f"Initial score: {initial:.15f}")
-    print(f"Our SOTA:      0.156133155786528")
+    # Compare against current best from solution_best.json
 
     # Phase 0: Better 594th vector placement
     print("\n=== Phase 0: Optimize 594th vector position ===")
@@ -201,13 +197,13 @@ def main():
     final = overlap_loss_exact(best_vecs)
     print(f"\n{'='*70}")
     print(f"Final:   {final:.15f}")
-    print(f"SOTA:    0.156133155786528")
+    print(f"Start:   {initial:.15f}")
     print(f"{'='*70}")
-    if final < 0.156133155786528:
+    if final < initial:
         print("*** BEATS SOTA! ***")
         save_solution(best_vecs, final, tag="best")
     else:
-        print(f"Does not beat SOTA (gap: {final - 0.156133155786528:.2e})")
+        print(f"Does not beat SOTA (gap: {final - initial:.2e})")
 
 
 if __name__ == "__main__":

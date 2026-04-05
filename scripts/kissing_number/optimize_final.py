@@ -1,4 +1,4 @@
-"""Final push: heavy 1e-13 and 1e-14 optimization.
+"""Final push: ultra-fine-scale optimization.
 
 Usage:
     uv run python scripts/kissing_number/optimize_final.py

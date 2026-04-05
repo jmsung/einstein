@@ -1,8 +1,8 @@
 """Simulated annealing with parallel tempering.
 
-8 replicas at geometric temperature ladder. Larger perturbation scales (1e-6)
-with Metropolis acceptance. Cold replicas polish, hot replicas explore.
+Multiple replicas at geometric temperature ladder with Metropolis acceptance.
 Periodic replica exchange between adjacent temperatures.
+Configure via environment variables: N_REPLICAS, SCALE, N_ITERS.
 
 Usage:
     PYTHONUNBUFFERED=1 uv run python scripts/kissing_number/optimize_sa_tempering.py

@@ -1,4 +1,4 @@
-"""Extended optimizer: push 1e-10 and 1e-11 scale perturbation much harder.
+"""Extended optimizer: medium-fine-scale perturbation.
 
 Usage:
     uv run python scripts/kissing_number/optimize_extended.py

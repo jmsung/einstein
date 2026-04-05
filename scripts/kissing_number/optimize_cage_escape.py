@@ -1,18 +1,7 @@
-"""Cage escape: coordinated multi-vector optimization targeting worst pairs.
+"""Coordinated multi-vector optimization targeting high-contribution pairs.
 
-The SOTA loss is dominated by 3 pairs (72.5% of total):
-  (394,414): 30.9% — cos=0.524
-  (90,528):  27.0% — cos=0.521
-  (32,167):  14.6% — cos=0.511
-
-Strategy: simultaneously perturb the worst vectors AND their pinning
-neighbors to find coordinated moves that reduce the dominant penalties.
-
-Approaches:
-1. SA with multi-vector moves targeting the cage
-2. Subset optimization (move ~50 vectors involved in worst pairs)
-3. Directional push: move worst pair vectors away from each other
-4. Basin hopping on the cage subspace
+Identifies the worst overlapping pairs dynamically and tries coordinated
+perturbation strategies: directional push, multi-vector SA, SO(11) rotation.
 
 Usage:
     PYTHONUNBUFFERED=1 uv run python scripts/kissing_number/optimize_cage_escape.py
@@ -28,6 +17,18 @@ from scipy.linalg import expm
 RESULTS_DIR = Path("results/problem-6-kissing-number")
 N = 594
 D = 11
+
+
+def find_worst_pairs(vecs, n=3):
+    """Find the n worst overlapping pairs dynamically."""
+    gram = vecs @ vecs.T
+    nn = len(vecs)
+    idx_i, idx_j = np.triu_indices(nn, k=1)
+    cos_vals = np.clip(gram[idx_i, idx_j], -1.0, 1.0)
+    dists = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - cos_vals))
+    penalties = np.maximum(0.0, 2.0 - dists)
+    order = np.argsort(-penalties)[:n]
+    return [(int(idx_i[k]), int(idx_j[k])) for k in order]
 
 
 def load_best():
@@ -313,9 +314,9 @@ def main():
     # Find cage vectors
     cage = find_cage_vectors(vecs, n_target=50)
 
-    # Phase 1: Directional push on worst 3 pairs
+    # Phase 1: Directional push on worst pairs (computed dynamically)
     print("\n=== Phase 1: Directional push on worst pairs ===")
-    worst_pairs = [(394, 414), (90, 528), (32, 167)]
+    worst_pairs = find_worst_pairs(vecs, n=3)
     for pair_i, pair_j in worst_pairs:
         for scale in [1e-5, 1e-6, 1e-7, 1e-8]:
             v, l, n = directional_push(best_vecs.copy(), pair_i, pair_j, scale, 200_000, 42)

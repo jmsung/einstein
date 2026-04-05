@@ -1,4 +1,4 @@
-"""Deep optimizer: push 1e-12 and 1e-13 scale to the limit.
+"""Deep optimizer: fine-scale perturbation.
 
 Usage:
     uv run python scripts/kissing_number/optimize_deep.py

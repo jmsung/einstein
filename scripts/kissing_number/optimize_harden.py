@@ -1,10 +1,7 @@
-"""Harden #1 position: extended micro-perturbation at sweet-spot scales.
-
-Focuses on scales 1e-12 through 1e-14 with heavy iteration counts
-and multiple seeds to maximize margin over CHRONOS.
+"""Extended micro-perturbation at fine scales.
 
 Usage:
-    uv run python scripts/kissing_number/optimize_harden.py
+    SCALES=1e-12,1e-13,1e-14 ITERS=5000000 uv run python scripts/kissing_number/optimize_harden.py
 """
 
 import json
@@ -125,32 +122,30 @@ def save_solution(vecs, score, tag="best"):
 
 
 def main():
+    import os
+
+    scales = [float(x) for x in os.environ.get("SCALES", "1e-12,1e-13,1e-14").split(",")]
+    iters = int(os.environ.get("ITERS_PER_ROUND", "5000000"))
+    n_rounds = int(os.environ.get("N_ROUNDS", "6"))
+
     print("=" * 70)
-    print("HARDEN #1: Extended micro-perturbation at sweet-spot scales")
+    print("Extended micro-perturbation")
     print("=" * 70)
 
     vecs = load_best()
     initial = overlap_loss_exact(vecs)
-    print(f"Start:   {initial:.15f}")
-    print(f"CHRONOS: 0.156133162413645")
-    print(f"Margin:  {0.15613316241364483 - initial:.2e}")
+    print(f"Start: {initial:.15f}")
     best_vecs, best_score = vecs.copy(), initial
 
-    # Alternating scales with different seeds for diversity
-    # 1e-12 = sweet spot (0.10% rate), 1e-13 (0.07%), 1e-14 (0.05%)
     rng = np.random.default_rng(2026)
     configs = [
-        (1e-12, 5_000_000, int(rng.integers(100000))),
-        (1e-13, 5_000_000, int(rng.integers(100000))),
-        (1e-12, 5_000_000, int(rng.integers(100000))),
-        (1e-14, 5_000_000, int(rng.integers(100000))),
-        (1e-13, 5_000_000, int(rng.integers(100000))),
-        (1e-12, 5_000_000, int(rng.integers(100000))),
+        (scales[i % len(scales)], iters, int(rng.integers(100000)))
+        for i in range(n_rounds)
     ]
 
-    for i, (scale, iters, seed) in enumerate(configs):
-        print(f"\n--- Round {i+1}/{len(configs)}: {scale:.0e}, {iters:,}, seed={seed} ---")
-        new_vecs, _, n_impr = run_perturbation(best_vecs.copy(), scale, iters, seed)
+    for i, (scale, it, seed) in enumerate(configs):
+        print(f"\n--- Round {i+1}/{len(configs)}: {scale:.0e}, {it:,}, seed={seed} ---")
+        new_vecs, _, n_impr = run_perturbation(best_vecs.copy(), scale, it, seed)
         exact = overlap_loss_exact(new_vecs)
         delta = best_score - exact
         print(f"  Exact: {exact:.15f} (delta={delta:.2e}, {n_impr} improvements)")
@@ -158,16 +153,12 @@ def main():
             best_score = exact
             best_vecs = new_vecs.copy()
             save_solution(best_vecs, best_score)
-            margin = 0.15613316241364483 - best_score
-            print(f"  New margin over CHRONOS: {margin:.2e}")
 
     final = overlap_loss_exact(best_vecs)
-    margin = 0.15613316241364483 - final
     print(f"\n{'='*70}")
-    print(f"Final:   {final:.15f}")
-    print(f"Start:   {initial:.15f}")
-    print(f"Delta:   {initial - final:.2e}")
-    print(f"Margin:  {margin:.2e} (was 5.98e-9)")
+    print(f"Final: {final:.15f}")
+    print(f"Start: {initial:.15f}")
+    print(f"Delta: {initial - final:.2e}")
     print(f"{'='*70}")
 
 

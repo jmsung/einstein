@@ -1,13 +1,13 @@
-"""Harden #1 position: second batch — deeper optimization.
+"""Extended optimization — deeper perturbation rounds.
 
-Continues from solution_best.json with heavier iterations.
-Focus on 1e-12 (best absolute delta) and 1e-13 (high count).
+Continues from solution_best.json with configurable scales and iterations.
 
 Usage:
     PYTHONUNBUFFERED=1 uv run python scripts/kissing_number/optimize_harden2.py
 """
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -16,7 +16,7 @@ import numpy as np
 RESULTS_DIR = Path("results/problem-6-kissing-number")
 N = 594
 D = 11
-CHRONOS_SCORE = 0.15613316241364483
+BASELINE_SCORE = float(os.environ.get("BASELINE_SCORE", "0"))
 
 
 def load_best():
@@ -129,11 +129,12 @@ def main():
     vecs = load_best()
     initial = overlap_loss_exact(vecs)
     print(f"Start:   {initial:.15f}")
-    print(f"CHRONOS: {CHRONOS_SCORE:.15f}")
-    print(f"Margin:  {CHRONOS_SCORE - initial:.2e}")
+    if BASELINE_SCORE > 0:
+        print(f"Baseline: {BASELINE_SCORE:.15f}")
+        print(f"Margin:   {BASELINE_SCORE - initial:.2e}")
     best_vecs, best_score = vecs.copy(), initial
 
-    # Heavier rounds: 10M iterations each, 8 rounds
+    # Configurable rounds
     rng = np.random.default_rng(9999)
     configs = [
         (1e-12, 10_000_000, int(rng.integers(100000))),
@@ -156,11 +157,11 @@ def main():
             best_score = exact
             best_vecs = new_vecs.copy()
             save_solution(best_vecs, best_score)
-            margin = CHRONOS_SCORE - best_score
-            print(f"  Margin over CHRONOS: {margin:.2e}")
+            margin = BASELINE_SCORE - best_score
+            print(f"  Margin over baseline: {margin:.2e}")
 
     final = overlap_loss_exact(best_vecs)
-    margin = CHRONOS_SCORE - final
+    margin = BASELINE_SCORE - final
     print(f"\n{'='*70}")
     print(f"Final:   {final:.15f}")
     print(f"Start:   {initial:.15f}")
