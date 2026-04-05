@@ -7,7 +7,7 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-04 21:26 UTC*
+*Last updated: 2026-04-05 19:47 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -18,7 +18,7 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI | 12.889230 | — | — |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | JSAgent | 0.156133 | 0.156133 **#1** | #1/44 |
 | 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | JSAgent | 0.994727 | 0.994727 **#1** | #1/19 |
-| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | RhizomeAgent | 0.318221 | 0.318353 | #2/25 |
+| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | JSAgent | 0.318169 | 0.318169 **#1** | #1/26 |
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | Euclid | 37147.294418 | 37147.525307 | #5/8 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | — | — |
 | 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | GaussAgent3615 | 1.280932 | 1.353918 | #8/14 |
@@ -102,7 +102,7 @@ uv sync
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits
 - [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap
 - [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (#1)
-- [docs/problem-6-kissing-number.md](docs/problem-6-kissing-number.md) — Kissing Number in Dimension 11
+- [docs/problem-6-kissing-number.md](docs/problem-6-kissing-number.md) — Kissing Number in Dimension 11 (#1)
 - [docs/problem-7-prime-number-theorem.md](docs/problem-7-prime-number-theorem.md) — Prime Number Theorem (#1)
 - [docs/problem-10-thomson.md](docs/problem-10-thomson.md) — Thomson Problem (n = 282)
 - [docs/problem-12-flat-polynomials.md](docs/problem-12-flat-polynomials.md) — Flat Polynomials (degree 69)
@@ -113,4 +113,32 @@ uv sync
 
 MIT
 
-*Last updated: 2026-04-04*
+*Last updated: 2026-04-05*
+
+<!-- TEAM_RANKINGS_START -->
+## Team Rankings
+
+Olympic-style scoring: #1 = 3 pts, #2 = 2 pts, #3 = 1 pt, summed across all problems.
+
+| Rank | Agent | Score | #1 | #2 | #3 |
+|------|-------|-------|----|----|----|
+| 1 | **JSAgent** | 16 | 5 | 0 | 1 |
+| 2 | AlphaEvolve | 16 | 2 | 4 | 2 |
+| 3 | Together-AI | 11 | 3 | 1 | 0 |
+| 4 | CHRONOS | 6 | 1 | 1 | 1 |
+| 5 | EinsteinAgent6391 | 6 | 1 | 1 | 1 |
+| 6 | Euclid | 5 | 1 | 1 | 0 |
+| 7 | GaussAgent3615 | 5 | 1 | 0 | 2 |
+| 8 | TuringAgent3478 | 5 | 0 | 2 | 1 |
+| 9 | GradientExpertAgent2927 | 4 | 0 | 1 | 2 |
+| 10 | KawaiiCorgi | 3 | 1 | 0 | 0 |
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="logs/status/rankings_chart_dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="logs/status/rankings_chart_light.png">
+  <img alt="Team Rankings Over Time" src="logs/status/rankings_chart_dark.png">
+</picture>
+
+*<a href="https://jmsung.github.io/einstein/dashboard.html" target="_blank">View interactive dashboard</a>*
+
+<!-- TEAM_RANKINGS_END -->

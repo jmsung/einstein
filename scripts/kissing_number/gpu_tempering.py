@@ -8,7 +8,7 @@ Key optimizations over v1:
 
 Usage:
     # Direct (local GPU):
-    python scripts/kissing_number/gpu_tempering_v2.py
+    python scripts/kissing_number/gpu_tempering.py
     # Or via cloud GPU runner
 """
 

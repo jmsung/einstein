@@ -4,7 +4,7 @@ Eliminates Python loop overhead that limits PyTorch implementations to
 ~35% GPU utilization. Three execution levels (benchmark to choose):
 
   Level 1: Vanilla PyTorch    — ParallelTemperingSA.run()
-  Level 2: Fused R×K step     — run_fused_tempering()    [131K p/s on A100]
+  Level 2: Fused R×K step     — run_fused_tempering()    [recommended]
   Level 3: Triton kernel      — run_triton_tempering()   [auto-fallback to L2]
 
 Quick start:

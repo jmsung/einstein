@@ -1,9 +1,8 @@
 """Eigenvalue-guided perturbation: exploit the deficient direction.
 
-The Gram matrix of our SOTA has one deficient eigenvalue (λ₁₀ ≈ 41.2 vs
-ideal 54.0). This "thin direction" means vectors are underrepresented in
-one dimension. Perturbing vectors INTO this direction could open space
-for the caged pairs to separate.
+The Gram matrix may have a deficient eigenvalue direction where vectors
+are underrepresented. Perturbing vectors INTO this direction could open
+space for overlapping pairs to separate.
 
 Usage:
     PYTHONUNBUFFERED=1 uv run python scripts/kissing_number/optimize_eigenvalue.py
