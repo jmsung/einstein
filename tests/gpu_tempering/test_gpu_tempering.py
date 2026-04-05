@@ -209,5 +209,37 @@ class TestFusedStep:
         del DELTA_FNS["dummy"]
 
 
+class TestTritonKernel:
+    def test_triton_fallback_to_fused(self):
+        """On CPU (no Triton), triton_sa_step falls back to fused_step."""
+        from einstein.gpu_tempering.triton_kernel import triton_sa_step
+
+        R, N, D, K = 4, 20, 5, 3
+        replicas = torch.randn(R, N, D, dtype=torch.float64)
+        replicas = replicas / replicas.norm(dim=2, keepdim=True)
+        losses = torch.tensor([HingeOverlapLoss().full_loss(replicas[r]).item() for r in range(R)],
+                              dtype=torch.float64)
+        temps = torch.tensor([1e-12, 1e-8, 1e-4, 1e-2], dtype=torch.float64)
+        probs = torch.ones(N, dtype=torch.float64) / N
+
+        new_losses, n_acc = triton_sa_step(replicas, losses, temps, probs, 1e-3, K, "hinge")
+        assert new_losses.shape == (R,)
+
+    def test_run_triton_tempering_smoke(self):
+        """Smoke test for run_triton_tempering (falls back to fused on CPU)."""
+        from einstein.gpu_tempering.triton_kernel import run_triton_tempering
+
+        rng = np.random.default_rng(42)
+        vecs = rng.standard_normal((20, 5))
+        vecs /= np.linalg.norm(vecs, axis=1, keepdims=True)
+
+        result = run_triton_tempering(
+            vecs, n_replicas=4, n_steps=50, k_per_step=3,
+            report_every=25, timeout_sec=30,
+        )
+        assert result["best_score"] <= result["initial_score"]
+        assert result["best_vectors"].shape == (20, 5)
+
+
 def test_init():
     pass
