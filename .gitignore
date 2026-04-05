@@ -18,6 +18,9 @@ wheels/
 # Environment / secrets
 .env
 
+# GPU cloud runner scripts (private, provider-specific)
+scripts/*/modal_*.py
+
 # Competition results
 results/
 
