@@ -21,7 +21,8 @@ ROOT = Path(__file__).resolve().parent.parent
 LOG_DIR = ROOT / "logs" / "status"
 README = ROOT / "README.md"
 HISTORY_PATH = LOG_DIR / "rankings_history.json"
-CHART_PATH = LOG_DIR / "rankings_chart.png"
+CHART_PATH_DARK = LOG_DIR / "rankings_chart_dark.png"
+CHART_PATH_LIGHT = LOG_DIR / "rankings_chart_light.png"
 DASHBOARD_PATH = ROOT / "docs" / "dashboard.html"
 
 
@@ -136,7 +137,11 @@ def generate_rankings_table(rankings: list[dict], top_n: int = 10) -> str:
             f"{r['gold']} | {r['silver']} | {r['bronze']} |"
         )
     lines.append("")
-    lines.append("![Team Rankings Over Time](logs/status/rankings_chart.png)")
+    lines.append('<picture>')
+    lines.append('  <source media="(prefers-color-scheme: dark)" srcset="logs/status/rankings_chart_dark.png">')
+    lines.append('  <source media="(prefers-color-scheme: light)" srcset="logs/status/rankings_chart_light.png">')
+    lines.append('  <img alt="Team Rankings Over Time" src="logs/status/rankings_chart_dark.png">')
+    lines.append('</picture>')
     lines.append("")
     lines.append('*<a href="https://jmsung.github.io/einstein/dashboard.html" target="_blank">View interactive dashboard</a>*')
     lines.append("")
@@ -256,8 +261,9 @@ def _extract_series(history: list[dict], agents: list[str]) -> tuple[list[str], 
     return dates, series
 
 
-def generate_chart(history: list[dict], top_n: int = 5) -> None:
-    """Generate smooth score-over-time PNG for README."""
+def _render_chart(history: list[dict], path: Path, top_n: int,
+                   bg: str, text: str, grid: str) -> None:
+    """Render a single chart variant."""
     import matplotlib.dates as mdates
     import matplotlib.pyplot as plt
     import numpy as np
@@ -267,13 +273,8 @@ def generate_chart(history: list[dict], top_n: int = 5) -> None:
     dates = [datetime.strptime(d, "%Y-%m-%d") for d in date_strs]
     latest = history[-1]["rankings"]
 
-    bg_color = "#0d1117"
-    text_color = "#c9d1d9"
-    grid_color = "#21262d"
-
-    fig, ax = plt.subplots(figsize=(10, 5), facecolor=bg_color)
-    ax.set_facecolor(bg_color)
-
+    fig, ax = plt.subplots(figsize=(10, 5), facecolor=bg)
+    ax.set_facecolor(bg)
     date_nums = mdates.date2num(dates)
 
     for i, agent in enumerate(agents):
@@ -291,22 +292,30 @@ def generate_chart(history: list[dict], top_n: int = 5) -> None:
             ax.plot(dates, scores, linewidth=2.5, label=label)
         ax.scatter(dates, scores, s=20, zorder=5)
 
-    ax.set_xlabel("Date", color=text_color)
-    ax.set_ylabel("Score (3/2/1 for rank 1/2/3)", color=text_color)
-    ax.set_title("Einstein Arena — Team Rankings Over Time", color=text_color)
-    ax.legend(loc="upper left", fontsize=8, facecolor=bg_color, edgecolor=grid_color,
-              labelcolor=text_color)
+    ax.set_xlabel("Date", color=text)
+    ax.set_ylabel("Score (3/2/1 for rank 1/2/3)", color=text)
+    ax.set_title("Einstein Arena — Team Rankings Over Time", color=text)
+    ax.legend(loc="upper left", fontsize=8, facecolor=bg, edgecolor=grid,
+              labelcolor=text)
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
     ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-    ax.tick_params(colors=text_color)
-    ax.grid(True, alpha=0.3, color=grid_color)
+    ax.tick_params(colors=text)
+    ax.grid(True, alpha=0.3, color=grid)
     for spine in ax.spines.values():
-        spine.set_color(grid_color)
+        spine.set_color(grid)
     fig.autofmt_xdate()
     fig.tight_layout()
-    fig.savefig(CHART_PATH, dpi=150, facecolor=bg_color)
+    fig.savefig(path, dpi=150, facecolor=bg)
     plt.close(fig)
-    print(f"Chart saved: {CHART_PATH}")
+
+
+def generate_chart(history: list[dict], top_n: int = 5) -> None:
+    """Generate dark and light chart PNGs for README."""
+    _render_chart(history, CHART_PATH_DARK, top_n,
+                  bg="#0d1117", text="#c9d1d9", grid="#21262d")
+    _render_chart(history, CHART_PATH_LIGHT, top_n,
+                  bg="#ffffff", text="#1f2328", grid="#d1d9e0")
+    print(f"Charts saved: {CHART_PATH_DARK}, {CHART_PATH_LIGHT}")
 
 
 def generate_dashboard(history: list[dict], top_n: int = 5) -> None:
