@@ -187,7 +187,7 @@ def micro_perturbation(
 ) -> tuple[np.ndarray, float]:
     """Atomic-scale micro-perturbation with greedy acceptance.
 
-    The proven CHRONOS technique: nudge one random vector by randn*scale,
+    Atomic-scale perturbation: nudge one random vector by randn*scale,
     renormalize, accept if loss decreases.
     """
     rng = np.random.default_rng(seed)
