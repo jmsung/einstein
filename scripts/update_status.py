@@ -261,17 +261,17 @@ def _extract_series(history: list[dict], agents: list[str]) -> tuple[list[str], 
     return dates, series
 
 
-# Rank-based color palette: brighter = higher rank, dimmer = lower.
-# Rank 1 gets bright orange for maximum visibility.
+# Rank-based rainbow palette: red → orange → yellow → green → blue.
+# Rank 1 gets red for maximum attention.
 RANK_COLORS = [
-    "#ff7f0e",  # #1 — bright orange (high visibility)
-    "#2ca02c",  # #2 — bright green
-    "#1f77b4",  # #3 — blue
-    "#888888",  # #4 — mid gray
-    "#555555",  # #5 — dim gray
+    "#e63946",  # #1 — red
+    "#ff7f0e",  # #2 — orange
+    "#e7b416",  # #3 — gold (darker yellow for visibility on white bg)
+    "#2ca02c",  # #4 — green
+    "#1f77b4",  # #5 — blue
 ]
-RANK_WIDTHS = [3.2, 2.8, 2.2, 1.6, 1.4]
-RANK_ALPHAS = [1.0, 0.95, 0.85, 0.6, 0.5]
+RANK_WIDTHS = [3.2, 2.8, 2.4, 2.0, 1.8]
+RANK_ALPHAS = [1.0, 0.95, 0.9, 0.85, 0.8]
 
 
 def _render_chart(history: list[dict], path: Path, top_n: int,
