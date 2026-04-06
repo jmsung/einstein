@@ -16,6 +16,7 @@ from .evaluator import (
     all_triangle_areas,
     hull_area,
     active_triples,
+    hull_vertex_indices,
 )
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "all_triangle_areas",
     "hull_area",
     "active_triples",
+    "hull_vertex_indices",
 ]
