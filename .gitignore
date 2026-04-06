@@ -24,8 +24,9 @@ scripts/*/modal_*.py
 # Competition results
 results/
 
-# Optimizer logs and CMA output
-logs/
+# Optimizer logs and CMA output (but keep daily status tracking)
+logs/*
+!logs/status/
 outcmaes/
 
 # Workbench symlink
