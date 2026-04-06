@@ -74,8 +74,13 @@ def _load_leaderboard():
     files = sorted(SOLUTIONS_DIR.glob("*.json"))
     out = []
     for f in files:
+        # Only parse files whose stem ends with an _<score> suffix matching the
+        # arena-downloaded naming convention (e.g. "capybara007_1029_0.02783558").
+        try:
+            expected = float(f.stem.split("_")[-1])
+        except ValueError:
+            continue
         data = json.loads(f.read_text())
-        expected = float(f.stem.split("_")[-1])
         out.append((f.name, data, expected))
     return out
 
