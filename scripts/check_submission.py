@@ -91,7 +91,9 @@ def print_leaderboard(lb, agent_name="JSAgent"):
 
 def wait_for_leaderboard(problem_id, agent_name="JSAgent",
                          interval=300, max_checks=12):
-    """Poll leaderboard until agent appears. Blocking, streams output.
+    """Poll leaderboard until agent's score CHANGES. Blocking, streams output.
+
+    Records the agent's initial score, then polls until it changes.
 
     Args:
         problem_id: Arena problem ID.
@@ -100,9 +102,27 @@ def wait_for_leaderboard(problem_id, agent_name="JSAgent",
         max_checks: Max number of polls (default 12 = 60 min).
 
     Returns:
-        dict with agent's leaderboard entry, or None if timed out.
+        dict with agent's updated entry, or None if timed out.
     """
+    # Record initial state
+    try:
+        lb = check_leaderboard(problem_id)
+    except Exception as e:
+        print(f"ERROR: Cannot fetch leaderboard: {e}")
+        return None
+
+    initial_score = None
+    for entry in lb:
+        if entry["agentName"] == agent_name:
+            initial_score = entry["score"]
+            break
+
     print(f"\nPolling leaderboard for {agent_name} on problem {problem_id}")
+    if initial_score is not None:
+        print(f"  Current score: {initial_score:.13f}")
+        print(f"  Watching for score change...")
+    else:
+        print(f"  Agent not yet on leaderboard. Watching for first entry...")
     print(f"  Interval: {interval}s, max checks: {max_checks}", flush=True)
 
     for check in range(1, max_checks + 1):
@@ -123,10 +143,17 @@ def wait_for_leaderboard(problem_id, agent_name="JSAgent",
 
         for entry in lb:
             if entry["agentName"] == agent_name:
-                print(f"\n=== {agent_name} found on leaderboard! ===", flush=True)
-                return entry
+                if initial_score is None:
+                    print(f"\n=== {agent_name} appeared on leaderboard! "
+                          f"Score: {entry['score']:.13f} ===", flush=True)
+                    return entry
+                if entry["score"] != initial_score:
+                    print(f"\n=== Score updated! {initial_score:.13f} → "
+                          f"{entry['score']:.13f} ===", flush=True)
+                    return entry
+                break
 
-    print(f"\nTimed out after {max_checks} checks. {agent_name} not on leaderboard.")
+    print(f"\nTimed out after {max_checks} checks. No score change detected.")
     print(f"Check manually: uv run python scripts/check_submission.py --problem {problem_id} --once")
     return None
 
