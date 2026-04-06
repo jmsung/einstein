@@ -19,7 +19,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: pip install numpy scipy
+        run: pip install numpy scipy matplotlib
 
       - name: Update arena status
         run: python scripts/update_status.py
