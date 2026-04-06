@@ -261,6 +261,19 @@ def _extract_series(history: list[dict], agents: list[str]) -> tuple[list[str], 
     return dates, series
 
 
+# Rank-based color palette: brighter = higher rank, dimmer = lower.
+# Rank 1 gets bright orange for maximum visibility.
+RANK_COLORS = [
+    "#ff7f0e",  # #1 — bright orange (high visibility)
+    "#2ca02c",  # #2 — bright green
+    "#1f77b4",  # #3 — blue
+    "#888888",  # #4 — mid gray
+    "#555555",  # #5 — dim gray
+]
+RANK_WIDTHS = [3.2, 2.8, 2.2, 1.6, 1.4]
+RANK_ALPHAS = [1.0, 0.95, 0.85, 0.6, 0.5]
+
+
 def _render_chart(history: list[dict], path: Path, top_n: int,
                    bg: str, text: str, grid: str) -> None:
     """Render a single chart variant."""
@@ -281,16 +294,21 @@ def _render_chart(history: list[dict], path: Path, top_n: int,
         scores = np.array(series[agent], dtype=float)
         score = latest.get(agent, {}).get("score", 0)
         label = f"#{i+1} {agent} ({score}pts)"
+        color = RANK_COLORS[i] if i < len(RANK_COLORS) else "#444444"
+        width = RANK_WIDTHS[i] if i < len(RANK_WIDTHS) else 1.2
+        alpha = RANK_ALPHAS[i] if i < len(RANK_ALPHAS) else 0.4
         if len(dates) >= 3:
             from scipy.interpolate import PchipInterpolator
             x_smooth = np.linspace(date_nums[0], date_nums[-1], 300)
             pchip = PchipInterpolator(date_nums, scores)
             y_smooth = pchip(x_smooth)
-            ax.plot(mdates.num2date(x_smooth), y_smooth, linewidth=2.5,
-                    solid_capstyle="round", label=label)
+            ax.plot(mdates.num2date(x_smooth), y_smooth, linewidth=width,
+                    solid_capstyle="round", label=label,
+                    color=color, alpha=alpha)
         else:
-            ax.plot(dates, scores, linewidth=2.5, label=label)
-        ax.scatter(dates, scores, s=20, zorder=5)
+            ax.plot(dates, scores, linewidth=width, label=label,
+                    color=color, alpha=alpha)
+        ax.scatter(dates, scores, s=24, zorder=5, color=color, alpha=alpha)
 
     ax.set_xlabel("Date", color=text)
     ax.set_ylabel("Score (3/2/1 for rank 1/2/3)", color=text)
@@ -328,13 +346,16 @@ def generate_dashboard(history: list[dict], top_n: int = 5) -> None:
     traces = []
     for i, agent in enumerate(agents):
         score = latest.get(agent, {}).get("score", 0)
+        color = RANK_COLORS[i] if i < len(RANK_COLORS) else "#444444"
+        width = RANK_WIDTHS[i] if i < len(RANK_WIDTHS) else 1.2
         traces.append({
             "x": date_strs,
             "y": series[agent],
             "name": f"#{i+1} {agent} ({score}pts)",
             "mode": "lines+markers",
-            "line": {"shape": "spline", "smoothing": 1.0, "width": 2.5},
-            "marker": {"size": 5},
+            "line": {"shape": "spline", "smoothing": 1.0, "width": width,
+                     "color": color},
+            "marker": {"size": 6, "color": color},
         })
 
     traces_json = json.dumps(traces)
