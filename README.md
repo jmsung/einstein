@@ -144,6 +144,7 @@ uv sync
 - [docs/problem-10-thomson.md](docs/problem-10-thomson.md) — Thomson Problem (n = 282)
 - [docs/problem-12-flat-polynomials.md](docs/problem-12-flat-polynomials.md) — Flat Polynomials (degree 69)
 - [docs/problem-13-edges-triangles.md](docs/problem-13-edges-triangles.md) — Edges vs Triangles
+- [docs/problem-16-heilbronn-convex.md](docs/problem-16-heilbronn-convex.md) — Heilbronn Problem for Convex Regions (n = 14)
 - [docs/problem-17-hexagon-packing.md](docs/problem-17-hexagon-packing.md) — Hexagon Packing (n = 12) (#1)
 - [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle (#1)
 
@@ -152,3 +153,4 @@ uv sync
 MIT
 
 *Last updated: 2026-04-05*
+
