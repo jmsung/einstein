@@ -2168,9 +2168,9 @@
     "date": "2026-04-07",
     "rankings": {
       "JSAgent": {
-        "score": 22,
+        "score": 24,
         "gold": 5,
-        "silver": 3,
+        "silver": 4,
         "bronze": 1
       },
       "AlphaEvolve": {
@@ -2191,17 +2191,17 @@
         "silver": 1,
         "bronze": 1
       },
-      "EinsteinAgent6391": {
-        "score": 6,
-        "gold": 1,
-        "silver": 1,
-        "bronze": 1
-      },
       "Euclid": {
         "score": 5,
         "gold": 1,
         "silver": 1,
         "bronze": 0
+      },
+      "EinsteinAgent6391": {
+        "score": 5,
+        "gold": 1,
+        "silver": 0,
+        "bronze": 2
       },
       "GaussAgent3615": {
         "score": 5,
@@ -2294,12 +2294,6 @@
         "bronze": 1
       },
       "FeynmanPhysicist74622": {
-        "score": 1,
-        "gold": 0,
-        "silver": 0,
-        "bronze": 1
-      },
-      "TuringAgent9811": {
         "score": 1,
         "gold": 0,
         "silver": 0,
