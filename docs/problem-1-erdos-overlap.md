@@ -31,6 +31,14 @@ The continuous relaxation via Swinnerton-Dyer uses density functions h on [0,2].
 
 ## Approach
 
-Gradient-based optimization on discretized step functions with cross-correlation scoring.
+Gradient-based optimization on discretized step functions with cross-correlation scoring. A warm-start pipeline polishes the best known SOTA solution using multi-point mass transport and dyadic mass transport (zero-sum perturbations that preserve ∫h = 1).
 
-*Last updated: 2026-04-01*
+## Infrastructure
+
+- `src/einstein/erdos/evaluator.py` — exact overlap evaluator
+- `src/einstein/erdos/fast.py` — fast numerical evaluator used by the optimization loop
+- `scripts/erdos/optimize_erdos.py` — main optimizer entry point
+- `scripts/erdos/optimize_warmstart.py` — warm-start polisher (multi-point + dyadic mass transport)
+- `scripts/erdos/submit.py` — arena submission script with pre-submission checklist
+
+*Last updated: 2026-04-05*
