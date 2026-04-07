@@ -30,7 +30,20 @@ from einstein.circles_rectangle.evaluator import (  # noqa: E402
 
 RESULTS_DIR = Path("results/problem-17-circles-rectangle")
 PROBLEM_ID = 18  # arena id for "Circles in a Rectangle (n=21)"
-MIN_IMPROVEMENT = 1e-7
+
+
+def fetch_min_improvement(problem_id: int) -> float:
+    """Fetch per-problem minImprovement from the arena API.
+
+    CLAUDE.md requires: minImprovement is per-problem — fetch from /api/problems
+    before submitting; do NOT hardcode.
+    """
+    with urllib.request.urlopen(f"{API_URL}/problems", timeout=10) as resp:
+        problems = json.loads(resp.read())
+    for p in problems:
+        if p.get("id") == problem_id:
+            return float(p["minImprovement"])
+    raise ValueError(f"Problem {problem_id} not found in /api/problems")
 
 
 def main():
@@ -44,11 +57,17 @@ def main():
 
     score = evaluate(sol)
 
+    min_improvement = fetch_min_improvement(PROBLEM_ID)
+    print(f"minImprovement (from API): {min_improvement:.0e}")
+
     lb = check_leaderboard(PROBLEM_ID)
-    sota_score = lb[0]["score"] if lb else float("-inf")
-    sota_agent = lb[0]["agentName"] if lb else "?"
-    second_score = lb[1]["score"] if len(lb) > 1 else float("-inf")
-    second_agent = lb[1]["agentName"] if len(lb) > 1 else "?"
+    # Skip our own previous entry — compute SOTA and second among other agents.
+    me = load_agent_name()
+    others = [e for e in lb if e["agentName"] != me]
+    sota_score = others[0]["score"] if others else float("-inf")
+    sota_agent = others[0]["agentName"] if others else "?"
+    second_score = others[1]["score"] if len(others) > 1 else float("-inf")
+    second_agent = others[1]["agentName"] if len(others) > 1 else "?"
 
     print(f"Solution:    {sol_path}")
     print(f"Shape:       {circles.shape}")
@@ -89,12 +108,12 @@ def main():
     print(f"  [{'x' if c5 else ' '}] 5. Worst overlap {v['worst_overlap']:.4e} ≥ 0")
 
     # Window check: must beat #2 by minImprovement AND not claim #1
-    above_second = (score - second_score) > MIN_IMPROVEMENT
-    below_first_by_min = (sota_score - score) > MIN_IMPROVEMENT
+    above_second = (score - second_score) > min_improvement
+    below_first_by_min = (sota_score - score) > min_improvement
     c6 = above_second and below_first_by_min
     print(f"  [{'x' if c6 else ' '}] 6. Score in safe rank-2 window:")
-    print(f"        above #2 by > {MIN_IMPROVEMENT:.0e}? {above_second}  (Δ = {score-second_score:+.4e})")
-    print(f"        below #1 by > {MIN_IMPROVEMENT:.0e}? {below_first_by_min}  (Δ = {sota_score-score:+.4e})")
+    print(f"        above #2 by > {min_improvement:.0e}? {above_second}  (Δ = {score-second_score:+.4e})")
+    print(f"        below #1 by > {min_improvement:.0e}? {below_first_by_min}  (Δ = {sota_score-score:+.4e})")
 
     # Projected rank
     strictly_better = sum(1 for e in lb if e["score"] > score)
