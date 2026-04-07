@@ -17,6 +17,7 @@ Usage (import from any submit.py):
     from scripts.check_submission import verify_api, wait_for_leaderboard, load_api_key
 """
 
+import argparse
 import json
 import os
 import sys
@@ -120,9 +121,9 @@ def wait_for_leaderboard(problem_id, agent_name="JSAgent",
     print(f"\nPolling leaderboard for {agent_name} on problem {problem_id}")
     if initial_score is not None:
         print(f"  Current score: {initial_score:.13f}")
-        print(f"  Watching for score change...")
+        print("  Watching for score change...")
     else:
-        print(f"  Agent not yet on leaderboard. Watching for first entry...")
+        print("  Agent not yet on leaderboard. Watching for first entry...")
     print(f"  Interval: {interval}s, max checks: {max_checks}", flush=True)
 
     for check in range(1, max_checks + 1):
@@ -159,7 +160,6 @@ def wait_for_leaderboard(problem_id, agent_name="JSAgent",
 
 
 def main():
-    import argparse
     parser = argparse.ArgumentParser(description="Poll arena leaderboard")
     parser.add_argument("--problem", type=int, required=True, help="Problem ID")
     parser.add_argument("--once", action="store_true", help="Single check only")
