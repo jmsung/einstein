@@ -7,7 +7,7 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-07 06:37 UTC*
+*Last updated: 2026-04-07 06:40 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -139,6 +139,7 @@ uv sync
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits
 - [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap
 - [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (#1)
+- [docs/problem-5-min-distance-ratio.md](docs/problem-5-min-distance-ratio.md) — Min Distance Ratio (2D, n=16)
 - [docs/problem-6-kissing-number.md](docs/problem-6-kissing-number.md) — Kissing Number in Dimension 11 (#1)
 - [docs/problem-7-prime-number-theorem.md](docs/problem-7-prime-number-theorem.md) — Prime Number Theorem (#1)
 - [docs/problem-10-thomson.md](docs/problem-10-thomson.md) — Thomson Problem (n = 282)
@@ -152,5 +153,5 @@ uv sync
 
 MIT
 
-*Last updated: 2026-04-05*
+*Last updated: 2026-04-07*
 
