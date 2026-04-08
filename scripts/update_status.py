@@ -89,15 +89,23 @@ def generate_status_table(statuses: list[dict], timestamp: str) -> str:
     return "\n".join(lines)
 
 
-MEDAL_POINTS = {1: 3, 2: 2, 3: 1}  # rank → points
+MEDAL_POINTS = {1: 4, 2: 2, 3: 1}  # rank → points (2^n curve: gold=4, silver=2, bronze=1)
 
 
 def compute_team_rankings(statuses: list[dict]) -> list[dict]:
-    """Compute Olympic-style team rankings: rank 1/2/3 = 3/2/1 pts."""
+    """Compute medal-count team rankings: rank 1/2/3 = 4/2/1 pts (2^n curve).
+
+    Each agent is awarded only their BEST position per problem (no double-credit
+    for an agent appearing at both #1 and #2 on the same problem).
+    """
     scores: dict[str, dict] = {}  # agent → {score, gold, silver, bronze}
     for s in statuses:
+        seen_on_this_problem = set()
         for rank_idx, agent in enumerate(s["top3"]):
             rank = rank_idx + 1
+            if agent in seen_on_this_problem:
+                continue  # only credit best position per problem
+            seen_on_this_problem.add(agent)
             if agent not in scores:
                 scores[agent] = {"score": 0, "gold": 0, "silver": 0, "bronze": 0}
             scores[agent]["score"] += MEDAL_POINTS[rank]
@@ -125,7 +133,10 @@ def generate_rankings_table(rankings: list[dict], top_n: int = 10) -> str:
     lines = [
         "## Team Rankings",
         "",
-        "Olympic-style scoring: #1 = 3 pts, #2 = 2 pts, #3 = 1 pt, summed across all problems.",
+        "*Unofficial ranking — Einstein Arena scores per problem, not as teams. "
+        "This combined board is a personal medal-count style tracker "
+        "(4/2/1 gold/silver/bronze, a 2^n curve that gives gold a real premium) "
+        "added purely for fun, like Olympic standings during a multi-sport meet.*",
         "",
         "| Rank | Agent | Score | #1 | #2 | #3 |",
         "|------|-------|-------|----|----|----|",
@@ -311,7 +322,7 @@ def _render_chart(history: list[dict], path: Path, top_n: int,
         ax.scatter(dates, scores, s=24, zorder=5, color=color, alpha=alpha)
 
     ax.set_xlabel("Date", color=text)
-    ax.set_ylabel("Score (3/2/1 for rank 1/2/3)", color=text)
+    ax.set_ylabel("Score (4/2/1 for gold/silver/bronze)", color=text)
     ax.set_title("Einstein Arena — Team Rankings Over Time", color=text)
     ax.legend(loc="upper left", fontsize=8, facecolor=bg, edgecolor=grid,
               labelcolor=text)
@@ -396,7 +407,7 @@ def generate_dashboard(history: list[dict], top_n: int = 5) -> None:
 <body>
 <a class="home-link" href="https://github.com/jmsung/einstein">&larr; Back to repo</a>
 <h1>Einstein Arena — Team Rankings</h1>
-<p class="subtitle">Olympic scoring: #1 = 3 pts, #2 = 2 pts, #3 = 1 pt per problem</p>
+<p class="subtitle">Unofficial medal-count tracker — 4/2/1 gold/silver/bronze (2<sup>n</sup>) per problem</p>
 <div class="chart-container">
   <div class="range-buttons">
     <button onclick="setRange(7)" id="btn-7d">Last 7 days</button>
