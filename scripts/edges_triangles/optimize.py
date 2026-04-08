@@ -185,11 +185,12 @@ def redistribute(
 
 def basin_hopping_optimize(
     xs: np.ndarray, ys: np.ndarray, n_iter: int = 50, temp: float = 1e-8,
+    seed: int = 777, noise_max: float = 0.1, noise_min: float = 0.01,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Basin-hopping: random global jumps in gap-space + GS local minimizer."""
     best_xs, best_ys = xs.copy(), ys.copy()
     best_score = _score_from_arrays(best_xs, best_ys)
-    rng = np.random.default_rng(777)
+    rng = np.random.default_rng(seed)
     first_multi = next(i for i in range(1, len(xs) - 1) if xs[i] >= 0.49)
 
     for it in range(n_iter):
@@ -200,7 +201,7 @@ def basin_hopping_optimize(
         all_sorted = np.concatenate([[xs_trial[first_multi - 1]], multi_xs, [xs_trial[-1]]])
         log_gaps = np.log(np.maximum(np.diff(all_sorted), 1e-15))
 
-        noise_scale = 0.1 * (1 - it / n_iter) + 0.01
+        noise_scale = noise_max * (1 - it / n_iter) + noise_min
         log_gaps += rng.normal(0, noise_scale, size=len(log_gaps))
 
         ez = np.exp(log_gaps)
