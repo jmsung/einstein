@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
 import time
 from pathlib import Path
 
@@ -37,7 +36,7 @@ def fast_score(u: np.ndarray) -> float:
     return float(np.maximum(0.0, 2.0 - d).sum())
 
 
-def vec_contribs(u: np.ndarray) -> np.ndarray:
+def vector_contributions(u: np.ndarray) -> np.ndarray:
     g = u @ u.T
     n = len(u)
     i, j = np.triu_indices(n, k=1)
@@ -73,13 +72,13 @@ def polish_round(
     cur = fast_score(u)
     best = cur
     best_u = u.copy()
-    contribs = vec_contribs(u)
+    contribs = vector_contributions(u)
     probs = contribs / contribs.sum() if contribs.sum() > 0 else np.ones(N) / N
     improvements = 0
     t0 = time.time()
     for it in range(n_iters):
         if it > 0 and it % 50_000 == 0:
-            contribs = vec_contribs(u)
+            contribs = vector_contributions(u)
             probs = contribs / contribs.sum() if contribs.sum() > 0 else np.ones(N) / N
         idx = int(rng.choice(N, p=probs))
         old_v = u[idx].copy()
