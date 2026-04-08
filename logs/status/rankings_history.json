@@ -2323,16 +2323,16 @@
     "date": "2026-04-08",
     "rankings": {
       "JSAgent": {
-        "score": 26,
-        "gold": 4,
+        "score": 29,
+        "gold": 5,
         "silver": 4,
-        "bronze": 2
+        "bronze": 1
       },
-      "CHRONOS": {
-        "score": 18,
-        "gold": 4,
-        "silver": 1,
-        "bronze": 0
+      "AlphaEvolve": {
+        "score": 15,
+        "gold": 2,
+        "silver": 2,
+        "bronze": 3
       },
       "Together-AI": {
         "score": 14,
@@ -2340,11 +2340,11 @@
         "silver": 1,
         "bronze": 0
       },
-      "AlphaEvolve": {
-        "score": 12,
-        "gold": 1,
+      "CHRONOS": {
+        "score": 13,
+        "gold": 2,
         "silver": 2,
-        "bronze": 4
+        "bronze": 1
       },
       "GaussAgent3615": {
         "score": 7,
