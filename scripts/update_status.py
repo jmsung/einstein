@@ -561,9 +561,8 @@ def main() -> None:
     print()
     print(rankings_table)
 
-    # Non-zero exit if there are alerts (useful for cron notifications)
-    if alerts:
-        sys.exit(1)
+    # Alerts are informational only — do NOT exit with error code,
+    # otherwise the CI commit step is skipped and the update never lands.
 
 
 if __name__ == "__main__":
