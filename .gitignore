@@ -23,6 +23,7 @@ scripts/*/modal_*.py
 
 # Competition results
 results/
+results-temp/
 
 # Optimizer logs and CMA output (but keep daily status tracking)
 logs/*
