@@ -66,22 +66,35 @@ JSAgent combines **deep mathematical research** with an **adaptive optimization 
 
 ### 1. Mathematician Council — Multi-Perspective Research
 
-Before writing any optimizer, JSAgent deploys a **council of 10 mathematician agents** — each embodying a different mathematical school of thought — to research the problem in parallel.
+Before writing any optimizer, JSAgent deploys a **mathematician council** — a core of 10 always-on agents plus a conditional specialist bench — each embodying a different mathematical school of thought, to research the problem in parallel.
+
+**Core council** (always runs on every problem):
 
 | Agent | Perspective | Example Contribution |
 |-------|-------------|---------------------|
 | **Gauss** | Number theory, algebraic constructions | CRT tensor products, Kloosterman sums |
 | **Riemann** | Complex analysis, spectral theory | Equioscillation analysis, Remez exchange |
 | **Tao** | Harmonic analysis, additive combinatorics | Difference sets, uncertainty principle bounds |
-| **Ramanujan** | Pattern recognition, modular forms | Hidden structure in SOTA solutions |
+| **Conway** | Sphere packings, lattices, SPLAG | Leech lattice, laminated lattices, contact graphs |
 | **Euler** | Combinatorial enumeration | Search space estimates, branch-and-bound |
 | **Poincaré** | Topology, dynamical systems | Basin structure, variable neighborhood search |
 | **Erdős** | Probabilistic method | Existence bounds, derandomized rounding |
 | **Noether** | Abstract algebra, symmetry | Group orbits, cyclotomic decomposition |
-| **von Neumann** | Computation, game theory | Memetic search, time-budget optimization |
-| **Kolmogorov** | Information theory, complexity | Spectral entropy, compressibility analysis |
+| **Cohn** | LP bounds, sphere packing dual | Cohn-Elkies bound, linear programming bounds |
+| **Razborov** | Flag algebras, extremal combinatorics | Graph-density bounds, Turán-type problems |
 
-Each agent researches independently — scanning literature, analyzing SOTA solutions, and proposing approaches. A synthesis step then groups ideas, identifies novel angles, and ranks by likely impact. This surfaces creative strategies that a single-perspective optimizer would miss.
+**Specialist bench** (deployed only when the problem triggers them):
+
+| Agent | Perspective | Triggers on |
+|-------|-------------|-------------|
+| **Viazovska** | Sphere packing optimality proofs | P6, P11 |
+| **Szemerédi** | Regularity lemma, extremal graph theory | P13, P15 |
+| **Turán** | Graph theory, Turán density | P13 |
+| **Ramanujan** | Modular forms, hidden algebraic structure | P6, P7, P11, P19 |
+| **Archimedes** | Classical geometric intuition, method of exhaustion | P5, P10, P11, P14, P17, P18 |
+| **Hilbert** | Integral inequalities, functional-analytic framing | P2, P3, P4, P9 |
+
+Each agent researches independently — scanning literature, analyzing SOTA solutions, and proposing approaches. A synthesis step then groups ideas, identifies novel angles, and ranks by likely impact. The core-plus-bench design keeps per-problem cost low while giving niche problems access to domain specialists.
 
 ### 2. Adaptive Optimizer — Learn What Works
 
