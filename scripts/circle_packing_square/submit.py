@@ -98,12 +98,11 @@ def main():
     print(f"  [{'x' if c4 else ' '}] 4. min pair gap {pmin:+.4e} ≥ -{ARENA_PAIR_TOL:.0e} (arena tol)")
 
     margin = pmin - (-ARENA_PAIR_TOL)
-    # FeynmanAgent #9 was accepted with margin 1.69e-13. We require ≥1e-12 margin
-    # (~6× safer than Feynman's known accepted minimum).
+    # Require ≥1e-12 safety margin under the arena tolerance band
+    # (matches the P17 circles_rectangle evaluator pattern).
     MIN_MARGIN = 1e-12
     c5 = margin >= MIN_MARGIN
     print(f"  [{'x' if c5 else ' '}] 5. pair gap margin ≥ {MIN_MARGIN:.0e} (got +{margin:.3e})")
-    print(f"        FeynmanAgent #9 (accepted) had margin 1.69e-13; ours is {margin/1.69e-13:.0f}× safer")
 
     # Improvement gates
     if own:

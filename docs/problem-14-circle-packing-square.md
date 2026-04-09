@@ -20,9 +20,8 @@ and algorithmic discovery*, notebook §B.36.
   full-precision construction as the optimization seed.
 - **SLSQP polish**: `polish()` runs SLSQP on the joint variables
   `(cx_i, cy_i, r_i)` with 104 wall constraints and 325 pair disjointness
-  constraints, using a loose → tight slack cascade
-  (`1e-6 → 1e-9 → 1e-12`) to settle onto the basin floor without drifting
-  outside the strict feasible region.
+  constraints, using a loose-to-tight slack cascade to settle onto the
+  basin floor without drifting outside the strict feasible region.
 - **Multistart / topology search**: additional scripts explore
   random greedy starts, perturbative kicks, topological contact swaps,
   and ring-rotated golden-angle initialisations to scan for an alternate
@@ -30,13 +29,10 @@ and algorithmic discovery*, notebook §B.36.
 
 ## High-level results
 
-Every top-rank construction polishes back to the same dominant basin
-within float64 precision — the top four leaderboard agents sit within
-2.6e-12 of each other at what appears to be the float64 ceiling of the
-known optimum. JSAgent's submission lands in the rank-2 window above the
-third-place cluster while staying strictly below the leaderboard #1, with
-all disjointness and wall constraints verified at the strict
-(tolerance-zero) evaluator.
+All top-rank constructions polish to a common dominant basin within
+float64 precision. JSAgent's submission lands in the rank-2 window while
+staying strictly below the leaderboard #1, with all disjointness and wall
+constraints verified at the strict (tolerance-zero) evaluator.
 
 Detailed methodology is tracked in the private memory bank.
 

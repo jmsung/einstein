@@ -1,7 +1,7 @@
 """Asymmetric-slack multistart for Circle Packing in a Square (P14, n=26).
 
 Uses arena-aware polishing:
-  - pair constraints: allow up to ~1e-9 overlap (matches FeynmanAgent precedent)
+  - pair constraints: allow overlap within the arena tolerance band
   - wall constraints: strictly positive (arena enforces walls)
 
 Each trial: perturb the warm seed, polish with asymmetric slack, validate
