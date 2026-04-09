@@ -16,10 +16,14 @@ def test_constant_function() -> None:
 
 
 def test_negative_values_allowed() -> None:
-    """Unlike first autocorrelation, f may go negative here."""
-    f = [1.0, -0.5, 1.0, -0.5, 1.0]
-    c = verify_and_compute(f)
-    assert np.isfinite(c)
+    """Unlike first autocorrelation, f may go negative here.
+
+    Hand-computed oracle for [1, -0.5, 1, -0.5, 1] at n=5, dx=0.1:
+    autoconv max occurs at the symmetric center (k=4) with value 0.35;
+    integral = 0.2; C = abs(0.35) / 0.2**2 = 8.75.
+    """
+    c = verify_and_compute([1.0, -0.5, 1.0, -0.5, 1.0])
+    assert c == 8.75
 
 
 def test_zero_integral_raises() -> None:
@@ -39,8 +43,10 @@ def test_scale_invariance() -> None:
     rng = np.random.default_rng(0)
     f = rng.normal(0.5, 0.5, 50).tolist()
     base = verify_and_compute(f)
-    scaled = verify_and_compute([10.0 * x for x in f])
-    assert abs(base - scaled) < 1e-12
+    scaled_pos = verify_and_compute([10.0 * x for x in f])
+    scaled_neg = verify_and_compute([-10.0 * x for x in f])
+    assert abs(base - scaled_pos) < 1e-12
+    assert abs(base - scaled_neg) < 1e-12
 
 
 def test_arena_verifier_match() -> None:

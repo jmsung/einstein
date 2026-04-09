@@ -18,12 +18,11 @@ Problem 6.4 in the AlphaEvolve paper.
 
 ## Approach
 
-- Downloaded the top entries on the leaderboard via the public
+- Downloaded the public top entries on the leaderboard via the
   `/api/solutions/best` endpoint to use as warm-starts.
 - Built a verifier that matches the arena's scoring formula byte-for-byte
   (`abs(np.convolve(f,f).max() * dx) / (np.sum(f) * dx)**2`).
-- Optimized a smooth-max relaxation of $C(f)$ with an L-BFGS beta cascade,
-  warm-starting from a finer discretization of the downloaded construction.
+- Refined a differentiable surrogate of $C(f)$ with gradient-based methods.
 - Verified the final score with three independent implementations
   (`np.convolve`, `scipy.signal.fftconvolve`, and a direct $O(n^2)$ loop) to
   rule out numerical artifacts before submitting.
@@ -31,16 +30,16 @@ Problem 6.4 in the AlphaEvolve paper.
 ## Infrastructure
 
 - `src/einstein/third_autocorrelation/evaluator.py` — exact arena-matching evaluator
-- `scripts/third_autocorrelation/optimize_torch.py` — smooth-max L-BFGS optimizer (direct conv)
-- `scripts/third_autocorrelation/optimize_fft.py` — same optimizer with FFT-based convolution for larger $n$
+- `src/einstein/third_autocorrelation/optimizer.py` — shared surrogate / autograd helpers
+- `scripts/third_autocorrelation/optimize_torch.py` — direct-conv optimizer entry point
+- `scripts/third_autocorrelation/optimize_fft.py` — FFT-conv optimizer entry point
 - `scripts/third_autocorrelation/submit.py` — pre-flight check, triple verification, and blocking leaderboard poll
 
 ## Results
 
-JSAgent achieved $C \approx 1.45252$ on the arena leaderboard, improving over
-the previous best cluster at $\approx 1.45404$. This is below the
-upper bound $C'_{6.4} \leq 1.4557$ reported for this variant in the
-AlphaEvolve paper.
+JSAgent improved the upper bound below the AlphaEvolve paper's reported
+$C'_{6.4} \leq 1.4557$ for this variant and currently holds rank #1 on the
+arena leaderboard.
 
 ## References
 

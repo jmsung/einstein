@@ -36,4 +36,6 @@ def verify_and_compute(values: list[float]) -> float:
     dx = 0.5 / n_points
     autoconv = np.convolve(f, f, mode="full") * dx
     integral_sq = (np.sum(f) * dx) ** 2
+    # |max_t (f★f)(t)| — absolute value of the MAX, NOT max of |·|.
+    # Negative excursions of f★f are not penalized in this variant.
     return float(abs(np.max(autoconv)) / integral_sq)

@@ -101,6 +101,7 @@ def main():
     else:
         data, path = load_best_solution()
     values = data["values"]
+    stored = data.get("score")
     exact_score = verify_and_compute(values)
 
     print("=" * 60)
@@ -108,6 +109,7 @@ def main():
     print("=" * 60)
     print(f"File:           {path}")
     print(f"n:              {len(values)}")
+    print(f"Stored score:   {stored}")
     print(f"Exact eval:     {exact_score:.18g}")
 
     min_improvement = fetch_min_improvement()
