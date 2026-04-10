@@ -32,10 +32,8 @@ from einstein.kissing_number.evaluator import overlap_loss_mpmath
 N = 594
 D = 11
 RESULTS = Path("results/problem-6-kissing-number")
-MB_ROOT = os.environ.get("EINSTEIN_MB_ROOT")
-MB_SOLUTIONS = (
-    Path(MB_ROOT) / "docs/problem-6-kissing-number/solutions" if MB_ROOT else None
-)
+POLISH_TRAIL = RESULTS / "polish-trail"
+SESSION_ID = time.strftime("%Y%m%d-%H%M%S") + "-" + Path(__file__).stem
 
 
 def load_vectors(path: str) -> list[list[float]]:
@@ -278,11 +276,12 @@ def main() -> None:
                 with open(path.with_suffix(".json.tmp"), "w") as f:
                     json.dump(out, f)
                 os.replace(path.with_suffix(".json.tmp"), path)
-                if MB_SOLUTIONS is not None:
-                    MB_SOLUTIONS.mkdir(parents=True, exist_ok=True)
-                    mb = MB_SOLUTIONS / f"ulp-2coord-sweep{sweep+1}-{verify_score:.6e}.json"
-                    with open(mb, "w") as f:
-                        json.dump(out, f)
+                POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
+                trail = POLISH_TRAIL / f"session-{SESSION_ID}-best.json"
+                tmp = POLISH_TRAIL / f".tmp-{SESSION_ID}.json"
+                with open(tmp, "w") as f:
+                    json.dump(out, f)
+                os.replace(tmp, trail)
                 print(f"  >>> SAVED {verify_score:.12e}", flush=True)
 
         if sweep_accepts == 0:

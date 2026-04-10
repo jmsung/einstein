@@ -5,7 +5,7 @@ inserting one extra root at various positions (and a few cluster-structured
 random starts), then runs short CMA-ES on each in parallel.
 
 Verifies all improvements with the hybrid evaluator. Saves verified
-improvements to both results/ and the MB.
+improvements to both results/ and results/polish-trail/.
 
 Usage: uv run python scripts/uncertainty/k15_parallel_cma.py [--workers N]
 """
@@ -30,11 +30,9 @@ from einstein.uncertainty.hybrid import hybrid_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
-MB_SOLUTIONS_DIR = (
-    Path.home()
-    / "projects/workbench/memory-bank/einstein/docs/problem-18-uncertainty-principle/solutions"
-)
-MB_SOLUTIONS_DIR.mkdir(parents=True, exist_ok=True)
+POLISH_TRAIL = Path("results/problem-18-uncertainty-principle/polish-trail")
+POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
+SESSION_ID = time.strftime("%Y%m%d-%H%M%S") + "-" + Path(__file__).stem
 
 
 def _load_best_k(k):
@@ -178,9 +176,11 @@ def save_result(roots, score, fast_score, tag):
     with open(fname, "w") as f:
         json.dump(result, f, indent=2)
     log(f"    SAVED: {fname.name}")
-    mb_fname = MB_SOLUTIONS_DIR / f"solution-k{len(roots)}-{score:.10f}.json"
-    with open(mb_fname, "w") as f:
+    trail = POLISH_TRAIL / f"session-{SESSION_ID}-best.json"
+    tmp = POLISH_TRAIL / f".tmp-{SESSION_ID}.json"
+    with open(tmp, "w") as f:
         json.dump(result, f, indent=2)
+    os.replace(tmp, trail)
 
 
 def main():
