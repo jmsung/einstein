@@ -21,7 +21,7 @@ import numpy as np
 from einstein.kissing_number.evaluator import overlap_loss
 
 RESULTS = Path("results/problem-6-kissing-number")
-MB_SOLUTIONS = Path.home() / "projects/workbench/memory-bank/einstein/docs/problem-6-kissing-number/solutions"
+POLISH_TRAIL = RESULTS / "polish-trail"
 N = 594
 D = 11
 CHRONOS_NEW_1 = 0.156133128358060  # arena #1 we are trying to beat
@@ -110,16 +110,16 @@ def polish_round(
 
 
 def save_best(u: np.ndarray, score: float) -> None:
-    """Atomically save to solution_best.json + MB backup."""
+    """Atomically save to solution_best.json and archive to polish-trail/."""
     p = RESULTS / "solution_best.json"
     out = {"vectors": u.tolist(), "score": score, "source": "polish_chronos.py"}
     tmp = p.with_suffix(".json.tmp")
     with open(tmp, "w") as f:
         json.dump(out, f)
     os.replace(tmp, p)
-    # MB backup
-    mb_p = MB_SOLUTIONS / f"polish_chronos_{score:.13f}.json"
-    with open(mb_p, "w") as f:
+    POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
+    trail = POLISH_TRAIL / f"polish_chronos_{score:.13f}.json"
+    with open(trail, "w") as f:
         json.dump(out, f)
     print(f"  >>> SAVED {score:.15f}", flush=True)
 

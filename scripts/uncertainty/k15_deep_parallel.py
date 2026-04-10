@@ -5,7 +5,7 @@ Each worker takes a starting position and runs:
   Phase 2: CMA-ES sigma=0.005, ~2000 fevals
   Hybrid verify
 
-Saves verified improvements to results/ and the MB.
+Saves verified improvements to results/ and results/polish-trail/.
 """
 import argparse
 import json
@@ -27,11 +27,8 @@ from einstein.uncertainty.hybrid import hybrid_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
-MB_SOLUTIONS_DIR = (
-    Path.home()
-    / "projects/workbench/memory-bank/einstein/docs/problem-18-uncertainty-principle/solutions"
-)
-MB_SOLUTIONS_DIR.mkdir(parents=True, exist_ok=True)
+POLISH_TRAIL = Path("results/problem-18-uncertainty-principle/polish-trail")
+POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
 
 
 def _load_best_k(k):
@@ -172,8 +169,8 @@ def save_result(roots, score, fast_score, tag):
     with open(fname, "w") as f:
         json.dump(result, f, indent=2)
     log(f"    SAVED: {fname.name}")
-    mb_fname = MB_SOLUTIONS_DIR / f"solution-k{len(roots)}-{score:.10f}.json"
-    with open(mb_fname, "w") as f:
+    trail = POLISH_TRAIL / f"solution-k{len(roots)}-{score:.10f}.json"
+    with open(trail, "w") as f:
         json.dump(result, f, indent=2)
 
 

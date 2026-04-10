@@ -56,10 +56,7 @@ from check_submission import (  # noqa: E402
 PROBLEM_ID = 6
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 RESULTS_DIR = PROJECT_ROOT / "results" / "problem-6-kissing-number"
-MB_ROOT = os.environ.get("EINSTEIN_MB_ROOT")
-MB_SOLUTIONS = (
-    Path(MB_ROOT) / "docs/problem-6-kissing-number/solutions" if MB_ROOT else None
-)
+POLISH_TRAIL = RESULTS_DIR / "polish-trail"
 STATE_FILE = RESULTS_DIR / "cron_state.json"
 LOCK_FILE = RESULTS_DIR / "cron.lock"
 LOG_DIR = PROJECT_ROOT / "logs" / "kissing_cron"
@@ -125,11 +122,10 @@ def save_best_to_disk(v: np.ndarray, score: float, tag: str) -> None:
     with open(tmp, "w") as f:
         json.dump(out, f)
     os.replace(tmp, path)
-    if MB_SOLUTIONS is not None:
-        MB_SOLUTIONS.mkdir(parents=True, exist_ok=True)
-        mb = MB_SOLUTIONS / f"cron-{tag}-{score:.6e}.json"
-        with open(mb, "w") as f:
-            json.dump(out, f)
+    POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
+    trail = POLISH_TRAIL / f"cron-{tag}-{score:.6e}.json"
+    with open(trail, "w") as f:
+        json.dump(out, f)
 
 
 def fetch_min_improvement() -> float:

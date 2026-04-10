@@ -31,10 +31,7 @@ from scipy.optimize import minimize
 from einstein.kissing_number.evaluator import overlap_loss
 
 RESULTS = Path("results/problem-6-kissing-number")
-MB_ROOT = os.environ.get("EINSTEIN_MB_ROOT")
-MB_SOLUTIONS = (
-    Path(MB_ROOT) / "docs/problem-6-kissing-number/solutions" if MB_ROOT else None
-)
+POLISH_TRAIL = RESULTS / "polish-trail"
 N = 594
 D = 11
 NORM = 2.0
@@ -116,11 +113,10 @@ def save_best(v: np.ndarray, score: float) -> None:
     with open(tmp, "w") as f:
         json.dump(out, f)
     os.replace(tmp, p)
-    if MB_SOLUTIONS is not None:
-        MB_SOLUTIONS.mkdir(parents=True, exist_ok=True)
-        mb_p = MB_SOLUTIONS / f"lbfgs-{score:.6e}.json"
-        with open(mb_p, "w") as f:
-            json.dump(out, f)
+    POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
+    trail = POLISH_TRAIL / f"lbfgs-{score:.6e}.json"
+    with open(trail, "w") as f:
+        json.dump(out, f)
     print(f"  >>> SAVED {score:.15e}", flush=True)
 
 

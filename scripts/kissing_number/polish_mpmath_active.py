@@ -36,10 +36,7 @@ from einstein.kissing_number.evaluator import overlap_loss_mpmath
 N = 594
 D = 11
 RESULTS = Path("results/problem-6-kissing-number")
-MB_ROOT = os.environ.get("EINSTEIN_MB_ROOT")
-MB_SOLUTIONS = (
-    Path(MB_ROOT) / "docs/problem-6-kissing-number/solutions" if MB_ROOT else None
-)
+POLISH_TRAIL = RESULTS / "polish-trail"
 
 
 def load_vectors(path: str) -> list[list[float]]:
@@ -223,11 +220,10 @@ def save_solution(v: np.ndarray, score: float, tag: str, seed: int = 0) -> None:
         with open(tmp, "w") as f:
             json.dump(out, f)
         os.replace(tmp, path)
-    if MB_SOLUTIONS is not None:
-        MB_SOLUTIONS.mkdir(parents=True, exist_ok=True)
-        mb = MB_SOLUTIONS / f"mpmath-polish-seed{seed}-{tag}-{score:.6e}.json"
-        with open(mb, "w") as f:
-            json.dump(out, f)
+    POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
+    trail = POLISH_TRAIL / f"mpmath-polish-seed{seed}-{tag}-{score:.6e}.json"
+    with open(trail, "w") as f:
+        json.dump(out, f)
     print(f"  >>> SAVED {score:.12e}  [seed={seed} {tag}]", flush=True)
 
 

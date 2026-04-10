@@ -9,8 +9,8 @@ to the score itself in this basin. We must use the slow-path centers
 formula for both candidate scoring and running total.
 
 Vectors are kept at norm = 2.0 (basin convention).
-Saves on every strict improvement to solution_best.json. If the env var
-EINSTEIN_MB_ROOT is set, also writes a backup to that directory.
+Saves on every strict improvement to solution_best.json, and appends a
+per-improvement archive to results/problem-6-kissing-number/polish-trail/.
 """
 
 from __future__ import annotations
@@ -26,10 +26,7 @@ import numpy as np
 from einstein.kissing_number.evaluator import overlap_loss
 
 RESULTS = Path("results/problem-6-kissing-number")
-MB_ROOT = os.environ.get("EINSTEIN_MB_ROOT")
-MB_SOLUTIONS = (
-    Path(MB_ROOT) / "docs/problem-6-kissing-number/solutions" if MB_ROOT else None
-)
+POLISH_TRAIL = RESULTS / "polish-trail"
 N = 594
 D = 11
 NORM = 2.0  # basin convention: ||v_i|| = 2 exactly
@@ -152,18 +149,17 @@ def polish_round(
 
 
 def save_best(v: np.ndarray, score: float) -> None:
-    """Atomically save to solution_best.json. Optional MB backup if EINSTEIN_MB_ROOT is set."""
+    """Atomically save to solution_best.json and archive to polish-trail/."""
     p = RESULTS / "solution_best.json"
     out = {"vectors": v.tolist(), "score": score, "source": "polish_new_basin.py"}
     tmp = p.with_suffix(".json.tmp")
     with open(tmp, "w") as f:
         json.dump(out, f)
     os.replace(tmp, p)
-    if MB_SOLUTIONS is not None:
-        MB_SOLUTIONS.mkdir(parents=True, exist_ok=True)
-        mb_p = MB_SOLUTIONS / f"new-basin-polish-{score:.6e}.json"
-        with open(mb_p, "w") as f:
-            json.dump(out, f)
+    POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
+    trail = POLISH_TRAIL / f"new-basin-polish-{score:.6e}.json"
+    with open(trail, "w") as f:
+        json.dump(out, f)
     print(f"  >>> SAVED {score:.15e}", flush=True)
 
 
