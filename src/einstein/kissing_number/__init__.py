@@ -1,3 +1,15 @@
-from .evaluator import evaluate, overlap_loss, exact_check
+from .evaluator import (
+    evaluate,
+    exact_check,
+    overlap_loss,
+    overlap_loss_fast,
+    overlap_loss_mpmath,
+)
 
-__all__ = ["evaluate", "overlap_loss", "exact_check"]
+__all__ = [
+    "evaluate",
+    "exact_check",
+    "overlap_loss",
+    "overlap_loss_fast",
+    "overlap_loss_mpmath",
+]

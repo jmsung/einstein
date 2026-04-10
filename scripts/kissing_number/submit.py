@@ -17,7 +17,11 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, "src")
-from einstein.kissing_number.evaluator import overlap_loss, overlap_loss_fast  # noqa: E402
+from einstein.kissing_number.evaluator import (  # noqa: E402
+    overlap_loss,
+    overlap_loss_fast,
+    overlap_loss_mpmath,
+)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from check_submission import (  # noqa: E402
@@ -43,6 +47,11 @@ def fetch_min_improvement() -> float:
 
 
 def load_best_solution():
+    """Prefer the mpmath-polished solution if available."""
+    mpmath_path = RESULTS_DIR / "solution_best_mpmath.json"
+    if mpmath_path.exists():
+        with open(mpmath_path) as f:
+            return json.load(f), mpmath_path
     path = RESULTS_DIR / "solution_best.json"
     with open(path) as f:
         data = json.load(f)
@@ -90,43 +99,49 @@ def main() -> None:
     stored = data.get("score")
 
     V = np.array(vectors, dtype=np.float64)
-    exact = overlap_loss(V)
-    fast = overlap_loss_fast(V)
+    # The arena verifier uses high-precision (mpmath) arithmetic. The float64
+    # paths are kept only as a sanity print; the mpmath result is the ground truth.
+    f64_slow = overlap_loss(V)
+    f64_fast = overlap_loss_fast(V)
+    mp_50 = overlap_loss_mpmath(V, dps=50)
+    mp_80 = overlap_loss_mpmath(V, dps=80)
 
     print("=" * 60)
     print("Kissing Number d=11 — Submission")
     print("=" * 60)
-    print(f"File:           {path}")
-    print(f"n_vectors:      {len(vectors)}")
-    print(f"Stored score:   {stored}")
-    print(f"Exact eval:     {exact:.15f}")
-    print(f"Fast eval:      {fast:.15f}")
-    print(f"Eval match:     {abs(exact - fast) < 1e-10}")
+    print(f"File:            {path}")
+    print(f"n_vectors:       {len(vectors)}")
+    print(f"Stored score:    {stored}")
+    print(f"f64 slow eval:   {f64_slow:.15e}  (sanity check)")
+    print(f"f64 fast eval:   {f64_fast:.15e}  (sanity check)")
+    print(f"mpmath dps=50:   {mp_50:.15e}  (arena parity)")
+    print(f"mpmath dps=80:   {mp_80:.15e}  (triple-check)")
+    print(f"mpmath stable:   {abs(mp_50 - mp_80) < 1e-20}")
 
     min_improvement = fetch_min_improvement()
-    print(f"minImprovement: {min_improvement}")
+    print(f"minImprovement:  {min_improvement}")
 
     print("\nCurrent leaderboard (top 5):")
     agent_name = load_agent_name()
     lb = check_leaderboard(PROBLEM_ID, limit=5)
     for i, sol in enumerate(lb):
         marker = " <-- us" if sol["agentName"] == agent_name else ""
-        print(f"  #{i+1} {sol['agentName']:<26} {sol['score']:.15f}{marker}")
+        print(f"  #{i+1} {sol['agentName']:<26} {sol['score']:.15e}{marker}")
 
     our_prev = next((s["score"] for s in lb if s["agentName"] == agent_name), None)
     rank3 = lb[2]["score"] if len(lb) >= 3 else None
     leader = lb[0]["score"] if lb else None
 
     print("\nPre-submission checklist:")
-    c1 = abs(exact - fast) < 1e-10
-    print(f"  [{'x' if c1 else ' '}] Evaluator tolerance=0 (exact ~= fast)")
-    c2 = stored is not None and abs(exact - stored) < 1e-12
-    print(f"  [{'x' if c2 else ' '}] Score matches stored (score is reproducible)")
-    c3 = rank3 is not None and exact <= rank3
+    c1 = abs(mp_50 - mp_80) < 1e-20
+    print(f"  [{'x' if c1 else ' '}] mpmath dps=50 ≡ dps=80 (stable across precision)")
+    c2 = stored is not None and abs(mp_50 - float(stored)) < 1e-16
+    print(f"  [{'x' if c2 else ' '}] Score matches stored value")
+    c3 = rank3 is not None and mp_50 <= rank3
     print(f"  [{'x' if c3 else ' '}] Score ranks top 3 (<= #3)")
-    c4 = our_prev is None or (exact < our_prev - min_improvement)
+    c4 = our_prev is None or (mp_50 < our_prev - min_improvement)
     print(f"  [{'x' if c4 else ' '}] Improves on our previous best by > minImprovement")
-    c5 = leader is None or exact < leader
+    c5 = leader is None or mp_50 < leader
     print(f"  [{'x' if c5 else ' '}] Strictly beats current leader (rank-1 candidate)")
 
     all_pass = c1 and c2 and c3 and c4 and c5

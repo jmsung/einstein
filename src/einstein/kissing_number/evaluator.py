@@ -88,6 +88,62 @@ def overlap_loss_fast(vectors: np.ndarray) -> float:
     return float(np.sum(penalties))
 
 
+def overlap_loss_mpmath(vectors, dps: int = 50) -> float:
+    """High-precision overlap loss matching the arena verifier.
+
+    The arena evaluates P6 in bignum precision (≥50 dps). Float64
+    computations can under-count overlap by up to ~1e-12 for tight basins
+    whose pair distances are within a few ulps of 2.0. This function is
+    the ground truth and MUST be used for any final score comparison.
+
+    Parameters
+    ----------
+    vectors : np.ndarray | list
+        Shape (N_VECTORS, DIMENSION). Accepts anything convertible to a
+        2-D sequence of floats; values are re-parsed through repr() to
+        preserve every bit of the float64 input.
+    dps : int
+        mpmath decimal precision. 50 matches the arena within float64
+        rounding; 100 is a sanity cross-check.
+
+    Returns
+    -------
+    float
+        Total overlap penalty, truncated to float64. Use mpmath directly
+        if you need the exact bignum value.
+    """
+    from mpmath import mp, mpf, sqrt as mpsqrt  # local import: keeps fast paths dependency-free
+
+    arr = np.asarray(vectors, dtype=np.float64)
+    if arr.ndim != 2 or arr.shape != (N_VECTORS, DIMENSION):
+        raise ValueError(f"Expected shape ({N_VECTORS}, {DIMENSION}), got {arr.shape}")
+
+    mp.dps = dps
+    n, d = arr.shape
+
+    V = [[mpf(repr(float(arr[i, k]))) for k in range(d)] for i in range(n)]
+    norms = [mpsqrt(sum(x * x for x in row)) for row in V]
+    if any(nrm == 0 for nrm in norms):
+        raise ValueError("All vectors must be non-zero")
+    two = mpf(2)
+    C = [[two * V[i][k] / norms[i] for k in range(d)] for i in range(n)]
+
+    total = mpf(0)
+    for i in range(n):
+        ci = C[i]
+        for j in range(i + 1, n):
+            cj = C[j]
+            diff2 = mpf(0)
+            for k in range(d):
+                t = ci[k] - cj[k]
+                diff2 += t * t
+            dist = mpsqrt(diff2)
+            if dist < two:
+                total += two - dist
+
+    return float(total)
+
+
 def evaluate(data: dict) -> float:
     """Score a kissing number solution. Matches arena verifier exactly."""
     vectors = np.array(data["vectors"], dtype=np.float64)
@@ -97,4 +153,4 @@ def evaluate(data: dict) -> float:
     if exact_check(vectors):
         return 0.0
 
-    return overlap_loss(vectors)
+    return overlap_loss_mpmath(vectors)
