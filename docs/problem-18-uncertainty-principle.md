@@ -32,6 +32,12 @@ Given a set of "double roots" z₁, ..., zₖ (positive reals ≤ 300), construc
 - `scripts/uncertainty/optimize_loop.py` — adaptive optimization loop
 - `scripts/uncertainty/exact_hillclimb.py` — exact hill-climbing optimizer
 - `scripts/uncertainty/k_climb_optimizer.py` — k-climb optimizer
+- `scripts/uncertainty/k14_polish.py` — hybrid-verified hillclimb on k=14 solutions
+- `scripts/uncertainty/k15_climb.py` — k=15 parallel multi-start climb from k=14 base
+- `scripts/uncertainty/k15_broad.py` — k=15 broad search with short CMA-ES runs
+- `scripts/uncertainty/k15_parallel_cma.py` — k=15 parallel CMA-ES with smooth penalty
+- `scripts/uncertainty/k15_deep_parallel.py` — k=15 deep refine with CMA-ES phases
+- `scripts/uncertainty/k15_refine.py` — k=15 deep CMA-ES + hillclimb refinement
 - `scripts/uncertainty/submit.py` — arena submission script
 
 ## References
@@ -40,4 +46,4 @@ Given a set of "double roots" z₁, ..., zₖ (positive reals ≤ 300), construc
 - Laguerre polynomial combination with α = -1/2
 - Solution format: `{"laguerre_double_roots": [z1, z2, ..., zk]}`
 
-*Last updated: 2026-04-04*
+*Last updated: 2026-04-09*

@@ -28,10 +28,8 @@ import mpmath as mp
 from einstein.kissing_number.evaluator import overlap_loss
 
 RESULTS = Path("results/problem-6-kissing-number")
-MB_ROOT = os.environ.get("EINSTEIN_MB_ROOT")
-MB_SOLUTIONS = (
-    Path(MB_ROOT) / "docs/problem-6-kissing-number/solutions" if MB_ROOT else None
-)
+POLISH_TRAIL = RESULTS / "polish-trail"
+SESSION_ID = time.strftime("%Y%m%d-%H%M%S") + "-" + Path(__file__).stem
 N = 594
 D = 11
 NORM = 2.0
@@ -58,11 +56,12 @@ def save_best(v: np.ndarray, score: float, tag: str = "mpmath") -> None:
     with open(tmp, "w") as f:
         json.dump(out, f)
     os.replace(tmp, p)
-    if MB_SOLUTIONS is not None:
-        MB_SOLUTIONS.mkdir(parents=True, exist_ok=True)
-        mb_p = MB_SOLUTIONS / f"mpmath-{tag}-{score:.6e}.json"
-        with open(mb_p, "w") as f:
-            json.dump(out, f)
+    POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
+    trail = POLISH_TRAIL / f"session-{SESSION_ID}-best.json"
+    tmp = POLISH_TRAIL / f".tmp-{SESSION_ID}.json"
+    with open(tmp, "w") as f:
+        json.dump(out, f)
+    os.replace(tmp, trail)
     print(f"  >>> SAVED {score:.15e}", flush=True)
 
 
