@@ -85,4 +85,4 @@ uv run python scripts/heilbronn_triangles/mpmath_polish.py
 - Cohen, A., Pohoata, C., Zakharov, D. *A new upper bound for the Heilbronn
   triangle problem.* arXiv:2305.18253 (2023).
 
-*Last updated: 2026-04-08*
+*Last updated: 2026-04-09*
