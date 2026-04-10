@@ -42,7 +42,7 @@ def bh_local(multi_xs, bi_xs, n_seeds=20, max_time=120) -> tuple[np.ndarray, flo
         if time.time() - t0 > max_time:
             break
         rng = np.random.default_rng(seed * 73 + 29)
-        # Mix: block_shuffle and pair_swap (winners from push_h)
+        # Mix of perturbation strategies
         for strategy in [
             ("bs", {"w": 3}), ("bs", {"w": 5}), ("bs", {"w": 10}), ("bs", {"w": 20}),
             ("ps", {"n": 1}), ("ps", {"n": 5}), ("pm", {"n": 1}),

@@ -43,7 +43,7 @@ def main():
     initial = _score_from_arrays(xs0, ys0)
     print(f"=== A. Multi-seed BH from {initial:.14f} ===\n")
 
-    seeds = [11, 23, 47, 89, 137, 211, 313, 421, 547, 661]
+    seeds = list(range(10))
     best_score = initial
     best_xs, best_ys = xs0.copy(), ys0.copy()
     results = []
