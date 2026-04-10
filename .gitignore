@@ -21,6 +21,9 @@ wheels/
 # GPU cloud runner scripts (private, provider-specific)
 scripts/*/modal_*.py
 
+# launchd / cron plists are per-machine and should not be checked in
+scripts/*/*.plist
+
 # Competition results
 results/
 results-temp/
