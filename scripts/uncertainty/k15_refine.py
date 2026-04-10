@@ -126,10 +126,12 @@ def hillclimb(roots, max_rounds=30):
     return roots, best
 
 
-def make_starts(base_roots):
-    promising_pos = [127, 107, 97, 142, 132, 87, 117, 152, 77, 92]
+def make_starts(base_roots, positions=None):
+    """Generate insertion-position trial starts. Default: uniform grid over [2, 290]."""
+    if positions is None:
+        positions = list(range(2, 290, 15))
     starts = []
-    for pos in promising_pos:
+    for pos in positions:
         cand = sorted(base_roots + [float(pos)])
         if all(cand[i + 1] - cand[i] >= 0.5 for i in range(len(cand) - 1)):
             starts.append((cand, f"pos{pos}"))
