@@ -1,13 +1,12 @@
-"""P13 push: test Council 5's left-side clustering hypothesis.
+"""P13 push: test left-side vs right-side cusp placement.
 
-Council 5 claim: t'(x) has sqrt singularity (x_k - x)^{-1/2} at the RIGHT endpoint
-of scallop k (approaching cusp from left). So sqrt(phi) ~ (x_k - x)^{-1/4}, and
-the optimal density CLUSTERS LEFT of each cusp, not symmetrically.
+Theory: t'(x) has a sqrt singularity (x_k - x)^{-1/2} at the right endpoint
+of each scallop, so sqrt(density) ~ (x_k - x)^{-1/4} suggests clustering on
+the LEFT side of each cusp rather than symmetrically.
 
-Current solution: 1 point per cusp snapped to x_k + 1e-9 (right side).
-Test: move those points to x_k - 1e-3 (LEFT side, scallop k-1), polish.
-
-Also tries other left-side offsets.
+Test: for each cusp x_k = 1 - 1/k, move the cusp-adjacent point from inside
+scallop k to inside scallop k-1 with various offsets, then polish with
+bounded L-BFGS.
 """
 
 import json

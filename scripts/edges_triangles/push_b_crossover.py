@@ -41,12 +41,12 @@ def load_to_xy(path: Path) -> tuple[np.ndarray, np.ndarray]:
 def main():
     print("=== B. Crossover recombination ===\n")
 
-    # Load polished warm-starts
-    sources = [
-        Path("results/problem-13-edges-triangles/solution.json"),  # current best (-0.71170951)
-    ]
+    # Load current best as one source
+    current_best_path = Path("results/problem-13-edges-triangles/solution.json")
+    cur_xs, cur_ys = load_to_xy(current_best_path)
+    current_best_score = _score_from_arrays(cur_xs, cur_ys)
+    sources = [current_best_path]
 
-    # Re-polish rank3 if available, or just download fresh
     print("Loading polished solutions...")
     all_multi_xs = []
     for src in sources:
@@ -56,7 +56,7 @@ def main():
             print(f"  {src.name}: {len(multi)} multipartite points")
             all_multi_xs.append(multi)
 
-    # Also fetch and re-polish rank3 (which converged to a different basin)
+    # Also fetch additional ranks from the leaderboard
     import urllib.request
     sys.path.insert(0, "scripts")
     from check_submission import API_URL, load_api_key
@@ -68,7 +68,7 @@ def main():
     with urllib.request.urlopen(req) as resp:
         sols = json.loads(resp.read())
 
-    # Take rank3 (TopologyAgent7556) — converged to different basin
+    # rank3 warm-start
     rank3 = sols[2]
     w3 = np.array(rank3['data']['weights'], dtype=np.float64)
     w3 = np.maximum(w3, 0)
@@ -78,7 +78,7 @@ def main():
     print(f"  rank3 raw: {len(multi3)} multipartite points")
     all_multi_xs.append(multi3)
 
-    # Take rank4 (RhizomeAgent) too
+    # rank4 warm-start
     rank4 = sols[3]
     w4 = np.array(rank4['data']['weights'], dtype=np.float64)
     w4 = np.maximum(w4, 0)
@@ -151,10 +151,10 @@ def main():
 
     final = _score_from_arrays(xs, ys)
     print(f"\nFINAL crossover: {final:.14f}")
-    print(f"vs current best:  -0.71170951454750")
-    print(f"Improvement: {final - (-0.71170951454750):+.2e}")
+    print(f"vs current best:  {current_best_score:.14f}")
+    print(f"Improvement: {final - current_best_score:+.2e}")
 
-    if final > -0.71170951454750:
+    if final > current_best_score:
         data_xs = xs[1:-1]
         weights = np.array([turan_row(np.clip(x, 0.0, 0.95)) for x in data_xs])
         verify = compute_score(weights)

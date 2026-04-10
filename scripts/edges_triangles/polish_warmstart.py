@@ -79,7 +79,9 @@ def main():
     warm_dir = Path("results/problem-13-edges-triangles/warm-starts")
     files = sorted(warm_dir.glob("rank*.json"))
 
-    our_score = -0.71170976291631
+    # Load current best dynamically from solution.json
+    cur_xs, cur_ys = load_to_xy(Path("results/problem-13-edges-triangles/solution.json"))
+    our_score = _score_from_arrays(cur_xs, cur_ys)
     print(f"Our current best: {our_score:.14f}")
     print(f"Polishing {len(files)} warm-starts...\n")
 

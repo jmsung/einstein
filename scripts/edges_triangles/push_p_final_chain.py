@@ -1,10 +1,8 @@
-"""P13 push: final extraction chain.
+"""P13 push: micro-noise BH chain with diverse perturbations.
 
-Based on E-L analysis, we're AT the theoretical m=490 floor. Any further gains
-are sub-leading O(1/m²) corrections.
-
-Strategy: very many BH seeds with MICRO noise levels (1e-3 to 1e-5) + bounded
-L-BFGS polish + boundary snap + repeat. Time-bounded 15 min.
+Many BH seeds with micro noise levels + bounded L-BFGS polish, plus block
+shuffle and adjacent-pair-swap perturbations and periodic boundary snap.
+Time-bounded 15 min.
 """
 
 import json

@@ -6,6 +6,7 @@ across scallop boundaries (the previous optimizer held k fixed).
 """
 
 import json
+import os
 import shutil
 import sys
 import time
@@ -26,7 +27,6 @@ from push_d_torch_lbfgs import (  # noqa: E402
 )
 
 RESULTS = Path("results/problem-13-edges-triangles")
-MB_SOL = Path.home() / "projects/workbench/memory-bank/einstein/docs/problem-13-edges-triangles/solutions"
 torch.set_default_dtype(torch.float64)
 
 
@@ -114,9 +114,11 @@ def save_solution(bi_xs: np.ndarray, multi_xs: np.ndarray, tag: str) -> Path:
     with open(out, "w") as f:
         json.dump({"weights": w.tolist()}, f)
     print(f"  Saved {out}  score={score:.14f}")
-    MB_SOL.mkdir(parents=True, exist_ok=True)
-    mb_copy = MB_SOL / f"solution-push-e-{score:.10f}.json"
-    shutil.copy2(out, mb_copy)
+    backup_dir = os.environ.get("EINSTEIN_BACKUP_DIR")
+    if backup_dir:
+        bd = Path(backup_dir)
+        bd.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(out, bd / f"solution-push-e-{score:.10f}.json")
     return out
 
 

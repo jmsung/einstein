@@ -8,6 +8,7 @@ Also does a quick L-BFGS polish after each generation's best.
 """
 
 import json
+import os
 import shutil
 import sys
 import time
@@ -24,7 +25,6 @@ from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
 from push_e_bh_lbfgs import lbfgs_polish, reconstruct_weights, true_score  # noqa: E402
 
 RESULTS = Path("results/problem-13-edges-triangles")
-MB_SOL = Path.home() / "projects/workbench/memory-bank/einstein/docs/problem-13-edges-triangles/solutions"
 
 
 def log_gaps_to_multi(log_gaps: np.ndarray, x_lo: float, x_hi: float) -> np.ndarray:
@@ -61,9 +61,11 @@ def save_solution(bi_xs: np.ndarray, multi_xs: np.ndarray, tag: str) -> Path:
     with open(out, "w") as f:
         json.dump({"weights": w.tolist()}, f)
     print(f"  Saved {out}  score={score:.14f}")
-    MB_SOL.mkdir(parents=True, exist_ok=True)
-    mb_copy = MB_SOL / f"solution-push-f-{score:.10f}.json"
-    shutil.copy2(out, mb_copy)
+    backup_dir = os.environ.get("EINSTEIN_BACKUP_DIR")
+    if backup_dir:
+        bd = Path(backup_dir)
+        bd.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(out, bd / f"solution-push-f-{score:.10f}.json")
     return out
 
 

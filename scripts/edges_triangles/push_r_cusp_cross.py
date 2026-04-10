@@ -1,14 +1,10 @@
 """P13 push: force cusp crossing.
 
-Council 4 insight: bounded L-BFGS holds each point in its assigned scallop
-via sigmoid bounds. If the true optimum has a point slightly across a
-cusp (in the OTHER scallop from where the optimizer assigned it), bounded
-L-BFGS can never find it.
-
-Test: for each cusp k in 3..19, take the point nearest the cusp (currently
-at x_k + 1e-9 inside scallop k), move it to the OTHER side (x_k - 1e-9 inside
-scallop k-1), re-run polish. Also try pairs (move point from k to k-1 AND
-a different point from k-1 to k).
+Bounded L-BFGS pins each point to its assigned scallop via sigmoid bounds,
+so a point can never cross a cusp during polish. This script forces the
+cusp-adjacent point across to the other scallop (k → k-1 or k-1 → k) and
+re-runs the bounded polish, testing each cusp k in 3..19 in both directions
+plus bulk variants.
 """
 
 import json

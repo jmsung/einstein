@@ -1,13 +1,8 @@
 """P13 push: E-L optimal density initialization + polish.
 
-From theory, the optimal point density is ρ*(x) ∝ sqrt(f(x)) where
-f(x) = t'/2 - t'²/6.
-
-We compute the cumulative distribution of sqrt(f) over [0.5, 0.95], place 490
-points at the inverse CDF at uniform quantiles, then polish with bounded L-BFGS.
-
-If our current solution is NOT exactly E-L optimal, this should find a new
-starting point that's closer to the theoretical floor.
+Place points at the inverse-CDF of sqrt(f(x)) over [0.5, 0.95] where
+f(x) = t'/2 - t'²/6 (Euler-Lagrange optimal density), then polish with
+bounded L-BFGS.
 """
 
 import json
@@ -27,6 +22,10 @@ from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
 from push_g_bounded import lbfgs_polish_bounded, perturb_log_gaps, save_solution, true_score  # noqa: E402
 
 RESULTS = Path("results/problem-13-edges-triangles")
+
+# Razborov clique-density bound at x=0.95 (Razborov 2008, "On the minimal
+# density of triangles in graphs"). Used as a published reference anchor.
+RAZBOROV_BOUND = -0.71158675291847
 
 
 def t_star(x: float) -> float:
@@ -93,10 +92,9 @@ def main():
     print(f"Current best: {init_score:.14f}")
 
     theoretical_excess = compute_theoretical_excess(490)
-    theoretical_floor = -0.71158675291847 - theoretical_excess
+    theoretical_floor = RAZBOROV_BOUND - theoretical_excess
     print(f"E-L theoretical excess for m=490: {theoretical_excess:.6e}")
     print(f"E-L theoretical floor:  {theoretical_floor:.14f}")
-    print(f"Our excess over Razborov: {init_score - (-0.71158675291847):.6e}")
     print()
 
     # Compute E-L positions

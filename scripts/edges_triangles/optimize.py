@@ -5,6 +5,7 @@ Use --polish to skip the initial pipeline and polish an existing solution.
 """
 
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -13,8 +14,6 @@ import numpy as np
 from scipy.optimize import minimize_scalar
 
 from einstein.edges_triangles.evaluator import compute_densities, compute_score, turan_row
-
-MB_SOLUTIONS = Path.home() / "projects/workbench/memory-bank/einstein/docs/problem-13-edges-triangles/solutions"
 
 
 def _segment_area(y0: float, y1: float, h: float) -> float:
@@ -282,7 +281,7 @@ def load_solution(path: Path) -> tuple[np.ndarray, np.ndarray]:
 
 
 def save_solution(xs_arr: np.ndarray, ys_arr: np.ndarray, out_dir: Path) -> Path:
-    """Save solution and auto-backup to MB."""
+    """Save solution. If EINSTEIN_BACKUP_DIR env var is set, also copy there."""
     data_xs = xs_arr[1:-1]
     weights = np.array([turan_row(np.clip(x, 0.0, 0.95)) for x in data_xs])
     score = compute_score(weights)
@@ -294,14 +293,13 @@ def save_solution(xs_arr: np.ndarray, ys_arr: np.ndarray, out_dir: Path) -> Path
     print(f"Saved to {out_path}")
     print(f"Verified: {score:.10f}")
 
-    # Auto-backup to MB
-    MB_SOLUTIONS.mkdir(parents=True, exist_ok=True)
-    mb_path = MB_SOLUTIONS / f"solution-{score:.8f}.json"
-    shutil.copy2(out_path, mb_path)
-    # Update best symlink
-    best_path = MB_SOLUTIONS / "solution-best.json"
-    shutil.copy2(out_path, best_path)
-    print(f"Backed up to MB: {mb_path.name}")
+    backup_dir = os.environ.get("EINSTEIN_BACKUP_DIR")
+    if backup_dir:
+        bd = Path(backup_dir)
+        bd.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(out_path, bd / f"solution-{score:.8f}.json")
+        shutil.copy2(out_path, bd / "solution-best.json")
+        print(f"Backed up to {bd}")
 
     return out_path
 
@@ -364,7 +362,7 @@ def main():
     score = _score_from_arrays(xs, ys)
     print(f"\n=== Advanced optimization from {score:.10f} ===")
 
-    # Basin-hopping (the breakthrough technique)
+    # Basin-hopping global search phase
     print("\nPhase 6: Basin-hopping...")
     xs_bh, ys_bh = basin_hopping_optimize(xs, ys, n_iter=50, temp=1e-8)
     xs_bh, ys_bh = golden_section_sweep(xs_bh, ys_bh, n_sweeps=100)

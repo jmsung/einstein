@@ -9,7 +9,6 @@ Usage:
 """
 
 import json
-import shutil
 import sys
 from pathlib import Path
 
@@ -20,7 +19,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 
 RESULTS = Path("results/problem-13-edges-triangles")
-MB_SOL = Path.home() / "projects/workbench/memory-bank/einstein/docs/problem-13-edges-triangles/solutions"
 
 torch.set_default_dtype(torch.float64)
 

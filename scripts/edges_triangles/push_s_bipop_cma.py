@@ -1,8 +1,8 @@
 """P13 push: BIPOP-CMA-ES with micro-sigma.
 
-Council 7 diagnosis: our prior CMA-ES failed because sigma=0.05 was WAY too
-large (feature scale is 1e-4). Use sigma=1e-5 instead with popsize=100,
-diagonal CMA for first 100 iters, BIPOP restarts.
+BIPOP-CMA-ES restart strategy on the log-gap parameterization with sigma
+sized to the local feature scale, popsize=100, diagonal-CMA warmup for the
+first 100 iters, and BIPOP large/small population restarts.
 """
 
 import json

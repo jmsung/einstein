@@ -1,15 +1,11 @@
-"""P13 push: apply Snell's law at cusps.
+"""P13 push: KKT-stationarity ratio at scallop cusps.
 
-Council 3 derived KKT stationarity at each scallop cusp x_k = 1-1/k:
+KKT stationarity at each scallop cusp x_k = 1-1/k gives:
     h_{k-} * (3 - t*'(x_k^-)) = h_{k+} * (3 - t*'(x_k^+))
 
-Analytical computation shows (3-t'_-)/(3-t'_+) = 2 at EVERY cusp k = 3..19.
-So optimal h_{k+} / h_{k-} = 2.
-
-Current solution has ratios in [1.0, 1.5]. This script adjusts cusp-adjacent
-gaps to the optimal 1:2 ratio, then polishes.
-
-Also tests h_- = h_+ (standard E-L smooth prediction) as control.
+This script tests a range of h+/h- ratios at cusp-adjacent gaps, polishes
+each with bounded L-BFGS, and keeps the best. The smooth E-L prediction
+h_- = h_+ is tested as a control.
 """
 
 import json
@@ -85,15 +81,15 @@ def main():
     for ratio in [2.0, 1.5, 1.25, 1.0, 0.75, 0.5, 3.0, 4.0]:
         adjusted = apply_snell_at_cusps(multi_xs, ratio)
         raw_sc = true_score(bi_xs, adjusted)
-        # Polish
         try:
             pol, _ = lbfgs_polish_bounded(adjusted, bi_xs, max_rounds=80)
             sc = true_score(bi_xs, pol)
-        except Exception as e:
-            sc = None
-        marker = " NEW BEST" if sc and sc > best_score + 1e-13 else ""
+        except Exception:
+            print(f"  ratio={ratio:.2f}: raw={raw_sc:.14f}  polish failed")
+            continue
+        marker = " NEW BEST" if sc > best_score + 1e-13 else ""
         print(f"  ratio={ratio:.2f}: raw={raw_sc:.14f}  polished={sc:.14f}{marker}")
-        if sc and sc > best_score + 1e-13:
+        if sc > best_score + 1e-13:
             best_multi = pol.copy()
             best_score = sc
 
