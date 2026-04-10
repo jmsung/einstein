@@ -46,6 +46,7 @@ N = 594
 D = 11
 RESULTS = Path("results/problem-6-kissing-number")
 POLISH_TRAIL = RESULTS / "polish-trail"
+SESSION_ID = time.strftime("%Y%m%d-%H%M%S") + "-" + Path(__file__).stem
 
 
 def load_vectors(path: str) -> list[list[float]]:
@@ -314,9 +315,11 @@ def main() -> None:
                     json.dump(out, f)
                 os.replace(path.with_suffix(".json.tmp"), path)
                 POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
-                trail = POLISH_TRAIL / f"ulp-coord-sweep{sweep+1}-{verify_score:.6e}.json"
-                with open(trail, "w") as f:
+                trail = POLISH_TRAIL / f"session-{SESSION_ID}-best.json"
+                tmp = POLISH_TRAIL / f".tmp-{SESSION_ID}.json"
+                with open(tmp, "w") as f:
                     json.dump(out, f)
+                os.replace(tmp, trail)
                 print(f"  >>> SAVED {verify_score:.12e}", flush=True)
 
             if args.target is not None and verify_score < args.target:

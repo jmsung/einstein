@@ -27,6 +27,7 @@ from einstein.kissing_number.evaluator import overlap_loss
 
 RESULTS = Path("results/problem-6-kissing-number")
 POLISH_TRAIL = RESULTS / "polish-trail"
+SESSION_ID = time.strftime("%Y%m%d-%H%M%S") + "-" + Path(__file__).stem
 N = 594
 D = 11
 NORM = 2.0  # basin convention: ||v_i|| = 2 exactly
@@ -157,9 +158,11 @@ def save_best(v: np.ndarray, score: float) -> None:
         json.dump(out, f)
     os.replace(tmp, p)
     POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
-    trail = POLISH_TRAIL / f"new-basin-polish-{score:.6e}.json"
-    with open(trail, "w") as f:
+    trail = POLISH_TRAIL / f"session-{SESSION_ID}-best.json"
+    tmp = POLISH_TRAIL / f".tmp-{SESSION_ID}.json"
+    with open(tmp, "w") as f:
         json.dump(out, f)
+    os.replace(tmp, trail)
     print(f"  >>> SAVED {score:.15e}", flush=True)
 
 

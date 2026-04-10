@@ -22,6 +22,7 @@ from einstein.kissing_number.evaluator import overlap_loss
 
 RESULTS = Path("results/problem-6-kissing-number")
 POLISH_TRAIL = RESULTS / "polish-trail"
+SESSION_ID = time.strftime("%Y%m%d-%H%M%S") + "-" + Path(__file__).stem
 N = 594
 D = 11
 CHRONOS_NEW_1 = 0.156133128358060  # arena #1 we are trying to beat
@@ -118,9 +119,11 @@ def save_best(u: np.ndarray, score: float) -> None:
         json.dump(out, f)
     os.replace(tmp, p)
     POLISH_TRAIL.mkdir(parents=True, exist_ok=True)
-    trail = POLISH_TRAIL / f"polish_chronos_{score:.13f}.json"
-    with open(trail, "w") as f:
+    trail = POLISH_TRAIL / f"session-{SESSION_ID}-best.json"
+    tmp = POLISH_TRAIL / f".tmp-{SESSION_ID}.json"
+    with open(tmp, "w") as f:
         json.dump(out, f)
+    os.replace(tmp, trail)
     print(f"  >>> SAVED {score:.15f}", flush=True)
 
 
