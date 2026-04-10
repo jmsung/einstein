@@ -165,6 +165,7 @@ uv sync
 - [docs/problem-17-hexagon-packing.md](docs/problem-17-hexagon-packing.md) — Hexagon Packing (n = 12) (#1)
 - [docs/problem-17-circles-rectangle.md](docs/problem-17-circles-rectangle.md) — Circles in a Rectangle (n = 21)
 - [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle (#1)
+- [docs/problem-19-difference-bases.md](docs/problem-19-difference-bases.md) — Difference Bases
 
 ## License
 
