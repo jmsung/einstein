@@ -1,9 +1,7 @@
 """Modal GPU basin search for Circles in Rectangle (n=21).
 
 Strategy: massive parallel multistart with diverse initialization + SLSQP polish.
-Goal: discover a novel basin with strict-disjoint floor > 2.365832375910832
-(the exact optimum of the known basin). Any basin with a higher floor gives
-us a path to #1 since capybara's score comes from float64-noise overlaps.
+Goal: discover a novel basin with higher strict-disjoint floor.
 
 Usage:
     modal run scripts/circles_rectangle/gpu_basin_search.py
@@ -26,7 +24,7 @@ image = (
 
 N = 21
 KNOWN_BASIN_EXACT = 2.365832375910832741572  # exact from KKT solve
-CAPYBARA_SCORE = 2.3658323759185156
+ARENA_BEST = 2.3658323759185156
 
 
 @app.function(
@@ -394,7 +392,7 @@ def main():
 
     print(f"Loaded {len(warmstart_circles)} warmstarts")
     print(f"Known basin exact: {KNOWN_BASIN_EXACT:.20f}")
-    print(f"Capybara #1:       {CAPYBARA_SCORE:.16f}")
+    print(f"Arena #1:          {ARENA_BEST:.16f}")
     print()
 
     # Launch batches — 40 batches × 100 trials = 4000 total
@@ -441,7 +439,7 @@ def main():
     print(f"Better than known: {total_better}")
     print(f"Global best:    {global_best:.16f}")
     print(f"Δ vs known:     {global_best - KNOWN_BASIN_EXACT:+.4e}")
-    print(f"Δ vs capybara:  {global_best - CAPYBARA_SCORE:+.4e}")
+    print(f"Δ vs arena #1:  {global_best - ARENA_BEST:+.4e}")
     print(f"Time:           {time.time() - t0:.0f}s")
 
     if all_scores:
