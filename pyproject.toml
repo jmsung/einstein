@@ -9,6 +9,7 @@ dependencies = [
     "cvxpy>=1.8.2",
     "galois>=0.4.10",
     "matplotlib>=3.10.8",
+    "modal>=1.4.1",
     "mpmath>=1.3.0",
     "numba>=0.64.0",
     "numpy>=2.4.3",

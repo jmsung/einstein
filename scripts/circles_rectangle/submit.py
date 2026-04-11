@@ -55,9 +55,8 @@ def main():
         sol = json.load(f)
     circles = np.array(sol["circles"], dtype=np.float64)
 
-    # Arena-tolerable overlap: capybara #1 was accepted with overlaps up to
-    # 7.53e-12.  We use a tolerance slightly below that as our safety bound.
-    ARENA_OVERLAP_SAFE = 8e-12  # capybara accepted at 7.53e-12
+    # Arena-tolerable overlap threshold (empirically determined from accepted submissions)
+    ARENA_OVERLAP_SAFE = 8e-12
 
     score = evaluate(sol, tol=ARENA_OVERLAP_SAFE)
 
@@ -102,8 +101,8 @@ def main():
     c3 = abs(v["worst_overlap"]) < ARENA_OVERLAP_SAFE
     print(f"  [{'x' if c3 else ' '}] 3. Overlap {v['worst_overlap']:.4e} within arena tolerance (< {ARENA_OVERLAP_SAFE:.0e})")
 
-    # Perimeter check (arena accepts float64 noise — capybara has +8.4e-14)
-    PERIM_NOISE = 1e-12  # capybara accepted at +8.4e-14
+    # Perimeter check (arena accepts small float64 noise)
+    PERIM_NOISE = 1e-12
     c4 = v["perimeter"] <= PERIMETER_BOUND + PERIM_NOISE
     print(f"  [{'x' if c4 else ' '}] 4. Perimeter {v['perimeter']:.16f} ≤ 4.0 + noise  (slack {v['slack']:.4e})")
 

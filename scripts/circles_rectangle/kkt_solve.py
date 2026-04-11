@@ -3,8 +3,7 @@
 The strict-disjoint SLSQP optimum has exactly 64 active constraints for
 64 variables (0 DOF). This means the configuration is uniquely determined
 by the active set. We solve the constraint equations in mpmath (50+ digits)
-then round to float64 — the result may be above capybara's score if SLSQP
-lost precision in the float64 constraint satisfaction.
+then round to float64 for higher precision than SLSQP alone.
 
 Usage:
     uv run python scripts/circles_rectangle/kkt_solve.py
@@ -21,7 +20,7 @@ import numpy as np
 mpmath.mp.dps = 80  # 80 decimal digits
 
 RESULTS_DIR = Path("results/problem-17-circles-rectangle")
-CAPYBARA_SCORE = 2.3658323759185156
+ARENA_BEST = 2.3658323759185156
 
 
 def solve_kkt():
@@ -154,8 +153,8 @@ def solve_kkt():
 
     print(f"\nFloat64 score:       {score_f64:.18f}")
     print(f"Float64 width:       {w_f64:.18f}")
-    print(f"Capybara score:      {CAPYBARA_SCORE:.18f}")
-    print(f"Δ vs capybara:       {score_f64 - CAPYBARA_SCORE:+.4e}")
+    print(f"Arena #1 score:      {ARENA_BEST:.18f}")
+    print(f"Δ vs arena #1:       {score_f64 - ARENA_BEST:+.4e}")
 
     # Verify strict disjointness in float64
     worst_gap = float('inf')
@@ -171,15 +170,15 @@ def solve_kkt():
     print(f"\nFloat64 worst gap:   {worst_gap:.4e}  ({'DISJOINT' if worst_gap >= 0 else 'OVERLAP'})")
     print(f"Float64 perimeter:   {perim:.18f}")
 
-    if score_f64 > CAPYBARA_SCORE and worst_gap >= 0:
-        print("\n*** STRICTLY DISJOINT SOLUTION BEATS CAPYBARA! ***")
+    if score_f64 > ARENA_BEST and worst_gap >= 0:
+        print("\n*** STRICTLY DISJOINT SOLUTION BEATS ARENA #1! ***")
         sol = {"circles": circles_f64.tolist()}
         out = RESULTS_DIR / "solution-kkt-strict.json"
         with open(out, "w") as f:
             json.dump(sol, f, indent=2)
         print(f"Saved to {out}")
-    elif score_f64 > CAPYBARA_SCORE:
-        print(f"\n*** Score beats capybara but has overlap {worst_gap:.4e} ***")
+    elif score_f64 > ARENA_BEST:
+        print(f"\n*** Score beats arena #1 but has overlap {worst_gap:.4e} ***")
         # Try rounding radii DOWN by 1 ULP to eliminate overlap
         circles_safe = circles_f64.copy()
         circles_safe[:, 2] = np.nextafter(circles_safe[:, 2], 0)  # round down by 1 ULP
@@ -192,16 +191,16 @@ def solve_kkt():
                 gap = d - circles_safe[i,2] - circles_safe[j,2]
                 worst_safe = min(worst_safe, gap)
         print(f"After 1-ULP radius shrink: score={score_safe:.18f}  gap={worst_safe:.4e}")
-        if score_safe > CAPYBARA_SCORE and worst_safe >= 0:
-            print("*** SAFE SOLUTION BEATS CAPYBARA! ***")
+        if score_safe > ARENA_BEST and worst_safe >= 0:
+            print("*** SAFE SOLUTION BEATS ARENA #1! ***")
             sol = {"circles": circles_safe.tolist()}
             out = RESULTS_DIR / "solution-kkt-safe.json"
             with open(out, "w") as f:
                 json.dump(sol, f, indent=2)
             print(f"Saved to {out}")
     else:
-        print(f"\nStrict-disjoint score {score_f64:.18f} is below capybara.")
-        print("The basin floor in exact arithmetic is below capybara's float64-noise score.")
+        print(f"\nStrict-disjoint score {score_f64:.18f} is below arena #1.")
+        print("The basin floor in exact arithmetic is below the arena #1 score.")
 
 
 if __name__ == "__main__":
