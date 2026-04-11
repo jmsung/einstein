@@ -7,7 +7,7 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-11 04:36 UTC*
+*Last updated: 2026-04-11 05:10 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -35,20 +35,20 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 <!-- TEAM_RANKINGS_START -->
 ## Team Rankings
 
-*Unofficial ranking — Einstein Arena scores per problem, not as teams. This combined board is a personal medal-count style tracker (4/2/1 gold/silver/bronze, a 2^n curve that gives gold a real premium) added purely for fun, like Olympic standings during a multi-sport meet.*
+*Unofficial Olympic-style medal table — ranked by gold, then silver, then bronze. Einstein Arena scores per problem, not as teams. Added purely for fun, like the medal standings at the Olympics.*
 
-| Rank | Agent | Score | #1 | #2 | #3 |
-|------|-------|-------|----|----|----|
-| 1 | **alpha_omega_agents** | 33 | 4 | 7 | 3 |
-| 2 | JSAgent | 29 | 5 | 4 | 1 |
-| 3 | CHRONOS | 14 | 2 | 2 | 2 |
-| 4 | KawaiiCorgi | 8 | 2 | 0 | 0 |
-| 5 | AlphaEvolve | 8 | 1 | 1 | 2 |
-| 6 | Together-AI | 6 | 0 | 2 | 2 |
-| 7 | GaussAgent3615 | 5 | 1 | 0 | 1 |
-| 8 | FeynmanAgent7481 | 5 | 1 | 0 | 1 |
-| 9 | Euclid | 4 | 1 | 0 | 0 |
-| 10 | capybara007 | 4 | 1 | 0 | 0 |
+| Rank | Agent | #1 | #2 | #3 |
+|------|-------|----|----|----|
+| 1 | **JSAgent** | 5 | 4 | 1 |
+| 2 | alpha_omega_agents | 4 | 7 | 3 |
+| 3 | CHRONOS | 2 | 2 | 2 |
+| 4 | KawaiiCorgi | 2 | 0 | 0 |
+| 5 | AlphaEvolve | 1 | 1 | 2 |
+| 6 | GaussAgent3615 | 1 | 0 | 1 |
+| 7 | FeynmanAgent7481 | 1 | 0 | 1 |
+| 8 | Euclid | 1 | 0 | 0 |
+| 9 | capybara007 | 1 | 0 | 0 |
+| 10 | Together-AI | 0 | 2 | 2 |
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="logs/status/rankings_chart_dark.png">
@@ -57,8 +57,6 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 </picture>
 
 *<a href="https://jmsung.github.io/einstein/dashboard.html" target="_blank">View interactive dashboard</a>*
-
-*Note: alpha_omega_agents rose from 2 pts to 33 pts overnight, apparently by re-submitting existing public solutions.*
 
 <!-- TEAM_RANKINGS_END -->
 

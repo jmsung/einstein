@@ -89,16 +89,13 @@ def generate_status_table(statuses: list[dict], timestamp: str) -> str:
     return "\n".join(lines)
 
 
-MEDAL_POINTS = {1: 4, 2: 2, 3: 1}  # rank → points (2^n curve: gold=4, silver=2, bronze=1)
-
-
 def compute_team_rankings(statuses: list[dict]) -> list[dict]:
-    """Compute medal-count team rankings: rank 1/2/3 = 4/2/1 pts (2^n curve).
+    """Compute Olympic-style team rankings: sorted by gold, then silver, then bronze.
 
     Each agent is awarded only their BEST position per problem (no double-credit
     for an agent appearing at both #1 and #2 on the same problem).
     """
-    scores: dict[str, dict] = {}  # agent → {score, gold, silver, bronze}
+    scores: dict[str, dict] = {}  # agent → {gold, silver, bronze}
     for s in statuses:
         seen_on_this_problem = set()
         for rank_idx, agent in enumerate(s["top3"]):
@@ -107,8 +104,7 @@ def compute_team_rankings(statuses: list[dict]) -> list[dict]:
                 continue  # only credit best position per problem
             seen_on_this_problem.add(agent)
             if agent not in scores:
-                scores[agent] = {"score": 0, "gold": 0, "silver": 0, "bronze": 0}
-            scores[agent]["score"] += MEDAL_POINTS[rank]
+                scores[agent] = {"gold": 0, "silver": 0, "bronze": 0}
             if rank == 1:
                 scores[agent]["gold"] += 1
             elif rank == 2:
@@ -116,10 +112,10 @@ def compute_team_rankings(statuses: list[dict]) -> list[dict]:
             else:
                 scores[agent]["bronze"] += 1
 
-    # Sort by score desc, then gold desc, then silver desc
+    # Olympic sort: gold desc, then silver desc, then bronze desc
     ranked = sorted(
         scores.items(),
-        key=lambda x: (x[1]["score"], x[1]["gold"], x[1]["silver"]),
+        key=lambda x: (x[1]["gold"], x[1]["silver"], x[1]["bronze"]),
         reverse=True,
     )
     return [
@@ -133,18 +129,17 @@ def generate_rankings_table(rankings: list[dict], top_n: int = 10) -> str:
     lines = [
         "## Team Rankings",
         "",
-        "*Unofficial ranking — Einstein Arena scores per problem, not as teams. "
-        "This combined board is a personal medal-count style tracker "
-        "(4/2/1 gold/silver/bronze, a 2^n curve that gives gold a real premium) "
-        "added purely for fun, like Olympic standings during a multi-sport meet.*",
+        "*Unofficial Olympic-style medal table — ranked by gold, then silver, "
+        "then bronze. Einstein Arena scores per problem, not as teams. "
+        "Added purely for fun, like the medal standings at the Olympics.*",
         "",
-        "| Rank | Agent | Score | #1 | #2 | #3 |",
-        "|------|-------|-------|----|----|----|",
+        "| Rank | Agent | #1 | #2 | #3 |",
+        "|------|-------|----|----|----|",
     ]
     for r in rankings[:top_n]:
         agent = f"**{r['agent']}**" if r["rank"] == 1 else r["agent"]
         lines.append(
-            f"| {r['rank']} | {agent} | {r['score']} | "
+            f"| {r['rank']} | {agent} | "
             f"{r['gold']} | {r['silver']} | {r['bronze']} |"
         )
     lines.append("")
@@ -171,11 +166,11 @@ def save_log(
 
     # Team rankings
     content += "## Team Rankings\n\n"
-    content += "| Rank | Agent | Score | #1 | #2 | #3 |\n"
-    content += "|------|-------|-------|----|----|----|"
+    content += "| Rank | Agent | #1 | #2 | #3 |\n"
+    content += "|------|-------|----|----|----|"
     for r in rankings:
         content += (
-            f"\n| {r['rank']} | {r['agent']} | {r['score']} | "
+            f"\n| {r['rank']} | {r['agent']} | "
             f"{r['gold']} | {r['silver']} | {r['bronze']} |"
         )
     content += "\n\n"
@@ -233,7 +228,7 @@ def update_rankings_history(rankings: list[dict]) -> list[dict]:
 
     # Convert rankings list to dict for storage
     rankings_dict = {
-        r["agent"]: {"score": r["score"], "gold": r["gold"], "silver": r["silver"], "bronze": r["bronze"]}
+        r["agent"]: {"gold": r["gold"], "silver": r["silver"], "bronze": r["bronze"]}
         for r in rankings
     }
 
@@ -253,21 +248,23 @@ def update_rankings_history(rankings: list[dict]) -> list[dict]:
 
 
 def _get_top_agents(history: list[dict], top_n: int = 8) -> list[str]:
-    """Get top N agents by latest score."""
+    """Get top N agents by latest Olympic ranking (gold, silver, bronze)."""
     latest = history[-1]["rankings"]
     top_sorted = sorted(
-        latest.items(), key=lambda x: (x[1]["score"], x[1]["gold"]), reverse=True,
+        latest.items(),
+        key=lambda x: (x[1]["gold"], x[1]["silver"], x[1].get("bronze", 0)),
+        reverse=True,
     )[:top_n]
     return [a for a, _ in top_sorted]
 
 
 def _extract_series(history: list[dict], agents: list[str]) -> tuple[list[str], dict[str, list[int]]]:
-    """Extract date strings and score series per agent."""
+    """Extract date strings and gold-count series per agent."""
     dates = [h["date"] for h in history]
     series: dict[str, list[int]] = {}
     for agent in agents:
         series[agent] = [
-            h["rankings"].get(agent, {}).get("score", 0) for h in history
+            h["rankings"].get(agent, {}).get("gold", 0) for h in history
         ]
     return dates, series
 
@@ -303,8 +300,8 @@ def _render_chart(history: list[dict], path: Path, top_n: int,
 
     for i, agent in enumerate(agents):
         scores = np.array(series[agent], dtype=float)
-        score = latest.get(agent, {}).get("score", 0)
-        label = f"#{i+1} {agent} ({score}pts)"
+        golds = latest.get(agent, {}).get("gold", 0)
+        label = f"#{i+1} {agent} ({golds}G)"
         color = RANK_COLORS[i] if i < len(RANK_COLORS) else "#444444"
         width = RANK_WIDTHS[i] if i < len(RANK_WIDTHS) else 1.2
         alpha = RANK_ALPHAS[i] if i < len(RANK_ALPHAS) else 0.4
@@ -322,8 +319,8 @@ def _render_chart(history: list[dict], path: Path, top_n: int,
         ax.scatter(dates, scores, s=24, zorder=5, color=color, alpha=alpha)
 
     ax.set_xlabel("Date", color=text)
-    ax.set_ylabel("Score (4/2/1 for gold/silver/bronze)", color=text)
-    ax.set_title("Einstein Arena — Team Rankings Over Time", color=text)
+    ax.set_ylabel("Gold Medals (#1 Finishes)", color=text)
+    ax.set_title("Einstein Arena — Gold Medals Over Time", color=text)
     ax.legend(loc="upper left", fontsize=8, facecolor=bg, edgecolor=grid,
               labelcolor=text)
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
@@ -356,13 +353,13 @@ def generate_dashboard(history: list[dict], top_n: int = 5) -> None:
     latest = history[-1]["rankings"]
     traces = []
     for i, agent in enumerate(agents):
-        score = latest.get(agent, {}).get("score", 0)
+        golds = latest.get(agent, {}).get("gold", 0)
         color = RANK_COLORS[i] if i < len(RANK_COLORS) else "#444444"
         width = RANK_WIDTHS[i] if i < len(RANK_WIDTHS) else 1.2
         traces.append({
             "x": date_strs,
             "y": series[agent],
-            "name": f"#{i+1} {agent} ({score}pts)",
+            "name": f"#{i+1} {agent} ({golds}G)",
             "mode": "lines+markers",
             "line": {"shape": "spline", "smoothing": 1.0, "width": width,
                      "color": color},
@@ -407,7 +404,7 @@ def generate_dashboard(history: list[dict], top_n: int = 5) -> None:
 <body>
 <a class="home-link" href="https://github.com/jmsung/einstein">&larr; Back to repo</a>
 <h1>Einstein Arena — Team Rankings</h1>
-<p class="subtitle">Unofficial medal-count tracker — 4/2/1 gold/silver/bronze (2<sup>n</sup>) per problem</p>
+<p class="subtitle">Olympic-style medal table — ranked by gold, then silver, then bronze</p>
 <div class="chart-container">
   <div class="range-buttons">
     <button onclick="setRange(7)" id="btn-7d">Last 7 days</button>
@@ -430,7 +427,7 @@ const layout = {{
     tickformat: '%m-%d',
   }},
   yaxis: {{
-    title: 'Score',
+    title: 'Gold Medals',
     gridcolor: '#21262d',
   }},
   legend: {{
