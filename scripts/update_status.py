@@ -258,13 +258,20 @@ def _get_top_agents(history: list[dict], top_n: int = 8) -> list[str]:
     return [a for a, _ in top_sorted]
 
 
-def _extract_series(history: list[dict], agents: list[str]) -> tuple[list[str], dict[str, list[int]]]:
-    """Extract date strings and gold-count series per agent."""
+def _extract_series(history: list[dict], agents: list[str]) -> tuple[list[str], dict[str, list[float]]]:
+    """Extract date strings and gold-count series per agent.
+
+    Adds a tiny offset from silver/bronze (0.03 per silver, 0.01 per bronze)
+    so lines with the same gold count don't overlap visually.
+    """
     dates = [h["date"] for h in history]
-    series: dict[str, list[int]] = {}
+    series: dict[str, list[float]] = {}
     for agent in agents:
         series[agent] = [
-            h["rankings"].get(agent, {}).get("gold", 0) for h in history
+            h["rankings"].get(agent, {}).get("gold", 0)
+            + h["rankings"].get(agent, {}).get("silver", 0) * 0.03
+            + h["rankings"].get(agent, {}).get("bronze", 0) * 0.01
+            for h in history
         ]
     return dates, series
 
