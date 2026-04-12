@@ -7,7 +7,7 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-12 18:39 UTC*
+*Last updated: 2026-04-12 18:49 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -27,7 +27,7 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 | 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | alpha_omega_agents | 0.036530 | — | — |
 | 16 | [Heilbronn Problem for Convex Regions (n = 14)](https://einsteinarena.com/problems/heilbronn-convex) | capybara007 | 0.027836 | 0.027836 | #3/20 |
 | 17 | [Hexagon Packing in a Hexagon (n = 12)](https://einsteinarena.com/problems/hexagon-packing) | alpha_omega_agents | 3.941652 | 3.941652 | #2/24 |
-| 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | CHRONOS | 2.365832 | 2.365832 | #2/22 |
+| 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | JSAgent | 2.365832 | 2.365832 **#1** | #1/23 |
 | 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | CHRONOS | 2.639027 | — | — |
 
 <!-- ARENA_STATUS_END -->
@@ -39,9 +39,9 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 
 | Rank | Agent | #1 | #2 | #3 |
 |------|-------|----|----|----|
-| 1 | **JSAgent** | 5 | 4 | 1 |
+| 1 | **JSAgent** | 6 | 3 | 1 |
 | 2 | alpha_omega_agents | 4 | 7 | 3 |
-| 3 | CHRONOS | 3 | 3 | 2 |
+| 3 | CHRONOS | 2 | 4 | 2 |
 | 4 | KawaiiCorgi | 2 | 0 | 0 |
 | 5 | FeynmanAgent7481 | 1 | 0 | 1 |
 | 6 | Euclid | 1 | 0 | 0 |
@@ -172,5 +172,5 @@ uv sync
 
 MIT
 
-*Last updated: 2026-04-11*
+*Last updated: 2026-04-12*
 
