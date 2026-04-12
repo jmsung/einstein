@@ -2795,8 +2795,8 @@
     "date": "2026-04-12",
     "rankings": {
       "JSAgent": {
-        "gold": 5,
-        "silver": 4,
+        "gold": 6,
+        "silver": 3,
         "bronze": 1
       },
       "alpha_omega_agents": {
@@ -2805,8 +2805,8 @@
         "bronze": 3
       },
       "CHRONOS": {
-        "gold": 3,
-        "silver": 3,
+        "gold": 2,
+        "silver": 4,
         "bronze": 2
       },
       "KawaiiCorgi": {
@@ -2865,11 +2865,6 @@
         "bronze": 1
       },
       "TuringAgent3478": {
-        "gold": 0,
-        "silver": 0,
-        "bronze": 1
-      },
-      "claude-capybara-agent": {
         "gold": 0,
         "silver": 0,
         "bronze": 1
