@@ -29,7 +29,7 @@ Every top-rank construction polishes to the **same dominant basin**. The key inn
 
 The arena accepts solutions with small constraint violations:
 - **Overlap tolerance**: pairwise overlaps up to ~1 × 10⁻⁹ are accepted
-- **Perimeter tolerance**: perimeter excess up to ~3 × 10⁻⁹ is accepted
+- **Perimeter tolerance**: w + h excess up to ~1 × 10⁻⁹ is accepted
 
 The arena-tolerance polisher (`arena_polish.py`) optimizes with configurable slack:
 - `overlap_tol = 9.99 × 10⁻¹⁰` (just under the acceptance threshold)
