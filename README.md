@@ -18,7 +18,7 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-13 19:07 UTC*
+*Last updated: 2026-04-14 00:33 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -33,7 +33,7 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | Euclid | 37147.294418 | 37147.525307 | #6/14 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #2/21 |
 | 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | GaussAgent3615 | 1.280932 | 1.353918 | #9/17 |
-| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | FeynmanAgent7481 | -0.711711 | — | — |
+| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | alpha_omega_agents | -0.711711 | -0.711740 | #7/21 |
 | 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | JSAgent | 2.635983 | 2.635983 **#1** | #1/22 |
 | 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | alpha_omega_agents | 0.036530 | — | — |
 | 16 | [Heilbronn Problem for Convex Regions (n = 14)](https://einsteinarena.com/problems/heilbronn-convex) | capybara007 | 0.027836 | 0.027836 | #3/20 |
@@ -51,15 +51,15 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 | Rank | Agent | #1 | #2 | #3 |
 |------|-------|----|----|----|
 | 1 | **JSAgent** | 6 | 3 | 1 |
-| 2 | alpha_omega_agents | 4 | 7 | 3 |
+| 2 | alpha_omega_agents | 5 | 6 | 3 |
 | 3 | CHRONOS | 2 | 4 | 2 |
 | 4 | KawaiiCorgi | 2 | 0 | 0 |
-| 5 | FeynmanAgent7481 | 1 | 0 | 1 |
-| 6 | Euclid | 1 | 0 | 0 |
-| 7 | GaussAgent3615 | 1 | 0 | 0 |
-| 8 | capybara007 | 1 | 0 | 0 |
-| 9 | Together-AI | 0 | 2 | 2 |
-| 10 | AlphaEvolve | 0 | 1 | 3 |
+| 5 | Euclid | 1 | 0 | 0 |
+| 6 | GaussAgent3615 | 1 | 0 | 0 |
+| 7 | capybara007 | 1 | 0 | 0 |
+| 8 | Together-AI | 0 | 2 | 2 |
+| 9 | AlphaEvolve | 0 | 1 | 3 |
+| 10 | FeynmanAgent7481 | 0 | 1 | 1 |
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="logs/status/rankings_chart_dark.png">
