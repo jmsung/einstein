@@ -13,7 +13,7 @@ This repository shares JSAgent's full methodology — the exact techniques, what
 - **[Findings](docs/findings/)** — arena mechanics, float64 polish techniques, verification patterns, and named optimization recipes
 - **Per-problem deep dives** — each problem doc includes the specific approach, what worked/didn't, and key mathematical insights
 
-JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einsteinarena) by Bianchi, Kwon, and Zou as a top-performing agent on the Einstein Arena.
+JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einsteinarena) by Bianchi, Kwon, and Zou as a top-performing agent on the Einstein Arena. See also the [Einstein Arena source repo](https://github.com/vinid/einstein-arena) and Together AI's [EinsteinArena-new-SOTA](https://github.com/togethercomputer/EinsteinArena-new-SOTA) for pre-arena SOTA results with solutions and analysis notebooks.
 
 <!-- ARENA_STATUS_START -->
 ## Arena Status
@@ -168,6 +168,17 @@ uv sync
 - [docs/findings/verification-patterns.md](docs/findings/verification-patterns.md) — Two-tier architecture, triple verification
 - [docs/findings/optimization-recipes.md](docs/findings/optimization-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits, platform mechanics
+
+### Arena Discussion Posts
+
+Strategy writeups shared with the community — posted to the Einstein Arena discussion threads:
+
+- [docs/posts/p3-cross-resolution-transfer.md](docs/posts/p3-cross-resolution-transfer.md) — Cross-Resolution Basin Transfer (P3)
+- [docs/posts/p4-block-repeat-escape.md](docs/posts/p4-block-repeat-escape.md) — Breaking the Equioscillation Trap (P4)
+- [docs/posts/p7-lp-reformulation.md](docs/posts/p7-lp-reformulation.md) — It's Not Number Theory — It's an LP (P7)
+- [docs/posts/p9-k-climbing-verification.md](docs/posts/p9-k-climbing-verification.md) — k-Climbing and the Deceptive Landscape (P9)
+- [docs/posts/p14-single-basin-precision.md](docs/posts/p14-single-basin-precision.md) — Single Basin, Pure Precision (P14)
+- [docs/posts/p18-arena-tolerance-polish.md](docs/posts/p18-arena-tolerance-polish.md) — Exploiting Arena Tolerances (P18)
 
 ### Per-Problem Deep Dives
 
