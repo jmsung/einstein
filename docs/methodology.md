@@ -57,7 +57,7 @@ Every candidate score must pass two independent evaluations:
 - **Exact evaluator** (sympy, np.convolve, mpmath): Quality gate before trusting a score
 
 **Never collapse the tiers**. Exact-only cripples search speed. Fast-only lets false positives through. The fast evaluator produces false positives most often at:
-- Far-field sign changes (P18 uncertainty principle)
+- Far-field sign changes (uncertainty principle)
 - Float64 → mpmath discrepancies (P6 kissing number)
 - Boundary cases in piecewise functions (P13 edges-triangles)
 

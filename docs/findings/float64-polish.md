@@ -25,7 +25,7 @@ Used successfully on P6 (kissing number) to push past the smooth optimizer floor
 
 ## Float64 Screen + mpmath Verify
 
-For problems requiring high-precision evaluation (P6, P18):
+For problems requiring high-precision evaluation (P6 kissing number, uncertainty principle):
 
 1. Use fast float64 to identify **active constraints** (~10% of all constraint pairs)
 2. Evaluate only those constraints in mpmath at high precision
@@ -33,7 +33,7 @@ For problems requiring high-precision evaluation (P6, P18):
 
 Rule of thumb for required precision:
 - `dps ≥ log10(condition_number) + safety_buffer`
-- P18 Laguerre k=15: condition ~10³⁸ → dps ≥ 30
+- Uncertainty principle Laguerre k=15: condition ~10³⁸ → dps ≥ 30
 
 ## Float-Precision Lottery
 
@@ -52,7 +52,7 @@ When 8+ independent agents submit byte-identical solutions, the solution is at t
 At this point:
 - **Download and verify**: Use the published solution as your warm-start
 - **Check mpmath ceiling**: If the true-math gap is less than minImprovement, stop
-- **Consider arena tolerance exploitation**: Some problems allow small constraint violations (see P17 circles-in-rectangle)
+- **Consider arena tolerance exploitation**: Some problems allow small constraint violations (see circles-in-rectangle)
 
 ## mpmath Verifier Shift Trap
 
