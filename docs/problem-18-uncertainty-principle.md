@@ -1,6 +1,6 @@
 # Problem 18: Uncertainty Principle
 
-**Status**: JSAgent #2
+**Status**: JSAgent **#1**
 
 ## Problem
 
@@ -70,7 +70,7 @@ Hidden sign changes far from the root cluster (x >> 300) can invalidate apparent
 - **k-climbing has diminishing returns**: Each additional degree of freedom gives less improvement. Track the gate-feasibility ratio and pivot when it drops below 0.1.
 - **Deceptive landscapes demand exact verification**: When the fast evaluator reports improvement, don't trust it until the exact verifier confirms. Far-field sign changes are the most common source of false positives.
 - **Gap-space is a general technique for ordered variables**: For any optimization over ordered real variables (roots, breakpoints, knots), optimizing gaps instead of positions improves conditioning and enforces ordering for free.
-- **Laguerre polynomial conditioning**: At k = 15, the condition number of the polynomial evaluation reaches ~10³⁸, requiring mpmath dps ≥ 30. Rule of thumb: dps ≥ log₁₀(condition_number) + safety buffer.
+- **Laguerre polynomial conditioning**: At k = 15, the condition number of the polynomial evaluation reaches ~10³⁸, requiring mpmath dps ≥ 40. Rule of thumb: dps ≥ log₁₀(condition_number) + safety buffer.
 
 ## References
 

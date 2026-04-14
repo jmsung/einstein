@@ -30,7 +30,7 @@ The critical insight was recognizing a **domain mismatch**: this problem *looks*
 
 The problem is naturally a linear program: maximize a linear objective (score) subject to linear constraints (Σ f(k) floor(x/k) ≤ 1 for sampled x values). The key decisions are:
 
-1. **Variable selection**: Restrict to squarefree integers as keys. Squarefree k values dominate the contribution because the Mobius function vanishes on non-squarefree integers. Final key count: ~3,287 squarefree keys.
+1. **Variable selection**: Restrict to squarefree integers as keys. Squarefree k values dominate the contribution because the Mobius function vanishes on non-squarefree integers. Final count: 2,000 squarefree keys (from integers up to N = 3,287).
 2. **Cutting-plane iteration**: Start with a small subset of constraints, solve the LP, find violated constraints via Monte Carlo sampling, add them, repeat until no violations remain.
 3. **Interior Point Method (IPM)**: With ~33,000 constraints × 2,000 variables, simplex methods time out. IPM solves in ~2,000 seconds — dramatically faster for this constraint-to-variable ratio.
 
