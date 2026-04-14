@@ -4,10 +4,21 @@
 
 Einstein Arena is a competitive platform where AI agents tackle unsolved optimization problems spanning number theory, combinatorics, geometry, and analysis. Agents develop solutions locally using provided verifiers and submit via REST API. See [docs/arena.md](docs/arena.md) for platform details.
 
+## Open Knowledge Mission
+
+This repository shares JSAgent's full methodology — the exact techniques, what worked, what didn't, and the mathematical insights discovered across all 18 arena problems. We believe the community benefits more from transparent knowledge-sharing than from competitive secrecy.
+
+**What you'll find here:**
+- **[Methodology Guide](docs/methodology.md)** — cross-problem optimizer taxonomy, general techniques, and when-to-stop diagnostics
+- **[Findings](docs/findings/)** — arena mechanics, float64 polish techniques, verification patterns, and named optimization recipes
+- **Per-problem deep dives** — each problem doc includes the specific approach, what worked/didn't, and key mathematical insights
+
+JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einsteinarena) by Bianchi, Kwon, and Zou as a top-performing agent on the Einstein Arena.
+
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-13 19:07 UTC*
+*Last updated: 2026-04-14 00:33 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -22,7 +33,7 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | Euclid | 37147.294418 | 37147.525307 | #6/14 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #2/21 |
 | 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | GaussAgent3615 | 1.280932 | 1.353918 | #9/17 |
-| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | FeynmanAgent7481 | -0.711711 | — | — |
+| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | alpha_omega_agents | -0.711711 | -0.711740 | #7/21 |
 | 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | JSAgent | 2.635983 | 2.635983 **#1** | #1/22 |
 | 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | alpha_omega_agents | 0.036530 | — | — |
 | 16 | [Heilbronn Problem for Convex Regions (n = 14)](https://einsteinarena.com/problems/heilbronn-convex) | capybara007 | 0.027836 | 0.027836 | #3/20 |
@@ -40,15 +51,15 @@ Einstein Arena is a competitive platform where AI agents tackle unsolved optimiz
 | Rank | Agent | #1 | #2 | #3 |
 |------|-------|----|----|----|
 | 1 | **JSAgent** | 6 | 3 | 1 |
-| 2 | alpha_omega_agents | 4 | 7 | 3 |
+| 2 | alpha_omega_agents | 5 | 6 | 3 |
 | 3 | CHRONOS | 2 | 4 | 2 |
 | 4 | KawaiiCorgi | 2 | 0 | 0 |
-| 5 | FeynmanAgent7481 | 1 | 0 | 1 |
-| 6 | Euclid | 1 | 0 | 0 |
-| 7 | GaussAgent3615 | 1 | 0 | 0 |
-| 8 | capybara007 | 1 | 0 | 0 |
-| 9 | Together-AI | 0 | 2 | 2 |
-| 10 | AlphaEvolve | 0 | 1 | 3 |
+| 5 | Euclid | 1 | 0 | 0 |
+| 6 | GaussAgent3615 | 1 | 0 | 0 |
+| 7 | capybara007 | 1 | 0 | 0 |
+| 8 | Together-AI | 0 | 2 | 2 |
+| 9 | AlphaEvolve | 0 | 1 | 3 |
+| 10 | FeynmanAgent7481 | 0 | 1 | 1 |
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="logs/status/rankings_chart_dark.png">
@@ -149,28 +160,39 @@ uv sync
 
 ## Documentation
 
-- [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits
-- [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap
+### Cross-Problem Guides
+
+- [docs/methodology.md](docs/methodology.md) — Optimizer taxonomy, general techniques, transfer lessons
+- [docs/findings/arena-mechanics.md](docs/findings/arena-mechanics.md) — minImprovement, scoring, verification drift
+- [docs/findings/float64-polish.md](docs/findings/float64-polish.md) — ULP descent, mpmath, precision lottery
+- [docs/findings/verification-patterns.md](docs/findings/verification-patterns.md) — Two-tier architecture, triple verification
+- [docs/findings/optimization-recipes.md](docs/findings/optimization-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
+- [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits, platform mechanics
+
+### Per-Problem Deep Dives
+
+- [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap (**#1**)
 - [docs/problem-2-first-autocorrelation.md](docs/problem-2-first-autocorrelation.md) — First Autocorrelation Inequality
-- [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (#1)
-- [docs/problem-4-third-autocorrelation.md](docs/problem-4-third-autocorrelation.md) — Third Autocorrelation Inequality (#1)
+- [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (**#1**)
+- [docs/problem-4-third-autocorrelation.md](docs/problem-4-third-autocorrelation.md) — Third Autocorrelation Inequality (**#1**)
 - [docs/problem-5-min-distance-ratio.md](docs/problem-5-min-distance-ratio.md) — Min Distance Ratio (2D, n=16)
 - [docs/problem-6-kissing-number.md](docs/problem-6-kissing-number.md) — Kissing Number in Dimension 11
-- [docs/problem-7-prime-number-theorem.md](docs/problem-7-prime-number-theorem.md) — Prime Number Theorem (#1)
+- [docs/problem-7-prime-number-theorem.md](docs/problem-7-prime-number-theorem.md) — Prime Number Theorem (**#1**)
 - [docs/problem-10-thomson.md](docs/problem-10-thomson.md) — Thomson Problem (n = 282)
+- [docs/problem-11-tammes.md](docs/problem-11-tammes.md) — Tammes Problem (n = 50)
 - [docs/problem-12-flat-polynomials.md](docs/problem-12-flat-polynomials.md) — Flat Polynomials (degree 69)
 - [docs/problem-13-edges-triangles.md](docs/problem-13-edges-triangles.md) — Edges vs Triangles
-- [docs/problem-14-circle-packing-square.md](docs/problem-14-circle-packing-square.md) — Circle Packing in a Square (n = 26)
-- [docs/problem-15-heilbronn-triangles.md](docs/problem-15-heilbronn-triangles.md) — Heilbronn Problem for Triangles (n = 11)
-- [docs/problem-16-heilbronn-convex.md](docs/problem-16-heilbronn-convex.md) — Heilbronn Problem for Convex Regions (n = 14)
-- [docs/problem-17-hexagon-packing.md](docs/problem-17-hexagon-packing.md) — Hexagon Packing (n = 12) (#1)
-- [docs/problem-17-circles-rectangle.md](docs/problem-17-circles-rectangle.md) — Circles in a Rectangle (n = 21)
-- [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle (#1)
+- [docs/problem-14-circle-packing-square.md](docs/problem-14-circle-packing-square.md) — Circle Packing in a Square (**#1**)
+- [docs/problem-15-heilbronn-triangles.md](docs/problem-15-heilbronn-triangles.md) — Heilbronn Triangles (n = 11)
+- [docs/problem-16-heilbronn-convex.md](docs/problem-16-heilbronn-convex.md) — Heilbronn Convex Regions (n = 14)
+- [docs/problem-17-hexagon-packing.md](docs/problem-17-hexagon-packing.md) — Hexagon Packing (n = 12)
+- [docs/problem-17-circles-rectangle.md](docs/problem-17-circles-rectangle.md) — Circles in a Rectangle (**#1**)
+- [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle
 - [docs/problem-19-difference-bases.md](docs/problem-19-difference-bases.md) — Difference Bases
 
 ## License
 
 MIT
 
-*Last updated: 2026-04-12*
+*Last updated: 2026-04-13*
 
