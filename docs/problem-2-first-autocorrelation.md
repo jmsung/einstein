@@ -1,6 +1,6 @@
 # Problem 2: First Autocorrelation Inequality (Upper Bound)
 
-**Status**: No submission (below minImprovement gate)
+**Status**: **Rank #1** — C = 1.502861628 (Δ = 1.23e-6 below previous SOTA)
 
 ## Problem
 
@@ -41,17 +41,28 @@ A multi-pronged attack combining FFT-backed smooth surrogates with linear progra
 - **LP formulation at small n** — cutting-plane converges cleanly at n ≈ 200
 - **Multi-resolution cycling** — changing n sometimes escapes local basins
 
+### What Worked (Breakthrough)
+
+- **Square parameterization** (f = v²) instead of log-space (f = exp(v)) — accesses a fundamentally different optimization landscape. The v² parameterization allows exact zeros and has different gradient structure, escaping local minima that trap the exp parameterization.
+- **n=90000 sweet spot** — block-repeat SOTA 3× to n=90000, then optimize with v². This specific resolution maximizes improvement from the square parameterization.
+- **Ultra-aggressive L-BFGS** — very long optimization at LOW beta (1e6-1e7) with large history_size=300 and max_iter=3000. The extended exploration at low beta finds deeper basins before tightening.
+
 ### What Didn't Work
 
 - **LP scaling at large n** — cutting-plane LP scales linearly at n ≈ 200 but diverges at n ≈ 30,000. The constraint count grows faster than the solver can handle.
 - **FOSS LP solver cross-over** — open-source solvers (HiGHS) stall in the n ≈ 2,000-5,000 regime where commercial solvers (MOSEK, Gurobi) would be needed.
 - **ULP-scale random polish** — at the precision floor, random perturbations have negligible probability of finding improvement.
+- **Exp parameterization at any n** — L-BFGS with f=exp(v) converges to Δ≈5.25e-8 at all tested resolutions (30k-300k), well below the 1e-7 minImprovement gate.
+- **Adam/SGD optimizers** — much worse than L-BFGS for this problem.
+- **Multi-peak polish** — subgradient descent on the exact objective couldn't escape the L-BFGS local minimum due to peak-locking (Jaech & Joseph, 2025).
+- **Random starts / CMA-ES** — couldn't find competitive basins at any resolution.
 
 ## Key Insights
 
-- **LP scaling wall**: Cutting-plane LP hits a fundamental scaling barrier at large n. The next step would be away-step Frank-Wolfe, not a bigger LP solver.
-- **Resolution is a hyperparameter**: Different values of n lead to genuinely different basins. Treating discretization resolution as tunable is essential.
-- **The gap persists**: The theoretical lower bound (1.28) and best upper bound (≈1.503) remain far apart — significant room for novel approaches exists.
+- **Parameterization matters more than resolution**: The square parameterization (f=v²) escapes local minima that trap the exp parameterization (f=exp(v)) at every resolution tested. This is the single most important finding.
+- **Peak-locking**: Gradient methods on the first autocorrelation inequality suffer from "peak-locking" (Jaech & Joseph, 2025) — the current argmax of the autoconvolution is reinforced during optimization. The v² parameterization mitigates this.
+- **Resolution sweet spots**: n=90000 (3× block-repeat of 30000) is the optimal resolution for square-param optimization. Larger n gives diminishing returns due to optimization difficulty.
+- **Low-beta exploration is critical**: Extended L-BFGS at low beta (1e6-1e7) with large history explores the landscape broadly before tightening. This 2-hour exploration phase at β=1e6 found a basin 12× deeper than the threshold.
 
 ## References
 
@@ -73,4 +84,4 @@ A multi-pronged attack combining FFT-backed smooth surrogates with linear progra
 - `scripts/first_autocorrelation/km_lp.py` — cutting-plane LP with CVXPY and block-averaging
 - `tests/first_autocorrelation/test_evaluator.py` — evaluator parity tests
 
-*Last updated: 2026-04-13*
+*Last updated: 2026-04-15*
