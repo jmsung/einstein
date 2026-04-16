@@ -134,11 +134,8 @@ def main():
 
     worst_old = np.max(G_old[1:])
     tight_ns = [n for n in range(1, max_n + 1) if G_old[n] > 0.5]
-    medium_ns = [n for n in range(1, max_n + 1) if G_old[n] > 0.0]
-
     log(f"  Worst G_old: {worst_old:.10f}")
     log(f"  Tight constraints (G>0.5): {len(tight_ns)}")
-    log(f"  Medium constraints (G>0): {len(medium_ns)}")
 
     # Initial constraints: tight constraints + sampling
     active_ns = sorted(set(tight_ns) | set(range(1, max_n + 1, 200)))

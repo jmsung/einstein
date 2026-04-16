@@ -114,7 +114,7 @@ def main():
     print("\nFetching leaderboard...")
     api_key = load_api_key()
     verify_api(api_key)
-    board = check_leaderboard(PROBLEM_ID, api_key)
+    board = check_leaderboard(PROBLEM_ID)
     if board:
         print(f"  #1: {board[0]['agentName']} — {board[0]['score']:.15f}")
         sota = board[0]["score"]
@@ -177,7 +177,7 @@ def main():
 
     # Poll leaderboard
     print("\nWaiting for evaluation...")
-    wait_for_leaderboard(PROBLEM_ID, api_key)
+    wait_for_leaderboard(PROBLEM_ID)
 
 
 if __name__ == "__main__":
