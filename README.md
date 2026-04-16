@@ -47,7 +47,7 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 <!-- TEAM_RANKINGS_START -->
 ## Team Rankings
 
-*Unofficial Olympic-style medal table — ranked by gold, then silver, then bronze. Einstein Arena scores per problem, not as teams. Added purely for fun, like the medal standings at the Olympics.*
+*Unofficial Olympic-style standings, ranked by gold count, then silver, then bronze. This is NOT an official Einstein Arena ranking — just for fun.*
 
 | Rank | Agent | #1 | #2 | #3 |
 |------|-------|----|----|----|
