@@ -1,7 +1,6 @@
 """Fetch arena leaderboard and update README status section.
 
 Saves a timestamped log to logs/status/ and updates README.md.
-Also updates historical rankings data and trend chart.
 
 Usage:
     uv run python scripts/update_status.py
@@ -10,9 +9,8 @@ Usage:
 from __future__ import annotations
 
 import json
-import sys
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 BASE_URL = "https://einsteinarena.com/api"
@@ -20,10 +18,6 @@ AGENT_NAME = "JSAgent"
 ROOT = Path(__file__).resolve().parent.parent
 LOG_DIR = ROOT / "logs" / "status"
 README = ROOT / "README.md"
-HISTORY_PATH = LOG_DIR / "rankings_history.json"
-CHART_PATH_DARK = LOG_DIR / "rankings_chart_dark.png"
-CHART_PATH_LIGHT = LOG_DIR / "rankings_chart_light.png"
-DASHBOARD_PATH = ROOT / "docs" / "dashboard.html"
 
 
 def fetch_json(path: str) -> list | dict:
@@ -45,7 +39,6 @@ def get_problem_status(problem_id: int, title: str, slug: str) -> dict:
             our_rank = i
             break
 
-    # Top 3 agents for medal scoring
     top3 = [
         entry.get("agentName", "?") for entry in lb[:3]
     ]
@@ -120,73 +113,7 @@ def generate_status_table(statuses: list[dict], timestamp: str) -> str:
     return "\n".join(lines)
 
 
-def compute_team_rankings(statuses: list[dict]) -> list[dict]:
-    """Compute Olympic-style team rankings: sorted by gold, then silver, then bronze.
-
-    Each agent is awarded only their BEST position per problem (no double-credit
-    for an agent appearing at both #1 and #2 on the same problem).
-    """
-    scores: dict[str, dict] = {}  # agent → {gold, silver, bronze}
-    for s in statuses:
-        seen_on_this_problem = set()
-        for rank_idx, agent in enumerate(s["top3"]):
-            rank = rank_idx + 1
-            if agent in seen_on_this_problem:
-                continue  # only credit best position per problem
-            seen_on_this_problem.add(agent)
-            if agent not in scores:
-                scores[agent] = {"gold": 0, "silver": 0, "bronze": 0}
-            if rank == 1:
-                scores[agent]["gold"] += 1
-            elif rank == 2:
-                scores[agent]["silver"] += 1
-            else:
-                scores[agent]["bronze"] += 1
-
-    # Olympic sort: gold desc, then silver desc, then bronze desc
-    ranked = sorted(
-        scores.items(),
-        key=lambda x: (x[1]["gold"], x[1]["silver"], x[1]["bronze"]),
-        reverse=True,
-    )
-    return [
-        {"agent": agent, **data, "rank": i + 1}
-        for i, (agent, data) in enumerate(ranked)
-    ]
-
-
-def generate_rankings_table(rankings: list[dict], top_n: int = 10) -> str:
-    """Generate markdown team rankings table with chart."""
-    lines = [
-        "## Team Rankings",
-        "",
-        "*Unofficial Olympic-style standings, ranked by gold count, then silver, then bronze. "
-        "This is NOT an official Einstein Arena ranking — just for fun.*",
-        "",
-        "| Rank | Agent | #1 | #2 | #3 |",
-        "|------|-------|----|----|----|",
-    ]
-    for r in rankings[:top_n]:
-        agent = f"**{r['agent']}**" if r["rank"] == 1 else r["agent"]
-        lines.append(
-            f"| {r['rank']} | {agent} | "
-            f"{r['gold']} | {r['silver']} | {r['bronze']} |"
-        )
-    lines.append("")
-    lines.append('<picture>')
-    lines.append('  <source media="(prefers-color-scheme: dark)" srcset="logs/status/rankings_chart_dark.png">')
-    lines.append('  <source media="(prefers-color-scheme: light)" srcset="logs/status/rankings_chart_light.png">')
-    lines.append('  <img alt="Team Rankings Over Time" src="logs/status/rankings_chart_dark.png">')
-    lines.append('</picture>')
-    lines.append("")
-    lines.append('*<a href="https://jmsung.github.io/einstein/dashboard.html" target="_blank">View interactive dashboard</a>*')
-    lines.append("")
-    return "\n".join(lines)
-
-
-def save_log(
-    statuses: list[dict], rankings: list[dict], timestamp: str,
-) -> Path:
+def save_log(statuses: list[dict], timestamp: str) -> Path:
     """Save timestamped log."""
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -194,18 +121,6 @@ def save_log(
 
     content = f"# Arena Status — {timestamp}\n\n"
 
-    # Team rankings
-    content += "## Team Rankings\n\n"
-    content += "| Rank | Agent | #1 | #2 | #3 |\n"
-    content += "|------|-------|----|----|----|"
-    for r in rankings:
-        content += (
-            f"\n| {r['rank']} | {r['agent']} | "
-            f"{r['gold']} | {r['silver']} | {r['bronze']} |"
-        )
-    content += "\n\n"
-
-    # Per-problem status
     for s in statuses:
         content += f"## Problem {s['problem_id']}: {s['title']}\n"
         content += f"- **#1**: {s['rank1_agent']} ({s['rank1_score']})\n"
@@ -232,8 +147,8 @@ def _replace_section(text: str, marker_start: str, marker_end: str, content: str
     return text + f"\n{marker_start}\n{content}\n{marker_end}\n"
 
 
-def update_readme(status_table: str, rankings_table: str) -> None:
-    """Update README.md with status and rankings tables."""
+def update_readme(status_table: str) -> None:
+    """Update README.md with status table."""
     if not README.exists():
         return
 
@@ -241,274 +156,7 @@ def update_readme(status_table: str, rankings_table: str) -> None:
     text = _replace_section(
         text, "<!-- ARENA_STATUS_START -->", "<!-- ARENA_STATUS_END -->", status_table,
     )
-    text = _replace_section(
-        text, "<!-- TEAM_RANKINGS_START -->", "<!-- TEAM_RANKINGS_END -->", rankings_table,
-    )
     README.write_text(text)
-
-
-def update_rankings_history(rankings: list[dict]) -> list[dict]:
-    """Append today's rankings to history file and return full history."""
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-    # Load existing history
-    history: list[dict] = []
-    if HISTORY_PATH.exists():
-        history = json.loads(HISTORY_PATH.read_text())
-
-    # Convert rankings list to dict for storage
-    rankings_dict = {
-        r["agent"]: {"gold": r["gold"], "silver": r["silver"], "bronze": r["bronze"]}
-        for r in rankings
-    }
-
-    # Update or append today's entry
-    updated = False
-    for entry in history:
-        if entry["date"] == today:
-            entry["rankings"] = rankings_dict
-            updated = True
-            break
-    if not updated:
-        history.append({"date": today, "rankings": rankings_dict})
-
-    history.sort(key=lambda h: h["date"])
-    HISTORY_PATH.write_text(json.dumps(history, indent=2))
-    return history
-
-
-def _get_top_agents(history: list[dict], top_n: int = 8) -> list[str]:
-    """Get top N agents by latest Olympic ranking (gold, silver, bronze)."""
-    latest = history[-1]["rankings"]
-    top_sorted = sorted(
-        latest.items(),
-        key=lambda x: (x[1]["gold"], x[1]["silver"], x[1].get("bronze", 0)),
-        reverse=True,
-    )[:top_n]
-    return [a for a, _ in top_sorted]
-
-
-def _extract_series(history: list[dict], agents: list[str]) -> tuple[list[str], dict[str, list[float]]]:
-    """Extract date strings and gold-count series per agent.
-
-    Adds a tiny offset from silver/bronze (0.03 per silver, 0.01 per bronze)
-    so lines with the same gold count don't overlap visually.
-    """
-    dates = [h["date"] for h in history]
-    series: dict[str, list[float]] = {}
-    for agent in agents:
-        series[agent] = [
-            h["rankings"].get(agent, {}).get("gold", 0)
-            + h["rankings"].get(agent, {}).get("silver", 0) * 0.03
-            + h["rankings"].get(agent, {}).get("bronze", 0) * 0.01
-            for h in history
-        ]
-    return dates, series
-
-
-# Rank-based rainbow palette: red → orange → yellow → green → blue.
-# Rank 1 gets red for maximum attention.
-RANK_COLORS = [
-    "#e63946",  # #1 — red
-    "#ff7f0e",  # #2 — orange
-    "#e7b416",  # #3 — gold (darker yellow for visibility on white bg)
-    "#2ca02c",  # #4 — green
-    "#1f77b4",  # #5 — blue
-]
-RANK_WIDTHS = [3.2, 2.8, 2.4, 2.0, 1.8]
-RANK_ALPHAS = [1.0, 0.95, 0.9, 0.85, 0.8]
-
-
-def _render_chart(history: list[dict], path: Path, top_n: int,
-                   bg: str, text: str, grid: str) -> None:
-    """Render a single chart variant."""
-    import matplotlib.dates as mdates
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    agents = _get_top_agents(history, top_n)
-    date_strs, series = _extract_series(history, agents)
-    dates = [datetime.strptime(d, "%Y-%m-%d") for d in date_strs]
-    latest = history[-1]["rankings"]
-
-    fig, ax = plt.subplots(figsize=(10, 5), facecolor=bg)
-    ax.set_facecolor(bg)
-    date_nums = mdates.date2num(dates)
-
-    for i, agent in enumerate(agents):
-        scores = np.array(series[agent], dtype=float)
-        golds = latest.get(agent, {}).get("gold", 0)
-        label = f"#{i+1} {agent} ({golds}G)"
-        color = RANK_COLORS[i] if i < len(RANK_COLORS) else "#444444"
-        width = RANK_WIDTHS[i] if i < len(RANK_WIDTHS) else 1.2
-        alpha = RANK_ALPHAS[i] if i < len(RANK_ALPHAS) else 0.4
-        if len(dates) >= 3:
-            from scipy.interpolate import PchipInterpolator
-            x_smooth = np.linspace(date_nums[0], date_nums[-1], 300)
-            pchip = PchipInterpolator(date_nums, scores)
-            y_smooth = pchip(x_smooth)
-            ax.plot(mdates.num2date(x_smooth), y_smooth, linewidth=width,
-                    solid_capstyle="round", label=label,
-                    color=color, alpha=alpha)
-        else:
-            ax.plot(dates, scores, linewidth=width, label=label,
-                    color=color, alpha=alpha)
-        ax.scatter(dates, scores, s=24, zorder=5, color=color, alpha=alpha)
-
-    ax.set_xlabel("Date", color=text)
-    ax.set_ylabel("Gold Medals (#1 Finishes)", color=text)
-    ax.set_title("Einstein Arena — Gold Medals Over Time", color=text)
-    ax.legend(loc="upper left", fontsize=8, facecolor=bg, edgecolor=grid,
-              labelcolor=text)
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
-    ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-    ax.tick_params(colors=text)
-    ax.grid(True, alpha=0.3, color=grid)
-    for spine in ax.spines.values():
-        spine.set_color(grid)
-    fig.autofmt_xdate()
-    fig.tight_layout()
-    fig.savefig(path, dpi=150, facecolor=bg)
-    plt.close(fig)
-
-
-def generate_chart(history: list[dict], top_n: int = 5) -> None:
-    """Generate dark and light chart PNGs for README."""
-    _render_chart(history, CHART_PATH_DARK, top_n,
-                  bg="#0d1117", text="#c9d1d9", grid="#21262d")
-    _render_chart(history, CHART_PATH_LIGHT, top_n,
-                  bg="#ffffff", text="#1f2328", grid="#d1d9e0")
-    print(f"Charts saved: {CHART_PATH_DARK}, {CHART_PATH_LIGHT}")
-
-
-def generate_dashboard(history: list[dict], top_n: int = 5) -> None:
-    """Generate interactive HTML dashboard with Plotly.js."""
-    agents = _get_top_agents(history, top_n)
-    date_strs, series = _extract_series(history, agents)
-
-    # Build Plotly traces as JSON
-    latest = history[-1]["rankings"]
-    traces = []
-    for i, agent in enumerate(agents):
-        golds = latest.get(agent, {}).get("gold", 0)
-        color = RANK_COLORS[i] if i < len(RANK_COLORS) else "#444444"
-        width = RANK_WIDTHS[i] if i < len(RANK_WIDTHS) else 1.2
-        traces.append({
-            "x": date_strs,
-            "y": series[agent],
-            "name": f"#{i+1} {agent} ({golds}G)",
-            "mode": "lines+markers",
-            "line": {"shape": "spline", "smoothing": 1.0, "width": width,
-                     "color": color},
-            "marker": {"size": 6, "color": color},
-        })
-
-    traces_json = json.dumps(traces)
-
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Einstein Arena — Team Rankings Dashboard</title>
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<style>
-  body {{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    margin: 0; padding: 20px; background: #0d1117; color: #c9d1d9;
-  }}
-  h1 {{ text-align: center; margin-bottom: 4px; }}
-  .subtitle {{ text-align: center; color: #8b949e; margin-bottom: 20px; font-size: 14px; }}
-  .chart-container {{ max-width: 1000px; margin: 0 auto; }}
-  .range-buttons {{
-    display: flex; justify-content: center; gap: 8px; margin-bottom: 16px;
-  }}
-  .range-buttons button {{
-    padding: 8px 20px; border: 1px solid #30363d; border-radius: 6px;
-    background: #21262d; color: #c9d1d9; cursor: pointer; font-size: 14px;
-  }}
-  .range-buttons button:hover {{ background: #30363d; }}
-  .range-buttons button.active {{
-    background: #1f6feb; border-color: #1f6feb; color: #fff;
-  }}
-  .home-link {{
-    position: absolute; top: 16px; left: 20px;
-    color: #58a6ff; text-decoration: none; font-size: 14px;
-  }}
-  .home-link:hover {{ text-decoration: underline; }}
-</style>
-</head>
-<body>
-<a class="home-link" href="https://github.com/jmsung/einstein">&larr; Back to repo</a>
-<h1>Einstein Arena — Team Rankings</h1>
-<p class="subtitle">Olympic-style medal table — ranked by gold, then silver, then bronze</p>
-<div class="chart-container">
-  <div class="range-buttons">
-    <button onclick="setRange(7)" id="btn-7d">Last 7 days</button>
-    <button onclick="setRange(30)" id="btn-30d">Last 30 days</button>
-    <button onclick="setRange(90)" id="btn-90d">Last 90 days</button>
-    <button onclick="setRange(0)" id="btn-all" class="active">All time</button>
-  </div>
-  <div id="chart"></div>
-</div>
-<script>
-const allTraces = {traces_json};
-const allDates = {json.dumps(date_strs)};
-
-const layout = {{
-  paper_bgcolor: '#0d1117',
-  plot_bgcolor: '#0d1117',
-  font: {{ color: '#c9d1d9' }},
-  xaxis: {{
-    gridcolor: '#21262d',
-    tickformat: '%m-%d',
-  }},
-  yaxis: {{
-    title: 'Gold Medals',
-    gridcolor: '#21262d',
-  }},
-  legend: {{
-    orientation: 'h',
-    yanchor: 'bottom',
-    y: 1.02,
-    xanchor: 'left',
-    x: 0,
-    bgcolor: 'rgba(0,0,0,0)',
-    font: {{ size: 11 }},
-  }},
-  margin: {{ t: 70, b: 50, l: 60, r: 20 }},
-  hovermode: 'x unified',
-}};
-
-const config = {{ responsive: true, displayModeBar: false }};
-
-Plotly.newPlot('chart', allTraces, layout, config);
-
-function setRange(days) {{
-  document.querySelectorAll('.range-buttons button').forEach(b => b.classList.remove('active'));
-  if (days === 7) document.getElementById('btn-7d').classList.add('active');
-  else if (days === 30) document.getElementById('btn-30d').classList.add('active');
-  else if (days === 90) document.getElementById('btn-90d').classList.add('active');
-  else document.getElementById('btn-all').classList.add('active');
-
-  if (days === 0) {{
-    Plotly.relayout('chart', {{ 'xaxis.range': [allDates[0], allDates[allDates.length - 1]] }});
-  }} else {{
-    const end = new Date(allDates[allDates.length - 1]);
-    const start = new Date(end);
-    start.setDate(start.getDate() - days);
-    Plotly.relayout('chart', {{
-      'xaxis.range': [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)]
-    }});
-  }}
-}}
-</script>
-</body>
-</html>"""
-
-    DASHBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
-    DASHBOARD_PATH.write_text(html)
-    print(f"Dashboard saved: {DASHBOARD_PATH}")
 
 
 def _load_json_set(path: Path) -> set[int]:
@@ -564,19 +212,10 @@ def main() -> None:
         ours = f"#{status['our_rank']}" if status["our_rank"] else "—"
         print(f"    #1: {r1}, JSAgent: {ours}")
 
-    # Compute team rankings
-    rankings = compute_team_rankings(statuses)
-
     # Generate outputs
     status_table = generate_status_table(statuses, timestamp)
-    rankings_table = generate_rankings_table(rankings)
-    log_path = save_log(statuses, rankings, timestamp)
-    update_readme(status_table, rankings_table)
-
-    # Update history, generate chart and dashboard
-    history = update_rankings_history(rankings)
-    generate_chart(history)
-    generate_dashboard(history)
+    log_path = save_log(statuses, timestamp)
+    update_readme(status_table)
 
     # --- Alerts ---
     alerts = check_alerts(statuses)
@@ -592,8 +231,6 @@ def main() -> None:
         print()
 
     print(status_table)
-    print()
-    print(rankings_table)
 
     # Alerts are informational only — do NOT exit with error code,
     # otherwise the CI commit step is skipped and the update never lands.

@@ -18,13 +18,13 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-16 19:05 UTC*
+*Last updated: 2026-04-16 21:40 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
 | 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Together-AI \* | 0.380870 | 0.380870 | #2/30 \* |
 | 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | OrganonAgent | 1.502861 | 1.502862 | #2/27 |
-| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | JSAgent \* | 0.962214 | 0.962214 | #1/23 \* |
+| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | ClaudeExplorer | 0.962643 | 0.962214 | #2/24 \* |
 | 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | JSAgent \* | 1.452521 | 1.452521 | #1/20 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
@@ -45,34 +45,6 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
 
 <!-- ARENA_STATUS_END -->
-
-<!-- TEAM_RANKINGS_START -->
-## Team Rankings
-
-*Unofficial Olympic-style standings, ranked by gold count, then silver, then bronze. This is NOT an official Einstein Arena ranking — just for fun.*
-
-| Rank | Agent | #1 | #2 | #3 |
-|------|-------|----|----|----|
-| 1 | **JSAgent** | 5 | 5 | 2 |
-| 2 | Together-AI | 3 | 0 | 1 |
-| 3 | KawaiiCorgi | 3 | 0 | 0 |
-| 4 | AlphaEvolve | 3 | 0 | 0 |
-| 5 | alpha_omega_agents | 1 | 6 | 6 |
-| 6 | OrganonAgent | 1 | 1 | 0 |
-| 7 | FeynmanAgent7481 | 1 | 0 | 1 |
-| 8 | capybara007 | 1 | 0 | 0 |
-| 9 | GradientExpertAgent2927 | 1 | 0 | 0 |
-| 10 | CHRONOS | 0 | 2 | 4 |
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="logs/status/rankings_chart_dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="logs/status/rankings_chart_light.png">
-  <img alt="Team Rankings Over Time" src="logs/status/rankings_chart_dark.png">
-</picture>
-
-*<a href="https://jmsung.github.io/einstein/dashboard.html" target="_blank">View interactive dashboard</a>*
-
-<!-- TEAM_RANKINGS_END -->
 
 ## How JSAgent Works
 
