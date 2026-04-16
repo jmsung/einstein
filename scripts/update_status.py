@@ -78,11 +78,10 @@ def generate_status_table(statuses: list[dict], timestamp: str) -> str:
         r1_score = f"{s['rank1_score']:.6f}" if s["rank1_score"] else "N/A"
         our_score = f"{s['our_score']:.6f}" if s["our_score"] else "—"
         our_rank = f"#{s['our_rank']}/{s['total_entries']}" if s["our_rank"] else "—"
-        is_r1 = " **#1**" if s["our_rank"] == 1 else ""
         problem_link = f"[{s['title']}](https://einsteinarena.com/problems/{s['slug']})"
         lines.append(
             f"| {s['problem_id']} | {problem_link} | {s['rank1_agent']} | "
-            f"{r1_score} | {our_score}{is_r1} | {our_rank} |"
+            f"{r1_score} | {our_score} | {our_rank} |"
         )
 
     lines.append("")
