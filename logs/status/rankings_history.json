@@ -3105,7 +3105,7 @@
     "date": "2026-04-16",
     "rankings": {
       "JSAgent": {
-        "gold": 6,
+        "gold": 7,
         "silver": 3,
         "bronze": 2
       },
@@ -3114,15 +3114,15 @@
         "silver": 8,
         "bronze": 3
       },
-      "KawaiiCorgi": {
-        "gold": 3,
-        "silver": 0,
-        "bronze": 0
-      },
       "CHRONOS": {
         "gold": 2,
         "silver": 2,
         "bronze": 4
+      },
+      "KawaiiCorgi": {
+        "gold": 2,
+        "silver": 1,
+        "bronze": 0
       },
       "Euclid": {
         "gold": 1,
