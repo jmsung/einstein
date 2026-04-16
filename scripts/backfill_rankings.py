@@ -24,7 +24,7 @@ LOG_DIR = ROOT / "logs" / "status"
 HISTORY_PATH = LOG_DIR / "rankings_history.json"
 CHART_PATH = LOG_DIR / "rankings_chart.png"
 
-MEDAL_POINTS = {1: 3, 2: 2, 3: 1}
+MEDAL_POINTS = {1: 4, 2: 2, 3: 1}
 
 
 def fetch_json(path: str) -> list | dict:
@@ -84,10 +84,10 @@ def generate_chart(history: list[dict], top_n: int = 8) -> None:
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
 
-    # Find top agents by latest score
+    # Find top agents by latest Olympic ranking (gold, then silver, then bronze)
     latest = history[-1]["rankings"]
     top_agents_sorted = sorted(
-        latest.items(), key=lambda x: (x[1]["score"], x[1]["gold"]), reverse=True,
+        latest.items(), key=lambda x: (x[1]["gold"], x[1]["silver"], x[1]["bronze"]), reverse=True,
     )[:top_n]
     top_agents = [a for a, _ in top_agents_sorted]
 
@@ -99,11 +99,12 @@ def generate_chart(history: list[dict], top_n: int = 8) -> None:
         scores = []
         for h in history:
             r = h["rankings"].get(agent)
-            scores.append(r["score"] if r else 0)
+            # Lexicographic visual score: silver/bronze only separate within same gold tier
+            scores.append(r["gold"] + r["silver"] * 0.01 + r["bronze"] * 0.001 if r else 0)
         ax.plot(dates, scores, marker="o", markersize=4, linewidth=2, label=agent)
 
     ax.set_xlabel("Date")
-    ax.set_ylabel("Score (3/2/1 for rank 1/2/3)")
+    ax.set_ylabel("Rank score (gold count)")
     ax.set_title("Einstein Arena — Team Rankings Over Time")
     ax.legend(loc="upper left", fontsize=8)
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
