@@ -67,6 +67,8 @@ The truncated Mobius function μ(n) for n ≤ N provides a natural baseline that
 
 - `src/einstein/prime/evaluator.py` — arena-matching evaluator with MC constraint validation
 - `scripts/prime/optimize_prime.py` — cutting-plane LP optimizer
+- `scripts/prime/warm_extend.py` — warm-start LP extension from existing solution to larger key counts
+- `scripts/prime/submit.py` — arena submission with MC verification and leaderboard polling
 - `tests/prime/test_prime.py` — evaluator tests and arena cross-validation
 
-*Last updated: 2026-04-13*
+*Last updated: 2026-04-15*
