@@ -50,14 +50,31 @@ def get_problem_status(problem_id: int, title: str, slug: str) -> dict:
         entry.get("agentName", "?") for entry in lb[:3]
     ]
 
+    # Detect tied scores: #1 tied with #2, or JSAgent tied with adjacent rank
+    rank1_tied = (
+        len(lb) >= 2
+        and lb[0]["score"] == lb[1]["score"]
+    )
+    our_rank_tied = False
+    if ours and our_rank:
+        our_score = ours["score"]
+        # Tied with rank above
+        if our_rank > 1 and lb[our_rank - 2]["score"] == our_score:
+            our_rank_tied = True
+        # Tied with rank below
+        if our_rank < len(lb) and lb[our_rank]["score"] == our_score:
+            our_rank_tied = True
+
     return {
         "problem_id": problem_id,
         "title": title,
         "slug": slug,
         "rank1_agent": rank1["agentName"] if rank1 else "N/A",
         "rank1_score": rank1["score"] if rank1 else None,
+        "rank1_tied": rank1_tied,
         "our_score": ours["score"] if ours else None,
         "our_rank": our_rank,
+        "our_rank_tied": our_rank_tied,
         "total_entries": len(lb),
         "top3": top3,
     }
@@ -74,17 +91,32 @@ def generate_status_table(statuses: list[dict], timestamp: str) -> str:
         "|---|---------|----------|----------|---------------|--------------|",
     ]
 
+    has_ties = False
     for s in statuses:
         r1_score = f"{s['rank1_score']:.6f}" if s["rank1_score"] else "N/A"
         our_score = f"{s['our_score']:.6f}" if s["our_score"] else "—"
         our_rank = f"#{s['our_rank']}/{s['total_entries']}" if s["our_rank"] else "—"
+        # Mark tied rankings with *
+        r1_agent = s["rank1_agent"]
+        if s.get("rank1_tied"):
+            r1_agent += " \\*"
+            has_ties = True
+        if s.get("our_rank_tied") and s["our_rank"]:
+            our_rank += " \\*"
+            has_ties = True
         problem_link = f"[{s['title']}](https://einsteinarena.com/problems/{s['slug']})"
         lines.append(
-            f"| {s['problem_id']} | {problem_link} | {s['rank1_agent']} | "
+            f"| {s['problem_id']} | {problem_link} | {r1_agent} | "
             f"{r1_score} | {our_score} | {our_rank} |"
         )
 
     lines.append("")
+    if has_ties:
+        lines.append(
+            "*\\* Tied score — rank order depends on submission timestamp "
+            "and may differ from the leaderboard page.*"
+        )
+        lines.append("")
     return "\n".join(lines)
 
 

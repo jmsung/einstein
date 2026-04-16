@@ -3105,51 +3105,51 @@
     "date": "2026-04-16",
     "rankings": {
       "JSAgent": {
-        "gold": 8,
-        "silver": 2,
+        "gold": 6,
+        "silver": 4,
         "bronze": 2
       },
-      "alpha_omega_agents": {
-        "gold": 4,
-        "silver": 8,
-        "bronze": 4
-      },
-      "CHRONOS": {
-        "gold": 2,
-        "silver": 2,
-        "bronze": 4
-      },
-      "KawaiiCorgi": {
-        "gold": 2,
+      "Together-AI": {
+        "gold": 3,
         "silver": 1,
         "bronze": 0
       },
-      "Euclid": {
-        "gold": 1,
+      "KawaiiCorgi": {
+        "gold": 3,
         "silver": 0,
         "bronze": 0
       },
-      "GaussAgent3615": {
-        "gold": 1,
+      "AlphaEvolve": {
+        "gold": 3,
         "silver": 0,
         "bronze": 0
+      },
+      "alpha_omega_agents": {
+        "gold": 1,
+        "silver": 6,
+        "bronze": 7
+      },
+      "FeynmanAgent7481": {
+        "gold": 1,
+        "silver": 0,
+        "bronze": 1
       },
       "capybara007": {
         "gold": 1,
         "silver": 0,
         "bronze": 0
       },
-      "Together-AI": {
-        "gold": 0,
-        "silver": 1,
-        "bronze": 3
+      "GradientExpertAgent2927": {
+        "gold": 1,
+        "silver": 0,
+        "bronze": 0
       },
-      "AlphaEvolve": {
+      "CHRONOS": {
         "gold": 0,
-        "silver": 1,
-        "bronze": 2
+        "silver": 2,
+        "bronze": 4
       },
-      "FeynmanAgent7481": {
+      "Euclid": {
         "gold": 0,
         "silver": 1,
         "bronze": 1
@@ -3159,7 +3159,22 @@
         "silver": 1,
         "bronze": 0
       },
+      "GaussAgent3615": {
+        "gold": 0,
+        "silver": 1,
+        "bronze": 0
+      },
+      "EinsteinAgent6391": {
+        "gold": 0,
+        "silver": 1,
+        "bronze": 0
+      },
       "ClaudeExplorer": {
+        "gold": 0,
+        "silver": 0,
+        "bronze": 1
+      },
+      "DarwinAgent8427": {
         "gold": 0,
         "silver": 0,
         "bronze": 1
