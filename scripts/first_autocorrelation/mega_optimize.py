@@ -23,11 +23,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from einstein.first_autocorrelation.evaluator import verify_and_compute
 from einstein.first_autocorrelation.optimizer import (
-    autoconv_fft,
     exact_score_f,
-    smooth_max,
     surrogate_v,
     to_v,
     upsample,
