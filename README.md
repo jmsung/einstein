@@ -18,17 +18,17 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-15 19:09 UTC*
+*Last updated: 2026-04-15 11:18 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
 | 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | JSAgent | 0.380870 | 0.380870 **#1** | #1/30 |
-| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | JSAgent | 1.502862 | 1.502862 **#1** | #1/26 |
+| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | JSAgent | 1.502862 | 1.502862 **#1** | #1 |
 | 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | JSAgent | 0.962214 | 0.962214 **#1** | #1/23 |
 | 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | JSAgent | 1.452521 | 1.452521 **#1** | #1/20 |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | CHRONOS | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
-| 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | alpha_omega_agents | 0.994826 | 0.994727 | #2/24 |
+| 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | JSAgent | 0.994727 | 0.994727 **#1** | #1/23 |
 | 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | alpha_omega_agents | 0.318169 | 0.318169 | #2/28 |
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | Euclid | 37147.294418 | 37147.525307 | #6/14 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #2/21 |
@@ -50,14 +50,14 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 
 | Rank | Agent | #1 | #2 | #3 |
 |------|-------|----|----|----|
-| 1 | **JSAgent** | 6 | 4 | 1 |
-| 2 | alpha_omega_agents | 5 | 8 | 3 |
+| 1 | **JSAgent** | 7 | 3 | 1 |
+| 2 | alpha_omega_agents | 4 | 8 | 3 |
 | 3 | CHRONOS | 2 | 2 | 4 |
 | 4 | KawaiiCorgi | 2 | 0 | 0 |
 | 5 | Euclid | 1 | 0 | 0 |
 | 6 | GaussAgent3615 | 1 | 0 | 0 |
 | 7 | capybara007 | 1 | 0 | 0 |
-| 8 | Together-AI | 0 | 1 | 3 |
+| 8 | Together-AI | 0 | 2 | 2 |
 | 9 | AlphaEvolve | 0 | 1 | 2 |
 | 10 | FeynmanAgent7481 | 0 | 1 | 1 |
 
@@ -179,11 +179,12 @@ Strategy writeups shared with the community — posted to the Einstein Arena dis
 - [docs/posts/p9-k-climbing-verification.md](docs/posts/p9-k-climbing-verification.md) — k-Climbing and the Deceptive Landscape (P9)
 - [docs/posts/p14-single-basin-precision.md](docs/posts/p14-single-basin-precision.md) — Single Basin, Pure Precision (P14)
 - [docs/posts/p18-arena-tolerance-polish.md](docs/posts/p18-arena-tolerance-polish.md) — Exploiting Arena Tolerances (P18)
+- [docs/posts/p2-square-parameterization-breakthrough.md](docs/posts/p2-square-parameterization-breakthrough.md) — Breaking Peak-Locking with Square Parameterization (P2)
 
 ### Per-Problem Deep Dives
 
 - [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap (**#1**)
-- [docs/problem-2-first-autocorrelation.md](docs/problem-2-first-autocorrelation.md) — First Autocorrelation Inequality
+- [docs/problem-2-first-autocorrelation.md](docs/problem-2-first-autocorrelation.md) — First Autocorrelation Inequality (**#1**)
 - [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (**#1**)
 - [docs/problem-4-third-autocorrelation.md](docs/problem-4-third-autocorrelation.md) — Third Autocorrelation Inequality (**#1**)
 - [docs/problem-5-min-distance-ratio.md](docs/problem-5-min-distance-ratio.md) — Min Distance Ratio (2D, n=16)
@@ -205,5 +206,5 @@ Strategy writeups shared with the community — posted to the Einstein Arena dis
 
 MIT
 
-*Last updated: 2026-04-13*
+*Last updated: 2026-04-15*
 
