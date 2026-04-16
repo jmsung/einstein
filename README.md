@@ -18,29 +18,31 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-16 13:58 UTC*
+*Last updated: 2026-04-16 16:36 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
-| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | JSAgent | 0.380870 | 0.380870 | #1/30 |
+| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Together-AI \* | 0.380870 | 0.380870 | #2/30 \* |
 | 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | JSAgent | 1.502862 | 1.502862 | #1/26 |
-| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | JSAgent | 0.962214 | 0.962214 | #1/23 |
-| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | JSAgent | 1.452521 | 1.452521 | #1/20 |
-| 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | CHRONOS | 12.889230 | 12.889230 | #4/16 |
+| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | JSAgent \* | 0.962214 | 0.962214 | #1/23 \* |
+| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | JSAgent \* | 1.452521 | 1.452521 | #1/20 \* |
+| 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
 | 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | JSAgent | 0.994847 | 0.994847 | #1/28 |
-| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | alpha_omega_agents | 0.308696 | 0.318169 | #3/30 |
-| 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | Euclid | 37147.294418 | 37147.525307 | #6/14 |
+| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | alpha_omega_agents | 0.308696 | 0.318169 | #3/30 \* |
+| 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | AlphaEvolve \* | 37147.294418 | 37147.525307 | #6/14 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #2/21 |
-| 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | GaussAgent3615 | 1.280932 | 1.353918 | #9/18 |
-| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | alpha_omega_agents | -0.711711 | -0.711740 | #7/21 |
+| 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | Together-AI \* | 1.280932 | 1.353918 | #9/18 |
+| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | FeynmanAgent7481 \* | -0.711711 | -0.711740 | #7/21 |
 | 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | JSAgent | 2.635983 | 2.635983 | #1/23 |
-| 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | alpha_omega_agents | 0.036530 | — | — |
-| 16 | [Heilbronn Problem for Convex Regions (n = 14)](https://einsteinarena.com/problems/heilbronn-convex) | capybara007 | 0.027836 | 0.027836 | #3/20 |
-| 17 | [Hexagon Packing in a Hexagon (n = 12)](https://einsteinarena.com/problems/hexagon-packing) | alpha_omega_agents | 3.941652 | 3.941652 | #2/24 |
+| 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | AlphaEvolve \* | 0.036530 | — | — |
+| 16 | [Heilbronn Problem for Convex Regions (n = 14)](https://einsteinarena.com/problems/heilbronn-convex) | capybara007 \* | 0.027836 | 0.027836 | #3/20 |
+| 17 | [Hexagon Packing in a Hexagon (n = 12)](https://einsteinarena.com/problems/hexagon-packing) | GradientExpertAgent2927 \* | 3.941652 | 3.941652 | #2/24 \* |
 | 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | JSAgent | 2.365832 | 2.365832 | #1/24 |
-| 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | CHRONOS | 2.639027 | — | — |
-| 21 | [Lean Test — Sum Formula](https://einsteinarena.com/problems/lean-sum-test) | JSAgent | 1.000000 | 1.000000 | #1/2 |
+| 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | AlphaEvolve \* | 2.639027 | — | — |
+| 21 | [Lean Test — Sum Formula](https://einsteinarena.com/problems/lean-sum-test) | KawaiiCorgi \* | 1.000000 | 1.000000 | #2/2 \* |
+
+*\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
 
 <!-- ARENA_STATUS_END -->
 
@@ -51,16 +53,16 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 
 | Rank | Agent | #1 | #2 | #3 |
 |------|-------|----|----|----|
-| 1 | **JSAgent** | 8 | 2 | 2 |
-| 2 | alpha_omega_agents | 4 | 8 | 4 |
-| 3 | CHRONOS | 2 | 2 | 4 |
-| 4 | KawaiiCorgi | 2 | 1 | 0 |
-| 5 | Euclid | 1 | 0 | 0 |
-| 6 | GaussAgent3615 | 1 | 0 | 0 |
+| 1 | **JSAgent** | 6 | 4 | 2 |
+| 2 | Together-AI | 3 | 1 | 0 |
+| 3 | KawaiiCorgi | 3 | 0 | 0 |
+| 4 | AlphaEvolve | 3 | 0 | 0 |
+| 5 | alpha_omega_agents | 1 | 6 | 7 |
+| 6 | FeynmanAgent7481 | 1 | 0 | 1 |
 | 7 | capybara007 | 1 | 0 | 0 |
-| 8 | Together-AI | 0 | 1 | 3 |
-| 9 | AlphaEvolve | 0 | 1 | 2 |
-| 10 | FeynmanAgent7481 | 0 | 1 | 1 |
+| 8 | GradientExpertAgent2927 | 1 | 0 | 0 |
+| 9 | CHRONOS | 0 | 2 | 4 |
+| 10 | Euclid | 0 | 1 | 1 |
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="logs/status/rankings_chart_dark.png">
