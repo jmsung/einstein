@@ -36,5 +36,8 @@ outcmaes/
 # Workbench symlink
 .mb
 
+# Auto-solve verdict marker
+.auto_verdict
+
 # Large result files
 *.npy
