@@ -18,9 +18,6 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install dependencies
-        run: pip install numpy scipy matplotlib
-
       - name: Update arena status
         run: python scripts/update_status.py
 
@@ -28,6 +25,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add logs/status/ README.md docs/dashboard.html
+          git add logs/status/ README.md
           git diff --staged --quiet || git commit -m "chore: daily arena status update"
           git push
