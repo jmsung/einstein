@@ -42,13 +42,21 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def normalize(h: np.ndarray) -> np.ndarray:
-    """Project h onto [0,1] with sum = n/2."""
+    """Project h onto [0,1] with sum = n/2.
+
+    Iterates clip-then-scale to handle cases where scaling pushes values > 1.
+    """
     h = np.clip(h, 0, 1)
     n = len(h)
-    s = np.sum(h)
-    if s > 0:
+    for _ in range(10):
+        s = np.sum(h)
+        if s == 0:
+            h = np.full(n, 0.5)
+            break
         h = h * (n / 2.0 / s)
-    h = np.clip(h, 0, 1)
+        if np.all(h <= 1.0) and np.all(h >= 0.0):
+            break
+        h = np.clip(h, 0, 1)
     return h
 
 
@@ -175,7 +183,7 @@ def approach_a(n: int = 600, K_values: list[int] | None = None,
 
         # Generate diverse initializations
         inits = []
-        for seed in range(8):
+        for seed in range(4):
             rng = np.random.default_rng(seed + K * 100)
             # Amplitude decays with frequency
             x0 = rng.standard_normal(K) * 0.15 / np.sqrt(np.arange(1, K + 1))
@@ -192,7 +200,7 @@ def approach_a(n: int = 600, K_values: list[int] | None = None,
                 inits.insert(0, ("warm_prev", best_coeffs.copy()))
 
         # Beta schedule: start smooth, then sharpen
-        beta_schedule = [10.0, 30.0, 100.0, 300.0]
+        beta_schedule = [10.0, 50.0, 200.0, 500.0]
 
         for name, x0 in inits:
             if time.time() - t0 > time_limit:
@@ -231,7 +239,7 @@ def approach_a(n: int = 600, K_values: list[int] | None = None,
 
         # Also try sin+cos parametrization
         print(f"\n  --- K={K} Fourier modes (sin+cos) ---")
-        for seed in range(4):
+        for seed in range(2):
             if time.time() - t0 > time_limit:
                 break
 
@@ -1054,7 +1062,7 @@ def main():
     results = {}
 
     # ===== Approach A: Fourier parametrization =====
-    h_a, s_a = approach_a(n=n, K_values=[20, 50, 100, 200], time_limit=420)
+    h_a, s_a = approach_a(n=n, K_values=[20, 50, 100, 200], time_limit=300)
     results["A_fourier_param"] = s_a
     if h_a is not None and s_a < global_best_score:
         global_best_score = s_a
@@ -1063,7 +1071,7 @@ def main():
 
     # ===== Approach A2: Direct L-BFGS-B =====
     h_a2, s_a2 = approach_a2_direct(
-        n=n, time_limit=300, warm_h=global_best_h)
+        n=n, time_limit=180, warm_h=global_best_h)
     results["A2_direct_lbfgsb"] = s_a2
     if h_a2 is not None and s_a2 < global_best_score:
         global_best_score = s_a2
@@ -1071,7 +1079,7 @@ def main():
         print(f"\n  >>> New global best from Approach A2: C = {s_a2:.13f}")
 
     # ===== Approach B: Iterative projection =====
-    h_b, s_b = approach_b(n=n, time_limit=300, warm_h=global_best_h)
+    h_b, s_b = approach_b(n=n, time_limit=180, warm_h=global_best_h)
     results["B_iterative_proj"] = s_b
     if h_b is not None and s_b < global_best_score:
         global_best_score = s_b
@@ -1079,7 +1087,7 @@ def main():
         print(f"\n  >>> New global best from Approach B: C = {s_b:.13f}")
 
     # ===== Approach C: CVXPY =====
-    h_c, s_c = approach_c(n_values=[20, 40, 60, 80, 100], time_limit=300)
+    h_c, s_c = approach_c(n_values=[20, 40, 60, 80], time_limit=180)
     results["C_cvxpy"] = s_c
     if h_c is not None and s_c < global_best_score:
         global_best_score = s_c
@@ -1088,7 +1096,7 @@ def main():
 
     # ===== Local polishing on global best =====
     if global_best_h is not None:
-        remaining = max(0, 2700 - (time.time() - t_global))
+        remaining = max(0, 1800 - (time.time() - t_global))
         if remaining > 30:
             h_pol, s_pol = local_polish(
                 global_best_h, n_iters=5_000_000,
