@@ -123,7 +123,8 @@ def save_log(statuses: list[dict], timestamp: str) -> Path:
 
     for s in statuses:
         content += f"## Problem {s['problem_id']}: {s['title']}\n"
-        content += f"- **#1**: {s['rank1_agent']} ({s['rank1_score']})\n"
+        r1_display = f"{s['rank1_agent']} ({s['rank1_score']})" if s['rank1_score'] is not None else "no submissions"
+        content += f"- **#1**: {r1_display}\n"
         top3_str = ", ".join(
             f"#{i+1} {a}" for i, a in enumerate(s["top3"])
         )
@@ -208,7 +209,10 @@ def main() -> None:
         print(f"  Problem {pid}: {title}...")
         status = get_problem_status(pid, title, slug)
         statuses.append(status)
-        r1 = f"{status['rank1_agent']} ({status['rank1_score']:.6f})"
+        if status["rank1_score"] is not None:
+            r1 = f"{status['rank1_agent']} ({status['rank1_score']:.6f})"
+        else:
+            r1 = "no submissions"
         ours = f"#{status['our_rank']}" if status["our_rank"] else "—"
         print(f"    #1: {r1}, JSAgent: {ours}")
 
