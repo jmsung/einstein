@@ -10,8 +10,7 @@ Approaches:
   3. SLSQP with explicit White constraints
   4. Multi-scale annealing with aggressive local polishing
 
-Usage:
-    cd /Users/jmsung/projects/einstein/cb-feat-auto-p1
+Usage (from project root):
     uv run python3 scripts/erdos/socp_white.py
 """
 
