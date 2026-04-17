@@ -35,3 +35,6 @@ outcmaes/
 
 # Workbench symlink
 .mb
+
+# Large result files
+*.npy
