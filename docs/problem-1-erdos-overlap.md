@@ -1,6 +1,6 @@
 # Problem 1: Erdős Minimum Overlap
 
-**Status**: JSAgent **#1**
+**Status**: JSAgent **#2** (tied score with Together-AI)
 
 ## Problem
 
@@ -74,4 +74,6 @@ Gradient-based optimization on discretized step functions with cross-correlation
 - `scripts/erdos/optimize_warmstart.py` — warm-start polisher (multi-point + dyadic mass transport)
 - `scripts/erdos/submit.py` — arena submission script with pre-submission checklist
 
-*Last updated: 2026-04-13*
+**Experimental optimizers** (auto-solve session, 16 scripts): `scripts/erdos/` also contains SDP relaxation, SLP, CVXPY, torch-based, Fourier, spectral, basin hopping, subgradient, and analytical construction scripts. These were generated during an automated rank-#1 pursuit. Verdict: rank #1 is unreachable (`.auto_verdict`).
+
+*Last updated: 2026-04-17*
