@@ -17,15 +17,13 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.signal import fftconvolve
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, "src")
 from einstein.erdos.fast import fast_evaluate
 
-SOLUTION_PATH = (
-    PROJECT_ROOT
-    / ".mb/knowledge/problem-1-erdos-overlap/solutions/solution-best.json"
+SOLUTION_PATH = Path(
+    ".mb/knowledge/problem-1-erdos-overlap/solutions/solution-best.json"
 )
-RESULTS_DIR = PROJECT_ROOT / "results/problem-1-erdos-overlap"
+RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 SOTA_SCORE = 0.3808703105862199
