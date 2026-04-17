@@ -15,7 +15,7 @@ import numpy as np
 from scipy.signal import fftconvolve
 
 import sys
-sys.path.insert(0, "/Users/jmsung/projects/einstein/cb-feat-auto-p1")
+sys.path.insert(0, "src")
 from einstein.erdos.evaluator import evaluate
 from einstein.erdos.fast import fast_evaluate
 

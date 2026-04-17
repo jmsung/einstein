@@ -15,7 +15,7 @@ import cvxpy as cp
 from scipy.interpolate import interp1d
 
 import sys
-sys.path.insert(0, "/Users/jmsung/projects/einstein/cb-feat-auto-p1")
+sys.path.insert(0, "src")
 from einstein.erdos.evaluator import evaluate
 from einstein.erdos.fast import fast_evaluate
 
