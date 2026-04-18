@@ -11,7 +11,10 @@ This repository shares JSAgent's full methodology — the exact techniques, what
 **What you'll find here:**
 - **[Methodology Guide](docs/methodology.md)** — cross-problem optimizer taxonomy, general techniques, and when-to-stop diagnostics
 - **[Findings](docs/findings/)** — arena mechanics, float64 polish techniques, verification patterns, and named optimization recipes
-- **Per-problem deep dives** — each problem doc includes the specific approach, what worked/didn't, and key mathematical insights
+- **[Per-problem deep dives](#per-problem-deep-dives)** — each problem doc includes the specific approach, what worked/didn't, and key mathematical insights
+- **[Discovery Timeline](docs/timeline.md)** — dated log of key breakthroughs for attribution clarity
+
+> **Philosophy:** JSAgent is built in the spirit of open scientific competition. We share methods, writeups, and lessons publicly so the community can build on them. If you find something useful, we'd appreciate a citation.
 
 JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einsteinarena) by Bianchi, Kwon, and Zou as a top-performing agent on the Einstein Arena. See also the [Einstein Arena source repo](https://github.com/vinid/einstein-arena) and Together AI's [EinsteinArena-new-SOTA](https://github.com/togethercomputer/EinsteinArena-new-SOTA) for pre-arena SOTA results with solutions and analysis notebooks.
 
@@ -137,6 +140,7 @@ uv sync
 
 ### Cross-Problem Guides
 
+- [docs/timeline.md](docs/timeline.md) — Discovery timeline — dated breakthroughs for attribution clarity
 - [docs/methodology.md](docs/methodology.md) — Optimizer taxonomy, general techniques, transfer lessons
 - [docs/findings/arena-mechanics.md](docs/findings/arena-mechanics.md) — minImprovement, scoring, verification drift
 - [docs/findings/float64-polish.md](docs/findings/float64-polish.md) — ULP descent, mpmath, precision lottery
@@ -159,8 +163,8 @@ Strategy writeups shared with the community — posted to the Einstein Arena dis
 ### Per-Problem Deep Dives
 
 - [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap (**#2**)
-- [docs/problem-2-first-autocorrelation.md](docs/problem-2-first-autocorrelation.md) — First Autocorrelation Inequality (**#1**)
-- [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (**#1**)
+- [docs/problem-2-first-autocorrelation.md](docs/problem-2-first-autocorrelation.md) — First Autocorrelation Inequality (**#2**)
+- [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (**#2**)
 - [docs/problem-4-third-autocorrelation.md](docs/problem-4-third-autocorrelation.md) — Third Autocorrelation Inequality (**#1**)
 - [docs/problem-5-min-distance-ratio.md](docs/problem-5-min-distance-ratio.md) — Min Distance Ratio (2D, n=16)
 - [docs/problem-6-kissing-number.md](docs/problem-6-kissing-number.md) — Kissing Number in Dimension 11
@@ -177,9 +181,21 @@ Strategy writeups shared with the community — posted to the Einstein Arena dis
 - [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle
 - [docs/problem-19-difference-bases.md](docs/problem-19-difference-bases.md) — Difference Bases
 
+## Citation
+
+```bibtex
+@misc{jsagent2026,
+  author       = {Sung, Jongmin},
+  title        = {JSAgent: An AI Agent for Hard Mathematical Optimization},
+  year         = {2026},
+  publisher    = {GitHub},
+  url          = {https://github.com/jmsung/einstein}
+}
+```
+
 ## License
 
 MIT
 
-*Last updated: 2026-04-17*
+*Last updated: 2026-04-18*
 
