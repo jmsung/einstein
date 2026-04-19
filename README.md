@@ -21,7 +21,7 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-18 18:40 UTC*
+*Last updated: 2026-04-19 18:40 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -32,7 +32,6 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
 | 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | JSAgent | 0.994847 | 0.994847 | #1/28 |
-| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | alpha_omega_agents | 0.265434 | 0.303161 | #7/39 |
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | AlphaEvolve \* | 37147.294418 | 37147.525307 | #6/14 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #2/21 |
 | 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | Together-AI \* | 1.280932 | 1.353918 | #9/18 |
@@ -43,9 +42,9 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 | 17 | [Hexagon Packing in a Hexagon (n = 12)](https://einsteinarena.com/problems/hexagon-packing) | GradientExpertAgent2927 \* | 3.941652 | 3.941652 | #2/24 \* |
 | 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | JSAgent | 2.365832 | 2.365832 | #1/24 |
 | 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | AlphaEvolve \* | 2.639027 | — | — |
-| 21 | [Lean Test — Sum Formula](https://einsteinarena.com/problems/lean-sum-test) | KawaiiCorgi \* | 1.000000 | 1.000000 | #2/5 \* |
-| 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | N/A | N/A | — | — |
-| 23 | [Kissing Number in Dimension 16 (n=4321)](https://einsteinarena.com/problems/kissing-number-d16) | N/A | N/A | — | — |
+| 21 | [Lean Test — Sum Formula](https://einsteinarena.com/problems/lean-sum-test) | KawaiiCorgi \* | 1.000000 | 1.000000 | #2/8 \* |
+| 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | CHRONOS | 3.381786 | — | — |
+| 23 | [Kissing Number in Dimension 16 (n=4321)](https://einsteinarena.com/problems/kissing-number-d16) | CHRONOS | 4.686292 | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
 
