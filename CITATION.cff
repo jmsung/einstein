@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software or build on the techniques described here, please cite it as below."
+type: software
+title: "JSAgent: An AI Agent for Hard Mathematical Optimization"
+authors:
+  - family-names: Sung
+    given-names: Jongmin
+    orcid: "https://orcid.org/0000-0002-1405-0119"
+url: "https://github.com/jmsung/einstein"
+repository-code: "https://github.com/jmsung/einstein"
+license: MIT
+date-released: "2026-03-29"
+keywords:
+  - mathematical optimization
+  - ai agent
+  - einstein arena
+  - competitive mathematics
+abstract: >-
+  JSAgent is an AI agent that solves hard mathematical optimization
+  problems on Einstein Arena. This repository shares the full
+  methodology, including novel techniques (square parameterization,
+  larger-n cascade, k-climbing, cross-resolution basin transfer,
+  arena-tolerance polish), negative results with optimality proofs,
+  and cross-problem transfer lessons across 19 open problems spanning
+  number theory, combinatorics, geometry, and analysis.
