@@ -150,38 +150,9 @@ uv sync
 - [docs/findings/optimization-recipes.md](docs/findings/optimization-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits, platform mechanics
 
-### Arena Discussion Posts
+### Arena Discussion Posts & Per-Problem Deep Dives
 
-Strategy writeups shared with the community — posted to the Einstein Arena discussion threads:
-
-- [docs/posts/p3-cross-resolution-transfer.md](docs/posts/p3-cross-resolution-transfer.md) — Cross-Resolution Basin Transfer (P3)
-- [docs/posts/p4-block-repeat-escape.md](docs/posts/p4-block-repeat-escape.md) — Breaking the Equioscillation Trap (P4)
-- [docs/posts/p7-lp-reformulation.md](docs/posts/p7-lp-reformulation.md) — It's Not Number Theory — It's an LP (P7)
-- [docs/posts/p9-k-climbing-verification.md](docs/posts/p9-k-climbing-verification.md) — k-Climbing and the Deceptive Landscape (P9)
-- [docs/posts/p14-single-basin-precision.md](docs/posts/p14-single-basin-precision.md) — Single Basin, Pure Precision (P14)
-- [docs/posts/p18-arena-tolerance-polish.md](docs/posts/p18-arena-tolerance-polish.md) — Exploiting Arena Tolerances (P18)
-- [docs/posts/p2-square-parameterization-breakthrough.md](docs/posts/p2-square-parameterization-breakthrough.md) — Breaking Peak-Locking with Square Parameterization (P2)
-
-### Per-Problem Deep Dives
-
-- [docs/problem-1-erdos-overlap.md](docs/problem-1-erdos-overlap.md) — Erdős Minimum Overlap (**#2**)
-- [docs/problem-2-first-autocorrelation.md](docs/problem-2-first-autocorrelation.md) — First Autocorrelation Inequality (**#2**)
-- [docs/problem-3-autocorrelation.md](docs/problem-3-autocorrelation.md) — Second Autocorrelation (**#2**)
-- [docs/problem-4-third-autocorrelation.md](docs/problem-4-third-autocorrelation.md) — Third Autocorrelation Inequality (**#1**)
-- [docs/problem-5-min-distance-ratio.md](docs/problem-5-min-distance-ratio.md) — Min Distance Ratio (2D, n=16)
-- [docs/problem-6-kissing-number.md](docs/problem-6-kissing-number.md) — Kissing Number in Dimension 11
-- [docs/problem-7-prime-number-theorem.md](docs/problem-7-prime-number-theorem.md) — Prime Number Theorem (**#1**)
-- [docs/problem-10-thomson.md](docs/problem-10-thomson.md) — Thomson Problem (n = 282)
-- [docs/problem-11-tammes.md](docs/problem-11-tammes.md) — Tammes Problem (n = 50)
-- [docs/problem-12-flat-polynomials.md](docs/problem-12-flat-polynomials.md) — Flat Polynomials (degree 69)
-- [docs/problem-13-edges-triangles.md](docs/problem-13-edges-triangles.md) — Edges vs Triangles
-- [docs/problem-14-circle-packing-square.md](docs/problem-14-circle-packing-square.md) — Circle Packing in a Square (**#1**)
-- [docs/problem-15-heilbronn-triangles.md](docs/problem-15-heilbronn-triangles.md) — Heilbronn Triangles (n = 11)
-- [docs/problem-16-heilbronn-convex.md](docs/problem-16-heilbronn-convex.md) — Heilbronn Convex Regions (n = 14)
-- [docs/problem-17-hexagon-packing.md](docs/problem-17-hexagon-packing.md) — Hexagon Packing (n = 12)
-- [docs/problem-17-circles-rectangle.md](docs/problem-17-circles-rectangle.md) — Circles in a Rectangle (**#1**)
-- [docs/problem-18-uncertainty-principle.md](docs/problem-18-uncertainty-principle.md) — Uncertainty Principle
-- [docs/problem-19-difference-bases.md](docs/problem-19-difference-bases.md) — Difference Bases
+Strategy writeups are linked from the [Discovery Timeline](docs/timeline.md). Per-problem deep dives with approaches, results, and key insights are in [docs/](docs/) (one file per problem).
 
 ## Citation
 
