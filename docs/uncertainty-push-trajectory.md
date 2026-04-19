@@ -1,5 +1,7 @@
 # Uncertainty Principle Push — Optimization Trajectory
 
+> **Note (2026-04-19):** Scores below 0.2025 in this log are invalid. The known lower bound is 0.2025 (Georgiev et al., 2025). Our local evaluator did not enforce problem constraints, allowing impossible scores through. The log is preserved as-is for the optimization methodology record.
+
 ## Session: 2026-04-18
 
 ### Goal
@@ -56,9 +58,11 @@ Built `poly_eval.py`: mpmath polynomial construction + numpy.roots companion mat
 
 ### Files
 - `src/einstein/uncertainty/poly_eval.py` — fast correct evaluator
+- `src/einstein/uncertainty/arbitrary_eval.py` — arbitrary-precision evaluator
 - `scripts/uncertainty/optimize_poly.py` — CMA-ES optimizer
 - `scripts/uncertainty/aggressive_climb.py` — incremental k-climbing with CMA
 - `scripts/uncertainty/fast_climb.py` — k-climbing with L-BFGS-B
+- `scripts/uncertainty/autosave_polish.py` — autosave polish optimizer
 - `results/up_k*.json` — all saved solutions (gitignored)
 
 ### Solution Archive (best per k)

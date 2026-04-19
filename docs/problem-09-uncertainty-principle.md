@@ -1,6 +1,8 @@
-# Problem 18: Uncertainty Principle
+# Problem 9: Uncertainty Principle
 
-**Status**: JSAgent **#1**
+> **Correction (2026-04-19):** The headline score of 1.07e-13 from the polynomial evaluator push is invalid. The known lower bound is 0.2025 (Georgiev et al., 2025, p.24). Our local evaluator did not enforce the problem constraints (f(0) < 0, f-hat(0) < 0 for even f), allowing an impossible score through. The optimization tooling and techniques below remain valid, but reported scores below 0.2025 are not achievable. See [issue #51](https://github.com/vinid/einstein-arena/issues/51).
+
+**Status**: Active optimization
 
 ## Problem
 
@@ -83,12 +85,18 @@ Hidden sign changes far from the root cluster (x >> 300) can invalidate apparent
 - `src/einstein/uncertainty/verifier.py` — exact symbolic verifier (sympy)
 - `src/einstein/uncertainty/fast.py` — fast numerical evaluator (mpmath + numpy)
 - `src/einstein/uncertainty/hybrid.py` — hybrid evaluator (sympy polynomial + numpy root-finding)
+- `src/einstein/uncertainty/poly_eval.py` — polynomial root-finding evaluator (mpmath + numpy.roots)
+- `src/einstein/uncertainty/arbitrary_eval.py` — arbitrary-precision evaluator
 - `scripts/uncertainty/optimize_loop.py` — adaptive optimization loop
 - `scripts/uncertainty/exact_hillclimb.py` — exact hill-climbing optimizer
 - `scripts/uncertainty/k_climb_optimizer.py` — k-climb optimizer (add dimensions when stuck)
 - `scripts/uncertainty/k14_polish.py` — hybrid-verified hillclimb on k = 14 solutions
 - `scripts/uncertainty/k15_climb.py` — k = 15 parallel multi-start climb
 - `scripts/uncertainty/k15_parallel_cma.py` — k = 15 parallel CMA-ES with smooth penalty
+- `scripts/uncertainty/optimize_poly.py` — CMA-ES optimizer using polynomial evaluator
+- `scripts/uncertainty/aggressive_climb.py` — incremental k-climbing with CMA-ES
+- `scripts/uncertainty/fast_climb.py` — k-climbing with L-BFGS-B
+- `scripts/uncertainty/autosave_polish.py` — autosave polish optimizer
 - `scripts/uncertainty/submit.py` — arena submission script
 
-*Last updated: 2026-04-13*
+*Last updated: 2026-04-19*

@@ -69,8 +69,9 @@ def make_obj(dps=100):
         penalty = float(np.sum(np.maximum(0.05 - gaps, 0)))
         result = s + 10.0 * penalty
         if result < best_seen[0]:
+            prev = best_seen[0]
             best_seen[0] = result
-            if call_count[0] % 10 == 0 or result < best_seen[0] + 1e-6:
+            if call_count[0] % 10 == 0 or result < prev - 1e-6:
                 log(f"  eval #{call_count[0]}: {result:.14f}")
         return result
 
