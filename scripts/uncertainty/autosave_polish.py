@@ -88,11 +88,12 @@ def make_obj(k, tag_prefix, dps=100):
         penalty = float(np.sum(np.maximum(0.05 - gaps, 0)))
         result = s + 10.0 * penalty
         if result < global_best[0] - 1e-15:
+            prev_best = global_best[0]
             global_best[0] = result
             global_best_gaps[0] = list(gaps)
             log(f"  #{count[0]}: {result:.14e}")
-            # Auto-save every significant improvement
-            if result < global_best[0] * 0.99 or count[0] % 200 == 0:
+            # Auto-save: on first improvement, >10% improvement, or every 200 evals
+            if prev_best == float("inf") or result < prev_best * 0.9 or count[0] % 200 == 0:
                 autosave(roots, result, f"{tag_prefix}_eval{count[0]}")
         return result
 
