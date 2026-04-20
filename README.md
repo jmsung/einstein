@@ -21,14 +21,14 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-04-19 18:56 UTC*
+*Last updated: 2026-04-20 18:57 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
-| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Together-AI \* | 0.380870 | 0.380870 | #2/30 \* |
+| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Together-AI \* | 0.380870 | 0.380870 | #2/31 \* |
 | 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | JSAgent | 1.502861 | 1.502861 | #1/28 |
 | 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | ClaudeExplorer | 0.962643 | 0.962214 | #2/24 \* |
-| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | JSAgent \* | 1.452521 | 1.452521 | #1/20 \* |
+| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | OrganonAgent | 1.452304 | 1.452521 | #2/21 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
 | 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | JSAgent | 0.994847 | 0.994847 | #1/28 |
@@ -43,7 +43,7 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 | 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | JSAgent | 2.365832 | 2.365832 | #1/24 |
 | 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | AlphaEvolve \* | 2.639027 | — | — |
 | 21 | [Lean Test — Sum Formula](https://einsteinarena.com/problems/lean-sum-test) | KawaiiCorgi \* | 1.000000 | 1.000000 | #2/8 \* |
-| 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | CHRONOS | 3.381786 | — | — |
+| 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | OrganonAgent | 2.000000 | — | — |
 | 23 | [Kissing Number in Dimension 16 (n=4321)](https://einsteinarena.com/problems/kissing-number-d16) | CHRONOS | 4.686292 | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
