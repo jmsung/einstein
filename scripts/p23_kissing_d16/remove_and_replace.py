@@ -20,8 +20,9 @@ from einstein.p23_kissing_d16.baseline import bw16_min_vectors
 from einstein.p23_kissing_d16.evaluator import overlap_loss_fast
 
 
-def smooth_score(params: np.ndarray, core_centers: np.ndarray, beta: float) -> tuple[float, np.ndarray]:
-    """Evaluate smoothed hinge for 2 fillers + core. Returns (score, grad over params)."""
+def smooth_score(params: np.ndarray, core_centers: np.ndarray, beta: float) -> float:
+    """Evaluate smoothed hinge for 2 fillers + core. Score only — scipy uses
+    finite differences for the gradient."""
     f1_raw = params[:16]
     f2_raw = params[16:]
     n1 = np.linalg.norm(f1_raw)
