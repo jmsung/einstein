@@ -48,7 +48,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `memetic-tabu-search.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-02 | 0.00 |
 | `sdp-flag-algebra.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `remez-equioscillation-diagnostic.md` | autocorrelation | 2 | 0 | 2 | 2026-04-08 | 0.00 |
-| `warm-start-from-leader.md` | universal | 9 | 6 | 1 | 2026-04-25 | 0.67 |
+| `warm-start-from-leader.md` | universal | 10 | 6 | 2 | 2026-05-02 | 0.60 |
 | `greedy-insert-cd-redistribute.md` | extremal-graph | 1 | 1 | 0 | 2026-04-09 | 1.00 |
 | `gpu-decision-framework.md` | meta | 5 | (meta) | 2 | 2026-04-25 | (n/a) |
 | `compute-router.md` | meta | 0 | (meta) | 0 | (TBD) | (n/a) |

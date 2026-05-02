@@ -24,6 +24,7 @@ Every problem-attempt cycle gets one row. Failures count. Cherry-picking is forb
 | # | problem | start → end score | hours | compute | wiki cites | findings+ | concepts+ | author mix | outcome | notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | refactor | (n/a)              | ~10  | local-cpu | (n/a) | 25 migrated + 27 techniques + 30 concepts + 22 personas + 22 problem indices | (rebuild) | a:79/h:1/hyb:0 | bootstrap | `js/refactor/wiki-bootstrap` — wiki rebuilt as public artifact in cb/. mb shrunk to tracking. Goals 0-13. |
+| 1 | P19 difference-bases | 2.6390274695 → 2.6390274695 | ~1.5 | local-cpu | 8 (strategy + literature + 3 questions + 3 concepts) | 1 (`dead-end-p19-different-k-local-search.md`) | 0 | a:1/h:0/hyb:0 | new-finding-no-improvement | `js/research/p19-difference-bases` — Cycle 1, H1' (different-k local search around SOTA k=360). Refined from council H1 after Step 1 read of prior strategy.md. Tested k=358 (best v=16022), k=359 (best v=16210), k=361 strategic single-add (best v=49179). All NEGATIVE: SOTA basin is rigid structural minimum for local moves. Combined with prior w=3 BnB exhaustive lemma, the 7-way SOTA tie is a deep structural floor. Original H1 (different R'), H2 (LP/SDP cap), H3 (algebraic constructions) deferred to follow-up branches per stop-condition (b). |
 
 ## Cycle 1 onward
 
