@@ -1,22 +1,35 @@
 # Einstein
 
-**JSAgent** — an AI agent that solves hard math and science optimization problems on [Einstein Arena](https://einsteinarena.com/).
+**JSAgent** — a self-improving AI agent that does mathematics, measured against the [Einstein Arena](https://einsteinarena.com/) benchmark.
 
-Einstein Arena is a competitive platform where AI agents tackle unsolved optimization problems spanning number theory, combinatorics, geometry, and analysis. Agents develop solutions locally using provided verifiers and submit via REST API. See [docs/arena.md](docs/arena.md) for platform details.
+Math is one of the few systems where an agent's claimed understanding can be verified objectively — the answer is right or wrong, the bound holds or doesn't, the score is reproducible. Most agent benchmarks rely on judges, rubrics, or human evaluation; Einstein Arena is brutal and exact. That makes it a near-ideal test bed for measuring how far well-organized self-learning can push the limit of mathematics.
 
-## Open Knowledge Mission
+## The artifact
 
-This repository shares JSAgent's full methodology — the exact techniques, what worked, what didn't, and the mathematical insights discovered across all 19 arena problems. We believe the community benefits more from transparent knowledge-sharing than from competitive secrecy.
+This repo is the artifact. It has three layers that grow together:
 
-**What you'll find here:**
-- **[Methodology Guide](docs/methodology.md)** — cross-problem optimizer taxonomy, general techniques, and when-to-stop diagnostics
-- **[Findings](docs/findings/)** — arena mechanics, float64 polish techniques, verification patterns, and named optimization recipes
-- **[Per-problem deep dives](#per-problem-deep-dives)** — each problem doc includes the specific approach, what worked/didn't, and key mathematical insights
-- **[Discovery Timeline](docs/timeline.md)** — dated log of key breakthroughs for attribution clarity
+| Layer | Path | What lives there |
+|---|---|---|
+| **Wiki — the brain** | [`wiki/`](wiki/) | Math knowledge: concepts, techniques, mathematician personas, findings, problems, open questions. Either human or agent may author, with mandatory frontmatter attribution. |
+| **Rules — the policy** | [`.claude/rules/`](.claude/rules/) | Behavioral rules that govern how the agent reads, thinks, asks, distills, and writes back. |
+| **Agent — the dynamics** | [`agent/`](agent/) | Self-improvement infrastructure: append-only cycle log, skill library with hit-rates, metrics, ablations. |
 
-> **Philosophy:** JSAgent is built in the spirit of open scientific competition. We share methods, writeups, and lessons publicly so the community can build on them. If you find something useful, we'd appreciate a citation.
+Plus the supporting layers: [`source/`](source/) (1:1 LLM distillations of papers/repos/blogs), [`raw/`](raw/) (gitignored cache of native originals), and the code in [`src/`](src/), [`scripts/`](scripts/), [`tests/`](tests/).
 
-JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einsteinarena) by Bianchi, Kwon, and Zou as a top-performing agent on the Einstein Arena. See also the [Einstein Arena source repo](https://github.com/vinid/einstein-arena) and Together AI's [EinsteinArena-new-SOTA](https://github.com/togethercomputer/EinsteinArena-new-SOTA) for pre-arena SOTA results with solutions and analysis notebooks.
+**Start here:**
+
+- [`wiki/home.md`](wiki/home.md) — narrative front door
+- [`wiki/problems/_inventory.md`](wiki/problems/_inventory.md) — concept-coverage compass across 23 arena problems
+- [`wiki/personas/_synthesis.md`](wiki/personas/_synthesis.md) — the 12 stances drawn from how the great mathematicians actually work
+- [`wiki/CLAUDE.md`](wiki/CLAUDE.md) — the wiki contract (machine-readable + prose)
+
+## The thesis
+
+The agent solves problems, fails, reflects, writes back to the wiki, and keeps going. Wisdom compounds across cycles in the wiki the same way understanding compounds across generations in biological evolution — selection on what worked, retention of what generalizes, ruthless pruning of what didn't.
+
+Math wisdom is the goal, not arena rank. Submission is a verification tool, not a goal — local triple-verify is the closed loop; the leaderboard is a second-rate signal that catches local-vs-arena verifier drift. No external posts; this repo is the publication channel.
+
+JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einsteinarena) by Bianchi, Kwon, and Zou as a top-performing agent on the Einstein Arena. See also the [Einstein Arena source repo](https://github.com/vinid/einstein-arena) and Together AI's [EinsteinArena-new-SOTA](https://github.com/togethercomputer/EinsteinArena-new-SOTA).
 
 <!-- ARENA_STATUS_START -->
 ## Arena Status
