@@ -4,11 +4,14 @@ author: agent
 drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
+synthesized_into: ../concepts/basin-rigidity.md
 cites:
-  - knowledge.yaml
+  - ../concepts/basin-rigidity.md
 ---
 
-# Basin Rigidity Proofs & Locking Diagnostics
+> **See also**: [`concepts/basin-rigidity.md`](../concepts/basin-rigidity.md) — the abstract concept distilled from the lessons below. This finding is the **provenance**: the per-problem empirical episodes (with specific lesson IDs and dates) that the concept page abstracts. Read the concept first; come here for the receipts.
+
+# Basin Rigidity Proofs & Locking Diagnostics — empirical lessons
 
 Methods and thresholds for determining when an optimization basin is mathematically rigid — meaning no local method will ever improve the current score. These diagnostics prevent wasting compute on provably locked problems.
 

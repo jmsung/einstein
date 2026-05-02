@@ -4,11 +4,14 @@ author: agent
 drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
+synthesized_into: ../concepts/k-climbing-and-dof-augmentation.md
 cites:
-  - knowledge.yaml
+  - ../concepts/k-climbing-and-dof-augmentation.md
 ---
 
-# k-Climbing & Dimension Augmentation
+> **See also**: [`concepts/k-climbing-and-dof-augmentation.md`](../concepts/k-climbing-and-dof-augmentation.md) — the abstract concept distilled from the lessons below. This finding is the **provenance**: per-problem empirical episodes. Read the concept first; come here for the receipts.
+
+# k-Climbing & Dimension Augmentation — empirical lessons
 
 ## #24 (k-climbing version): k-climbing beats local optimization at fixed k
 
