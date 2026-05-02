@@ -5,9 +5,9 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - reference/2025-novikov-alphaevolve.md
+  - ../source/papers/2025-novikov-alphaevolve.md
   - knowledge.yaml
-  - reference/2026-togetherai-einstein-arena.md
+  - ../source/blog/2026-togetherai-einstein-arena.md
 ---
 
 # Warm-Start Recon Protocol

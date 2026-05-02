@@ -5,7 +5,7 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - mathematician-council.md
+  - ../personas/_synthesis.md
   - knowledge.yaml
 ---
 

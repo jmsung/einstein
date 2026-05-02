@@ -16,3 +16,4 @@ Append-only record of wiki ingests, promotions, lints, and structural changes.
 - **goal 3** — 10 behavioral rules + slim 4-axiom file in `.claude/rules/`.
 - **goal 4** — personas pass: 22 files (16 council + 5 new + _synthesis). Source: mb/wiki/mathematician-council.md.
 - **goal 5** — findings pass: 25 files migrated from mb/wiki/findings/ + arena-scoring.md (renamed from arena-scoring-investigation). Frontmatter updated with type/author/drafted; cites still reference old paths (rewritten in Goal 6).
+- **goal 6** — references pass: 44 .md files from mb/wiki/reference/ split by provenance into source/{papers/(38), repos/(2), blog/(4)}. 24 PDFs copied to raw/papers/ (gitignored). Cites in findings/ and source/ rewritten from `reference/<x>` → `../source/<provenance>/<x>` paths.

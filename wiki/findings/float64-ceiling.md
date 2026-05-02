@@ -5,7 +5,7 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - reference/2025-novikov-alphaevolve.md
+  - ../source/papers/2025-novikov-alphaevolve.md
   - knowledge.yaml
 ---
 

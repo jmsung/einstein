@@ -6,7 +6,7 @@ level: 2
 cites:
   - problem-evaluation.md
   - strategy.md
-  - reference/2026-togetherai-einstein-arena.md
+  - ../source/blog/2026-togetherai-einstein-arena.md
 ---
 
 # Arena Scoring Investigation: Copy-Paste Exploit & Fair Evaluation Proposal

@@ -6,8 +6,8 @@ level: 1
 source_type: agent_analysis
 cites:
   - knowledge.yaml
-  - reference/2025-jaech-autoconvolution.md
-  - reference/2026-sung-jsagent-codebase.md
+  - ../source/papers/2025-jaech-autoconvolution.md
+  - ../source/repos/jmsung-einstein-codebase.md
 ---
 
 # Optimizer Recipes & Technique Catalog

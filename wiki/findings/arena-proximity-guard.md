@@ -6,7 +6,7 @@ level: 1
 source_type: agent_analysis
 cites:
   - knowledge.yaml
-  - reference/2026-togetherai-einstein-arena.md
+  - ../source/blog/2026-togetherai-einstein-arena.md
 ---
 
 # Arena minImprovement Proximity Guard

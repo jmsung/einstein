@@ -6,7 +6,7 @@ level: 1
 source_type: agent_analysis
 cites:
   - knowledge.yaml
-  - reference/2025-novikov-alphaevolve.md
+  - ../source/papers/2025-novikov-alphaevolve.md
 ---
 
 # Packing Problem Techniques — Rank Grabs & Tolerance Exploitation

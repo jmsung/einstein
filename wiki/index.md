@@ -79,4 +79,12 @@ Catalog of all wiki pages. Updated as content lands.
 
 ## Source corpus
 
-*(see `../source/` — populated in Goal 6 — references pass)*
+44 references migrated from mb/wiki/reference/ on 2026-05-02. Layout in `../source/`:
+
+- **papers/** (38) — academic papers, 1959 → 2026
+- **arxiv/** (0) — currently empty; future arxiv-direct distillations
+- **repos/** (2) — jmsung-einstein, jmsung-einstein-codebase
+- **blog/** (4) — togetherai-einstein-arena, cohn-kissing-numbers, bloom-erdos-problems, friedman-packing-records
+- **oeis/** (0) — currently empty; reserved for OEIS sequence pages
+
+24 PDFs copied to `../raw/papers/` (gitignored). Originals can be re-fetched from `source_url` in each `source/<provenance>/<stem>.md` frontmatter.
