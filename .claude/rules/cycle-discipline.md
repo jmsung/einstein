@@ -20,10 +20,11 @@ This rule is the structural enforcement of the four honesty checks (`agent/READM
 ### At cycle END (per `/worktree-done` or `/agent-reflect`):
 
 3. **Run `tools/refresh_qmd.sh`** before any merge. The qmd index does NOT auto-detect new files; without refresh, the NEXT cycle can't query this cycle's findings — silently breaks the wiki-first discipline. Refusal: don't mark cycle complete if qmd is stale.
-4. **Append exactly one row** to `agent/cycle-log.md` for the cycle. Schema in the file header. Failures and abandons count — note `outcome: blocked | no-change | new-finding-no-improvement` as appropriate.
-5. **Update `agent/skill-library.md`** for every technique invoked during the cycle: increment `tried`; increment `top3` if the cycle reached top-3 on the problem; increment `finding` if the cycle produced any new wiki finding (positive OR dead-end).
-6. **Verify `author:` fields** on every wiki page touched/added in the cycle. The mix is the self-improvement signal.
-7. **Failure-finding obligation** — if any approach was abandoned during the cycle, `wiki/findings/dead-end-<slug>.md` must exist for it. If not, block the worktree-done step.
+4. **Run `tools/wiki_graph.py --file-questions`** to surface structural gaps (Types 1, 2, 4, 5 — see `wiki/findings/finding-the-fertile-gaps.md`). Top-3 Type-2 candidates auto-file as `wiki/questions/<date>-gap-<slug>.md`. The next cycle's council dispatch picks them up alongside persona questions. The gap-detector says *what to consider*; the cross-pollination-not-compute filter says *what to keep*.
+5. **Append exactly one row** to `agent/cycle-log.md` for the cycle. Schema in the file header. Failures and abandons count — note `outcome: blocked | no-change | new-finding-no-improvement` as appropriate.
+6. **Update `agent/skill-library.md`** for every technique invoked during the cycle: increment `tried`; increment `top3` if the cycle reached top-3 on the problem; increment `finding` if the cycle produced any new wiki finding (positive OR dead-end).
+7. **Verify `author:` fields** on every wiki page touched/added in the cycle. The mix is the self-improvement signal.
+8. **Failure-finding obligation** — if any approach was abandoned during the cycle, `wiki/findings/dead-end-<slug>.md` must exist for it. If not, block the worktree-done step.
 
 **Anti-patterns explicitly forbidden:**
 
