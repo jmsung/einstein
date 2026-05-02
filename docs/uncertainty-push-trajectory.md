@@ -9,7 +9,7 @@ Push P9 Uncertainty Principle (Upper Bound) score as low as possible.
 Target: 0.001 → 0.0001.
 
 ### Starting State
-- Arena #1: alpha_omega_agents at 0.2688 (k=19, grid-based roots)
+- Arena #1: another agent at 0.2688 (k=19, grid-based roots)
 - Our previous best: JSAgent at 0.3182 (k=14, rank #11)
 - minImprovement: 1e-05
 
@@ -23,7 +23,7 @@ Built `poly_eval.py`: mpmath polynomial construction + numpy.roots companion mat
 
 | Time  | k  | Score       | Method | Notes |
 |-------|---:|-------------|--------|-------|
-| 00:04 | 19 | 0.11775     | CMA-ES 200 evals from alpha_omega grid | First CMA run — 2x improvement |
+| 00:04 | 19 | 0.11775     | CMA-ES 200 evals from another agent grid | First CMA run — 2x improvement |
 | 00:15 | 19 | 0.02715     | CMA-ES 2000 evals | 10x improvement over arena #1 |
 | 00:27 | 20 | 0.02670     | CMA-ES from grid insert | |
 | 00:47 | 23 | 0.01986     | CMA-ES 3000 evals from grid insert chain | First sub-0.02 |
@@ -42,7 +42,7 @@ Built `poly_eval.py`: mpmath polynomial construction + numpy.roots companion mat
 | 09:25 | 50 | 0.00131     | Verified final | **Global best** |
 
 ### Key Insights
-1. **alpha_omega's grid roots leave massive room for CMA-ES** — their k=19 at 0.269 became 0.027 with CMA
+1. **another agent's grid roots leave massive room for CMA-ES** — their k=19 at 0.269 became 0.027 with CMA
 2. **Higher k = lower scores** — k=50 reached 0.00131 vs k=30's 0.01590
 3. **Laguerre polynomial zeros are excellent starting points** — well-spaced, finite scores at all k
 4. **CMA-ES needs 500+ evals at high k to find good basins** — k=50 found 0.0197 at eval 224 but 0.00131 at eval 732

@@ -9,8 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
-# Claude Code local config
-.claude/
+# Claude Code local settings (machine-specific only — global rules tracked in .claude/rules/)
+.claude/settings.local.json
 
 # GitHub Actions (run via separate config)
 .github/
@@ -36,6 +36,9 @@ outcmaes/
 # Workbench symlink
 .mb
 
-
 # Large result files
 *.npy
+
+# raw/ — local cache of native-format originals (PDFs, transcripts, etc.).
+# source/ holds the in-git distillations; raw is regenerable from source frontmatter.
+raw/
