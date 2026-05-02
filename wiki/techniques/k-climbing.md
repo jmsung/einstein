@@ -66,4 +66,4 @@ Local CPU. Gap-space NM at k=14: minutes. CMA-ES at k=14: ~10 min for full conve
 - `wiki/findings/float64-polish.md` (#65 — mpmath dps scaling).
 - knowledge.yaml pattern `k-climbing`.
 - `wiki/techniques/gap-space-parameterization.md` (companion).
-- `mb/wiki/problem-9-uncertainty-principle/strategy.md`.
+- `mb/tracking/problem-9-uncertainty-principle/strategy.md`.

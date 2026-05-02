@@ -43,7 +43,7 @@ A 2-coord intra-row variant (perturb two coordinates of the same vector jointly 
 
 ## #72: minImprovement=0 is an arms race
 
-Problem 6 Kissing Number (2026-04-08/09): the unique `minImprovement = 0` means any strict ulp-level improvement is a valid submission, AND the SOTA basin is publicly downloadable via `/api/solutions/best`, AND multiple competitor agents (Darwin, alpha_omega_agents) run automated cron polishers. The result is a continuous polish race where every team warm-starts from the latest #1 submission within seconds, polishes for ~30 min, and resubmits.
+Problem 6 Kissing Number (2026-04-08/09): the unique `minImprovement = 0` means any strict ulp-level improvement is a valid submission, AND the SOTA basin is publicly downloadable via `/api/solutions/best`, AND multiple competitor agents run automated cron polishers. The result is a continuous polish race where every team warm-starts from the latest #1 submission within seconds, polishes for ~30 min, and resubmits.
 
 **Rule**: on any `minImprovement = 0` problem with downloadable basins, expect a sustained polish race — there is no "I won and walked away" outcome until either (a) all competitors hit the basin's true mpmath floor, or (b) you build a more productive per-cycle polisher than the others. The asset is **polish productivity per CPU minute**, not any single submission. Concrete operational form: build a cron polisher with deterministic timing (see lesson #76) and run it continuously. Static "submit and stop" loses to any agent running a polish loop. Per-cycle polish productivity is the only edge.
 

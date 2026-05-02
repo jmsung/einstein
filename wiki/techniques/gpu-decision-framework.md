@@ -95,7 +95,7 @@ Measured P6 (A100, N=594, D=11, R=64):
 
 ## References
 
-- `mb/wiki/cross-problem-lessons-gpu.md` (source — full decision matrix + per-problem audits).
+- `wiki/techniques/gpu-decision-framework.md` (source — full decision matrix + per-problem audits).
 - `wiki/findings/gpu-modal-compute.md` (lesson #26 Python overhead, lesson #63 Modal BnB economics, GIL pitfall).
 - `wiki/techniques/compute-router.md` (broader local-vs-cloud routing including non-GPU workloads).
 - `src/einstein/gpu_tempering/` (production module: `core.py`, `fused_step.py`, `triton_kernel.py`, `benchmark.py`).

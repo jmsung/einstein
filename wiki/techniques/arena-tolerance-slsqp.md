@@ -56,4 +56,4 @@ Local CPU. Single SLSQP run: seconds for n=21 packing, ~1 min for n=26. Sequenti
 - `wiki/findings/arena-proximity-guard.md` (lesson #90 strict-less-than; #91 minImprovement drift; #98 P7 1e-4 band).
 - `wiki/findings/lp-solver-scaling.md` (lesson #97 — competitor 1.0001× scaling on P7).
 - knowledge.yaml strategies `slsqp_epigraph_polish`; pattern `arena-tolerance-scaling`.
-- `mb/wiki/problem-18-circles-rectangle/strategy.md`.
+- `mb/tracking/problem-18-circles-rectangle/strategy.md`.

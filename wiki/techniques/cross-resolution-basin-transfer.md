@@ -55,5 +55,5 @@ Local CPU. Downsample is O(n_high). Refinement at n=100k via Dinkelbach + β-cas
 - `wiki/findings/optimizer-recipes.md` ("Cross-Resolution Basin Transfer" + "Multi-Scale Upsampling").
 - `wiki/findings/equioscillation-escape.md` (#51 contrast: larger-n escape = upsample with perturbation; this = downsample for basin transfer).
 - knowledge.yaml pattern `cross-resolution-basin-transfer`.
-- `mb/wiki/problem-3-second-autocorrelation/strategy.md` (1.6M → 100k transplant + C(90,3) algebra).
+- `mb/tracking/problem-3-second-autocorrelation/strategy.md` (1.6M → 100k transplant + C(90,3) algebra).
 - Jaech & Joseph 2025 autoconvolution paper (multi-scale upsampling, the dual direction).

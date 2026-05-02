@@ -62,4 +62,4 @@ Local CPU. FFT conv via `torch.fft.rfft/irfft` makes n=100k tractable on CPU in 
 - `wiki/findings/equioscillation-escape.md` (lessons #51, #52, #94 — cascade recipe, "frozen" label test, parameterization companion).
 - `wiki/findings/optimizer-recipes.md` (#93 v² parameterization escape).
 - knowledge.yaml strategy `larger_n_escape_cascade` and pattern `larger-n-escape-for-equioscillation-basins`.
-- `mb/wiki/problem-4-third-autocorrelation/strategy.md`, `mb/wiki/problem-2-first-autocorrelation/strategy.md`.
+- `mb/tracking/problem-4-third-autocorrelation/strategy.md`, `mb/tracking/problem-2-first-autocorrelation/strategy.md`.

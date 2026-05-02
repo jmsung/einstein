@@ -83,4 +83,4 @@ All three converging in ~10 min total = strongest computational proof of local o
 - `wiki/findings/optimizer-recipes.md` (#67 — CMA-ES gap-space recipe).
 - knowledge.yaml strategy `cma_es`.
 - `wiki/techniques/gap-space-parameterization.md` (companion).
-- `mb/wiki/problem-1-erdos-overlap/strategy.md` (sigma collapse), `mb/wiki/problem-9-uncertainty-principle/strategy.md` (gap-space).
+- `mb/tracking/problem-1-erdos-overlap/strategy.md` (sigma collapse), `mb/tracking/problem-9-uncertainty-principle/strategy.md` (gap-space).

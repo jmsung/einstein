@@ -64,4 +64,4 @@ for t in range(50):
 - `wiki/findings/lp-solver-scaling.md` (#47, #57 — when LP is the wrong tool).
 - knowledge.yaml strategy `dinkelbach`.
 - Source: Jaech & Joseph 2025, autoconvolution paper (`source/papers/2025-jaech-autoconvolution.md`).
-- `mb/wiki/problem-2-first-autocorrelation/strategy.md`, `mb/wiki/problem-3-second-autocorrelation/strategy.md`.
+- `mb/tracking/problem-2-first-autocorrelation/strategy.md`, `mb/tracking/problem-3-second-autocorrelation/strategy.md`.

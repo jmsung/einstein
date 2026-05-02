@@ -51,4 +51,4 @@ Local CPU. One Remez run on a candidate SOTA: minutes. Sequential — GPU sits i
 - knowledge.yaml pattern `equioscillation-active-triple-diagnostic`.
 - `wiki/techniques/larger-n-cascade.md` (the escape path when discretization is the trap).
 - `wiki/techniques/cma-es-with-warmstart.md` (companion second-order test).
-- `mb/wiki/problem-1-erdos-overlap/strategy.md` (437 active shifts).
+- `mb/tracking/problem-1-erdos-overlap/strategy.md` (437 active shifts).

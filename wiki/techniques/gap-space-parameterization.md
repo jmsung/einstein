@@ -57,4 +57,4 @@ Local CPU. Reparameterization is free; no compute overhead. NM / CMA-ES / L-BFGS
 - `wiki/findings/optimizer-recipes.md` (#26 — gap-space reparameterization improves NM convergence; #67 — CMA-ES gap-space recipe).
 - knowledge.yaml pattern `gap-space-reparameterization`.
 - `wiki/techniques/k-climbing.md` (companion: increase dimensionality + new gap).
-- `mb/wiki/problem-9-uncertainty-principle/strategy.md`.
+- `mb/tracking/problem-9-uncertainty-principle/strategy.md`.

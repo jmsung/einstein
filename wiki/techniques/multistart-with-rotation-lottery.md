@@ -58,5 +58,5 @@ Local CPU. Embarrassingly parallel — `multiprocessing.Pool` across cores. Wall
 - `wiki/findings/arena-proximity-guard.md` (lessons #22, #35, #42 — when this trick fails).
 - knowledge.yaml strategy `rotation_lottery`.
 - `wiki/techniques/slsqp-active-pair-polish.md` (the polish that comes BEFORE the lottery).
-- `mb/wiki/problem-11-tammes-n50/strategy.md` (86 / 2000 hits).
-- `mb/wiki/problem-5-min-distance-ratio/strategy.md` (rotation + scale + translation).
+- `mb/tracking/problem-11-tammes-n50/strategy.md` (86 / 2000 hits).
+- `mb/tracking/problem-5-min-distance-ratio/strategy.md` (rotation + scale + translation).

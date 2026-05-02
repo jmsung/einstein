@@ -64,7 +64,7 @@ This page is the routing layer for everything else. It does not run compute; it 
 
 ## References
 
-- `mb/wiki/cross-problem-lessons-gpu.md` (full decision framework, per-problem audits).
+- `wiki/techniques/gpu-decision-framework.md` (full decision framework, per-problem audits).
 - `wiki/findings/gpu-modal-compute.md` (lesson #26 Python overhead; lesson #63 Modal BnB economics; GIL pitfall).
 - `wiki/techniques/gpu-decision-framework.md` (GPU-specific decision tree; benchmark tool).
 - `.claude/rules/compute-router.md` (the rule that triggers this page).

@@ -56,5 +56,5 @@ Local CPU. `O(d²·|link|)` per L-BFGS iteration. P22 d=12, |link|≈24 → seco
 
 - `wiki/findings/hinge-overlap-rank3-squeeze.md` (lesson #100 — derivation + P22/P23 results).
 - `wiki/findings/p22-d12-construction-survey.md` (P12a construction, link structure of v₀).
-- `mb/wiki/problem-22-kissing-d12/strategy.md` (attack-ladder step 2).
+- `mb/tracking/problem-22-kissing-d12/strategy.md` (attack-ladder step 2).
 - `wiki/techniques/parallel-tempering-sa.md` (the heavier alternative this test obsoletes for kissing-tight problems).

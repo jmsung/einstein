@@ -83,4 +83,4 @@ Local CPU. P13 n=500 points: minutes for the full three-stage cycle. Sequential 
 - knowledge.yaml strategy `greedy_insert_cd_redistribute`; pattern `greedy-insert-cd-redistribute`.
 - `wiki/techniques/bounded-lbfgs-per-region-sigmoid.md` (companion polish for kink-aware problems).
 - `wiki/techniques/boundary-snap-for-kinks.md` (companion when envelope has discrete kinks).
-- `mb/wiki/problem-13-edges-triangles/strategy.md`, `mb/wiki/problem-13-edges-triangles/implementation-recipes.md`.
+- `mb/tracking/problem-13-edges-triangles/strategy.md`, `mb/tracking/problem-13-edges-triangles/implementation-recipes.md`.

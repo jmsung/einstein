@@ -67,4 +67,4 @@ Local CPU. Sequential per-coordinate descent — GPU sits idle. mpmath is CPU-on
 - `wiki/findings/optimizer-recipes.md` — mpmath polish patterns.
 - knowledge.yaml strategies: `mpmath_polish_with_float64_screen`, `ulp_coord_descent_mpmath_verify`.
 - `wiki/techniques/slsqp-active-pair-polish.md` (the smoother-but-shallower polish that this technique succeeds).
-- `mb/wiki/problem-6-kissing-number/strategy.md`.
+- `mb/tracking/problem-6-kissing-number/strategy.md`.

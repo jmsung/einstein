@@ -64,4 +64,4 @@ Local CPU. Polish: seconds. Shrink + verify: instant. Total < 1 min including tr
 - `wiki/findings/packing-techniques.md` (lesson #45, #56 — P17b origin and P14 generalization).
 - `wiki/findings/arena-proximity-guard.md` (lessons #42, #90, #91).
 - knowledge.yaml strategy `uniform_radius_shrink_rank2`.
-- `mb/wiki/problem-17b-circles-rectangle/strategy.md`, `mb/wiki/problem-14-circles-square/strategy.md`.
+- `mb/tracking/problem-17b-circles-rectangle/strategy.md`, `mb/tracking/problem-14-circles-square/strategy.md`.

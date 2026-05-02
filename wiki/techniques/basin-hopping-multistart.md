@@ -68,5 +68,5 @@ best = min(results, key=lambda r: r[0])
 - `wiki/findings/optimizer-recipes.md` (#69 — multi-seed BH reveals warm-start polish sub-basins).
 - `wiki/findings/basin-rigidity.md` (lesson #84 — 44K multistart for P5 global-optimality proof).
 - knowledge.yaml strategies `distinct_basin_multistart`, `basin_hopping`; pattern `multi-seed-basin-hopping-for-warm-start-substructure`.
-- `mb/wiki/problem-13-edges-triangles/experiment-log.md` (seed 11 deeper basin).
-- `mb/wiki/problem-16-heilbronn-convex/strategy.md` (21-active distinct-basin rank-#2).
+- `mb/tracking/problem-13-edges-triangles/experiment-log.md` (seed 11 deeper basin).
+- `mb/tracking/problem-16-heilbronn-convex/strategy.md` (21-active distinct-basin rank-#2).

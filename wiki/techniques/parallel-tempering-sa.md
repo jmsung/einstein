@@ -63,4 +63,4 @@ result = run_fused_tempering(
 - `wiki/findings/gpu-modal-compute.md` (lesson #26 — Python overhead).
 - knowledge.yaml strategy `simulated_annealing` and pattern `sa-parallel-tempering`.
 - `src/einstein/gpu_tempering/` — production module (`core.py`, `fused_step.py`, `triton_kernel.py`).
-- `mb/wiki/problem-6-kissing-number/strategy.md`.
+- `mb/tracking/problem-6-kissing-number/strategy.md`.

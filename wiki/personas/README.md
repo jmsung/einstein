@@ -2,7 +2,7 @@
 
 Embodied mathematician perspectives. Each file is a *stance* — how that mathematician sees a problem, the heuristics they reach for, what they fail at, the moves they're famous for.
 
-Distinct from `mb/wiki/mathematician-council.md` (the old dispatch table): persona files are *substance* — read by the agent before invoking that persona's voice. Dispatch policy lives in [`../.claude/rules/council-dispatch.md`](../../.claude/rules/council-dispatch.md).
+Persona files are *substance* — read by the agent before invoking that persona's voice. Dispatch policy lives in [`../.claude/rules/council-dispatch.md`](../../.claude/rules/council-dispatch.md). The `_synthesis.md` page distills the 12 stances drawn from how all of them work.
 
 ## Roster (21 total — to be populated in Goal 4)
 

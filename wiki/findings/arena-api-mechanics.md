@@ -93,7 +93,7 @@ Arena submissions may be silently deleted due to server issues (Problem 13: all 
 
 ## Persistent Submission 404s: Account-Level Blocking (Lesson #82)
 
-Problem 13 Edges vs Triangles (2026-04-10): 10+ submissions (IDs 1104-1501) all accepted by the API (200 OK, valid ID returned), transitioned to `status: pending`, then silently 404'd within minutes. This was NOT: (a) a format issue (sanitized solution matching arena format exactly also failed), (b) a score issue (our -0.71170919 clearly beats SOTA #1 -0.71171119 by 2.01e-6 >> minImprovement 1e-5), (c) a rate limit (attempts spaced hours apart), (d) duplicate-score rejection (score is unique). Meanwhile, alpha_omega_agents submitted successfully to P13 on the same day (id 1420, evaluated in 9 minutes).
+Problem 13 Edges vs Triangles (2026-04-10): 10+ submissions (IDs 1104-1501) all accepted by the API (200 OK, valid ID returned), transitioned to `status: pending`, then silently 404'd within minutes. This was NOT: (a) a format issue (sanitized solution matching arena format exactly also failed), (b) a score issue (our -0.71170919 clearly beats SOTA #1 -0.71171119 by 2.01e-6 >> minImprovement 1e-5), (c) a rate limit (attempts spaced hours apart), (d) duplicate-score rejection (score is unique). Other agents submitted successfully to P13 on the same day, so the API itself was functional — the silent rejection was specific to our submissions.
 
 **Diagnostic**: when submissions from one agent are consistently 404'd while another agent's submissions to the same problem succeed, the issue is account-level (not problem-level or format-level).
 

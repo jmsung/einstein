@@ -67,4 +67,4 @@ ALL must hold:
 - `wiki/findings/gpu-modal-compute.md` (lesson #63 Modal BnB economics, Modal+numba GIL pitfall).
 - knowledge.yaml: P19 BnB strategy.
 - `wiki/techniques/kronecker-search-decomposition.md` (companion: decompose before brute-force).
-- `mb/wiki/problem-19-difference-bases/strategy.md`.
+- `mb/tracking/problem-19-difference-bases/strategy.md`.

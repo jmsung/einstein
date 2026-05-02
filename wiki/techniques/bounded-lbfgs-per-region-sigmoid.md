@@ -59,4 +59,4 @@ Local CPU with PyTorch. P13 n=500 Turán scallops: max_iter=50, lr=0.1, ~10 oute
 - `wiki/findings/optimizer-recipes.md` (#68 — bounded L-BFGS per-region sigmoid).
 - knowledge.yaml pattern `bounded-lbfgs-per-region-sigmoid`.
 - `wiki/techniques/boundary-snap-for-kinks.md` (companion technique for kinks).
-- `mb/wiki/problem-13-edges-triangles/strategy.md`, `mb/wiki/problem-13-edges-triangles/implementation-recipes.md`.
+- `mb/tracking/problem-13-edges-triangles/strategy.md`, `mb/tracking/problem-13-edges-triangles/implementation-recipes.md`.

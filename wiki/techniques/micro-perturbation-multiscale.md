@@ -55,4 +55,4 @@ Local CPU. Sequential per-vector perturbation — GPU sits idle without batching
 - knowledge.yaml strategy `micro_perturbation`; pattern `multi-scale-micro-perturbation`.
 - `wiki/techniques/parallel-tempering-sa.md` (the heavier escalation).
 - `wiki/techniques/mpmath-ulp-polish.md` (the deeper-precision successor).
-- `mb/wiki/problem-6-kissing-number/strategy.md`.
+- `mb/tracking/problem-6-kissing-number/strategy.md`.

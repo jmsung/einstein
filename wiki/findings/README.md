@@ -37,4 +37,4 @@ Once a finding is cited by 3+ other wiki pages OR explicitly invoked across 3+ p
 2. The finding stays in place (provenance) but gets `superseded_by: concepts/<slug>.md` in frontmatter
 3. Human approval gate
 
-The 24 thematic findings inherited from `mb/wiki/findings/` are migrated in Goal 5.
+The 24 thematic findings inherited from `wiki/findings/` are migrated in Goal 5.

@@ -52,4 +52,4 @@ For combinatorial problems whose ostensible search space is huge, look for a **K
 - `wiki/findings/discrete-optimization.md` (lesson #62 — "When to write your own solver"; CP-SAT wall diagnostic).
 - `wiki/findings/gpu-modal-compute.md` (lesson #63 — Modal BnB economics).
 - `wiki/techniques/bnb-exhaustive-w3.md` (companion: formal BnB negative lemmas).
-- `mb/wiki/problem-19-difference-bases/strategy.md` (Kronecker structure A ⊕ 8011·{0,1,4,6}).
+- `mb/tracking/problem-19-difference-bases/strategy.md` (Kronecker structure A ⊕ 8011·{0,1,4,6}).

@@ -57,4 +57,4 @@ Local CPU. Each snap → bounded-L-BFGS polish → BH cycle is ~30s for n=500. T
 - `wiki/findings/optimizer-recipes.md` (#71 — boundary-snap for slope-N interpolation kinks).
 - knowledge.yaml pattern `boundary-snap-for-interpolation-kinks`.
 - `wiki/techniques/bounded-lbfgs-per-region-sigmoid.md` (the companion polish technique).
-- `mb/wiki/problem-13-edges-triangles/strategy.md` (snap-BH chain → −0.71170918806610).
+- `mb/tracking/problem-13-edges-triangles/strategy.md` (snap-BH chain → −0.71170918806610).

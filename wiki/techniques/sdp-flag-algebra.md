@@ -56,5 +56,5 @@ Local CPU usually suffices for flag types up to size ~7–8. Larger flags need M
 - knowledge.yaml: see strategy notes on Razborov flag algebra (P13).
 - `wiki/findings/optimizer-recipes.md` (#68 boundary L-BFGS, #69 multi-seed BH — the downstream polish).
 - `wiki/findings/equioscillation-escape.md` (when SDP is the wrong tool).
-- `mb/wiki/problem-13-edges-triangles/literature.md` (Razborov 2007, FlagMatic, Turán construction).
+- `mb/tracking/problem-13-edges-triangles/literature.md` (Razborov 2007, FlagMatic, Turán construction).
 - Razborov, "Flag Algebras", J. Symbolic Logic 72 (2007).

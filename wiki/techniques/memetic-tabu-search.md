@@ -56,4 +56,4 @@ Local CPU. Vectorized numpy — 16-core multiprocess scales linearly. P12: 1.26B
 
 - `wiki/findings/discrete-optimization.md`.
 - knowledge.yaml strategies `memetic_tabu_search`, `genetic_algorithm`, `simulated_annealing`.
-- `mb/wiki/problem-12-flat-polynomials/strategy.md`.
+- `mb/tracking/problem-12-flat-polynomials/strategy.md`.

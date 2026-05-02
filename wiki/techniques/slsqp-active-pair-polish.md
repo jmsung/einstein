@@ -63,4 +63,4 @@ Local CPU. Sequential SLSQP — GPU sits idle. Negligible cost: Tammes n=50 poli
 - `wiki/findings/packing-techniques.md` (lesson #56 P14 generalization; lesson #92 arena-tolerance variant).
 - `wiki/findings/float64-polish.md` (lesson #74 float64 screen + mpmath verify).
 - knowledge.yaml strategies: `slsqp_active_pair_polish`, `slsqp_smooth_nlp_minmax_ratio`, `slsqp_epigraph_polish`, `iterated_slsqp_perturb`.
-- `mb/wiki/problem-11-tammes-n50/strategy.md`.
+- `mb/tracking/problem-11-tammes-n50/strategy.md`.

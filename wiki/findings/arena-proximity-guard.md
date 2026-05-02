@@ -61,6 +61,6 @@ Problem 7 (Prime Number Theorem): the Monte Carlo evaluator checks `G(x) = Σ f(
 
 ## Lesson #91: minImprovement Changes Reopen "Frozen" Problems — Monitor the API
 
-Problem 18 (2026-04-12): minImprovement was lowered from 1e-7 to 1e-9 by the arena operators (responding to alpha_omega's request). This change reopened the arena-tolerance exploitation path that was previously blocked (overlap + perimeter slack gives ~4e-9 headroom, enough to clear 1e-9 but not 1e-7). The previous "Conquered (tied #1)" status was instantly obsoleted — CHRONOS exploited the same tolerances to take sole #1, requiring us to re-climb.
+Problem 18 (2026-04-12): minImprovement was lowered from 1e-7 to 1e-9 by the arena operators. This change reopened the arena-tolerance exploitation path that was previously blocked (overlap + perimeter slack gives ~4e-9 headroom, enough to clear 1e-9 but not 1e-7). The previous "Conquered (tied #1)" status was instantly obsoleted, requiring us to re-climb.
 
 **Rule**: treat minImprovement as a mutable parameter. Re-fetch from `/api/problems` before any submission planning. Problems labeled "frozen" or "conquered" may reopen if thresholds change. Add minImprovement monitoring to the recon checklist for all problems where the current gap-to-#1 is within 100x of the old minImprovement.
