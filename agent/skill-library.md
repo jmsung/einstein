@@ -34,7 +34,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `bounded-lbfgs-per-region-sigmoid.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `boundary-snap-for-kinks.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `first-order-link-tangent-test.md` | kissing-tight | 2 | 1 | 1 | 2026-04-25 | 0.50 |
-| `kronecker-search-decomposition.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-09 | 0.00 |
+| `kronecker-search-decomposition.md` | discrete-combinatorics | 2 | 0 | 2 | 2026-05-02 | 0.00 |
 | `bnb-exhaustive-w3.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-09 | 0.00 |
 | `lp-cutting-plane-warmstart.md` | sieve | 2 | 2 | 1 | 2026-04-15 | 1.00 |
 | `dinkelbach-fractional-programming.md` | autocorrelation-ratio | 1 | 1 | 0 | 2026-04-10 | 1.00 |
