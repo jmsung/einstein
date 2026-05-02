@@ -34,7 +34,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `bounded-lbfgs-per-region-sigmoid.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `boundary-snap-for-kinks.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `first-order-link-tangent-test.md` | kissing-tight | 2 | 1 | 1 | 2026-04-25 | 0.50 |
-| `kronecker-search-decomposition.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-09 | 0.00 |
+| `kronecker-search-decomposition.md` | discrete-combinatorics | 2 | 0 | 2 | 2026-05-02 | 0.00 |
 | `bnb-exhaustive-w3.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-09 | 0.00 |
 | `lp-cutting-plane-warmstart.md` | sieve | 2 | 2 | 1 | 2026-04-15 | 1.00 |
 | `dinkelbach-fractional-programming.md` | autocorrelation-ratio | 1 | 1 | 0 | 2026-04-10 | 1.00 |
@@ -48,7 +48,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `memetic-tabu-search.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-02 | 0.00 |
 | `sdp-flag-algebra.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `remez-equioscillation-diagnostic.md` | autocorrelation | 2 | 0 | 2 | 2026-04-08 | 0.00 |
-| `warm-start-from-leader.md` | universal | 9 | 6 | 1 | 2026-04-25 | 0.67 |
+| `warm-start-from-leader.md` | universal | 11 | 6 | 3 | 2026-05-02 | 0.55 |
 | `greedy-insert-cd-redistribute.md` | extremal-graph | 1 | 1 | 0 | 2026-04-09 | 1.00 |
 | `gpu-decision-framework.md` | meta | 5 | (meta) | 2 | 2026-04-25 | (n/a) |
 | `compute-router.md` | meta | 0 | (meta) | 0 | (TBD) | (n/a) |

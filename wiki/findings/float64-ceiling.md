@@ -4,12 +4,15 @@ author: agent
 drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
+synthesized_into: ../concepts/float64-ceiling.md
 cites:
+  - ../concepts/float64-ceiling.md
   - ../source/papers/2025-novikov-alphaevolve.md
-  - knowledge.yaml
 ---
 
-# Float64-Ceiling Problems & Byte-Identical Consensus
+> **See also**: [`concepts/float64-ceiling.md`](../concepts/float64-ceiling.md) — the abstract concept distilled from the lessons below. This finding is the **provenance**: empirical per-problem episodes that grounded the concept. Read the concept first; come here for the receipts.
+
+# Float64-Ceiling Problems & Byte-Identical Consensus — empirical lessons
 
 When all leaderboard agents converge to the same contact graph or construction, competition reduces to purely numerical float64 polish. Understanding when a problem has hit its float64 ceiling is critical for deciding whether to invest further compute or pivot.
 

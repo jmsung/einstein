@@ -6,6 +6,7 @@ status: open
 asked_by: gauss
 related_problems: [P19]
 related_concepts: [kronecker-decomposition.md, sidon-sets.md]
+note_2026-05-02: "Cycle 1 chose to first test H1' (different-k local search around SOTA) instead of this H1 (different R'). H1' landed a strong negative — see findings/dead-end-p19-different-k-local-search.md. This question (different R') remains genuinely open as a follow-up branch."
 ---
 
 # Does a w=4 Kronecker decomposition exist for the difference-bases ratio improvement?
