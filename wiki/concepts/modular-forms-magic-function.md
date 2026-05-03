@@ -14,6 +14,14 @@ cites:
   - ../source/papers/1987-serre-mod-representations.md
   - ../source/papers/2005-diamond-modular-forms.md
   - ../source/papers/2026-angdinata-ramanujan-tau-primes.md
+  - ../personas/atiyah.md
+  - ../personas/cohn.md
+  - ../personas/conway.md
+  - ../personas/ramanujan.md
+  - ../personas/riemann.md
+  - ../personas/viazovska.md
+  - ../personas/wiles.md
+related_personas: [atiyah.md, cohn.md, conway.md, ramanujan.md, riemann.md, viazovska.md, wiles.md]
 ---
 
 # Modular Forms & Magic Functions

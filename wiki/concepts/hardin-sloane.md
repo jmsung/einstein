@@ -10,6 +10,8 @@ cites:
   - ../personas/conway.md
   - ../concepts/sphere-packing.md
   - ../concepts/kissing-number.md
+  - ../personas/archimedes.md
+related_personas: [archimedes.md, conway.md]
 ---
 
 # Hardin-Sloane spherical codes — canonical reference table

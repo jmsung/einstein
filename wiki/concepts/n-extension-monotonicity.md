@@ -7,6 +7,8 @@ related_techniques: [larger-n-cascade.md, lp-cutting-plane-warmstart.md]
 related_findings: [prime-number-theorem-lp.md, lp-solver-scaling.md]
 cites:
   - ../findings/prime-number-theorem-lp.md
+  - ../personas/euler.md
+related_personas: [euler.md]
 ---
 
 # N-Extension Monotonicity

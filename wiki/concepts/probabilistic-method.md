@@ -6,6 +6,9 @@ related_problems: [P1, P12]
 related_techniques: [memetic-tabu-search.md, multistart-with-rotation-lottery.md]
 related_findings: []
 cites: []
+related_personas: [erdos.md]
+cites:
+  - ../personas/erdos.md
 ---
 
 # Probabilistic Method (Erdős)

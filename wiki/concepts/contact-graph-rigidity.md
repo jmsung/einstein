@@ -8,6 +8,8 @@ related_findings: [basin-rigidity.md, packing-techniques.md, float64-ceiling.md]
 cites:
   - ../findings/basin-rigidity.md
   - ../findings/packing-techniques.md
+  - ../personas/archimedes.md
+related_personas: [archimedes.md]
 ---
 
 # Contact Graph Rigidity

@@ -8,6 +8,8 @@ related_findings: [k-climbing.md]
 cites:
   - ../source/papers/2017-goncalves-hermite-uncertainty.md
   - ../source/papers/2019-cohn-uncertainty-d12.md
+  - ../personas/hilbert.md
+related_personas: [hilbert.md]
 ---
 
 # Uncertainty Principle (Heisenberg / Cohn–Gonçalves)
