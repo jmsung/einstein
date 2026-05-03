@@ -7,9 +7,9 @@ arena_url: https://einsteinarena.com/problems/first-autocorrelation
 status: conquered
 score_current: 1.5028616283497658
 tier: S
-concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, parameterization-selection.md, sidon-sets.md, smooth-max-approximation.md]
+concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, parameterization-selection.md, parameterization-induced-rank-deficiency.md, sidon-sets.md, smooth-max-approximation.md]
 techniques_used: [larger-n-cascade.md, lp-cutting-plane-warmstart.md, bounded-lbfgs-per-region-sigmoid.md, warm-start-from-leader.md]
-findings_produced: [optimizer-recipes.md, equioscillation-escape.md]
+findings_produced: [optimizer-recipes.md, equioscillation-escape.md, p2-peak-locking-hessian-mechanism.md]
 private_tracking: ../../mb/tracking/problem-2-first-autocorrelation/
 ---
 
@@ -34,6 +34,7 @@ Peak-locking via exp(v) parameterization is fundamental to equioscillation basin
 - [autocorrelation-inequality.md](../concepts/autocorrelation-inequality.md)
 - [equioscillation.md](../concepts/equioscillation.md)
 - [parameterization-selection.md](../concepts/parameterization-selection.md)
+- [parameterization-induced-rank-deficiency.md](../concepts/parameterization-induced-rank-deficiency.md) — formal mechanism behind P2's exp(v) → v² escape
 - [sidon-sets.md](../concepts/sidon-sets.md)
 - [smooth-max-approximation.md](../concepts/smooth-max-approximation.md)
 
@@ -46,6 +47,7 @@ Peak-locking via exp(v) parameterization is fundamental to equioscillation basin
 ## Findings
 - [optimizer-recipes.md](../findings/optimizer-recipes.md)
 - [equioscillation-escape.md](../findings/equioscillation-escape.md)
+- [p2-peak-locking-hessian-mechanism.md](../findings/p2-peak-locking-hessian-mechanism.md) — formal Hessian mechanism behind the exp(v) → v² escape; promoted to concept [parameterization-induced-rank-deficiency.md](../concepts/parameterization-induced-rank-deficiency.md)
 
 ## References
 - Matolcsi-Kolountzakis (2010), autoconvolution inequalities.
