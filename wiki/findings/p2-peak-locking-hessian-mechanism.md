@@ -6,8 +6,8 @@ question_origin: research/p2-peak-locking
 status: answered
 related_problems: [P2, P3, P4, P9, P13]
 verified_on: [P2, P3]
-promotion_proposed: true
-promotion_rationale: cited from P2, P3, P4 problem indices (3+ citations); v^p sweep + cross-problem confirmation isolates the mechanism; meets the cited-3+-times bar in cycle-discipline.md
+promoted_to: ../concepts/parameterization-induced-rank-deficiency.md
+promoted_on: 2026-05-02
 related_concepts: [parameterization-selection.md, autocorrelation-inequality.md, smooth-max-approximation.md]
 related_findings: [equioscillation-escape.md, optimizer-recipes.md]
 cites:
@@ -20,6 +20,8 @@ cites:
 ---
 
 # Peak-locking Hessian fingerprint: exp(v) vs v² at v-critical points
+
+> **Promoted to concept** (2026-05-02): the formal mechanism is now a stand-alone concept page at [`concepts/parameterization-induced-rank-deficiency`](../concepts/parameterization-induced-rank-deficiency.md). This finding is preserved as the empirical record (test setup, raw numbers, sweep tables); the concept page is the durable WHAT-IS framing.
 
 ## Question
 

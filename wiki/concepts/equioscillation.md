@@ -61,6 +61,6 @@ The flip side is the **trap**: if your discretization has `n` DOF and the equios
 
 ## Related
 
-- Concepts: [discretization-as-structure](discretization-as-structure.md), [basin-rigidity](basin-rigidity.md), [autocorrelation-inequality](autocorrelation-inequality.md), [contact-graph-rigidity](contact-graph-rigidity.md).
+- Concepts: [discretization-as-structure](discretization-as-structure.md), [basin-rigidity](basin-rigidity.md), [autocorrelation-inequality](autocorrelation-inequality.md), [contact-graph-rigidity](contact-graph-rigidity.md), [parameterization-induced-rank-deficiency](parameterization-induced-rank-deficiency.md) (the *other* lock type — distinct mechanism, distinct escape).
 - Techniques: [remez-equioscillation-diagnostic](../techniques/remez-equioscillation-diagnostic.md), [larger-n-cascade](../techniques/larger-n-cascade.md).
 - Findings: [equioscillation-escape](../findings/equioscillation-escape.md), [basin-rigidity](../findings/basin-rigidity.md).
