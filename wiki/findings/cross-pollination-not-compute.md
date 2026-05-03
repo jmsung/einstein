@@ -4,7 +4,7 @@ author: hybrid
 drafted: 2026-05-02
 question_origin: cross-problem
 status: answered
-related_concepts: [parameterization-selection.md, provable-floor-and-frozen-problems.md]
+related_concepts: [parameterization-selection.md, provable-floor-and-frozen-problems.md, asymmetric-kronecker.md]
 related_techniques: []
 related_personas: [atiyah.md, polya.md, _synthesis.md]
 cites:
