@@ -242,6 +242,13 @@ def compute_type1_concept_gaps(nodes, edges):
     for rp in nodes:
         if rp.startswith(("concepts/", "techniques/", "personas/")):
             topic_slugs.add(Path(rp).stem.lower())
+    # Also pull source/ slugs (paper/blog references) — covers cases like
+    # "erich friedman" where the topic exists at source/blog/friedman-packing-records
+    # but isn't in concepts/. Walk the source/ tree and add stems.
+    source_dir = WIKI.parent / "source"
+    if source_dir.exists():
+        for p in source_dir.rglob("*.md"):
+            topic_slugs.add(p.stem.lower())
     # Problem index slugs with digit prefix stripped: "1-erdos-overlap.md" -> "erdos-overlap"
     problem_slugs = set()
     for rp in nodes:
@@ -269,7 +276,17 @@ def compute_type1_concept_gaps(nodes, edges):
         "tammes", "thomson", "wichmann", "kissing", "modal", "github", "arxiv",
         "einstein", "arena", "score",
         "problem", "problems", "score", "min", "max", "size", "true", "false",
+        # parsing artifacts surfaced by v5 detector (2026-05-02 noise pass)
+        "triggering", "structure", "uniform", "lattice", "lattices",
+        "leech-sloane",  # proper-noun-as-author (paper ref); not a concept gap
+        # operational / non-math
+        "heartbeat", "worker", "modal-worker",
     }
+    # Multi-word phrase prefixes/suffixes that indicate parsing artifacts
+    # (regex catches "For Problem", "The Hardin", etc. — first word is generic)
+    PHRASE_PREFIX_NOISE = {"for", "the", "by", "from", "with", "and", "but"}
+    PHRASE_SUFFIX_NOISE = {"lesson", "lessons", "rule", "rules", "section",
+                           "result", "results", "tammes", "p19", "p22"}
 
     # Mentions tally
     mention_pages = defaultdict(set)
@@ -311,6 +328,11 @@ def compute_type1_concept_gaps(nodes, edges):
                 if all(w in STOPWORDS for w in words):
                     continue
                 if len(phrase) < 8:
+                    continue
+                # Filter parsing-artifact prefixes/suffixes ("for problem", "the hardin", etc.)
+                if words[0] in PHRASE_PREFIX_NOISE:
+                    continue
+                if words[-1] in PHRASE_SUFFIX_NOISE:
                     continue
             mention_pages[phrase].add(rp)
     candidates = [(p, len(srcs), sorted(srcs)[:3]) for p, srcs in mention_pages.items() if len(srcs) >= 3]
