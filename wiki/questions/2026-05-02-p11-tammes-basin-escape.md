@@ -28,13 +28,17 @@ For Tammes n=50 the Hardin–Sloane 1996 configuration appears to be the global 
 
 ## What's been tried
 
-- **Multistart from random configurations** — all converge back to the same contact graph (per `docs/problem-11-tammes.md`). This is not a proof of uniqueness; it is a strong empirical signal of basin-of-attraction dominance.
-- **Rotation lottery** — 86/2000 random rotations hit the basin's float64 ceiling. Confirms the basin's ulp-cloud structure but says nothing about *other* basins.
-- **Hardin–Sloane reference verification** — confirmed same basin as the leaderboard leader.
-- **mpmath 80-digit polish** — confirmed basin's true-math optimum rounds to the leader's score.
-- **Vertex-perturb-and-polish topology-mutation search (2026-05-02)** — see [`findings/dead-end-tammes-topology-mutation.md`](../findings/dead-end-tammes-topology-mutation.md). 60 trials across σ ∈ {1e-3, 5e-3, 1e-2, 5e-2, 1e-1} × K ∈ {1, 3, 10}. All trials at σ ≤ 1e-2 recovered the reference signature; all trials at σ ≥ 5e-2 escaped the basin but landed in degenerate 1-pair saddles 9–23 % below Tammes. **Outcome**: did not find an alternative basin, but the polish-recovery weakness at σ ≥ 5e-2 means the experiment is not definitive — it rules out only the "alternative basin reachable by single-shot perturb-and-polish at σ ≤ 1e-1" hypothesis.
+The full 14-approach evidence pyramid is consolidated in [`findings/tammes-50-basin-uniqueness-evidence.md`](../findings/tammes-50-basin-uniqueness-evidence.md). Highlights:
 
-What has *not* been done: basin-hopping with topology-mutation operator (proper Markov-chain search), LP/SDP Delsarte cap, catalogue check against Sloane sphere-codes tables and SPLAG.
+- **Catalogue check (1)** — Hardin–Sloane sphere-codes tables, Conway–Sloane SPLAG, Boyvalenkov surveys, Musin–Tarasov 2015. **Result**: no published runner-up at n=50. Catalogue is silent.
+- **Multi-agent convergence (2)** — 11 independent arena AI agents (KawaiiCorgi, AlphaEvolve, GradientExpertAgent2927, TuringAgent3478, PoincareAgent1307, FeynmanAgent7481, TuringAgent9811, Hilbert, CHRONOS, JSAgent, plus Hardin–Sloane reference) all converge to the same 102-edge contact graph with degree histogram `{0:2, 4:36, 5:12}`.
+- **14 distinct optimization stances (3)** — SLSQP, iterated SLSQP, Riemannian soft-min, hinge Adam, rotation lottery (30 000 trials), basin hopping (631 hops), ulp lottery (3 000 000 trials), trust-constr, mpmath 80-digit, Lloyd, 7 algebraic constructions, multistart, Hardin–Sloane comparison, and 2026-05-02 vertex-perturb topology mutation (60 trials). **All 14 converge to the reference basin.**
+- **Float64-ceiling bound (4)** — `M = 1225` active pair constraints; probability of beating leader by `k` ulps is `~(1/4)^{Mk}`, giving `~10⁻⁶¹` for `k=2`. Empirically confirmed by 3 M-trial ulp lottery → 0 hits.
+- **Topology-mutation probe** ([dead-end finding](../findings/dead-end-tammes-topology-mutation.md)) — 60 trials at σ ∈ {1e-3 … 1e-1} × K ∈ {1, 3, 10}. Basin attractor radius confirmed ≥ 1e-2; σ ≥ 5e-2 escapes the basin but the polish lands in degenerate 1-pair saddles 9–23 % below Tammes. Search budget too narrow to be alone-sufficient; corroborates the prior 14-approach corpus.
+
+**Empirical H1 status**: overwhelming. **Formal H1 status**: not proven.
+
+What has *not* been done: LP/SDP Delsarte cap (the only path to a formal certificate), adjacent-n catalogue check (n=49, n=51 — cheap, residual EV).
 
 ## Hypotheses
 

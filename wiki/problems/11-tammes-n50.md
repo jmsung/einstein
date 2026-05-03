@@ -43,10 +43,12 @@ Contact-graph-locked basins require wide active-pair tolerance (tol=1e-3) to cap
 - [warm-start-from-leader.md](../techniques/warm-start-from-leader.md)
 
 ## Findings
+- [tammes-50-basin-uniqueness-evidence.md](../findings/tammes-50-basin-uniqueness-evidence.md) — 4-line evidence pyramid: catalogue silence, 11-agent convergence, 14-method search, float64-ceiling bound. Empirical H1 supported; formal H1 (LP/SDP certificate) still open.
+- [dead-end-tammes-topology-mutation.md](../findings/dead-end-tammes-topology-mutation.md) — 60-trial vertex-perturb-and-polish topology-mutation probe (2026-05-02). Basin attractor radius ≥ 1e-2; no alternative basin found.
 - [float64-ceiling.md](../findings/float64-ceiling.md) — cross-problem inventory of float64-ceiling occurrences (P2, P5, P6, P10, P11, P14, P15, P17a/b, P23)
 
 ## Open questions
-- [2026-05-02-p11-tammes-basin-escape.md](../questions/2026-05-02-p11-tammes-basin-escape.md) — is the Hardin–Sloane contact graph uniquely optimal, or does a topology-distinct configuration exist?
+- [2026-05-02-p11-tammes-basin-escape.md](../questions/2026-05-02-p11-tammes-basin-escape.md) — is the Hardin–Sloane contact graph uniquely optimal? Empirically yes (overwhelming); formally unproven (no LP/SDP certificate).
 
 ## References
 - Hardin and Sloane, sphere-codes tables.
