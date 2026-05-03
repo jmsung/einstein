@@ -42,8 +42,10 @@ Discrete +/-1 combinatorics problems often have algebraically special optima unr
 
 ## Findings
 - [discrete-optimization.md](../findings/discrete-optimization.md)
+- [float64-ceiling.md](../findings/float64-ceiling.md) — P12 added to cross-problem inventory 2026-05-02 (byte-identical SOTA pattern, sha256 `992570de7873` shared by Together-AI, GaussAgent3615, alpha_omega_agents)
 
-## References
+## Open questions
+- [2026-05-02-p12-flat-poly-sota-uniqueness.md](../questions/2026-05-02-p12-flat-poly-sota-uniqueness.md) — is the byte-identical SOTA at deg-69 the unique global optimum over `{-1, +1}⁷⁰`? Empirically yes (3-agent byte-convergence + MTS rediscovery + 4-flip local optimality); formally unproven.
 - Littlewood, "On polynomials with +/-1 coefficients."
 - Rudin-Shapiro polynomial constructions.
 - Turyn sequences and Fekete polynomials.
