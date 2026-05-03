@@ -17,7 +17,7 @@ Empirical sweep at n=80, β=200, sparse SOTA-like seed:
   v³             1.8107106179   32    32          6.68e4
   v⁴             1.8310046542   32    32          2.40e4
   v⁶             1.8846429515   32    32          4.54e4
-  U*sigmoid(v)   2.0994322618   36    52          9.98e6
+  U*sigmoid(v)   2.0994330845   35    52          6.62e6   (+17 saturated cells at upper bound)
 
 v² is the only escape. v^p for p ≥ 3 peak-locks like exp despite being polynomial.
 **U*sigmoid(v) is *more* rank-deficient than exp** — it has TWO boundary saturations
@@ -86,9 +86,14 @@ def main() -> None:
     C_exp = lambda v: C_beta(np.exp(v), beta, dx)
     def make_C_vp(p):
         return lambda v: C_beta(np.abs(v) ** p, beta, dx)
-    # Sigmoid: f = U * σ(v); reaches f=0 at v→-∞ and f=U at v→+∞ (both finite-image boundaries
-    # where σ' and σ'' BOTH vanish — same structural family as exp at the f=0 boundary).
-    U = 5.0  # generous upper bound, doesn't bind on this seed's f
+    # Sigmoid: f = U * σ(v); image is the bounded interval (0, U). Boundary at v→-∞ (σ→0)
+    # and at v→+∞ (σ→1). Both have σ' and σ'' vanishing — same structural family as exp at the
+    # f=0 boundary, but doubled (TWO saturating boundaries instead of one). U=5 here binds on
+    # 14/80 cells of the seed (max of f_true is ~8.4 after normalization), which is intentional:
+    # it seeds the upper-saturation boundary on purpose, mirroring how P13's per-region sigmoid
+    # would behave at upper-bound activity. The result (52 near-zero eigs vs 32 dead = 35 lower
+    # boundary + 17 upper saturation) confirms both boundaries contribute to rank deficiency.
+    U = 5.0
     def C_sig(v): return C_beta(U / (1.0 + np.exp(-v)), beta, dx)
     clamped = np.clip(f_true, 1e-300, U - 1e-12)
     v0_sig = np.log(clamped / (U - clamped))
