@@ -43,7 +43,10 @@ Contact-graph-locked basins require wide active-pair tolerance (tol=1e-3) to cap
 - [warm-start-from-leader.md](../techniques/warm-start-from-leader.md)
 
 ## Findings
-- [float64-ceiling.md](../findings/float64-ceiling.md)
+- [float64-ceiling.md](../findings/float64-ceiling.md) — cross-problem inventory of float64-ceiling occurrences (P2, P5, P6, P10, P11, P14, P15, P17a/b, P23)
+
+## Open questions
+- [2026-05-02-p11-tammes-basin-escape.md](../questions/2026-05-02-p11-tammes-basin-escape.md) — is the Hardin–Sloane contact graph uniquely optimal, or does a topology-distinct configuration exist?
 
 ## References
 - Hardin and Sloane, sphere-codes tables.
