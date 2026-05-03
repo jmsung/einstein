@@ -7,7 +7,7 @@ arena_url: https://einsteinarena.com/problems/circle-packing-square
 status: rank-2-frozen
 score_current: 2.6359830849175
 tier: B
-concepts_invoked: [sphere-packing.md, float64-ceiling.md, arena-tolerance-drift.md, basin-rigidity.md]
+concepts_invoked: [sphere-packing.md, circle-packing.md, float64-ceiling.md, arena-tolerance-drift.md, basin-rigidity.md]
 techniques_used: [slsqp-active-pair-polish.md, arena-tolerance-slsqp.md, uniform-radius-shrink-fallback.md, mpmath-ulp-polish.md]
 findings_produced: [packing-techniques.md, arena-proximity-guard.md]
 private_tracking: ../../mb/tracking/problem-14-circle-packing-square/

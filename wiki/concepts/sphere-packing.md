@@ -17,6 +17,7 @@ cites:
   - ../personas/conway.md
   - ../personas/ramanujan.md
   - ../personas/viazovska.md
+  - circle-packing.md
 related_personas: [archimedes.md, cohn.md, conway.md, ramanujan.md, viazovska.md]
 ---
 
