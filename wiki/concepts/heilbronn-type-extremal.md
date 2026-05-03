@@ -11,6 +11,7 @@ cites:
   - contact-graph-rigidity.md
   - provable-floor-and-frozen-problems.md
   - symmetry-and-fundamental-domain.md
+  - reduced-hessian.md
   - ../source/papers/2025-novikov-alphaevolve.md
 ---
 
@@ -117,6 +118,7 @@ This protocol follows the [`provable-floor-and-frozen-problems.md`](provable-flo
 ## Related
 
 - [`concepts/basin-rigidity.md`](basin-rigidity.md) — broader concept; over-determined active-constraint case is one specialization
+- [`concepts/reduced-hessian.md`](reduced-hessian.md) — the second-order rigidity certificate that upgrades "no first-order descent" to "no second-order descent in active-tangent directions"; load-bearing for Heilbronn rigidity proofs
 - [`concepts/contact-graph-rigidity.md`](contact-graph-rigidity.md) — analogous for sphere-packing
 - [`concepts/provable-floor-and-frozen-problems.md`](provable-floor-and-frozen-problems.md) — when to declare a problem frozen
 - [`concepts/symmetry-and-fundamental-domain.md`](symmetry-and-fundamental-domain.md) — affine quotient construction
