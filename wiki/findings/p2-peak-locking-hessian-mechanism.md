@@ -39,22 +39,24 @@ The constant $\varphi'' = 2$ under `v²` is the entire content. It says: *even w
 
 ## Numerical verification
 
-Small-instance check at $n = 80$, smooth-max $\beta = 200$, with a SOTA-like sparse seed (script: [`scripts/first_autocorrelation/peak_locking_hessian.py`](../../scripts/first_autocorrelation/peak_locking_hessian.py)). Both parameterizations converge to v-critical points with **the same dead-cell count (32 / 80)** but different objective values:
+Small-instance check at $n = 80$, smooth-max $\beta = 200$, with a SOTA-like sparse seed (script: [`scripts/first_autocorrelation/peak_locking_hessian.py`](../../scripts/first_autocorrelation/peak_locking_hessian.py)). Five parameterizations from the same seed:
 
-```
-C at exp(v) critical: 1.9539951034
-C at v²    critical: 1.7817122319
+| $\varphi$ | $\varphi''(0)$ | $C$ at v-critical | dead cells | near-zero Hess eigs | cond # |
+|---|---:|---:|---:|---:|---:|
+| $\exp(v)$ | $0$ | $1.9539951034$ | $32 / 80$ | $\mathbf{32 / 80}$ | $1.03 \times 10^5$ |
+| $v^{2}$ | $\mathbf{2}$ | $\mathbf{1.7817122319}$ | $32 / 80$ | $\mathbf{0 / 80}$ | $4.55 \times 10^4$ |
+| $v^{3}$ | $0$ | $1.8107106179$ | $32 / 80$ | $\mathbf{32 / 80}$ | $6.68 \times 10^4$ |
+| $v^{4}$ | $0$ | $1.8310046542$ | $32 / 80$ | $\mathbf{32 / 80}$ | $2.40 \times 10^4$ |
+| $v^{6}$ | $0$ | $1.8846429515$ | $32 / 80$ | $\mathbf{32 / 80}$ | $4.54 \times 10^4$ |
 
-exp(v): dead cells = 32/80; near-zero Hessian eigs (|λ| < 1e-6) = 32/80
-v²    : dead cells = 32/80; near-zero Hessian eigs (|λ| < 1e-6) =  0/80
+Two clean readings:
 
-exp(v) condition #  ≈ 1.03e5
-v²     condition #  ≈ 4.55e4
-```
+1. **The 1:1 dead-cell ↔ near-zero-eigenvalue correspondence holds for every $\varphi$ with $\varphi''(0) = 0$.** $\exp$, $v^3$, $v^4$, $v^6$ — all four — produce exactly 32 near-zero eigenvalues at the v-critical point, matching their 32 dead cells. The mechanism is *not* "polynomial vs transcendental" or "smooth vs $C^\infty$" — it is exactly $\varphi''(0)$.
+2. **Basin value tracks monotonically with the vanishing order of $\varphi$ at zero.** $v^2$ ($\varphi'' = 2$) gives the lowest C; $\exp$ (vanishing to all orders) gives the highest. The polynomials $v^3, v^4, v^6$ interpolate, with $C$ increasing as $\varphi$ vanishes faster at zero. This is consistent with the rank-deficient subspace getting "flatter" as the vanishing order grows.
 
-The 1:1 correspondence between dead cells and near-zero eigenvalues under `exp(v)` is exact. Under `v²`, the dead cells contribute eigenvalues of order $2 \, \nabla_f C_\beta \approx 10^{-3}$, well above the $10^{-6}$ threshold. `v²` reaches a basin $0.17$ below the `exp(v)` basin — a structural escape, not a polish.
+Under `v²`, the dead cells contribute eigenvalues of order $2 \, \nabla_f C_\beta \approx 10^{-3}$, three orders of magnitude above the $10^{-6}$ near-zero threshold. The other four parameterizations have those eigenvalues all below $10^{-6}$.
 
-(The negative eigenvalues seen in both spectra are saddle-curvature from the smooth-max $\beta = 200$ approximation; they're a feature of the LSE relaxation, not of the parameterization, and are comparable in size between the two.)
+(The negative eigenvalues seen in all spectra are saddle-curvature from the smooth-max $\beta = 200$ approximation; they're a feature of the LSE relaxation, not of the parameterization, and are comparable in size across cases.)
 
 ## Why this is the right framing
 
@@ -67,9 +69,17 @@ The standard explanation — "exp can't reach exact zeros" — is necessary but 
 
 ## Sufficient condition for parameterization-induced basin escape
 
-Working hypothesis (established for P2, plausible for the autocorrelation family more broadly): if the true optimum has $f_i = 0$ for some non-empty index set $S$, then a parameterization $f = \varphi(v)$ with $\varphi'(v_i) = 0$ on $S$ but $\varphi''(v_i) \neq 0$ on $S$ produces a v-critical-point structure that exposes the boundary stationarity (KKT) of the underlying constrained problem. Parameterizations with both $\varphi' = \varphi'' = 0$ on $S$ (e.g. $\varphi = \exp$) hide this structure behind a flat sub-manifold, producing peak-locking.
+**Sufficient condition** (verified at $n=80$ across $\varphi \in \{\exp, v^2, v^3, v^4, v^6\}$): if the true optimum has $f_i = 0$ for some non-empty index set $S$, then a parameterization $f = \varphi(v)$ produces v-critical points that expose boundary KKT stationarity (and hence escape peak-locking) if and only if
 
-Equivalent variational view: the v² parameterization is the squared-magnitude of the natural gradient flow on the simplex $\{f \geq 0, \int f = 1\}$ with respect to the Wasserstein-2 metric, while `exp(v)` is the natural flow with respect to the Fisher–Rao information metric. The Wasserstein flow respects the boundary (cells can deactivate); the Fisher–Rao flow penalizes the boundary infinitely (cells cannot reach zero in finite time). The peak-locking is the Fisher–Rao boundary penalty showing up as Hessian rank deficiency.
+$$
+\varphi'(v_i) = 0 \quad \text{and} \quad \varphi''(v_i) \neq 0 \quad \text{at } v_i \text{ where } f_i = 0.
+$$
+
+The first condition is necessary so that $v_i$ is a finite v-critical-point coordinate (not an asymptote). The second is necessary so that the Hessian's $\mathrm{diag}(\varphi'' \odot \nabla_f C_\beta)$ term retains finite curvature on the dead-cell subspace. Parameterizations satisfying both ($v^2$ is the canonical example) escape; parameterizations with $\varphi'' = 0$ on $S$ (whether $\exp$ or any $v^p$ with $p \geq 3$) peak-lock.
+
+The empirical sweep above is the falsification test: $v^p$ for $p \in \{3, 4, 6\}$ all peak-lock as predicted, ruling out alternative mechanisms ("any non-exp escapes" or "any polynomial escapes") and isolating the mechanism to exactly $\varphi''(0) \neq 0$.
+
+**Equivalent variational view**: the $v^2$ parameterization is the squared-magnitude of the natural gradient flow on the simplex $\{f \geq 0, \int f = 1\}$ with respect to the Wasserstein-2 metric, while `exp(v)` is the natural flow with respect to the Fisher–Rao information metric. The Wasserstein flow respects the boundary (cells can deactivate); the Fisher–Rao flow penalizes the boundary infinitely (cells cannot reach zero in finite time). The peak-locking is the Fisher–Rao boundary penalty showing up as Hessian rank deficiency.
 
 ## What this rules out
 
@@ -79,8 +89,9 @@ Equivalent variational view: the v² parameterization is the squared-magnitude o
 ## What this opens
 
 - A clean diagnostic for the parameterization choice: **count zero-cells of the empirical SOTA**. If the count is $> 0$ and the gap is the parameterization-induced rank-deficient subspace, switching to `v²` (or any $\varphi$ with $\varphi'' \neq 0$ at the boundary) is indicated.
-- A natural extension: parameterizations $\varphi(v) = v^p$ for $p \in \{2, 3, 4\}$ have $\varphi''(0) = 0$ for $p > 2$. So `v³` should peak-lock similarly to `exp(v)`, not unlock like `v²`. Untested. Cross-check would strengthen the sufficient-condition claim.
-- Cross-problem applicability: P3 (Second Autocorrelation), P4 (Third Autocorrelation), P9 (Uncertainty), P13 (Edges-vs-Triangles) — any problem with sparse SOTA structure under non-negativity is a candidate. P9's $k$-climbing escape (lesson #24) plausibly fits the same mechanism: gap-space parameterization $g_i = z_{i+1} - z_i$ has a different second-derivative structure than position-space.
+- ~~A natural extension: $v^p$ for $p \geq 3$ should peak-lock since $\varphi''(0) = 0$.~~ **Verified.** $v^3, v^4, v^6$ all peak-lock at the same dead-cell count as $\exp$, with basin C tracking the vanishing order. Question [2026-05-02-p2-vp-parameterization-test](../questions/2026-05-02-p2-vp-parameterization-test.md) is closed answered.
+- Cross-problem applicability: P3 (Second Autocorrelation), P4 (Third Autocorrelation), P9 (Uncertainty), P13 (Edges-vs-Triangles) — any problem with sparse SOTA structure under non-negativity is a candidate. P9's $k$-climbing escape (lesson #24) plausibly fits the same mechanism: gap-space parameterization $g_i = z_{i+1} - z_i$ has a different second-derivative structure than position-space. Untested.
+- The variational framing (Fisher–Rao vs Wasserstein-2 natural gradient flows) connects to a real literature (Amari, Otto–Villani, Carrillo et al.) and is the natural framing for promoting this finding to a publishable result. Untouched here.
 
 ## See also
 

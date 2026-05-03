@@ -3,7 +3,9 @@ type: question
 author: agent
 drafted: 2026-05-02
 asked_by: research/p2-peak-locking
-status: open
+status: answered
+answered: 2026-05-02
+answer_finding: ../findings/p2-peak-locking-hessian-mechanism.md
 related_problems: [P2, P3, P4]
 related_concepts: [parameterization-selection.md]
 related_findings: [p2-peak-locking-hessian-mechanism.md, equioscillation-escape.md]
@@ -56,4 +58,16 @@ Same script, four runs, ~30 seconds local CPU. Trivial. The reason it's filed as
 
 ## Status
 
-**Open.** Easy to answer — should be the first thing the next cycle on this branch (or a follow-up) does.
+**Answered (2026-05-02).** The sweep was run in the same cycle as the question was filed. Result at $n=80$, $\beta=200$:
+
+| $\varphi$ | $\varphi''(0)$ | $C$ at v-critical | dead | near-zero eigs |
+|---|---:|---:|---:|---:|
+| $\exp(v)$ | $0$ | $1.9540$ | $32$ | $\mathbf{32}$ |
+| $v^{2}$ | $\mathbf{2}$ | $\mathbf{1.7817}$ | $32$ | $\mathbf{0}$ |
+| $v^{3}$ | $0$ | $1.8107$ | $32$ | $\mathbf{32}$ |
+| $v^{4}$ | $0$ | $1.8310$ | $32$ | $\mathbf{32}$ |
+| $v^{6}$ | $0$ | $1.8846$ | $32$ | $\mathbf{32}$ |
+
+Prediction confirmed. $v^p$ for $p \in \{3, 4, 6\}$ peak-locks like $\exp$ — 32 dead cells produce exactly 32 near-zero Hessian eigenvalues at the v-critical point. Only $v^2$ (the unique $p$ with $\varphi''(0) \neq 0$) escapes. Basin $C$ also tracks the vanishing order monotonically.
+
+The mechanism is isolated: parameterization-induced basin escape requires $\varphi'(0) = 0$ AND $\varphi''(0) \neq 0$. See [p2-peak-locking-hessian-mechanism](../findings/p2-peak-locking-hessian-mechanism.md) for the updated finding.

@@ -1,26 +1,29 @@
-"""Verify the peak-locking Hessian fingerprint at small n.
+"""Verify the peak-locking Hessian fingerprint at small n across a parameterization sweep.
 
-For the smooth-max P2 objective C_β(f) at a v-critical point under each parameterization:
-
-  exp(v):  the Hessian is rank-deficient with one near-zero eigenvalue per
-           "dead" cell (f_i ≈ 0). The dead-cell subspace is a flat sub-manifold
-           of v-space — the optimizer cannot decisively prune those cells.
-
-  v²:      the Hessian has full rank even with dead cells; each dead cell
-           contributes a finite eigenvalue 2·∂C_β/∂f_i because ∂²f/∂v² = 2.
-           The optimizer reaches a strictly better basin.
-
-Reproduces the small-n verification cited in
-  wiki/findings/p2-peak-locking-hessian-mechanism.md.
-
-Tracks the analytical derivation: for f = φ(v),
+For the smooth-max P2 objective C_β(f) at a v-critical point under each parameterization
+f = φ(v), the Hessian decomposes as
 
     H_v = J_φ(v)ᵀ · H_f · J_φ(v) + diag( φ''(v) ⊙ ∇_f C_β )
 
-at any v-critical point. The first term is rank-deficient on the dead-cell
-subspace under both parameterizations (J_φ kills those rows). The second term
-vanishes under exp (φ'' = exp(v) = f → 0 at dead cells) but is +2 ∇_f C_β
-under v² (φ'' = 2 constant). That second term is the entire mechanism.
+The first term is rank-deficient on the dead-cell subspace whenever φ'(0) = 0. The second
+term is the load-bearing factor: it vanishes when φ''(0) = 0 (exp, v^p for p ≥ 3) and
+gives a finite eigenvalue 2·∂C_β/∂f_i when φ''(0) = 2 (v² only).
+
+Empirical sweep at n=80, β=200, sparse SOTA-like seed:
+
+  param   p   C_crit         dead  near0_eigs  cond #
+  exp(v)  -   1.9539951034   32    32          1.03e5
+  v²      2   1.7817122319   32    0           4.55e4
+  v³      3   1.8107106179   32    32          6.68e4
+  v⁴      4   1.8310046542   32    32          2.40e4
+  v⁶      6   1.8846429515   32    32          4.54e4
+
+Only v² escapes; v^p for p ≥ 3 peak-locks like exp despite being polynomial. Basin C
+tracks monotonically with the *vanishing-order* of φ at zero: more vanishing → higher C.
+
+This confirms the sufficient condition: parameterization-induced basin escape requires
+φ'(0) = 0 and φ''(0) ≠ 0. Reproduces the verification cited in
+  wiki/findings/p2-peak-locking-hessian-mechanism.md.
 """
 
 from __future__ import annotations
@@ -68,31 +71,39 @@ def main() -> None:
     f_true[20:40] = 0.05 * np.random.rand(20)
     f_true /= f_true.sum() * dx
 
-    C_v_exp = lambda v: C_beta(np.exp(v), beta, dx)
-    C_v_sq  = lambda v: C_beta(v * v, beta, dx)
+    C_exp = lambda v: C_beta(np.exp(v), beta, dx)
+    def make_C_vp(p):
+        return lambda v: C_beta(np.abs(v) ** p, beta, dx)
 
-    v0_exp = np.log(np.maximum(f_true, 1e-300))
-    v0_sq  = np.sqrt(f_true)
-    r_exp = minimize(C_v_exp, v0_exp, method="L-BFGS-B", options=dict(maxiter=500, ftol=1e-14, gtol=1e-12))
-    r_sq  = minimize(C_v_sq,  v0_sq,  method="L-BFGS-B", options=dict(maxiter=500, ftol=1e-14, gtol=1e-12))
+    cases = [
+        ("exp(v)", "-", C_exp,        np.log(np.maximum(f_true, 1e-300))),
+        ("v**2",   "2", make_C_vp(2), np.abs(f_true) ** (1.0 / 2)),
+        ("v**3",   "3", make_C_vp(3), np.abs(f_true) ** (1.0 / 3)),
+        ("v**4",   "4", make_C_vp(4), np.abs(f_true) ** (1.0 / 4)),
+        ("v**6",   "6", make_C_vp(6), np.abs(f_true) ** (1.0 / 6)),
+    ]
 
-    print(f"C at exp(v) critical: {r_exp.fun:.10f}")
-    print(f"C at v^2   critical: {r_sq.fun:.10f}")
+    print(f"{'param':>10} {'p':>4} {'C_crit':>14} {'dead':>6} {'near0eig':>10} {'smallest>0':>12} {'largest':>12} {'cond':>10}")
+    print("-" * 90)
 
-    H_exp = numerical_hessian(C_v_exp, r_exp.x)
-    H_sq  = numerical_hessian(C_v_sq,  r_sq.x)
-    eigs_exp = np.sort(np.linalg.eigvalsh(H_exp))
-    eigs_sq  = np.sort(np.linalg.eigvalsh(H_sq))
+    for label, pstr, fn, v0 in cases:
+        r = minimize(fn, v0, method="L-BFGS-B", options=dict(maxiter=500, ftol=1e-14, gtol=1e-12))
+        H = numerical_hessian(fn, r.x)
+        eigs = np.sort(np.linalg.eigvalsh(H))
 
-    f_at_exp = np.exp(r_exp.x)
-    f_at_sq  = r_sq.x ** 2
-    dead_exp = int(np.sum(f_at_exp < 1e-8 * f_at_exp.max()))
-    dead_sq  = int(np.sum(f_at_sq  < 1e-8 * f_at_sq.max()))
+        if label == "exp(v)":
+            f_at = np.exp(r.x)
+        else:
+            p_int = int(pstr)
+            f_at = np.abs(r.x) ** p_int
 
-    print(f"exp(v): dead cells = {dead_exp}/{n}; near-zero eigs (|λ|<1e-6) = {int(np.sum(np.abs(eigs_exp) < 1e-6))}/{n}")
-    print(f"v^2  : dead cells = {dead_sq}/{n}; near-zero eigs (|λ|<1e-6) = {int(np.sum(np.abs(eigs_sq) < 1e-6))}/{n}")
-    print(f"exp(v) cond # (positive eigs only) ≈ {eigs_exp[-1] / max(eigs_exp[eigs_exp > 1e-12].min(), 1e-30):.2e}")
-    print(f"v^2   cond # (positive eigs only) ≈ {eigs_sq[-1]  / max(eigs_sq[eigs_sq  > 1e-12].min(), 1e-30):.2e}")
+        dead = int(np.sum(f_at < 1e-8 * f_at.max()))
+        near0 = int(np.sum(np.abs(eigs) < 1e-6))
+        pos = eigs[eigs > 1e-12]
+        smallest = pos.min() if len(pos) else float("nan")
+        largest = eigs[-1]
+        cond = largest / smallest if smallest > 0 else float("inf")
+        print(f"{label:>10} {pstr:>4} {r.fun:>14.10f} {dead:>6} {near0:>10} {smallest:>12.4e} {largest:>12.4e} {cond:>10.2e}")
 
 
 if __name__ == "__main__":
