@@ -5,12 +5,17 @@ drafted: 2026-05-02
 question_origin: research/p2-peak-locking
 status: answered
 related_problems: [P2, P3, P4, P9, P13]
+verified_on: [P2, P3]
+promotion_proposed: true
+promotion_rationale: cited from P2, P3, P4 problem indices (3+ citations); v^p sweep + cross-problem confirmation isolates the mechanism; meets the cited-3+-times bar in cycle-discipline.md
 related_concepts: [parameterization-selection.md, autocorrelation-inequality.md, smooth-max-approximation.md]
 related_findings: [equioscillation-escape.md, optimizer-recipes.md]
 cites:
   - ../concepts/parameterization-selection.md
   - ../concepts/smooth-max-approximation.md
   - ../findings/equioscillation-escape.md
+  - ../problems/2-first-autocorrelation.md
+  - ../problems/3-autocorrelation.md
   - ../../scripts/first_autocorrelation/peak_locking_hessian.py
 ---
 
@@ -90,7 +95,19 @@ The empirical sweep above is the falsification test: $v^p$ for $p \in \{3, 4, 6\
 
 - A clean diagnostic for the parameterization choice: **count zero-cells of the empirical SOTA**. If the count is $> 0$ and the gap is the parameterization-induced rank-deficient subspace, switching to `v²` (or any $\varphi$ with $\varphi'' \neq 0$ at the boundary) is indicated.
 - ~~A natural extension: $v^p$ for $p \geq 3$ should peak-lock since $\varphi''(0) = 0$.~~ **Verified.** $v^3, v^4, v^6$ all peak-lock at the same dead-cell count as $\exp$, with basin C tracking the vanishing order. Question [2026-05-02-p2-vp-parameterization-test](../questions/2026-05-02-p2-vp-parameterization-test.md) is closed answered.
-- Cross-problem applicability: P3 (Second Autocorrelation), P4 (Third Autocorrelation), P9 (Uncertainty), P13 (Edges-vs-Triangles) — any problem with sparse SOTA structure under non-negativity is a candidate. P9's $k$-climbing escape (lesson #24) plausibly fits the same mechanism: gap-space parameterization $g_i = z_{i+1} - z_i$ has a different second-derivative structure than position-space. Untested.
+- Cross-problem applicability:
+  - **P3 (Second Autocorrelation)**: same Hessian fingerprint confirmed — different objective ($\max C = \|f\star f\|_2^2 / (\|f\star f\|_1 \cdot \|f\star f\|_\infty)$, sign-flipped), same sparse seed, same dead-cell count (32 / 80). $\exp$ and $v^3$ peak-lock with the 1:1 dead → near-zero correspondence; $v^2$ escapes. The mechanism is **objective-shape agnostic** — it depends only on the chain rule applied to a smooth functional with a non-negativity constraint, not on the specific functional.
+  - **P4 (Third Autocorrelation)**: SOTA at $n=400$ has **0 dead cells** and admits signed $f$. The mechanism's prediction is "no parameterization-induced peak-lock because no dead-cell subspace." P4's documented escape (lesson #51 via larger-$n$ cascade) is a *distinct* mechanism — equioscillation-saturation from DOF-vs-active-constraint deficit at small $n$, not parameterization-induced Hessian rank deficiency.
+  - **P9 (Uncertainty), P13 (Edges-vs-Triangles)**: gap-space and per-region-sigmoid escapes (lessons #24, #68) plausibly fit the same mechanism but on different boundary structures (ordering, box constraints). Untested.
+
+The P2/P3 distinction from the P4 case is the key structural insight: **two different lock types need two different escapes**.
+
+| Lock type | Diagnostic | Escape |
+|---|---|---|
+| Parameterization Hessian rank deficiency on dead-cell subspace | optimum has $f_i = 0$ on positive-measure $S$; $\exp(v)$ Hessian has $\#S$ near-zero eigenvalues | switch to $\varphi$ with $\varphi''(0) \neq 0$ (e.g. $v^2$) — this finding |
+| Equioscillation saturation at fixed $n$ | active conv positions $\approx n$; KKT-rigid at this discretization | larger-$n$ cascade with block-repeat + perturbation (lesson #51) |
+
+P2 had the first lock type (sparse SOTA); P4 had the second (dense Chebyshev SOTA at small $n$). Both go away under their respective escapes; neither escape works on the other's lock. The wiki had been collapsing both under "peak-locking" — they're different.
 - The variational framing (Fisher–Rao vs Wasserstein-2 natural gradient flows) connects to a real literature (Amari, Otto–Villani, Carrillo et al.) and is the natural framing for promoting this finding to a publishable result. Untouched here.
 
 ## See also

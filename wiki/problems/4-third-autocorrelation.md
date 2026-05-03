@@ -44,6 +44,7 @@ Larger-n escape through block-repeat plus perturbation breaks piecewise-constant
 ## Findings
 - [equioscillation-escape.md](../findings/equioscillation-escape.md)
 - [optimizer-recipes.md](../findings/optimizer-recipes.md)
+- [p2-peak-locking-hessian-mechanism.md](../findings/p2-peak-locking-hessian-mechanism.md) — explains *why* P4's escape was via larger-n cascade and not parameterization swap: P4 SOTA at n=400 has 0 dead cells (function spans [−22.86, +32.04], 81/400 cells negative) so the parameterization-induced Hessian rank deficiency does not apply. Two distinct lock types — equioscillation saturation (P4) vs dead-cell rank deficiency (P2) — need two distinct escapes.
 
 ## References
 - Tao et al. (2025), Problem 6.4 variant (b), arXiv:2511.02864.

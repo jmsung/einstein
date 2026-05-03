@@ -9,7 +9,7 @@ score_current: 1.5028616283497658
 tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, parameterization-selection.md, sidon-sets.md, smooth-max-approximation.md]
 techniques_used: [larger-n-cascade.md, lp-cutting-plane-warmstart.md, bounded-lbfgs-per-region-sigmoid.md, warm-start-from-leader.md]
-findings_produced: [optimizer-recipes.md, equioscillation-escape.md]
+findings_produced: [optimizer-recipes.md, equioscillation-escape.md, p2-peak-locking-hessian-mechanism.md, p2-lower-bound-research-state.md]
 private_tracking: ../../mb/tracking/problem-2-first-autocorrelation/
 ---
 
