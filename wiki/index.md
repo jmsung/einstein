@@ -60,6 +60,15 @@ Catalog of all wiki pages. Updated as content lands.
 - [findings/polish-race-dynamics.md](findings/polish-race-dynamics.md) — polish race; cron timing; theoretical freeze
 - [findings/verification-patterns.md](findings/verification-patterns.md) — two-tier verification; false positives
 
+### P19 difference bases — dead-end findings + structural lemmas
+- [findings/p19-kronecker-bridging-threshold.md](findings/p19-kronecker-bridging-threshold.md) — conditional identity v = L·λ + c(A); 2-axis (c, max) Pareto
+- [findings/dead-end-p19-different-k-local-search.md](findings/dead-end-p19-different-k-local-search.md) — different-k local search around SOTA k=360
+- [findings/dead-end-p19-4mark-sidon-rulers.md](findings/dead-end-p19-4mark-sidon-rulers.md) — R={0,1,4,6} uniquely best 4-mark Sidon
+- [findings/dead-end-p19-imperfect-5mark-sidon.md](findings/dead-end-p19-imperfect-5mark-sidon.md) — closes H1 sub-cases
+- [findings/dead-end-p19-bose-chowla.md](findings/dead-end-p19-bose-chowla.md) — Bose-Chowla algebraic family fails
+- [findings/dead-end-p19-extended-span-1-swap.md](findings/dead-end-p19-extended-span-1-swap.md) — 1-swap of SOTA atom in [6968, 8010]
+- [findings/dead-end-p19-from-scratch-extended-span.md](findings/dead-end-p19-from-scratch-extended-span.md) — direct BnB at S_max=8010 + Wichmann correction
+
 ### Strategy & process
 - [findings/strategic-approach.md](findings/strategic-approach.md) — literature first; breadth-before-depth
 - [findings/council-dispatch.md](findings/council-dispatch.md) — council convergence; persona trust *(experience finding; the policy lives in `.claude/rules/council-dispatch.md`)*
