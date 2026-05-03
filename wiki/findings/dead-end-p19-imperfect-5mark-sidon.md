@@ -102,7 +102,7 @@ The H1 question structure is now:
 
 H1 closed; H2 (LP/SDP cap certificate) and H3 (cross-pollination outside the Sidon framework) remain. Per the [cross-pollination-not-compute](cross-pollination-not-compute.md) filter, the next moves are:
 
-1. **H2 — LP/SDP cap certificate**. Bernshteyn–Tait 2019 gives `c² ≥ 2.434`; SOTA at 2.639 is "moderately above." Tightening the LP could prove 2.639 is the global floor (publishable formal result).
+1. **H2 — LP/SDP cap certificate**. Leech 1956 gives `c² ≥ 2.434`; Bernshteyn–Tait 2019 ([source](../../source/papers/2019-bernshteyn-tait-difference-bases.md)) tightens strictly to `c² ≥ 2.434 + ε` with numerical `ε ≈ 10⁻³`. SOTA at 2.639 is "moderately above." Tightening the LP / larger PSD truncations could prove 2.639 is the global floor (publishable formal result).
 2. **H3 — cross-pollination angles** the gap detector might surface. The recent v4 detector identified Bose–Chowla as a candidate; that closed via this and PR #68. Future detector runs might surface other connections.
 3. **Pivot away from P19**: it's now formally exhausted under all constraint-geometric attacks at k=360. Modal-scale w=4 BnB exhaustive (~$12) would convert the prior partial w=4 result into a full lemma, but at this point the cumulative evidence is strong enough that a clean writeup of P19 as a *fully-resolved* problem is more valuable than another exhaustion run.
 
