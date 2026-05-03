@@ -11,18 +11,30 @@ gives a finite eigenvalue 2·∂C_β/∂f_i when φ''(0) = 2 (v² only).
 
 Empirical sweep at n=80, β=200, sparse SOTA-like seed:
 
-  param   p   C_crit         dead  near0_eigs  cond #
-  exp(v)  -   1.9539951034   32    32          1.03e5
-  v²      2   1.7817122319   32    0           4.55e4
-  v³      3   1.8107106179   32    32          6.68e4
-  v⁴      4   1.8310046542   32    32          2.40e4
-  v⁶      6   1.8846429515   32    32          4.54e4
+  param          C_crit         dead  near0_eigs  cond #
+  exp(v)         1.9539951034   32    32          1.03e5
+  v²             1.7817122319   32     0          4.55e4
+  v³             1.8107106179   32    32          6.68e4
+  v⁴             1.8310046542   32    32          2.40e4
+  v⁶             1.8846429515   32    32          4.54e4
+  U*sigmoid(v)   2.0994330845   35    52          6.62e6   (+17 saturated cells at upper bound)
 
-Only v² escapes; v^p for p ≥ 3 peak-locks like exp despite being polynomial. Basin C
-tracks monotonically with the *vanishing-order* of φ at zero: more vanishing → higher C.
+v² is the only escape. v^p for p ≥ 3 peak-locks like exp despite being polynomial.
+**U*sigmoid(v) is *more* rank-deficient than exp** — it has TWO boundary saturations
+(σ→0 at v→-∞ and σ→1 at v→+∞), each contributing rank deficiency, so the optimizer
+can't even reach exp's basin. Basin C tracks the vanishing order of φ at boundaries.
 
-This confirms the sufficient condition: parameterization-induced basin escape requires
-φ'(0) = 0 and φ''(0) ≠ 0. Reproduces the verification cited in
+The sigmoid result rules out a tempting cross-problem hypothesis: P13's documented
+sigmoid-based escape (lesson #68) is NOT the parameterization-rank-deficiency mechanism.
+That escape works for a different reason — replacing hard L-BFGS-B box walls with
+smooth interior gradients, which is structurally distinct.
+
+Sufficient condition (sharpened): parameterization-induced basin escape requires (a)
+the optimum's boundary indices map to FINITE v-coordinates (not v=±∞), AND (b) at
+those finite coordinates, φ'(v) = 0 with φ''(v) ≠ 0. v² satisfies both at v=0;
+exp, v^p (p≥3), and sigmoid all fail one or both conditions.
+
+Reproduces the verification cited in
   wiki/findings/p2-peak-locking-hessian-mechanism.md.
 """
 
@@ -74,13 +86,25 @@ def main() -> None:
     C_exp = lambda v: C_beta(np.exp(v), beta, dx)
     def make_C_vp(p):
         return lambda v: C_beta(np.abs(v) ** p, beta, dx)
+    # Sigmoid: f = U * σ(v); image is the bounded interval (0, U). Boundary at v→-∞ (σ→0)
+    # and at v→+∞ (σ→1). Both have σ' and σ'' vanishing — same structural family as exp at the
+    # f=0 boundary, but doubled (TWO saturating boundaries instead of one). U=5 here binds on
+    # 14/80 cells of the seed (max of f_true is ~8.4 after normalization), which is intentional:
+    # it seeds the upper-saturation boundary on purpose, mirroring how P13's per-region sigmoid
+    # would behave at upper-bound activity. The result (52 near-zero eigs vs 32 dead = 35 lower
+    # boundary + 17 upper saturation) confirms both boundaries contribute to rank deficiency.
+    U = 5.0
+    def C_sig(v): return C_beta(U / (1.0 + np.exp(-v)), beta, dx)
+    clamped = np.clip(f_true, 1e-300, U - 1e-12)
+    v0_sig = np.log(clamped / (U - clamped))
 
     cases = [
-        ("exp(v)", "-", C_exp,        np.log(np.maximum(f_true, 1e-300))),
-        ("v**2",   "2", make_C_vp(2), np.abs(f_true) ** (1.0 / 2)),
-        ("v**3",   "3", make_C_vp(3), np.abs(f_true) ** (1.0 / 3)),
-        ("v**4",   "4", make_C_vp(4), np.abs(f_true) ** (1.0 / 4)),
-        ("v**6",   "6", make_C_vp(6), np.abs(f_true) ** (1.0 / 6)),
+        ("exp(v)",       "-", C_exp,        np.log(np.maximum(f_true, 1e-300))),
+        ("v**2",         "2", make_C_vp(2), np.abs(f_true) ** (1.0 / 2)),
+        ("v**3",         "3", make_C_vp(3), np.abs(f_true) ** (1.0 / 3)),
+        ("v**4",         "4", make_C_vp(4), np.abs(f_true) ** (1.0 / 4)),
+        ("v**6",         "6", make_C_vp(6), np.abs(f_true) ** (1.0 / 6)),
+        ("U*sigmoid(v)", "s", C_sig,        v0_sig),
     ]
 
     print(f"{'param':>10} {'p':>4} {'C_crit':>14} {'dead':>6} {'near0eig':>10} {'smallest>0':>12} {'largest':>12} {'cond':>10}")
@@ -93,6 +117,8 @@ def main() -> None:
 
         if label == "exp(v)":
             f_at = np.exp(r.x)
+        elif label == "U*sigmoid(v)":
+            f_at = U / (1.0 + np.exp(-r.x))
         else:
             p_int = int(pstr)
             f_at = np.abs(r.x) ** p_int

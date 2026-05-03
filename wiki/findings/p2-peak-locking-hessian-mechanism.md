@@ -46,22 +46,24 @@ The constant $\varphi'' = 2$ under `v²` is the entire content. It says: *even w
 
 ## Numerical verification
 
-Small-instance check at $n = 80$, smooth-max $\beta = 200$, with a SOTA-like sparse seed (script: [`scripts/first_autocorrelation/peak_locking_hessian.py`](../../scripts/first_autocorrelation/peak_locking_hessian.py)). Five parameterizations from the same seed:
+Small-instance check at $n = 80$, smooth-max $\beta = 200$, with a SOTA-like sparse seed (script: [`scripts/first_autocorrelation/peak_locking_hessian.py`](../../scripts/first_autocorrelation/peak_locking_hessian.py)). Six parameterizations from the same seed:
 
-| $\varphi$ | $\varphi''(0)$ | $C$ at v-critical | dead cells | near-zero Hess eigs | cond # |
-|---|---:|---:|---:|---:|---:|
-| $\exp(v)$ | $0$ | $1.9539951034$ | $32 / 80$ | $\mathbf{32 / 80}$ | $1.03 \times 10^5$ |
-| $v^{2}$ | $\mathbf{2}$ | $\mathbf{1.7817122319}$ | $32 / 80$ | $\mathbf{0 / 80}$ | $4.55 \times 10^4$ |
-| $v^{3}$ | $0$ | $1.8107106179$ | $32 / 80$ | $\mathbf{32 / 80}$ | $6.68 \times 10^4$ |
-| $v^{4}$ | $0$ | $1.8310046542$ | $32 / 80$ | $\mathbf{32 / 80}$ | $2.40 \times 10^4$ |
-| $v^{6}$ | $0$ | $1.8846429515$ | $32 / 80$ | $\mathbf{32 / 80}$ | $4.54 \times 10^4$ |
+| $\varphi$ | $\varphi''(0)$ | $\varphi'$, $\varphi''$ at $f = 0$ | $C$ at v-critical | dead cells | near-zero Hess eigs | cond # |
+|---|---:|---|---:|---:|---:|---:|
+| $\exp(v)$ | $0$ (asymptote) | both vanish at $v \to -\infty$ | $1.9539951034$ | $32 / 80$ | $\mathbf{32 / 80}$ | $1.03 \times 10^5$ |
+| $v^{2}$ | $\mathbf{2}$ | $\varphi' = 0$, $\varphi'' = 2$ at $v = 0$ (finite) | $\mathbf{1.7817122319}$ | $32 / 80$ | $\mathbf{0 / 80}$ | $4.55 \times 10^4$ |
+| $v^{3}$ | $0$ | both vanish at $v = 0$ (finite) | $1.8107106179$ | $32 / 80$ | $\mathbf{32 / 80}$ | $6.68 \times 10^4$ |
+| $v^{4}$ | $0$ | both vanish at $v = 0$ (finite) | $1.8310046542$ | $32 / 80$ | $\mathbf{32 / 80}$ | $2.40 \times 10^4$ |
+| $v^{6}$ | $0$ | both vanish at $v = 0$ (finite) | $1.8846429515$ | $32 / 80$ | $\mathbf{32 / 80}$ | $4.54 \times 10^4$ |
+| $U \cdot \sigma(v)$ | $0$ (at $v = 0$) | both vanish at $v \to -\infty$ AND at $v \to +\infty$ | $2.0994330845$ | $35 / 80$ + 17 saturated | $\mathbf{52 / 80}$ | $6.62 \times 10^6$ |
 
-Two clean readings:
+Three clean readings:
 
-1. **The 1:1 dead-cell ↔ near-zero-eigenvalue correspondence holds for every $\varphi$ with $\varphi''(0) = 0$.** $\exp$, $v^3$, $v^4$, $v^6$ — all four — produce exactly 32 near-zero eigenvalues at the v-critical point, matching their 32 dead cells. The mechanism is *not* "polynomial vs transcendental" or "smooth vs $C^\infty$" — it is exactly $\varphi''(0)$.
-2. **Basin value tracks monotonically with the vanishing order of $\varphi$ at zero.** $v^2$ ($\varphi'' = 2$) gives the lowest C; $\exp$ (vanishing to all orders) gives the highest. The polynomials $v^3, v^4, v^6$ interpolate, with $C$ increasing as $\varphi$ vanishes faster at zero. This is consistent with the rank-deficient subspace getting "flatter" as the vanishing order grows.
+1. **The 1:1 dead-cell ↔ near-zero-eigenvalue correspondence holds for every $\varphi$ with $\varphi''$ vanishing at the boundary.** $\exp$, $v^3$, $v^4$, $v^6$ — all four — produce exactly 32 near-zero eigenvalues at the v-critical point, matching their 32 dead cells. The mechanism is *not* "polynomial vs transcendental" or "smooth vs $C^\infty$" — it is exactly the order at which $\varphi$ vanishes at the boundary.
+2. **Basin value tracks monotonically with the vanishing order.** $v^2$ ($\varphi'' = 2$) gives the lowest C; sigmoid (vanishing at *both* boundaries, two saturation modes) gives the highest. $\exp$ and the polynomial $v^p$ family interpolate, with $C$ increasing as the boundary becomes structurally harder to reach.
+3. **Sigmoid is *more* rank-deficient than exp.** The sigmoid's image is the bounded interval $(0, U)$, so v-critical points have *two* boundary saturations: $\sigma \to 0$ as $v \to -\infty$ (35 dead cells) AND $\sigma \to 1$ as $v \to +\infty$ (17 saturated cells). Both contribute rank deficiency — 52 near-zero eigenvalues total. This is the cross-problem-relevant result: P13's "sigmoid escape" (lesson #68 in [optimizer-recipes](optimizer-recipes.md)) is **not** the parameterization-rank-deficiency mechanism. Sigmoid peak-locks more aggressively than exp; P13's escape works via a different mechanism (replacing hard L-BFGS-B box walls with smooth interior gradients), not via Hessian curvature retention at the boundary.
 
-Under `v²`, the dead cells contribute eigenvalues of order $2 \, \nabla_f C_\beta \approx 10^{-3}$, three orders of magnitude above the $10^{-6}$ near-zero threshold. The other four parameterizations have those eigenvalues all below $10^{-6}$.
+Under `v²`, the dead cells contribute eigenvalues of order $2 \, \nabla_f C_\beta \approx 10^{-3}$, three orders of magnitude above the $10^{-6}$ near-zero threshold. Every other parameterization has those eigenvalues below $10^{-6}$.
 
 (The negative eigenvalues seen in all spectra are saddle-curvature from the smooth-max $\beta = 200$ approximation; they're a feature of the LSE relaxation, not of the parameterization, and are comparable in size across cases.)
 
@@ -100,7 +102,10 @@ The empirical sweep above is the falsification test: $v^p$ for $p \in \{3, 4, 6\
 - Cross-problem applicability:
   - **P3 (Second Autocorrelation)**: same Hessian fingerprint confirmed — different objective ($\max C = \|f\star f\|_2^2 / (\|f\star f\|_1 \cdot \|f\star f\|_\infty)$, sign-flipped), same sparse seed, same dead-cell count (32 / 80). $\exp$ and $v^3$ peak-lock with the 1:1 dead → near-zero correspondence; $v^2$ escapes. The mechanism is **objective-shape agnostic** — it depends only on the chain rule applied to a smooth functional with a non-negativity constraint, not on the specific functional.
   - **P4 (Third Autocorrelation)**: SOTA at $n=400$ has **0 dead cells** and admits signed $f$. The mechanism's prediction is "no parameterization-induced peak-lock because no dead-cell subspace." P4's documented escape (lesson #51 via larger-$n$ cascade) is a *distinct* mechanism — equioscillation-saturation from DOF-vs-active-constraint deficit at small $n$, not parameterization-induced Hessian rank deficiency.
-  - **P9 (Uncertainty), P13 (Edges-vs-Triangles)**: gap-space and per-region-sigmoid escapes (lessons #24, #68) plausibly fit the same mechanism but on different boundary structures (ordering, box constraints). Untested.
+  - **P9 (Uncertainty)**: **mechanism does not apply.** Variables are positive Laguerre double-roots; SOTA at $k=18$ has all gaps $\ge 0.83$ (no active ordering constraint, hence no boundary cells). P9's gap-space escape (lesson #24) works by re-coordinatizing $z_i \to g_i = z_{i+1} - z_i$, which converts a *relative* ordering constraint into an *absolute* non-negativity constraint $g_i \ge 0$. That coordinate change is the escape — a structurally different mechanism than the parameterization-curvature story here.
+  - **P13 (Edges-vs-Triangles)**: **mechanism does not apply directly.** SOTA does have a sparse weight matrix (~74% zeros at $n=500\times 20$), so dead cells exist. But P13's documented sigmoid escape (lesson #68) tested on the P2 setup *peak-locks worse than exp* — sigmoid's image is the bounded interval $(0, U)$, so v-critical points have boundary saturation at both $v \to -\infty$ and $v \to +\infty$, giving more rank deficiency, not less. P13's actual escape mechanism is replacing hard L-BFGS-B box walls (which zero out gradients at the boundary) with smooth interior parameterization (which keeps gradients flowing throughout the box) — the win is *first-order* gradient flow, not *second-order* Hessian curvature.
+
+The P9/P13 results above were the question's pre-flagged prediction and now have empirical / structural support. They sharpen the concept's "When it applies" scope.
 
 The P2/P3 distinction from the P4 case is the key structural insight: **two different lock types need two different escapes**.
 

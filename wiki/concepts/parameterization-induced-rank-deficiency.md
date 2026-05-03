@@ -33,23 +33,34 @@ $$
 
 Let $S = \{i : f_i = 0\}$ be the *dead-cell subspace* (boundary indices of the optimum). The first term is rank-deficient on $S$ for any $\varphi$ with $\varphi'(0) = 0$ — the Jacobian kills those rows. The second term is the **load-bearing factor**: it is zero on $S$ when $\varphi''(0) = 0$, and is $\varphi''(0) \cdot \nabla_f C$ on $S$ otherwise.
 
-| Condition on $\varphi$ at boundary | Hessian on $S$ | Optimizer behavior |
-|---|---|---|
-| $\varphi'(0) \neq 0$ | full rank (boundary not constrained at $v_i = 0$) | constraint is hard-bounded, often hits L-BFGS-B walls |
-| $\varphi'(0) = 0$, $\varphi''(0) = 0$ | rank-deficient — eigenvalue $\to 0$ on $S$ | **peak-locking** — flat sub-manifold, no decisive prune |
-| $\varphi'(0) = 0$, $\varphi''(0) \neq 0$ | full rank — eigenvalue $\varphi''(0) \cdot \nabla_f C$ on $S$ | **escape** — KKT-style activity test exposed at boundary |
+| Boundary location for $f = 0$ | $\varphi'$, $\varphi''$ at the boundary | Hessian on $S$ | Optimizer behavior |
+|---|---|---|---|
+| Finite $v_0$ with $\varphi'(v_0) \neq 0$ | $\varphi' \neq 0$ | full rank (boundary not at a critical point of $v$-problem) | constraint is hard-bounded, often hits L-BFGS-B walls |
+| Finite $v_0$ with $\varphi' = \varphi'' = 0$ at $v_0$ | both vanish | rank-deficient on $S$ | **peak-locking** |
+| **$v_0$ at infinity** ($\varphi$ vanishes asymptotically) | both vanish in the limit | rank-deficient on $S$ | **peak-locking** ($\exp$, sigmoid) |
+| Finite $v_0$ with $\varphi'(v_0) = 0$, $\varphi''(v_0) \neq 0$ | $\varphi'' \neq 0$ | full rank — eigenvalue $\varphi''(v_0) \cdot \nabla_f C$ on $S$ | **escape** — KKT-style activity test exposed at boundary |
 
-The third row is the only known parameterization-induced escape from peak-locking.
+Only the last row escapes. **Finite $v$-coordinate for the boundary AND non-vanishing second derivative there** are *both* required. $v^2$ is the canonical example (boundary at $v_0 = 0$, $\varphi''(0) = 2$); sigmoid is *not* an escape (boundary at $v_0 = \pm \infty$, where $\sigma'' \to 0$); $\exp$ is not an escape (boundary at $v_0 = -\infty$).
 
 ## When it applies
 
-Whenever:
+The mechanism applies whenever:
 
 - The objective $C$ is smooth (or made smooth via a relaxation like $\mathrm{LSE}_\beta$ for $\max$); and
 - The optimum has $f_i = 0$ on a non-empty index set $S$ (sparse SOTA — typical for variational problems with positivity constraints); and
-- The unconstrained reformulation $f = \varphi(v)$ has $\varphi(0) = 0$ (so $v_i = 0$ corresponds to $f_i = 0$).
+- The unconstrained reformulation $f = \varphi(v)$ has $\varphi(0) = 0$ at a *finite* $v$-coordinate (so $v_i = 0$ corresponds to $f_i = 0$ at finite $v$, not at an asymptote).
 
-This applies to any problem in the autocorrelation family with sparse optima (P2 verified; P3 verified). Does *not* apply to problems where the optimum is interior (no dead cells) — there is no boundary subspace to be rank-deficient on. P4 (Third Autocorrelation) is the canonical example of inapplicability: SOTA at $n=400$ has zero dead cells, and the documented "lock" there is a *different* mechanism (equioscillation saturation at small $n$, escaped by larger-$n$ cascade).
+The escape — switching to a $\varphi$ with $\varphi''(0) \neq 0$ — applies under the same conditions.
+
+**This applies to** the autocorrelation family with sparse optima: P2 verified, P3 verified.
+
+**This does *not* apply to**:
+
+- **P4 (Third Autocorrelation)** — SOTA has zero dead cells; no boundary subspace exists. The "lock" there is equioscillation saturation at small $n$, a different mechanism, escaped by larger-$n$ cascade.
+- **P9 (Uncertainty)** — variables are positive Laguerre double-roots; SOTA at $k=18$ has all gaps $\ge 0.83$ (no active ordering constraint, no boundary cells). P9's documented gap-space escape (lesson #24) is a *coordinate change* that converts an *ordering* constraint into a non-negativity constraint on gaps — that re-coordinatization is the escape, not parameterization curvature.
+- **P13 (Edges-vs-Triangles)** — SOTA has dead cells (~74% sparse weight matrix), but P13's documented sigmoid escape (lesson #68) is **not** the curvature-retention escape. Sigmoid has its boundary at $v = \pm \infty$ where $\sigma''$ vanishes — peak-locks worse than exp on a P2 controlled test (52 near-zero eigs vs 32 under exp; basin C 2.10 vs 1.95). P13's actual escape mechanism is replacing hard L-BFGS-B box walls with smooth interior gradients — a *first-order* gradient-flow win, not a *second-order* Hessian-curvature win.
+
+The P9/P13 tests sharpen the scope: parameterization-induced rank deficiency is a non-negativity-cone phenomenon with the boundary at a finite $v$-coordinate. Other constraint geometries (ordering, box) admit their own escapes that are not this mechanism.
 
 ## Diagnostic
 
@@ -58,7 +69,7 @@ Two-line test for any problem suspected of parameterization-induced peak-locking
 1. **Count zero-cells of the empirical SOTA.** If $|S| = 0$, the mechanism does not apply — look for equioscillation-saturation locks instead.
 2. **At a v-critical point under $\exp(v)$, count Hessian eigenvalues with $|\lambda| < 10^{-6}$.** If the count equals $|S|$ to within rounding, the rank deficiency is exact and the cell heights $\{f_i \approx 0\}$ project 1:1 onto the near-null subspace. Switching to $f = v^2$ should produce zero such eigenvalues at the new v-critical point and a strictly lower (resp. higher, for max problems) basin value.
 
-Numerically verified at $n=80$, $\beta=200$ on P2 and P3: 32 dead cells under $\exp(v)$ produce 32 near-zero eigenvalues; 0 under $v^2$. See [findings/p2-peak-locking-hessian-mechanism](../findings/p2-peak-locking-hessian-mechanism.md) for the empirical sweep including $v^p$ for $p \in \{2, 3, 4, 6\}$.
+Numerically verified at $n=80$, $\beta=200$ on P2 and P3: 32 dead cells under $\exp(v)$ produce 32 near-zero eigenvalues; 0 under $v^2$. The full sweep $\{\exp, v^2, v^3, v^4, v^6, U \cdot \sigma\}$ confirms the sufficient condition exactly. See [findings/p2-peak-locking-hessian-mechanism](../findings/p2-peak-locking-hessian-mechanism.md) for the table.
 
 ## Why it works
 
