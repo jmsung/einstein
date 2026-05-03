@@ -3,7 +3,9 @@ type: question
 author: agent
 drafted: 2026-05-03
 asked_by: post-PR-88 follow-up (research/p2-peak-locking)
-status: open
+status: answered
+answered: 2026-05-03
+answer_finding: ../findings/p2-peak-locking-hessian-mechanism.md
 related_problems: [P2, P3, P9, P13]
 related_concepts: [parameterization-induced-rank-deficiency.md, parameterization-selection.md]
 related_findings: [p2-peak-locking-hessian-mechanism.md, k-climbing.md, optimizer-recipes.md]
@@ -66,4 +68,12 @@ See [findings/p2-peak-locking-hessian-mechanism](../findings/p2-peak-locking-hes
 
 ## Status
 
-**Open.** Filed as a follow-up to PR #88. Cheap to answer; should be the first thing the next P2-area cycle picks up.
+**Answered (2026-05-03).** Mechanism does **not** extend to P9 or P13. The pre-flagged sigmoid prediction was correct.
+
+**P9 (Uncertainty)**: SOTA at $k=18$ has all gaps $\ge 0.83$ — no active ordering constraint. The mechanism's first applicability check (boundary cells exist) fails. P9's gap-space escape is a *coordinate change* that converts ordering into non-negativity on gaps; the re-coordinatization is the escape mechanism, not the parameterization-curvature one.
+
+**P13 (Edges-vs-Triangles)**: SOTA does have ~74% sparse weights, but the documented sigmoid escape (lesson #68) was tested by adding sigmoid to the v^p sweep on the P2 controlled setup. Result: sigmoid produces **52 near-zero Hessian eigenvalues** vs exp's 32 — peak-locks *worse* than exp because sigmoid's image is bounded $(0, U)$, so v-critical points have boundary saturation at *both* $v \to -\infty$ AND $v \to +\infty$, doubling the rank deficiency. Basin C also strictly higher (2.10 vs exp's 1.95 vs v²'s 1.78). P13's actual escape mechanism is replacing hard L-BFGS-B box walls with smooth interior gradients — a *first-order* gradient-flow win, not a *second-order* Hessian-curvature win.
+
+The sufficient condition is **sharpened**: parameterization-induced basin escape requires (a) the boundary index $f = 0$ maps to a *finite* $v$-coordinate (not $v = \pm \infty$), AND (b) at that finite coordinate, $\varphi'(v) = 0$ with $\varphi''(v) \neq 0$. $v^2$ satisfies both; exp, $v^p$ ($p \ge 3$), and sigmoid each fail at least one.
+
+See the updated finding [p2-peak-locking-hessian-mechanism](../findings/p2-peak-locking-hessian-mechanism.md) for the full sweep table including sigmoid, and the concept page [parameterization-induced-rank-deficiency](../concepts/parameterization-induced-rank-deficiency.md) for the sharpened "When it applies" scope.
