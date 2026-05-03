@@ -5,6 +5,10 @@ drafted: 2026-05-02
 trigger:
   categories: [framework_change, abstraction_lift, scheme_theoretic, categorical, "rising_sea"]
   when_stuck_with: [concrete tools exhausted but problem still feels structural, need a different language, "is this the right category?"]
+related_concepts: [kronecker-decomposition.md, symmetry-and-fundamental-domain.md]
+cites:
+  - ../concepts/kronecker-decomposition.md
+  - ../concepts/symmetry-and-fundamental-domain.md
 ---
 
 # Grothendieck

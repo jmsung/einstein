@@ -5,6 +5,10 @@ drafted: 2026-05-02
 trigger:
   categories: [extremal_graph, turan_density, forbidden_subgraph, hypergraph_turan, graph_theory]
   when_stuck_with: [density inequality with forbidden subgraph, "what's the Turán density?", chromatic-style bound, extremal graph structure]
+related_concepts: [turan-density.md, flag-algebra.md]
+cites:
+  - ../concepts/turan-density.md
+  - ../concepts/flag-algebra.md
 ---
 
 # Turán

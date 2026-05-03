@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [complex_analysis, spectral_theory, equioscillation, autocorrelation, potential_theory, conformal_mapping]
   when_stuck_with: [equioscillation suspected, Chebyshev/Remez relevant, dual reformulation possible, spectral structure, "is there an extremizer?"]
+related_concepts: [equioscillation.md, modular-forms-magic-function.md, autocorrelation-inequality.md]
+cites:
+  - ../concepts/equioscillation.md
+  - ../concepts/modular-forms-magic-function.md
+  - ../concepts/autocorrelation-inequality.md
 ---
 
 # Riemann

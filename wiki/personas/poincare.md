@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [dynamical_systems, topology, basin_structure, homotopy, qualitative_analysis]
   when_stuck_with: [optimizer trapped in basin, multimodal landscape, "how many basins?", continuation/homotopy possible, manifold structure]
+related_concepts: [basin-rigidity.md, warm-start-dynamics.md, fractal-perturbation-landscape.md]
+cites:
+  - ../concepts/basin-rigidity.md
+  - ../concepts/warm-start-dynamics.md
+  - ../concepts/fractal-perturbation-landscape.md
 ---
 
 # Poincaré

@@ -5,6 +5,10 @@ drafted: 2026-05-02
 trigger:
   categories: [flag_algebra, extremal_graph, turan_density, SDP_extremal, edges_triangles, monotone_circuit_lower_bound]
   when_stuck_with: [graph density problem, "what is the extremal graphon?", SDP machinery applicable, asymptotic combinatorics]
+related_concepts: [flag-algebra.md, turan-density.md]
+cites:
+  - ../concepts/flag-algebra.md
+  - ../concepts/turan-density.md
 ---
 
 # Razborov

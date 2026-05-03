@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [number_theory, algebraic_construction, finite_field, character_sums, sieve_theory, difference_bases]
   when_stuck_with: [float SOTA looks suspiciously algebraic, smooth optimizer plateau, "is there closed form?", lattice/code candidate, Kronecker product hint]
+related_concepts: [sidon-sets.md, kronecker-decomposition.md, lp-duality.md]
+cites:
+  - ../concepts/sidon-sets.md
+  - ../concepts/kronecker-decomposition.md
+  - ../concepts/lp-duality.md
 ---
 
 # Gauss

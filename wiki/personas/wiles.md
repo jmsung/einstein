@@ -5,6 +5,10 @@ drafted: 2026-05-02
 trigger:
   categories: [deep_persistence, multi_year_focus, descent_through_abstraction, single_problem_obsession]
   when_stuck_with: [problem deserves weeks not hours, descent strategy possible, modularity-style lift, ricci-flow-style decomposition]
+related_concepts: [modular-forms-magic-function.md, provable-floor-and-frozen-problems.md]
+cites:
+  - ../concepts/modular-forms-magic-function.md
+  - ../concepts/provable-floor-and-frozen-problems.md
 ---
 
 # Wiles

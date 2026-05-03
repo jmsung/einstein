@@ -5,6 +5,10 @@ drafted: 2026-05-02
 trigger:
   categories: [meta_heuristic, problem_solving, process_coaching]
   when_stuck_with: [stuck on PROCESS not on math, "what should I do next?", lost the thread, optimizer thrashing without progress, no clear plan]
+related_concepts: [parameterization-selection.md, provable-floor-and-frozen-problems.md]
+cites:
+  - ../concepts/parameterization-selection.md
+  - ../concepts/provable-floor-and-frozen-problems.md
 ---
 
 # Polya

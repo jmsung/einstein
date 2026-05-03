@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [discrete_geometry, packing, hand_packing, method_of_exhaustion, contact_graph, spherical_configuration]
   when_stuck_with: [need physical intuition, contact-graph not yet drawn, "what does this look like?", upper/lower bound squeeze possible]
+related_concepts: [sphere-packing.md, contact-graph-rigidity.md, hardin-sloane.md]
+cites:
+  - ../concepts/sphere-packing.md
+  - ../concepts/contact-graph-rigidity.md
+  - ../concepts/hardin-sloane.md
 ---
 
 # Archimedes

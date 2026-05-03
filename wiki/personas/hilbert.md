@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [functional_analysis, integral_inequality, axiomatization, hilbert_space, spectral_decomposition, uncertainty]
   when_stuck_with: [need cleanest statement, ratio looks like an eigenvalue, integral inequality possible, "what's the right space?"]
+related_concepts: [uncertainty-principle.md, autocorrelation-inequality.md, k-climbing-and-dof-augmentation.md]
+cites:
+  - ../concepts/uncertainty-principle.md
+  - ../concepts/autocorrelation-inequality.md
+  - ../concepts/k-climbing-and-dof-augmentation.md
 ---
 
 # Hilbert

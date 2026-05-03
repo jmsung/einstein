@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [cross_field, algebra_geometry_analysis, index_theorem, geometry_physics, K_theory]
   when_stuck_with: [one field is stuck, "what does this look like in another language?", marriage of tools possible, gauge theory connection]
+related_concepts: [modular-forms-magic-function.md, lp-duality.md, symmetry-and-fundamental-domain.md]
+cites:
+  - ../concepts/modular-forms-magic-function.md
+  - ../concepts/lp-duality.md
+  - ../concepts/symmetry-and-fundamental-domain.md
 ---
 
 # Atiyah

@@ -5,6 +5,12 @@ drafted: 2026-05-02
 trigger:
   categories: [sphere_packing, lattices, kissing_number, codes, group_theory, sporadic_groups]
   when_stuck_with: [unknown construction in target dimension, contact graph mystery, "what's the best known lattice here?", code-from-lattice possibility]
+related_concepts: [sphere-packing.md, kissing-number.md, hardin-sloane.md, modular-forms-magic-function.md]
+cites:
+  - ../concepts/sphere-packing.md
+  - ../concepts/kissing-number.md
+  - ../concepts/hardin-sloane.md
+  - ../concepts/modular-forms-magic-function.md
 ---
 
 # Conway

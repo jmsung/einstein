@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [modular_forms, q_series, partition_identities, ramanujan_graphs, hidden_algebraic_structure, mock_theta]
   when_stuck_with: [SOTA looks unreasonably algebraic, suspected modular structure, q-series pattern, expander/Ramanujan graph candidate]
+related_concepts: [modular-forms-magic-function.md, sidon-sets.md, sphere-packing.md]
+cites:
+  - ../concepts/modular-forms-magic-function.md
+  - ../concepts/sidon-sets.md
+  - ../concepts/sphere-packing.md
 ---
 
 # Ramanujan

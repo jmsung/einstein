@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [probabilistic_method, extremal_combinatorics, ramsey, random_constructions, lower_bounds]
   when_stuck_with: [no explicit construction known, upper-lower bound gap, "does there exist?", randomization possible, Lovász local lemma applicable]
+related_concepts: [probabilistic-method.md, sidon-sets.md, minimprovement-gate.md]
+cites:
+  - ../concepts/probabilistic-method.md
+  - ../concepts/sidon-sets.md
+  - ../concepts/minimprovement-gate.md
 ---
 
 # Erdős
