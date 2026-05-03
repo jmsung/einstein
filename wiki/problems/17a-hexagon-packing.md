@@ -7,7 +7,7 @@ arena_url: https://einsteinarena.com/problems/hexagon-packing
 status: rank-1-tied
 score_current: 3.9416523
 tier: C
-concepts_invoked: [sphere-packing.md, symmetry-and-fundamental-domain.md, float64-ceiling.md]
+concepts_invoked: [sphere-packing.md, circle-packing.md, symmetry-and-fundamental-domain.md, float64-ceiling.md]
 techniques_used: [warm-start-from-leader.md, basin-hopping-multistart.md]
 findings_produced: [packing-techniques.md]
 private_tracking: ../../mb/tracking/problem-17-hexagon-packing/
