@@ -8,6 +8,8 @@ related_findings: [warm-start-recon.md, polish-race-dynamics.md, float64-ceiling
 cites:
   - ../findings/warm-start-recon.md
   - ../findings/polish-race-dynamics.md
+  - ../personas/poincare.md
+related_personas: [poincare.md]
 ---
 
 # Warm-Start Dynamics

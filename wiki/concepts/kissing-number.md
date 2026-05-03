@@ -14,6 +14,10 @@ cites:
   - ../source/papers/2024-cohn-li-kissing.md
   - ../source/papers/2024-delaat-kissing-sdp.md
   - ../source/blog/cohn-kissing-numbers.md
+  - ../personas/cohn.md
+  - ../personas/conway.md
+  - ../personas/viazovska.md
+related_personas: [cohn.md, conway.md, viazovska.md]
 ---
 
 # Kissing Number `κ(d)`

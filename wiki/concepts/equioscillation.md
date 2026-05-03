@@ -8,6 +8,8 @@ related_findings: [equioscillation-escape.md, basin-rigidity.md]
 cites:
   - ../findings/equioscillation-escape.md
   - ../findings/basin-rigidity.md
+  - ../personas/riemann.md
+related_personas: [riemann.md]
 ---
 
 # Equioscillation (Chebyshev / Remez)

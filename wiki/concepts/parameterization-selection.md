@@ -8,6 +8,9 @@ related_findings: [optimizer-recipes.md, equioscillation-escape.md, k-climbing.m
 cites:
   - ../findings/optimizer-recipes.md
   - ../findings/equioscillation-escape.md
+  - ../personas/polya.md
+  - ../personas/tao.md
+related_personas: [polya.md, tao.md]
 ---
 
 # Parameterization Selection

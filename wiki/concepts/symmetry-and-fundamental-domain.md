@@ -7,6 +7,10 @@ related_techniques: [multistart-with-rotation-lottery.md, slsqp-active-pair-poli
 related_findings: [basin-rigidity.md]
 cites:
   - ../findings/basin-rigidity.md
+  - ../personas/atiyah.md
+  - ../personas/grothendieck.md
+  - ../personas/noether.md
+related_personas: [atiyah.md, grothendieck.md, noether.md]
 ---
 
 # Symmetry and Fundamental Domain

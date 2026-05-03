@@ -9,6 +9,8 @@ cites:
   - ../findings/arena-proximity-guard.md
   - ../findings/polish-race-dynamics.md
   - ../findings/warm-start-recon.md
+  - ../personas/erdos.md
+related_personas: [erdos.md]
 ---
 
 # minImprovement Gate (Proximity Guard)

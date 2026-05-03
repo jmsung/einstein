@@ -8,6 +8,8 @@ related_findings: [equioscillation-escape.md, optimizer-recipes.md, sa-parallel-
 cites:
   - ../findings/equioscillation-escape.md
   - ../findings/sa-parallel-tempering.md
+  - ../personas/tao.md
+related_personas: [tao.md]
 ---
 
 # Smooth-Max Approximation (Log-Sum-Exp / β-Cascade)

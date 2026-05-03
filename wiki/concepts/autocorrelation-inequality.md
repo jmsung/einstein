@@ -11,6 +11,10 @@ cites:
   - ../source/papers/2025-jaech-autoconvolution.md
   - ../source/papers/2026-rechnitzer-autoconvolution-digits.md
   - ../source/papers/2025-boyer-autoconvolution.md
+  - ../personas/hilbert.md
+  - ../personas/riemann.md
+  - ../personas/tao.md
+related_personas: [hilbert.md, riemann.md, tao.md]
 ---
 
 # Autocorrelation Inequality (`f ⋆ f` Problems)

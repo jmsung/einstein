@@ -7,6 +7,8 @@ related_techniques: [k-climbing.md, gap-space-parameterization.md]
 related_findings: [k-climbing.md]
 cites:
   - ../findings/k-climbing.md
+  - ../personas/hilbert.md
+related_personas: [hilbert.md]
 ---
 
 # k-Climbing and DOF Augmentation

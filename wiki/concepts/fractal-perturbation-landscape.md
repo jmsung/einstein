@@ -8,6 +8,8 @@ related_findings: [perturbation-landscape.md, sa-parallel-tempering.md, float64-
 cites:
   - ../findings/perturbation-landscape.md
   - ../findings/sa-parallel-tempering.md
+  - ../personas/poincare.md
+related_personas: [poincare.md]
 ---
 
 # Fractal Perturbation Landscape

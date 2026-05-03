@@ -235,8 +235,13 @@ def compute_type1_concept_gaps(nodes, edges):
     Filter out problem-name false positives (these have problems/ pages,
     not concepts/ pages — the detector should not flag them as missing).
     """
-    # Existing concept page slugs
-    concept_slugs = {Path(rp).stem.lower() for rp in nodes if rp.startswith("concepts/")}
+    # Existing topic slugs across concepts/, techniques/, personas/
+    # (the v2 detector only checked concepts/, so "frank-wolfe" was flagged even
+    # after `techniques/frank-wolfe.md` existed).
+    topic_slugs = set()
+    for rp in nodes:
+        if rp.startswith(("concepts/", "techniques/", "personas/")):
+            topic_slugs.add(Path(rp).stem.lower())
     # Problem index slugs with digit prefix stripped: "1-erdos-overlap.md" -> "erdos-overlap"
     problem_slugs = set()
     for rp in nodes:
@@ -272,7 +277,14 @@ def compute_type1_concept_gaps(nodes, edges):
         for cp in page["concepts_mentioned"]:
             phrase = cp.lower()
             slug_form = phrase.replace(" ", "-").replace("–", "-").replace("—", "-")
-            if slug_form in concept_slugs:
+            # Slug-aliasing: skip if phrase matches any concept/technique/persona slug
+            # exactly OR is a substring of one (catches the case where I authored
+            # `cohn-elkies-bound.md` to fill the `cohn-elkies` Type-1 gap).
+            # Substring is safe within topic_slugs because we exclude problem slugs
+            # (which would cause "circle packing" to false-match "circle-packing-square").
+            if slug_form in topic_slugs:
+                continue
+            if any(slug_form in ts or ts in slug_form for ts in topic_slugs if len(ts) >= 6):
                 continue
             if slug_form in problem_slugs:
                 continue  # has a problems/ page, not a concept gap

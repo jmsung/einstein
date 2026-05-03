@@ -10,6 +10,12 @@ cites:
   - ../source/papers/2024-cohn-li-kissing.md
   - ../source/papers/2024-delaat-kissing-sdp.md
   - ../findings/prime-number-theorem-lp.md
+  - ../personas/atiyah.md
+  - ../personas/cohn.md
+  - ../personas/gauss.md
+  - ../personas/hadamard.md
+  - ../personas/viazovska.md
+related_personas: [atiyah.md, cohn.md, gauss.md, hadamard.md, viazovska.md]
 ---
 
 # LP Duality (Certificate Machinery)
