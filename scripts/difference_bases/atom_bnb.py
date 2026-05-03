@@ -27,8 +27,6 @@ from pathlib import Path
 import numpy as np
 import numba as nb
 
-sys.path.insert(0, "src")
-
 SOTA_PATH = (
     Path.home()
     / "projects/einstein/mb/tracking/problem-19-difference-bases"
