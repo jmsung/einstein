@@ -47,7 +47,6 @@ from __future__ import annotations
 import time
 
 import cvxpy as cp
-import numpy as np
 
 
 def lasserre_l2_bound(n: int, *, max_iters: int = 30000, verbose: bool = False) -> tuple[float | None, str, float]:

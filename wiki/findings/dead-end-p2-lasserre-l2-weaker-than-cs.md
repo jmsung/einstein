@@ -83,6 +83,7 @@ This is a known phenomenon: Lasserre L2 = LP-style relaxation, which is what C-S
 - Sanity check at $n=1$ (relaxation gives 0.667 ≤ analytical 1.0): correct relaxation behavior verified.
 - Empirical scaling at $n=3, 4, 6, 8, 10, 12, 16$: bound monotone, $\sim n^4$ wall-clock — consistent with the SDP size $(2n+1)^2$ scaling and the constraint count $O(n^2)$. Reproducible via [`scripts/first_autocorrelation/lasserre_lower_bound.py`](../../scripts/first_autocorrelation/lasserre_lower_bound.py).
 - Extrapolation to "L2 limit ~1.0 << 1.28": derived from a $1 - c/\sqrt{n}$ fit on 8 data points; inexact but the structural conclusion is robust because all 8 points are well below 1.28.
+- Caveat on "level-2": this is the **moment-relaxation form** of L2 (PSD moment matrix + linear localizers $M_{0, i+1} \ge 0$). Full Lasserre L2 also adds matrix-valued localizers $M_1(a_i \cdot y) \succeq 0$ for each non-negativity constraint, which can only tighten the bound. The structural conclusion (relaxation gap $\ge 0.31$ at $n=16$ — well below 1.28 either way) is unlikely to flip with the proper localizers, but the term "L2" is mildly imprecise; the correct label is "moment-relaxation L2" or "L2-lite."
 
 ## See also
 
