@@ -4,13 +4,14 @@ author: agent
 drafted: 2026-05-02
 question_origin: cross-problem
 status: answered
-related_concepts: [coxeter-todd-k12.md, kissing-number.md, hinge-overlap.md, provable-floor-and-frozen-problems.md, first-order-link-tangent-test.md]
+related_concepts: [coxeter-todd-k12.md, kissing-number.md, hinge-overlap.md, provable-floor-and-frozen-problems.md, first-order-link-tangent-test.md, bourgain-clozel-kahane.md]
 related_techniques: [first-order-link-tangent-test.md]
 related_findings: [p22-d12-construction-survey.md, hinge-overlap-rank3-squeeze.md]
 related_personas: [conway.md, cohn.md, viazovska.md]
 cites:
   - ../concepts/kissing-number.md
   - ../concepts/coxeter-todd-k12.md
+  - ../concepts/bourgain-clozel-kahane.md
   - p22-d12-construction-survey.md
   - hinge-overlap-rank3-squeeze.md
 ---

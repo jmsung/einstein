@@ -7,7 +7,7 @@ arena_url: unknown
 status: hidden
 score_current: 0.275
 tier: A
-concepts_invoked: [uncertainty-principle.md, k-climbing-and-dof-augmentation.md, parameterization-selection.md, arena-tolerance-drift.md]
+concepts_invoked: [uncertainty-principle.md, bourgain-clozel-kahane.md, k-climbing-and-dof-augmentation.md, parameterization-selection.md, arena-tolerance-drift.md]
 techniques_used: [k-climbing.md, gap-space-parameterization.md, mpmath-ulp-polish.md]
 findings_produced: [verification-patterns.md]
 private_tracking: ../../mb/tracking/problem-18-uncertainty/
