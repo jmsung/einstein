@@ -10,6 +10,7 @@ cites:
   - ../personas/hilbert.md
   - autocorrelation-inequality.md
   - sidon-sets.md
+  - kolountzakis-matolcsi-bound.md
 ---
 
 # Hardy–Hilbert inequality (and the autocorrelation family's functional-analytic spine)

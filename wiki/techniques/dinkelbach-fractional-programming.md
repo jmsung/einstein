@@ -2,8 +2,10 @@
 type: technique
 author: agent
 drafted: 2026-05-02
-related_concepts: []
+related_concepts: [kolountzakis-matolcsi-bound.md, autocorrelation-inequality.md]
 related_problems: [P2, P3]
+cites:
+  - ../concepts/kolountzakis-matolcsi-bound.md
 compute_profile: [local-cpu, modal-gpu]
 cost_estimate: "minutes to hours; GPU only when float64 conv at large n"
 hit_rate: "TBD"
