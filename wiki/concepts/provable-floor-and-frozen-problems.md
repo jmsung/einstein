@@ -9,6 +9,10 @@ cites:
   - ../findings/frozen-problem-triage.md
   - ../findings/polish-race-dynamics.md
   - ../findings/float64-ceiling.md
+  - ../personas/hadamard.md
+  - ../personas/polya.md
+  - ../personas/wiles.md
+related_personas: [hadamard.md, polya.md, wiles.md]
 ---
 
 # Provable Floor / Frozen Problems

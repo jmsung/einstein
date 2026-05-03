@@ -10,6 +10,11 @@ cites:
   - ../source/papers/2017-cloninger-autoconvolution-sidon.md
   - ../source/papers/2007-gyarmati-sums-differences.md
   - ../source/papers/2010-matolcsi-autoconvolution.md
+  - ../personas/erdos.md
+  - ../personas/gauss.md
+  - ../personas/ramanujan.md
+  - ../personas/tao.md
+related_personas: [erdos.md, gauss.md, ramanujan.md, tao.md]
 ---
 
 # Sidon Sets and `B_h[g]` Generalizations

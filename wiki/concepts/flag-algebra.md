@@ -6,6 +6,11 @@ related_problems: [P13]
 related_techniques: [sdp-flag-algebra.md, bounded-lbfgs-per-region-sigmoid.md, boundary-snap-for-kinks.md]
 related_findings: []
 cites: []
+related_personas: [razborov.md, szemeredi.md, turan.md]
+cites:
+  - ../personas/razborov.md
+  - ../personas/szemeredi.md
+  - ../personas/turan.md
 ---
 
 # Flag Algebra (Razborov)

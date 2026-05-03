@@ -8,6 +8,8 @@ related_findings: [equioscillation-escape.md, optimizer-recipes.md]
 cites:
   - ../findings/equioscillation-escape.md
   - ../source/papers/2025-jaech-autoconvolution.md
+  - ../personas/tao.md
+related_personas: [tao.md]
 ---
 
 # Discretization as Structure (`n` is a Hyperparameter)

@@ -8,6 +8,8 @@ related_findings: [basin-rigidity.md, float64-ceiling.md, equioscillation-escape
 cites:
   - ../findings/basin-rigidity.md
   - ../findings/float64-ceiling.md
+  - ../personas/poincare.md
+related_personas: [poincare.md]
 ---
 
 # Basin Rigidity

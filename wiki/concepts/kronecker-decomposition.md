@@ -6,6 +6,12 @@ related_problems: [P19]
 related_techniques: [kronecker-search-decomposition.md, bnb-exhaustive-w3.md]
 related_findings: []
 cites: []
+related_personas: [euler.md, gauss.md, grothendieck.md, noether.md]
+cites:
+  - ../personas/euler.md
+  - ../personas/gauss.md
+  - ../personas/grothendieck.md
+  - ../personas/noether.md
 ---
 
 # Kronecker Decomposition (Combinatorial Sumset Structure)

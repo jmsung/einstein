@@ -8,6 +8,8 @@ related_findings: [optimizer-recipes.md]
 cites:
   - ../findings/optimizer-recipes.md
   - ../source/papers/2025-jaech-autoconvolution.md
+  - ../personas/euler.md
+related_personas: [euler.md]
 ---
 
 # Fractional Programming (Dinkelbach Transform)

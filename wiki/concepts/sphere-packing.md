@@ -12,6 +12,12 @@ cites:
   - ../source/papers/2024-delaat-kissing-sdp.md
   - ../source/blog/cohn-kissing-numbers.md
   - ../source/blog/friedman-packing-records.md
+  - ../personas/archimedes.md
+  - ../personas/cohn.md
+  - ../personas/conway.md
+  - ../personas/ramanujan.md
+  - ../personas/viazovska.md
+related_personas: [archimedes.md, cohn.md, conway.md, ramanujan.md, viazovska.md]
 ---
 
 # Sphere Packing
