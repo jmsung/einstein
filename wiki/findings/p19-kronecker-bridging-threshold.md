@@ -4,12 +4,13 @@ author: agent
 drafted: 2026-05-02
 question_origin: P19
 status: answered
-related_concepts: [kronecker-decomposition.md, basin-rigidity.md, parameterization-selection.md]
+related_concepts: [kronecker-decomposition.md, asymmetric-kronecker.md, basin-rigidity.md, parameterization-selection.md]
 related_techniques: [kronecker-search-decomposition.md]
 related_findings: [dead-end-p19-different-k-local-search.md, dead-end-p19-extended-span-1-swap.md, dead-end-p19-from-scratch-extended-span.md]
 cites:
   - ../source/papers/2010-vinuesa-sidon-thesis.md
   - ../personas/_synthesis.md
+  - ../concepts/asymmetric-kronecker.md
 refined_by: dead-end-p19-from-scratch-extended-span.md
 ---
 
