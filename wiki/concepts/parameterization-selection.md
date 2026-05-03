@@ -8,6 +8,8 @@ related_findings: [optimizer-recipes.md, equioscillation-escape.md, k-climbing.m
 cites:
   - ../findings/optimizer-recipes.md
   - ../findings/equioscillation-escape.md
+  - ../findings/p2-peak-locking-hessian-mechanism.md
+  - ../concepts/parameterization-induced-rank-deficiency.md
   - ../personas/polya.md
   - ../personas/tao.md
 related_personas: [polya.md, tao.md]
@@ -53,6 +55,8 @@ Two mechanisms:
 2. **Implicit ordering / boundary handling.** Hard bounds (`scipy L-BFGS-B`) zero gradients at the boundary, locking the optimizer there. A sigmoid `σ(v)` keeps `dσ/dv = σ(1−σ) > 0` everywhere inside the box, so L-BFGS can take long unconstrained steps in `v` while the image stays feasible.
 
 The formal statement: for a smooth `φ` with full-rank Jacobian, critical points of `C ∘ φ` correspond to critical points of `C` only on the relative interior of the image; at boundary critical points of the image, the parameterization changes whether the gradient *sees* the boundary. This is why `v²` exposes a zero-support stationary point that `exp(v)` cannot.
+
+The formal Hessian mechanism — `H_v = J_φᵀ H_f J_φ + diag(φ''(v) ⊙ ∇_f C)` — is worked out in concept [parameterization-induced-rank-deficiency](parameterization-induced-rank-deficiency.md) (promoted from [findings/p2-peak-locking-hessian-mechanism](../findings/p2-peak-locking-hessian-mechanism.md)). The load-bearing fact is that `φ''(v_i) = 2` for `v²` but `0` for `exp(v)` at dead cells, so `v²` retains finite Hessian curvature on the dead-cell subspace while `exp(v)` is rank-deficient there. Numerical verification at `n=80` shows the rank deficiency is exact: 32 dead cells under `exp(v)` produce 32 near-zero Hessian eigenvalues. Cross-problem verified on P3 (different objective shape, same fingerprint).
 
 ## Classic examples
 

@@ -7,9 +7,9 @@ arena_url: https://einsteinarena.com/problems/autocorrelation
 status: conquered
 score_current: 0.962214
 tier: S
-concepts_invoked: [autocorrelation-inequality.md, fractional-programming-dinkelbach.md, parameterization-selection.md, sidon-sets.md]
+concepts_invoked: [autocorrelation-inequality.md, fractional-programming-dinkelbach.md, parameterization-selection.md, parameterization-induced-rank-deficiency.md, sidon-sets.md]
 techniques_used: [cross-resolution-basin-transfer.md, dinkelbach-fractional-programming.md, larger-n-cascade.md, gpu-decision-framework.md]
-findings_produced: [optimizer-recipes.md, gpu-modal-compute.md]
+findings_produced: [optimizer-recipes.md, gpu-modal-compute.md, p2-peak-locking-hessian-mechanism.md]
 private_tracking: ../../mb/tracking/problem-3-autocorrelation/
 ---
 
@@ -34,6 +34,7 @@ High-resolution solutions downsampled to target resolution create structurally n
 - [autocorrelation-inequality.md](../concepts/autocorrelation-inequality.md)
 - [fractional-programming-dinkelbach.md](../concepts/fractional-programming-dinkelbach.md)
 - [parameterization-selection.md](../concepts/parameterization-selection.md)
+- [parameterization-induced-rank-deficiency.md](../concepts/parameterization-induced-rank-deficiency.md) — verified cross-problem at n=80 with the same Hessian fingerprint despite a different objective shape
 - [sidon-sets.md](../concepts/sidon-sets.md)
 
 ## Techniques used
@@ -45,6 +46,7 @@ High-resolution solutions downsampled to target resolution create structurally n
 ## Findings
 - [optimizer-recipes.md](../findings/optimizer-recipes.md)
 - [gpu-modal-compute.md](../findings/gpu-modal-compute.md)
+- [p2-peak-locking-hessian-mechanism.md](../findings/p2-peak-locking-hessian-mechanism.md) — same Hessian fingerprint observed: at $n=80, \beta=200$ from a sparse seed, exp(v) and v³ both peak-lock with 32 dead cells producing 32 near-zero Hessian eigenvalues; v² escapes (0 near-zero eigs). Mechanism is objective-shape agnostic.
 
 ## References
 - Jaech (2025), Boyer (2025), Rechnitzer (2026) — autoconvolution literature.
