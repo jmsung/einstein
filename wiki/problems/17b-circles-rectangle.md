@@ -7,7 +7,7 @@ arena_url: https://einsteinarena.com/problems/circles-rectangle
 status: conquered
 score_current: 2.3658323852080
 tier: A
-concepts_invoked: [sphere-packing.md, arena-tolerance-drift.md, float64-ceiling.md, minimprovement-gate.md]
+concepts_invoked: [sphere-packing.md, circle-packing.md, arena-tolerance-drift.md, float64-ceiling.md, minimprovement-gate.md]
 techniques_used: [arena-tolerance-slsqp.md, slsqp-active-pair-polish.md, uniform-radius-shrink-fallback.md, warm-start-from-leader.md]
 findings_produced: [packing-techniques.md, arena-proximity-guard.md]
 private_tracking: ../../mb/tracking/problem-17-circles-rectangle/
