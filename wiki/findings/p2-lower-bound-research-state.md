@@ -10,8 +10,6 @@ cites:
   - ../../source/papers/2017-cloninger-autoconvolution-sidon.md
   - ../../source/papers/2010-matolcsi-autoconvolution.md
   - ../../source/papers/2010-vinuesa-sidon-thesis.md
-  - ../../mb/tracking/problem-2-first-autocorrelation/lower-bounds.md
-  - ../../mb/tracking/problem-3-autocorrelation/lower-bounds-first.md
 ---
 
 # Why P2 lower bounds aren't advancing past 1.28
@@ -35,7 +33,7 @@ Four proof techniques cover the published literature. Three are exhausted; one i
 
 The three exhausted techniques fail in two qualitatively different ways:
 
-- **Theoretical wall (Fourier-kernel)**: Matolcsi–Vinuesa show that no kernel of the form $K = \beta * \beta$ with $\beta$ smooth and bounded can certify $C_1 > 1.276$. Tightening the kernel without changing the framework returns diminishing fractions of the gap to 1.276 and never crosses it.
+- **Theoretical wall (Fourier-kernel)**: the Fourier-kernel framework with kernels of the form $K = \beta * \beta$ has a theoretical ceiling at $\approx 1.276$ (Matolcsi–Vinuesa 2010 §4). Tightening the kernel within the framework returns diminishing fractions of the gap to 1.276 and never crosses it; an entirely different kernel class would be needed to break through.
 
 - **Compute wall (Cloninger–Steinerberger)**: their proof has *no* theoretical ceiling — they explicitly state the method "should be able to prove lower bounds arbitrarily close to the sharp result" — but the case enumeration grows exponentially in the discretization parameter $n$. To push from 1.28 ($n \le 24$) to ~1.30 needs $n \approx 30+$, estimated $\sim 10^6$ CPU hours under their published scaling. This is reachable in principle (a few months of cloud compute) but no group has published the run.
 

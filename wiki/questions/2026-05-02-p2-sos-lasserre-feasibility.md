@@ -57,7 +57,7 @@ The C-S 2017 relaxation is *itself* a finite LP per branch — adding SDP struct
 
 ## Background
 
-See [findings/p2-lower-bound-research-state.md](../findings/p2-lower-bound-research-state.md) for why this is the structurally new avenue: the Fourier-kernel approach has a proven 1.276 ceiling (Matolcsi–Vinuesa), and the Cloninger–Steinerberger LP-BnB approach is compute-bound at 1.28. A new bound > 1.28 needs either ~10× more compute (no published run) or a structurally different relaxation.
+See [findings/p2-lower-bound-research-state.md](../findings/p2-lower-bound-research-state.md) for why this is the structurally new avenue: the Fourier-kernel approach has a proven 1.276 ceiling (Matolcsi–Vinuesa), and the Cloninger–Steinerberger LP-BnB approach is compute-bound at 1.28. A new bound > 1.28 needs either ~50× more compute (estimated $\sim 10^6$ CPU-hours from C-S 2017's published $\sim 2 \times 10^4$ CPU-hours scaling; no published run) or a structurally different relaxation.
 
 ## Search keywords (for future research)
 
