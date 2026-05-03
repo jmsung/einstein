@@ -16,6 +16,30 @@ cites:
 
 When all leaderboard agents converge to the same contact graph or construction, competition reduces to purely numerical float64 polish. Understanding when a problem has hit its float64 ceiling is critical for deciding whether to invest further compute or pivot.
 
+## Cross-problem inventory
+
+| Problem | Flavor | Diagnostic that fired | Outcome | Lesson # |
+|---|---|---|---|---|
+| **P2** First Autocorrelation (n=30000) | byte-identical SOTA | sha256 `19fdb2925f5f9024` shared by 8 frontier agents → published step-function (TTT-Discover) | matched float64 floor, no escape without structural change | #46 |
+| **P5** Min Distance Ratio (n=16) | basin-rigidity (over-determined KKT) | 30 active constraints on 28 DOF; 44 018 multistart → 0 alternatives | declared frozen, accepted basin floor | (concept: provable-floor) |
+| **P6** Kissing d=11 (n=594) | theoretical floor + verifier-shift | hinge-loss 0 in mpmath dps=80 (provable global min); arena flipped float64→mpmath overnight | download-verify-submit endgame; mpmath verifier mandatory | #73, #81 |
+| **P10** Thomson (n=282) | magic-number + ceiling | T=28 icosadeltahedral, single-funneled landscape; 18+ approaches found nothing beyond float64 noise (~7e-12) | classify frozen on entry next time | #21 |
+| **P11** Tammes (n=50) | contact-graph-locked basin | Hardin-Sloane 1996 reference; M=1225 active pairs → P(beat by 2 ulps) ≈ 10⁻⁶¹; rotation lottery 86/2000 hit ceiling | rank-2-frozen, tied at score level with #1 | #34, #43, #44 |
+| **P14** Circle Packing in Square (n=26) | Packomania-known + ceiling | 4 agents bit-tied at AlphaEvolve float64 ceiling; 10+ within 1e-11 | rank-2 grab; lottery had marginal +EV but burned 3h CPU | #55 |
+| **P15** Heilbronn Triangles (n=11) | basin-rigidity + paper-copy | rank 1-3 bit-identical to AlphaEvolve `mathematical_results.ipynb` cell 100; reduced 17×17 KKT → +6.245e-17 vs minImprovement 1e-8 | declared frozen; 3-check entry gate now mandatory | #77 |
+| **P17a** Hexagon Packing (n=12) | float64-ceiling | basin rigid at sub-ulp; strict-tol trap nearly cost 500 pts | mpmath verification before any submit | (axiom A1) |
+| **P17b** Circles in Rectangle (n=21) | float64-ceiling | rank #1 at basin floor | held #1 via cron polish | (referenced in concepts) |
+| **P23** Kissing d=16 | theoretical cap | Levenshtein 1979 proves κ(16)=4320; score 2.0 = floor + duplicate | tied #1 via download-verify-submit | (concept: provable-floor) |
+
+**Patterns to read across the rows:**
+
+- *Diagnostic that fired first* is usually one of: bit-comparison against published construction (P2, P6, P15), Hardin-Sloane / Packomania reference match (P10, P11, P14), or KKT over-determination (P5, P15, P17a).
+- *Worst rabbit holes happen when the diagnostic is skipped at entry.* P15 burned 18 852 trials confirming what the 3-check entry gate said in 5 minutes (lesson #77). P14 burned 3 CPU-hours on a marginal-EV lottery (lesson #55).
+- *Mixed flavors compound.* P15 is both basin-rigid (b) AND a paper-copy float64 ceiling (a) — either alone would have been enough to pivot.
+- *Verifier precision is not a contract.* P6 silently flipped float64→mpmath; mpmath dps≥50 verification on day 1 is now baked in for any sub-ulp problem regardless of arena's apparent precision.
+
+
+
 ## Float64-Ceiling Problems (Tammes n=50)
 
 When ALL leaderboard agents converge to the same contact graph and the top scores differ only in the 7th+ decimal, the basin's true math optimum is fixed and the remaining "competition" is purely numerical:
