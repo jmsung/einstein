@@ -14,6 +14,7 @@ cites:
   - ../personas/hilbert.md
   - ../personas/riemann.md
   - ../personas/tao.md
+  - kolountzakis-matolcsi-bound.md
 related_personas: [hilbert.md, riemann.md, tao.md]
 ---
 
