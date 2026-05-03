@@ -9,7 +9,7 @@ score_current: 1.4525211550469
 tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, smooth-max-approximation.md, parameterization-selection.md]
 techniques_used: [larger-n-cascade.md, micro-perturbation-multiscale.md, bounded-lbfgs-per-region-sigmoid.md]
-findings_produced: [equioscillation-escape.md, optimizer-recipes.md]
+findings_produced: [equioscillation-escape.md, optimizer-recipes.md, p2-peak-locking-hessian-mechanism.md]
 private_tracking: ../../mb/tracking/problem-4-third-autocorrelation/
 ---
 
