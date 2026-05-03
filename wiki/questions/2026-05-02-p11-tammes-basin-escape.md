@@ -6,7 +6,10 @@ status: open
 asked_by: agent
 related_problems: [P11]
 related_concepts: [float64-ceiling.md, basin-rigidity.md, contact-graph-rigidity.md, sphere-packing.md, hardin-sloane.md, provable-floor-and-frozen-problems.md]
-related_findings: [float64-ceiling.md, basin-rigidity.md]
+related_findings: [float64-ceiling.md, basin-rigidity.md, tammes-50-basin-uniqueness-evidence.md, dead-end-tammes-topology-mutation.md]
+partial_answer: ../findings/tammes-50-basin-uniqueness-evidence.md
+empirical_h1_supported: true
+formal_h1_proven: false
 ---
 
 # Is the Hardin–Sloane n=50 contact graph the global Tammes(50) optimum, or does a topology-distinct configuration exist?
@@ -29,8 +32,9 @@ For Tammes n=50 the Hardin–Sloane 1996 configuration appears to be the global 
 - **Rotation lottery** — 86/2000 random rotations hit the basin's float64 ceiling. Confirms the basin's ulp-cloud structure but says nothing about *other* basins.
 - **Hardin–Sloane reference verification** — confirmed same basin as the leaderboard leader.
 - **mpmath 80-digit polish** — confirmed basin's true-math optimum rounds to the leader's score.
+- **Vertex-perturb-and-polish topology-mutation search (2026-05-02)** — see [`findings/dead-end-tammes-topology-mutation.md`](../findings/dead-end-tammes-topology-mutation.md). 60 trials across σ ∈ {1e-3, 5e-3, 1e-2, 5e-2, 1e-1} × K ∈ {1, 3, 10}. All trials at σ ≤ 1e-2 recovered the reference signature; all trials at σ ≥ 5e-2 escaped the basin but landed in degenerate 1-pair saddles 9–23 % below Tammes. **Outcome**: did not find an alternative basin, but the polish-recovery weakness at σ ≥ 5e-2 means the experiment is not definitive — it rules out only the "alternative basin reachable by single-shot perturb-and-polish at σ ≤ 1e-1" hypothesis.
 
-What has *not* been done: a directed search for topology-distinct configurations (e.g., contact-graph-mutation moves, edge-flip-then-reoptimize, cross-validation against catalogued sphere codes at adjacent n).
+What has *not* been done: basin-hopping with topology-mutation operator (proper Markov-chain search), LP/SDP Delsarte cap, catalogue check against Sloane sphere-codes tables and SPLAG.
 
 ## Hypotheses
 
@@ -40,10 +44,12 @@ What has *not* been done: a directed search for topology-distinct configurations
 
 ## Next steps
 
-1. **Catalogue check** — query Sloane's sphere-codes database, Conway–Sloane SPLAG, and any post-2020 large-n Tammes work for *catalogued runner-up* configurations at n=50. Distill any distinct topology to `source/`.
-2. **Topology-mutation search** — implement contact-graph edge-flip moves (drop one near-active pair, add another, re-polish on the manifold). Run 1000+ trials warm-started from Hardin–Sloane. If even one trial finds a strictly better score with a different contact graph → H2 confirmed and the basin is escapable.
-3. **LP/SDP cap attempt** — formulate the Delsarte-style LP for spherical codes at n=50, solve, compare dual to the basin floor. If dual = floor → H3 confirmed and H1 is proven.
-4. **Adjacent-n check** — Hardin–Sloane n=49 and n=51 contact graphs may give hints. If n=49 + 1 vertex inserted "deepens" near n=50 in a way that doesn't recover Hardin–Sloane, an alternative topology family exists.
+Ordered by cheapest-informative-move to most-decisive:
+
+1. **Catalogue check** *(cheapest, highest-leverage on a positive find)* — query Sloane's sphere-codes database, Conway–Sloane SPLAG, and any post-2020 large-n Tammes work for *catalogued runner-up* configurations at n=50. Distill any distinct topology to `source/`. If literature has a runner-up, the question collapses immediately to "verify against the runner-up."
+2. **Adjacent-n check** — Hardin–Sloane n=49 and n=51 contact graphs may give hints. If n=49 + 1 vertex inserted "deepens" near n=50 in a way that doesn't recover Hardin–Sloane, an alternative topology family exists.
+3. **Basin-hopping with topology-mutation operator** *(direct H2 test; ~1k–10k hops)* — replace single-shot perturb-and-polish with a Metropolis chain over polished configurations, tabu the reference signature so the chain is forced to explore. Required to upgrade the partial-answer in `findings/dead-end-tammes-topology-mutation.md` from "no alternative basin within single-step reach" to "no alternative basin within Markov-chain reach."
+4. **LP/SDP cap attempt** *(most decisive — produces a certificate)* — formulate the Delsarte-style LP for spherical codes at n=50, solve, compare dual to the basin floor. If dual = floor → H3 confirmed and H1 is *proven* without enumerating topologies. This is the path used by Cohn–Elkies for sphere packing and Levenshtein for kissing numbers.
 
 ## References
 
