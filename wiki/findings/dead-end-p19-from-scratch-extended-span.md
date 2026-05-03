@@ -59,11 +59,11 @@ Combined with prior negatives:
 | BnB w=3 exhaustive (cycle 0) | 6967 | 0 hits, 1.22T nodes |
 | BnB w=4 random sample 25% (cycle 0) | 6967 | 0 hits, 3.45T nodes |
 | 1-swap with extended y [6968, 8010] (cycle 3) | 6967→8010 | 0 hits, 0 c-preserving |
-| **Direct BnB from scratch (cycle 6, this finding)** | **8010** | **0 hits, 3.715B nodes (time-limited)** |
+| **Direct BnB from scratch (cycle 12, this finding)** | **8010** | **0 hits, 3.715B nodes (time-limited)** |
 
 **Established**: no 90-mark atom with c(A)≥1044 in [0, 8010] is findable by current goal-directed BnB techniques in 30-min budget. Combined with the structural Pareto argument, the search-feasible improvement space at the **fixed Kronecker template** `(R={0,1,4,6}, λ=8011, k_atom=90)` is empty or nearly so.
 
-## Refines the cycle-2 finding (cycle 6 wisdom-yield)
+## Refines the cycle-2 finding (cycle 12 wisdom-yield)
 
 [`p19-kronecker-bridging-threshold.md`](p19-kronecker-bridging-threshold.md) was correct in surfacing the conditional identity but overstated the design-space lever:
 
@@ -89,7 +89,7 @@ These directions remain genuinely untested:
 
 ```bash
 cd cb/  # or any worktree
-# Direct BnB at extended span (cycle 6, this finding) — ~30 min on M5 Max, 0 hits:
+# Direct BnB at extended span (cycle 12, this finding) — ~30 min on M5 Max, 0 hits:
 uv run python scripts/difference_bases/atom_bnb.py \
   --mode direct --target-v 1044 --S-max 8010 --k 90 \
   --time-limit 1800 --max-nodes 20000000000
@@ -98,7 +98,7 @@ uv run python scripts/difference_bases/atom_bnb.py \
 uv run python scripts/difference_bases/cross_block_analysis.py
 ```
 
-`atom_bnb.py` was promoted from `mb/tracking/.../private-scripts/` to public during cycle 6 with the post-refactor `SOTA_PATH` fix. JIT-compiled inner loop, ~2M nodes/sec on M5 Max.
+`atom_bnb.py` was promoted from `mb/tracking/.../private-scripts/` to public during cycle 12 with the post-refactor `SOTA_PATH` fix. JIT-compiled inner loop, ~2M nodes/sec on M5 Max.
 
 ## See also
 

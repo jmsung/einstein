@@ -43,13 +43,13 @@ Kronecker product structures in combinatorics reduce search space dramatically �
 
 ## Findings
 - [discrete-optimization.md](../findings/discrete-optimization.md)
-- [p19-kronecker-bridging-threshold.md](../findings/p19-kronecker-bridging-threshold.md) — conditional identity v = L·λ + c(A); 2-axis (c, max) Pareto (corrected by cycle 6)
+- [p19-kronecker-bridging-threshold.md](../findings/p19-kronecker-bridging-threshold.md) — conditional identity v = L·λ + c(A); 2-axis (c, max) Pareto (corrected by cycle 12)
 - [dead-end-p19-different-k-local-search.md](../findings/dead-end-p19-different-k-local-search.md) — different-k local search around SOTA
 - [dead-end-p19-4mark-sidon-rulers.md](../findings/dead-end-p19-4mark-sidon-rulers.md) — 4-mark Sidon R uniquely {0,1,4,6}
 - [dead-end-p19-imperfect-5mark-sidon.md](../findings/dead-end-p19-imperfect-5mark-sidon.md) — H1 sub-cases closed
 - [dead-end-p19-bose-chowla.md](../findings/dead-end-p19-bose-chowla.md) — Bose-Chowla family fails
 - [dead-end-p19-extended-span-1-swap.md](../findings/dead-end-p19-extended-span-1-swap.md) — 1-swap of SOTA atom with extended y
-- [dead-end-p19-from-scratch-extended-span.md](../findings/dead-end-p19-from-scratch-extended-span.md) — direct BnB at S_max=8010 + Wichmann correction (cycle 6)
+- [dead-end-p19-from-scratch-extended-span.md](../findings/dead-end-p19-from-scratch-extended-span.md) — direct BnB at S_max=8010 + Wichmann correction (cycle 12)
 
 ## References
 - Gyarmati, "Sums and differences of finite sets" (2007).
