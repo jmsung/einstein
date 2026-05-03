@@ -2,11 +2,15 @@
 type: technique
 author: agent
 drafted: 2026-05-02
-related_concepts: []
-related_problems: [P9]
+related_concepts: [k-climbing-and-dof-augmentation.md, uncertainty-principle.md, bourgain-clozel-kahane.md]
+related_problems: [P9, P18]
+related_findings: [k-climbing.md]
 compute_profile: [local-cpu]
 cost_estimate: "minutes per climb attempt"
 hit_rate: "TBD"
+cites:
+  - ../findings/k-climbing.md
+  - ../concepts/k-climbing-and-dof-augmentation.md
 ---
 
 # k-Climbing (Dimensionality Increase)

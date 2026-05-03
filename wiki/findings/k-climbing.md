@@ -7,6 +7,7 @@ source_type: agent_analysis
 synthesized_into: ../concepts/k-climbing-and-dof-augmentation.md
 cites:
   - ../concepts/k-climbing-and-dof-augmentation.md
+  - ../techniques/k-climbing.md
 ---
 
 > **See also**: [`concepts/k-climbing-and-dof-augmentation.md`](../concepts/k-climbing-and-dof-augmentation.md) — the abstract concept distilled from the lessons below. This finding is the **provenance**: per-problem empirical episodes. Read the concept first; come here for the receipts.

@@ -8,6 +8,7 @@ cites:
   - knowledge.yaml
   - ../source/papers/2015-tao-sieve-theory-notes.md
   - ../concepts/kolountzakis-matolcsi-bound.md
+  - ../techniques/lp-cutting-plane-warmstart.md
 ---
 
 # LP Solver Scaling & Cutting-Plane Methods

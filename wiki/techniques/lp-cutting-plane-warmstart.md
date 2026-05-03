@@ -2,11 +2,15 @@
 type: technique
 author: agent
 drafted: 2026-05-02
-related_concepts: []
+related_concepts: [kolountzakis-matolcsi-bound.md, lp-duality.md]
 related_problems: [P2, P7]
+related_findings: [lp-solver-scaling.md]
 compute_profile: [local-cpu]
 cost_estimate: "minutes (warm-start) to hours (cold-start large-n)"
 hit_rate: "TBD"
+cites:
+  - ../findings/lp-solver-scaling.md
+  - ../concepts/kolountzakis-matolcsi-bound.md
 ---
 
 # LP Cutting-Plane with IPM Warm-Start
