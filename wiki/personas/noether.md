@@ -5,6 +5,10 @@ drafted: 2026-05-02
 trigger:
   categories: [symmetry, invariant_theory, group_action, fundamental_domain, conservation_laws]
   when_stuck_with: [redundant DOF suspected, problem has obvious symmetry group, "can we restrict to a fundamental domain?", optimum likely fixed by subgroup]
+related_concepts: [symmetry-and-fundamental-domain.md, kronecker-decomposition.md]
+cites:
+  - ../concepts/symmetry-and-fundamental-domain.md
+  - ../concepts/kronecker-decomposition.md
 ---
 
 # Noether

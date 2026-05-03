@@ -5,6 +5,11 @@ drafted: 2026-05-02
 trigger:
   categories: [combinatorial_enumeration, generating_functions, partitions, graph_theory, variational, polyhedra]
   when_stuck_with: [finite search space possibly tractable, "can we enumerate?", symmetry collapse, generating function hint, OEIS match]
+related_concepts: [fractional-programming-dinkelbach.md, kronecker-decomposition.md, n-extension-monotonicity.md]
+cites:
+  - ../concepts/fractional-programming-dinkelbach.md
+  - ../concepts/kronecker-decomposition.md
+  - ../concepts/n-extension-monotonicity.md
 ---
 
 # Euler

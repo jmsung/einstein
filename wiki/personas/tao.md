@@ -5,6 +5,13 @@ drafted: 2026-05-02
 trigger:
   categories: [harmonic_analysis, additive_combinatorics, restriction, uncertainty, Fourier, Sidon, dyadic]
   when_stuck_with: [non-trivial cancellation, scale separation, Fourier decay, "what is the obstruction?", multi-scale phenomenon]
+related_concepts: [autocorrelation-inequality.md, sidon-sets.md, parameterization-selection.md, discretization-as-structure.md, smooth-max-approximation.md]
+cites:
+  - ../concepts/autocorrelation-inequality.md
+  - ../concepts/sidon-sets.md
+  - ../concepts/parameterization-selection.md
+  - ../concepts/discretization-as-structure.md
+  - ../concepts/smooth-max-approximation.md
 ---
 
 # Tao

@@ -5,6 +5,12 @@ drafted: 2026-05-02
 trigger:
   categories: [LP_bounds, sphere_packing, Cohn_Elkies, magic_function, dual_certificate, Fourier_positivity]
   when_stuck_with: [need an upper bound, dual proof of optimality, "is the LP bound tight?", magic function search]
+related_concepts: [lp-duality.md, sphere-packing.md, kissing-number.md, modular-forms-magic-function.md]
+cites:
+  - ../concepts/lp-duality.md
+  - ../concepts/sphere-packing.md
+  - ../concepts/kissing-number.md
+  - ../concepts/modular-forms-magic-function.md
 ---
 
 # Cohn
