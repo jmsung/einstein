@@ -12,19 +12,24 @@ cites:
   - ../concepts/p19-fully-resolved.md
   - ../findings/p19-kronecker-bridging-threshold.md
   - 2026-05-02-p19-structural-cap-conjecture.md
+  - ../../source/papers/2019-bernshteyn-tait-difference-bases.md
 ---
 
-# Can the Bernshteyn–Tait 2019 lower bound `c² ≥ 2.434` be tightened to `2.639` (the SOTA)?
+# Can the Bernshteyn–Tait 2019 lower bound `d* ≥ 2.4344 + ε` be tightened to `2.639` (the SOTA)?
 
-This is the **concrete attack-route scoping** for the open H2 question on P19. The parent question [`2026-05-02-p19-structural-cap-conjecture.md`](2026-05-02-p19-structural-cap-conjecture.md) asks whether *any* LP/SDP certificate exists; this question scopes the most promising path: tightening the Bernshteyn–Tait 2019 LP bound directly.
+> **2026-05-03 update — paper ingested.** The actual contribution of Bernshteyn–Tait 2019 is *strictly tightening* Leech's 1956 bound `d* ≥ 2.4344…` to `d* ≥ 2.4344… + ε` for some `ε > 0`, with numerical estimate `ε ≈ 10⁻³` (not optimized). See [`source/papers/2019-bernshteyn-tait-difference-bases.md`](../../source/papers/2019-bernshteyn-tait-difference-bases.md). Earlier versions of this question conflated the two attributions; corrected throughout below.
+
+This is the **concrete attack-route scoping** for the open H2 question on P19. The parent question [`2026-05-02-p19-structural-cap-conjecture.md`](2026-05-02-p19-structural-cap-conjecture.md) asks whether *any* LP/SDP certificate exists; this question scopes the most promising path: tightening the Bernshteyn–Tait 2019 PSD-truncation bound directly.
 
 ## Setting
 
-P19 (restricted difference bases / sparse rulers) score: `c²(B) = |B|² / v(B)`, minimized.
+P19 (restricted difference bases / sparse rulers) score: `c²(B) = |B|² / v(B)`, minimized. Note: arena P19 uses `|B|² / v` while B-T uses `D(n)² / n` — different normalizations of the same underlying constant `d* = lim D(n)²/n`. Asymptotically aligned.
 
 - **SOTA**: 7-way tie at `c² = 2.6390274695`. Achieved by Kronecker decomposition `B = A ⊕ 8011 · {0,1,4,6}` with a 90-mark Wichmann-style atom `A` (`c(A) = 1043`, `max(A) = 6967`). See [`p19-fully-resolved`](../concepts/p19-fully-resolved.md).
-- **Best published lower bound**: Bernshteyn–Tait 2019 gives `c² ≥ 2.434` for any restricted difference base.
-- **Gap**: `2.6390 − 2.4343 ≈ 0.205` (about 8% of the SOTA value).
+- **Leech 1956 lower bound**: `d* ≥ 2 − 2 inf_θ [sin(θ)/θ] = 2.4344…` (with `θ_* ≈ 4.4934`, `sin(θ_*)/θ_* ≈ −0.2172`).
+- **Bernshteyn–Tait 2019 strict improvement**: `d* ≥ 2.4344 + ε` for some `ε > 0`, numerical estimate `ε ≈ 10⁻³`. Proof uses Bochner–Herglotz + 4×4 PSD constraints on Fourier coefficients of a probability measure on `𝕋`.
+- **Best published upper bound**: Golay 1972, `d* ≤ 2.6458`. (No improvement post-1972 to the authors' knowledge.)
+- **Gap to SOTA**: `2.6390 − 2.4344 ≈ 0.2046` (about 8.4% of the SOTA value). The B-T improvement closes only `~10⁻³` of this gap.
 
 ## Question
 
@@ -43,24 +48,27 @@ Either outcome is wisdom. The (a) outcome is publication-grade; the (b) outcome 
 
 ## What is known about Bernshteyn–Tait 2019
 
-(All claims here need ingestion of the actual paper — see "First step" below.)
+(Paper ingested 2026-05-03; full distillation at [`source/papers/2019-bernshteyn-tait-difference-bases.md`](../../source/papers/2019-bernshteyn-tait-difference-bases.md). Summary below.)
 
-The Bernshteyn–Tait 2019 result on `B_2[1]`-type structures (restricted difference bases / additive bases) bounds `c²(B)` from below using a Fourier-analytic argument on the indicator function `1_B`:
+The Bernshteyn–Tait 2019 result reformulates the difference-basis question as a Fourier-coefficient problem on probability measures on the unit circle `𝕋`:
 
-- **Variable**: indicator `1_B : ℤ → {0, 1}` (or its `ℝ`-relaxation in the LP).
-- **Constraint**: every integer in `[1, v]` is in the difference set `B − B`. Equivalently, `1_B \star 1_{-B}(k) ≥ 1` for `k ∈ [1, v]`.
-- **Dual variable**: a non-negative function `μ` on `ℤ` (or `ℝ_{≥0}` in the LP relaxation).
-- **Bound mechanism**: Plancherel + Fourier-positivity of `\hat{μ}` gives a lower bound on `|B|² / v`.
+- **Setup**: Suppose `D(n)² / n ≤ 2 − 2 sin(θ)/θ + o(1)` (i.e., violates Leech's bound by `ε`). Construct probability measures `μ, ν ∈ Prob(𝕋)` from the difference basis via push-forward by `k ↦ exp(θik/n)`.
+- **Convolution identity** (eq. 3.3 in B-T): `μ * μ̄ = (2 / (2 + α)) ν + (α / (2 + α)) ζ` where `α := lim |A_n|²/n − 2 ∈ [0, 0.4344]` and `ζ ∈ Prob(𝕋)`.
+- **Bochner–Herglotz** (Theorem 2.2): `n × n` Hermitian matrix `A(i, j) := μ̂(j − i)` is positive semidefinite for every `n`.
+- **Decomposition**: `μ = (1−β)η + βδ₁` where `β = √(α/(2+α)) ≈ 0.4224`. The atom at `1 ∈ 𝕋` is forced.
+- **Contradiction via 3×3 + 4×4 PSD matrices** on `Re(η̂(0..3))`. The 3×3 PSD constraint forces `0 < Re(η̂(2)) < 0.1`; the 4×4 constraint forces `Re(η̂(3)) > 0.4`; combined with the convolution identity, `Re(η̂(3)) < 0.1` — contradiction.
 
-The 2.434 constant arises from a specific feasibility argument in the dual; exact derivation pending paper ingest.
+**Leech's `2.4344` bound** comes from the optimal `θ_*` minimizing `sin(θ)/θ`. **B-T's `+ε` improvement** comes from the 4×4 PSD truncation; larger truncations should give larger `ε` (this is the natural sharpening direction).
+
+**Open question** in the paper (§3.13): let `a` be the infimum of `α > 0` such that `(μ, ζ)` exist satisfying the convolution identity. Is `d* = 2 + a`? This would convert the strict-improvement existence theorem into a tractable variational problem.
 
 ## Hypotheses
 
-### H2.1 — Sharper Plancherel / Hardy–Hilbert step
+### H2.1 — Larger PSD truncations (the natural sharpening direction)
 
-The BT 2019 bound uses a Plancherel argument that sums `|\hat{1_B}(ξ)|²` against a kernel. The current bound's slack may come from a sub-optimal Hardy–Hilbert / autoconvolution step. The Kolountzakis–Matolcsi cutting-plane LP framework (see [`kolountzakis-matolcsi-bound`](../concepts/kolountzakis-matolcsi-bound.md)) is the natural numerical tool for tightening this: at finite `n`, the LP can be solved exactly and the dual gives a certificate.
+B-T's contradiction comes from PSD constraints on the 4×4 Hermitian matrix `M(i, j) := Re(η̂(j − i))` for `i, j ∈ {0, 1, 2, 3}`. The systematic improvement is to use `n × n` matrices for `n ≥ 5`. Each additional row/column adds new PSD constraints that may force the contradiction at larger `α` (smaller `ε`-violation), giving a strictly tighter `d*` lower bound.
 
-**Concrete experiment**: implement the BT LP at `n = 1000`, `n = 5000`, `n = 30 000`, with the SOTA configuration as a feasibility witness. Read off the LP's *primal* optimum (lower bound on `c²`). If primal at `n = 30 000` is ≥ `2.55`, the LP is tightening; if it stays ≤ `2.45`, the LP is fundamentally loose and H2 fails via this route.
+**Concrete experiment**: solve the SDP feasibility problem "does there exist `(η̂(0), η̂(1), …, η̂(n−1))` with `η̂(0) = 1`, `η̂(1) = γ ≈ −0.7314`, satisfying B-T's convolution identity at the chosen `α` AND the `n × n` Hermitian PSD constraint?" Find the largest `α` for which feasibility holds; that is the new lower bound `d* ≥ 2 + α`. Implement at `n = 5, 6, 7, 8, …` until SDP solver runtime becomes prohibitive (likely `n ≈ 12` on local CPU).
 
 ### H2.2 — SDP lift
 
@@ -82,25 +90,22 @@ A Viazovska-style magic function `f : ℝ → ℝ` whose Fourier transform satis
 
 ## First step (concrete)
 
-**Before any of the above**: ingest the actual Bernshteyn–Tait 2019 paper into `source/papers/`. The wiki references it 5 times but no distillation exists. Until ingested, all "what BT actually proves" claims here are reconstructions from secondary references.
-
-The arXiv link (to verify): search "Bernshteyn Tait" + "Sidon" + "B_2[1]" — the relevant paper is likely *Bernshteyn, A. & Tait, M., "Improved lower bounds on the size of B_2[g] sets,"* (2019) on arXiv. **User approval required for ingest** per the wiki-ingest discipline.
+**Done 2026-05-03**: BT 2019 paper ingested at [`source/papers/2019-bernshteyn-tait-difference-bases.md`](../../source/papers/2019-bernshteyn-tait-difference-bases.md). Constants and proof structure verified. Earlier "Bernshteyn–Tait 2019 gives `c² ≥ 2.434`" claims across 4 wiki pages were corrected to attribute `2.434` to Leech 1956 and `2.434 + ε` (numerical `ε ≈ 10⁻³`) to B-T 2019.
 
 After ingest, the next concrete steps in priority order:
 
-1. Verify the `2.434` constant against the ingested paper (current claim is a citation-of-citation).
-2. Set up H2.1 numerical LP at `n = 1000` as a sanity check (a few hours; local CPU).
-3. Based on H2.1 result, decide whether H2.2 (SDP lift) is worth the cost (a day + MOSEK license question).
-4. H2.3 (Kronecker-restricted) is a smaller side branch — implementable in a day on local CPU.
-5. H2.4 (magic function) is a research-week-or-more investment; only worth pursuing if H2.1–3 give a clean negative.
+1. **H2.1 SDP feasibility at `n = 5, 6, 7, 8`**. The smallest experiment that should give measurable improvement over B-T's 4×4 result. ~1 day local CPU with CLARABEL or SCS. **First non-trivial experiment.**
+2. H2.3 (Kronecker-restricted LP) is a smaller side branch — implementable in a day on local CPU. Independent of H2.1 outcome.
+3. H2.2 (full LP-relaxation lift) is harder — requires writing the convolution-identity LP from scratch with the full asymptotic limit machinery.
+4. H2.4 (magic function) is a research-week-or-more investment; only worth pursuing if H2.1 saturates near SOTA.
 
 ## Estimated effort
 
 | Hypothesis | Effort | Compute | Wisdom yield |
 |---|---|---|---|
-| BT paper ingest + verify constants | 1 hour | local | required for any other step |
-| H2.1 (LP at n=1k–30k) | 3–6 hours | local CPU | tightness curve regardless of outcome |
-| H2.2 (SDP lift) | 1 day | local CPU + solver license | first-of-kind data on SDP slack for difference bases |
+| ~~BT paper ingest + verify constants~~ | ~~1 hour~~ | ~~local~~ | **DONE 2026-05-03** |
+| H2.1 (PSD truncation `n = 5..8`) | 1 day | local CPU + CLARABEL/SCS | tightness curve regardless of outcome; new bound `d* ≥ 2 + α_n` |
+| H2.2 (full convolution-identity LP lift) | 2–3 days | local CPU | systematic generalization of B-T's argument |
 | H2.3 (Kronecker-restricted LP) | 1 day | local CPU | proves SOTA tight within construction class — even if not globally |
 | H2.4 (magic function search) | weeks | varies | research-grade math; publishable on success |
 
