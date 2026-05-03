@@ -7,6 +7,7 @@ source_type: agent_analysis
 synthesized_into: ../concepts/basin-rigidity.md
 cites:
   - ../concepts/basin-rigidity.md
+  - ../concepts/reduced-hessian.md
 ---
 
 > **See also**: [`concepts/basin-rigidity.md`](../concepts/basin-rigidity.md) — the abstract concept distilled from the lessons below. This finding is the **provenance**: the per-problem empirical episodes (with specific lesson IDs and dates) that the concept page abstracts. Read the concept first; come here for the receipts.

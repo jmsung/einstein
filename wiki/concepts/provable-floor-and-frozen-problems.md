@@ -12,6 +12,7 @@ cites:
   - ../personas/hadamard.md
   - ../personas/polya.md
   - ../personas/wiles.md
+  - reduced-hessian.md
 related_personas: [hadamard.md, polya.md, wiles.md]
 ---
 

@@ -9,6 +9,7 @@ cites:
   - ../findings/basin-rigidity.md
   - ../findings/float64-ceiling.md
   - ../personas/poincare.md
+  - reduced-hessian.md
 related_personas: [poincare.md]
 ---
 

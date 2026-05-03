@@ -8,6 +8,7 @@ cites:
   - knowledge.yaml
   - ../source/repos/jmsung-einstein.md
   - ../source/repos/jmsung-einstein-codebase.md
+  - ../concepts/bourgain-clozel-kahane.md
 ---
 
 # Verification Patterns & Quality Gates

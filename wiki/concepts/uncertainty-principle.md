@@ -9,6 +9,7 @@ cites:
   - ../source/papers/2017-goncalves-hermite-uncertainty.md
   - ../source/papers/2019-cohn-uncertainty-d12.md
   - ../personas/hilbert.md
+  - bourgain-clozel-kahane.md
 related_personas: [hilbert.md]
 ---
 

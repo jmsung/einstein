@@ -9,6 +9,7 @@ cites:
   - ../findings/basin-rigidity.md
   - ../findings/packing-techniques.md
   - ../personas/archimedes.md
+  - reduced-hessian.md
 related_personas: [archimedes.md]
 ---
 
