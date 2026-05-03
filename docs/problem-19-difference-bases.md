@@ -77,6 +77,7 @@ Neighborhood moves on the integer set — swap, shift, insert/delete — refine 
 - `src/einstein/difference_bases/evaluator.py` — arena-matching exact scorer
 - `src/einstein/difference_bases/fast.py` — numba kernels for incremental difference-multiset updates
 - `src/einstein/difference_bases/optimizer.py` — shared optimizer utilities
+- `scripts/difference_bases/atom_bnb.py` — goal-directed BnB atom solver (direct from-scratch + LNS modes) for the Kronecker decomposition `B = A ⊕ 8011·{0,1,4,6}`
 - `tests/difference_bases/test_evaluator.py` — evaluator parity tests
 
-*Last updated: 2026-04-13*
+*Last updated: 2026-05-02*
