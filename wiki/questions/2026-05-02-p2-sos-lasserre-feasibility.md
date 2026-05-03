@@ -3,12 +3,15 @@ type: question
 author: agent
 drafted: 2026-05-02
 asked_by: research/p2-lower-bound
-status: open
+status: partially-answered
+answered: 2026-05-03
+answer_finding: ../findings/dead-end-p2-lasserre-l2-weaker-than-cs.md
 related_problems: [P2]
 related_concepts: [autocorrelation-inequality.md, lp-duality.md]
-related_findings: [p2-lower-bound-research-state.md]
+related_findings: [p2-lower-bound-research-state.md, dead-end-p2-lasserre-l2-weaker-than-cs.md]
 cites:
   - ../findings/p2-lower-bound-research-state.md
+  - ../findings/dead-end-p2-lasserre-l2-weaker-than-cs.md
   - ../../source/papers/2017-cloninger-autoconvolution-sidon.md
 ---
 
@@ -68,4 +71,24 @@ See [findings/p2-lower-bound-research-state.md](../findings/p2-lower-bound-resea
 
 ## Status
 
-**Open.** No literature search yet. Next cycle should run a targeted search before any SDP coding: this is exactly the kind of problem where someone may have tried it and not advertised the result.
+**Partially answered (2026-05-03).** Sub-questions 1 and 2 closed; sub-question 3 (hybrid SDP+BnB) reframed.
+
+**Result** (see [findings/dead-end-p2-lasserre-l2-weaker-than-cs](../findings/dead-end-p2-lasserre-l2-weaker-than-cs.md)): the level-2 Lasserre relaxation of the Cloninger–Steinerberger finite formulation gives bounds well below the C-S enumeration baseline at every tested $n$:
+
+| $n$ | Lasserre L2 | (C-S baseline: $a_n \ge 1.28$ for $n \le 24$) |
+|---:|---:|---|
+| 3 | 0.857 | — |
+| 8 | 0.941 | — |
+| 12 | 0.960 | — |
+| 16 | 0.970 | — |
+
+Wall-clock scales as $\sim n^4$ ($0.02 \text{ s}$ at $n=3$ to $29 \text{ s}$ at $n=16$); $n=24$ is solvable in ~10 minutes but the bound is asymptoting around $\sim 1.0$, far below 1.28. Lasserre L2 is not a competitive alternative to C-S.
+
+**Sub-question 3 (hybrid SDP+BnB) reframed.** Since Lasserre L2 is too loose to certify entire C-S sub-cases as infeasible, the hybrid acceleration doesn't pay off in this naive form. A reframe: use group-equivariant SDP (exploiting translation/reflection symmetry of the autoconvolution problem) to reduce SDP size by $O(n)$ and access higher Lasserre levels at modest $n$. Whether *that* beats C-S is the new open question. Filed for a future branch if the topic becomes a priority.
+
+**Search keywords for future research** (kept):
+- "Lasserre hierarchy autoconvolution"
+- "SOS bound autocorrelation supremum"
+- "moment relaxation $\|f \star f\|_\infty$"
+- "polynomial optimization autoconvolution"
+- *(new)* "group-equivariant SDP autocorrelation" / "symmetry-reduced SOS"
