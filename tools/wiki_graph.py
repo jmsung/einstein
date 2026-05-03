@@ -261,6 +261,44 @@ def compute_type1_concept_gaps(nodes, edges):
             problem_slugs.add(m.group(1).lower())
             problem_slugs.add(stem.lower())  # also keep original
 
+    # v6: extract problem-title phrases from H1 lines so detector can skip phrases
+    # that are problem-name fragments (e.g., "minimum overlap" from P1's
+    # "Erdős Minimum Overlap"; "second autocorrelation" from P3's "Second
+    # Autocorrelation Inequality"). Generates all 2-word substrings of each title.
+    problem_title_phrases = set()
+    for rp, page in nodes.items():
+        if not rp.startswith("problems/"):
+            continue
+        for line in page["body"].splitlines():
+            m = re.match(r"^#\s+Problem\s+\d+[a-z]?\s*[—–\-]\s*(.+?)\s*$", line)
+            if not m:
+                continue
+            title_tail = m.group(1)
+            # Strip trailing "(n=...)" or similar parentheticals
+            title_tail = re.sub(r"\s*\([^)]*\)\s*$", "", title_tail).strip()
+            # Lowercase + emit all contiguous 2-word substrings
+            words = title_tail.lower().split()
+            for i in range(len(words) - 1):
+                problem_title_phrases.add(f"{words[i]} {words[i+1]}")
+            for i in range(len(words) - 2):
+                problem_title_phrases.add(f"{words[i]} {words[i+1]} {words[i+2]}")
+            break  # one H1 per page
+
+    # v6: extract author surnames from source/papers/ filenames (year-author-topic.md
+    # convention). Filters out proper-name false positives like "erich friedman"
+    # where the surname is in source/ but the full name isn't a concept.
+    author_surnames = set()
+    if source_dir.exists():
+        for p in source_dir.rglob("*.md"):
+            stem_parts = p.stem.lower().split("-")
+            # Skip leading year (4-digit)
+            if stem_parts and re.match(r"^\d{4}$", stem_parts[0]):
+                stem_parts = stem_parts[1:]
+            # Surnames likely sit in the first 1-2 components after year
+            for i, part in enumerate(stem_parts[:2]):
+                if len(part) >= 5 and part.isalpha():
+                    author_surnames.add(part)
+
     STOPWORDS = {
         # frontmatter / structural
         "concepts", "techniques", "findings", "problems", "questions", "personas",
@@ -281,6 +319,8 @@ def compute_type1_concept_gaps(nodes, edges):
         "leech-sloane",  # proper-noun-as-author (paper ref); not a concept gap
         # operational / non-math
         "heartbeat", "worker", "modal-worker",
+        # v6: generic abstract nouns surfaced by v5 noise pass (2026-05-03)
+        "optimality",  # ends in -ality but is too generic to be a concept gap
     }
     # Multi-word phrase prefixes/suffixes that indicate parsing artifacts
     # (regex catches "For Problem", "The Hardin", etc. — first word is generic)
@@ -308,6 +348,16 @@ def compute_type1_concept_gaps(nodes, edges):
             # Also skip if the phrase contains a problem-slug substring (e.g., "first autocorrelation"
             # is the slug of P2's problem page minus the digit prefix)
             if any(slug_form == ps or slug_form == ps.replace("-", " ") for ps in problem_slugs):
+                continue
+            # v6: skip phrases that are substrings of any problem H1 title
+            # (catches "minimum overlap" from "Erdős Minimum Overlap", "second
+            # autocorrelation" from "Second Autocorrelation Inequality", etc.)
+            if phrase in problem_title_phrases:
+                continue
+            # v6: skip phrases where any word matches an author surname from source/
+            # (catches "erich friedman" where source/blog/friedman-packing-records
+            # documents the topic; not a concept gap)
+            if any(w in author_surnames for w in phrase.split()):
                 continue
             words = phrase.split()
             # Single words: stricter filter
