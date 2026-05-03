@@ -40,7 +40,9 @@ SOURCE = Path("/Users/jongmin/projects/einstein/cb/source")
 QUESTIONS = WIKI / "questions"
 AGENT_OUT = Path("/Users/jongmin/projects/einstein/cb/agent")
 
-SIMILARITY_THRESHOLD = 0.70  # qmd score above which we treat as latent edge
+SIMILARITY_THRESHOLD = 0.50  # qmd score above which we treat as latent edge
+                              # (was 0.70 — first run found 0 hits; lowered to 0.50 per
+                              # 2026-05-02 tuning. Documented in finding-the-fertile-gaps "Limits".)
 LONG_PATH_THRESHOLD = 4  # path length > this between high-similarity pages = chain gap
 UMBRELLA_CLUSTER_MIN = 4  # min pages in a tight cluster to flag as needing concept
 
@@ -112,7 +114,10 @@ def parse_page(path: Path) -> dict:
         out["links_out"].add(_normalize_link(href + ".md" if not href.endswith(".md") else href, path))
 
     # Concept mentions: capitalized noun phrases (heuristic — Type 1 detection)
-    for cp in re.findall(r"\b([A-Z][a-z]+(?:[-–][A-Z][a-z]+)*(?:\s+[A-Z][a-z]+)*)\b", out["body"]):
+    # Restrict to within-line matches (no newlines) and reasonable length.
+    for cp in re.findall(r"\b([A-Z][a-z]+(?:[-–][A-Z][a-z]+)*(?:[ \t]+[A-Z][a-z]+){0,3})\b", out["body"]):
+        if "\n" in cp or len(cp) > 60:
+            continue
         out["concepts_mentioned"].add(cp)
 
     return out
@@ -227,9 +232,22 @@ def compute_type1_concept_gaps(nodes, edges):
 
     Heuristic: prefer multi-word phrases or hyphenated math-style terms.
     Filter out frontmatter keys, category names, and generic English words.
+    Filter out problem-name false positives (these have problems/ pages,
+    not concepts/ pages — the detector should not flag them as missing).
     """
     # Existing concept page slugs
     concept_slugs = {Path(rp).stem.lower() for rp in nodes if rp.startswith("concepts/")}
+    # Problem index slugs with digit prefix stripped: "1-erdos-overlap.md" -> "erdos-overlap"
+    problem_slugs = set()
+    for rp in nodes:
+        if not rp.startswith("problems/"):
+            continue
+        stem = Path(rp).stem
+        # Strip leading digits + optional letter (e.g., "17a-circles-rectangle" -> "circles-rectangle")
+        m = re.match(r"^\d+[a-z]?-(.+)$", stem)
+        if m:
+            problem_slugs.add(m.group(1).lower())
+            problem_slugs.add(stem.lower())  # also keep original
 
     STOPWORDS = {
         # frontmatter / structural
@@ -255,6 +273,12 @@ def compute_type1_concept_gaps(nodes, edges):
             phrase = cp.lower()
             slug_form = phrase.replace(" ", "-").replace("–", "-").replace("—", "-")
             if slug_form in concept_slugs:
+                continue
+            if slug_form in problem_slugs:
+                continue  # has a problems/ page, not a concept gap
+            # Also skip if the phrase contains a problem-slug substring (e.g., "first autocorrelation"
+            # is the slug of P2's problem page minus the digit prefix)
+            if any(slug_form == ps or slug_form == ps.replace("-", " ") for ps in problem_slugs):
                 continue
             words = phrase.split()
             # Single words: stricter filter
@@ -375,16 +399,17 @@ def compute_type5_umbrella_gaps(nodes, edges):
     for rp in findings_techniques:
         if not nodes[rp]["title"]:
             continue
-        nbrs = qmd_semantic_neighbors(nodes[rp]["title"], k=4)
-        nbr_paths = [n[0] for n in nbrs if n[1] >= 0.5]
-        if not nbr_paths:
-            continue
+        nbrs = qmd_semantic_neighbors(nodes[rp]["title"], k=6)  # k=6 to leave room after self-filter
+        # Exclude self from neighbor list (self-cluster bug fix)
+        nbr_paths = [n[0] for n in nbrs if n[0] != rp and n[1] >= 0.5]
+        if len(nbr_paths) < 2:
+            continue  # too few real neighbors to form a cluster
         concept_in_nbrs = any(p.startswith("concepts/") for p in nbr_paths)
         if concept_in_nbrs:
             continue
-        # No concept in the top-4 semantic neighborhood → may need an umbrella
+        # No concept in the top neighborhood → may need an umbrella
         candidates.append({"page": rp, "neighbors_no_concept": nbr_paths[:3]})
-    return candidates[:8]
+    return candidates[:10]
 
 
 def write_report(stats, type1, type2, type4, type5, out_path: Path | None):
