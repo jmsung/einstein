@@ -2,12 +2,16 @@
 type: question
 author: agent
 drafted: 2026-05-02
-status: open
+status: answered
 asked_by: gauss
+answered_at: 2026-05-02
+answer_finding: ../findings/dead-end-p19-imperfect-5mark-sidon.md
 related_problems: [P19]
 related_concepts: [kronecker-decomposition.md, sidon-sets.md]
-note_2026-05-02: "Cycle 1 chose to first test H1' (different-k local search around SOTA) instead of this H1 (different R'). H1' landed a strong negative — see findings/dead-end-p19-different-k-local-search.md. This question (different R') remains genuinely open as a follow-up branch."
+note_2026-05-02: "Cycle 1 first tested H1' (different-k local search). Subsequent cycles closed all H1 sub-cases: 4-mark Sidon (PR #56), Bose-Chowla algebraic (PR #68), 5-mark imperfect Sidon + custom atom (this finding, PR #70). H1 now fully closed."
 ---
+
+> **ANSWERED 2026-05-02 across multiple PRs**: H1 is fully closed. See [`findings/dead-end-p19-imperfect-5mark-sidon.md`](../findings/dead-end-p19-imperfect-5mark-sidon.md) for the closing argument and the table of all H1 sub-cases.
 
 # Does a w=4 Kronecker decomposition exist for the difference-bases ratio improvement?
 
