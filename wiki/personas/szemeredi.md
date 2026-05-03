@@ -5,6 +5,10 @@ drafted: 2026-05-02
 trigger:
   categories: [regularity_lemma, extremal_graph, removal_lemma, pseudorandomness, density_increment]
   when_stuck_with: [graph density problem, large graph asymptotic, "are these vertices regular?", removal lemma applicable]
+related_concepts: [flag-algebra.md, turan-density.md]
+cites:
+  - ../concepts/flag-algebra.md
+  - ../concepts/turan-density.md
 ---
 
 # Szemerédi

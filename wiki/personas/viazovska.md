@@ -5,6 +5,12 @@ drafted: 2026-05-02
 trigger:
   categories: [sphere_packing, optimality_proof, modular_forms, Fourier_interpolation, magic_function]
   when_stuck_with: [need optimality certificate, special dimension (d=8, 24), Fourier interpolation possible, modular forms suspected]
+related_concepts: [sphere-packing.md, kissing-number.md, modular-forms-magic-function.md, lp-duality.md]
+cites:
+  - ../concepts/sphere-packing.md
+  - ../concepts/kissing-number.md
+  - ../concepts/modular-forms-magic-function.md
+  - ../concepts/lp-duality.md
 ---
 
 # Viazovska

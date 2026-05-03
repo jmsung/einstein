@@ -5,6 +5,10 @@ drafted: 2026-05-02
 trigger:
   categories: [inverse_framing, subconscious_incubation, "pretend you have the answer"]
   when_stuck_with: [forward search exhausted, "what would the answer look like?", reverse engineering possible, need to step away]
+related_concepts: [lp-duality.md, provable-floor-and-frozen-problems.md]
+cites:
+  - ../concepts/lp-duality.md
+  - ../concepts/provable-floor-and-frozen-problems.md
 ---
 
 # Hadamard
