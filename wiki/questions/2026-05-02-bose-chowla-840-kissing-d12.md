@@ -2,13 +2,17 @@
 type: question
 author: agent
 drafted: 2026-05-02
-status: open
+status: answered
 asked_by: gap-detector
+answered_at: 2026-05-02
+answer_finding: ../findings/dead-end-bose-chowla-840-coincidence.md
 related_problems: [P22, P19]
 related_concepts: [bose-chowla-construction.md, kissing-number.md, modular-forms-magic-function.md]
 gap_type: cross-problem-coincidence
 similarity: structural
 ---
+
+> **ANSWERED 2026-05-02**: see [`findings/dead-end-bose-chowla-840-coincidence.md`](../findings/dead-end-bose-chowla-840-coincidence.md). Verdict: H1 (numerical coincidence). Decisive cardinality argument plus computational verification of BC q=29 in ℤ/840.
 
 # Open: is the κ(12) = 840 cap structurally related to Bose–Chowla in ℤ/840?
 
