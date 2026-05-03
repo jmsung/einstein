@@ -78,7 +78,7 @@ score  =  360² / 49109  =  2.6390274695
 
 The constructive surface is fully closed. Non-constructive attacks:
 
-1. **H2 — LP/SDP cap certificate**. Bernshteyn–Tait 2019 gives `c² ≥ 2.434` (lower bound on score). Tightening this LP bound to `2.639` would PROVE 2.639 is the global floor — a publishable formal result analogous to Cohn–Elkies for sphere packing. Effort: ~week of work; substantial mathematics.
+1. **H2 — LP/SDP cap certificate**. Bernshteyn–Tait 2019 gives `c² ≥ 2.434` (lower bound on score). Tightening this LP bound to `2.639` would PROVE 2.639 is the global floor — a publishable formal result analogous to Cohn–Elkies for sphere packing. Effort: ~week of work; substantial mathematics. **Concrete attack-route scoping**: see [`questions/2026-05-03-p19-bernshteyn-tait-tightening.md`](../questions/2026-05-03-p19-bernshteyn-tait-tightening.md) (4 sub-hypotheses H2.1–2.4: sharper Plancherel, SDP lift, Kronecker-restricted LP, magic function).
 2. **H3 — magic-function argument**. If a Viazovska-style magic function exists for difference bases, it would saturate Bernshteyn–Tait. Highly speculative; depends on the right modular-form structure for `ℤ` vs the sphere-packing context where Viazovska 2016 works.
 3. **w=4 BnB Modal exhaustive**. The prior partial w=4 sample (2,504 / 10,000) on Modal at $4 found 0 hits. Completing the sweep ($12 more) would make w=4 a *formal* exhaustion lemma analogous to w=3 (1.22T nodes, 0 hits). Modal-only; per current discipline, not pursued without explicit user direction.
 

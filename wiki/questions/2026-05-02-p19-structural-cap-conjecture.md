@@ -5,8 +5,14 @@ drafted: 2026-05-02
 status: open
 asked_by: cohn
 related_problems: [P19]
-related_concepts: [provable-floor-and-frozen-problems.md, lp-duality.md]
+related_concepts: [provable-floor-and-frozen-problems.md, lp-duality.md, p19-fully-resolved.md, kolountzakis-matolcsi-bound.md]
+child_questions: [2026-05-03-p19-bernshteyn-tait-tightening.md]
+cites:
+  - 2026-05-03-p19-bernshteyn-tait-tightening.md
+  - ../concepts/p19-fully-resolved.md
 ---
+
+> **2026-05-03 update**: see [`2026-05-03-p19-bernshteyn-tait-tightening.md`](2026-05-03-p19-bernshteyn-tait-tightening.md) for the concrete attack-route scoping. The Bernshteyn–Tait 2019 LP route (with 4 sub-hypotheses H2.1–H2.4) is the most promising operational path under H2 below.
 
 # Is the P19 7-way tie a structural cap, and if so what is the LP/SDP certificate?
 
