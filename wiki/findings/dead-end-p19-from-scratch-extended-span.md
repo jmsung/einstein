@@ -4,12 +4,13 @@ author: agent
 drafted: 2026-05-02
 question_origin: P19
 status: answered
-related_concepts: [kronecker-decomposition.md, basin-rigidity.md, sidon-sets.md]
+related_concepts: [kronecker-decomposition.md, asymmetric-kronecker.md, basin-rigidity.md, sidon-sets.md]
 related_techniques: [bnb-exhaustive-w3.md]
 related_findings: [p19-kronecker-bridging-threshold.md, dead-end-p19-extended-span-1-swap.md, dead-end-p19-different-k-local-search.md]
 cites:
   - p19-kronecker-bridging-threshold.md
   - dead-end-p19-extended-span-1-swap.md
+  - ../concepts/asymmetric-kronecker.md
 ---
 
 # Dead end: P19 from-scratch BnB in the extended-span design space

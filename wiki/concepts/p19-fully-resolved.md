@@ -8,6 +8,7 @@ related_findings: [p19-kronecker-bridging-threshold.md, dead-end-p19-different-k
 related_personas: [gauss.md, cohn.md, hadamard.md, riemann.md]
 cites:
   - kronecker-decomposition.md
+  - asymmetric-kronecker.md
   - bose-chowla-construction.md
   - sidon-sets.md
   - provable-floor-and-frozen-problems.md
