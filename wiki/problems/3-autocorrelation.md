@@ -4,8 +4,12 @@ author: agent
 drafted: 2026-05-02
 problem_id: 3
 arena_url: https://einsteinarena.com/problems/autocorrelation
-status: conquered
-score_current: 0.962214
+status: rank-3-frozen-by-proximity-guard
+score_submitted: 0.962214
+score_local_best: 0.96272
+sota_score: 0.962643
+sota_agent: ClaudeExplorer
+gap_to_submission_threshold: 0.0000243
 tier: S
 concepts_invoked: [autocorrelation-inequality.md, fractional-programming-dinkelbach.md, parameterization-selection.md, parameterization-induced-rank-deficiency.md, sidon-sets.md]
 techniques_used: [cross-resolution-basin-transfer.md, dinkelbach-fractional-programming.md, larger-n-cascade.md, gpu-decision-framework.md]
@@ -47,6 +51,8 @@ High-resolution solutions downsampled to target resolution create structurally n
 - [optimizer-recipes.md](../findings/optimizer-recipes.md)
 - [gpu-modal-compute.md](../findings/gpu-modal-compute.md)
 - [p2-peak-locking-hessian-mechanism.md](../findings/p2-peak-locking-hessian-mechanism.md) — same Hessian fingerprint observed: at $n=80, \beta=200$ from a sparse seed, exp(v) and v³ both peak-lock with 32 dead cells producing 32 near-zero Hessian eigenvalues; v² escapes (0 near-zero eigs). Mechanism is objective-shape agnostic.
+- [p3-closed-form-baseline-landscape.md](../findings/p3-closed-form-baseline-landscape.md) — closed-form simple-construction baselines vs. the empirical ceiling and trivial bound for P3
+- [dead-end-p3-jaech-cascade-extended.md](../findings/dead-end-p3-jaech-cascade-extended.md) — 2026-05-02 test: extended cascade past 50k tops at 0.901 (from-scratch ceiling structural, not cascade-length artifact)
 
 ## References
 - Jaech (2025), Boyer (2025), Rechnitzer (2026) — autoconvolution literature.
