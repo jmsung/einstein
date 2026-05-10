@@ -42,3 +42,4 @@ outcmaes/
 # raw/ — local cache of native-format originals (PDFs, transcripts, etc.).
 # source/ holds the in-git distillations; raw is regenerable from source frontmatter.
 raw/
+.obsidian/
