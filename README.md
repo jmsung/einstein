@@ -34,7 +34,7 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-05-16 18:57 UTC*
+*Last updated: 2026-05-17 19:00 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
