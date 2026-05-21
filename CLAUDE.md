@@ -18,7 +18,7 @@ This repo is the public artifact. It has three layers, each with its own contrac
 
 **Generalized math wisdom**, not arena rank. The agent solves problems, learns from failure, and writes back to the wiki. Each cycle compounds. Submission is a wisdom-verification tool, not a goal — minimum 6 hours between submissions per problem; user-approved each time. **No external posts** — all knowledge stays on this repo + wiki.
 
-See [`mb/tracking/active/js-refactor-wiki-bootstrap.md`](../mb/tracking/active/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `wiki/home.md`).
+See [`mb/tracking/completed/js-refactor-wiki-bootstrap.md`](../mb/tracking/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `wiki/home.md`).
 
 ## Setup
 
@@ -40,7 +40,7 @@ modal run ...                          # GPU scripts (needs Modal account)
 - `results/problem-{id}-{name}/` — result files (gitignored)
 
 ### Compute routing
-Two first-class environments. Always route the workload before launching — see `wiki/techniques/compute-router.md` (when available) and `.claude/rules/compute-router.md`.
+Two first-class environments. Always route the workload before launching — see `wiki/techniques/compute-router.md` and `.claude/rules/compute-router.md`.
 
 - **Local a local workstation (high-memory)**: mpmath polish, sequential CPU optimizers (L-BFGS / NM / SLSQP), small basin-hopping, MPS float32 batch ops, large multistart with multiprocess
 - **Modal A100/H100**: sustained float64 GPU parallel (parallel tempering, CMA-ES large-pop float64), large LP/SDP that's RAM-bound
