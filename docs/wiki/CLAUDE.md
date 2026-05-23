@@ -125,14 +125,15 @@ This is a deliberate departure from the jongmin-wiki "wiki pages NEVER created a
 
 ## Categories
 
-| Category | Cardinality | Examples | Authored from |
+| Category | Count (as of 2026-05-23) | Examples | Authored from |
 |---|---|---|---|
-| `concepts/` | many:1 from sources | LP duality, equioscillation, Cohn-Elkies, modular forms, basin rigidity, parameterization selection | Distillation across multiple problems / sources |
-| `techniques/` | many:1 from concepts | Parallel tempering, mpmath ulp polish, Remez exchange, SDP flag algebra, compute router | Concept + implementation knowledge |
-| `personas/` | bounded ~21 | Gauss, Riemann, Tao, Conway, Polya, Hilbert, …, plus `_synthesis.md` (12 stances) | Hand-curated per mathematician |
-| `findings/` | seed for concepts | Q→A pages with cites | Single-problem or council outputs |
-| `problems/` | 23 + `_inventory.md` | One short index per arena problem | Per-problem rollup |
-| `questions/` | open seed-bed | "Why does X work?" with status: open/answered/abandoned | Council dispatch + gap detect |
+| `concepts/` | 49 pages | LP duality, equioscillation, Cohn-Elkies, modular forms, basin rigidity, parameterization selection | Distillation across multiple problems / sources |
+| `techniques/` | 31 pages | Parallel tempering, mpmath ulp polish, Remez exchange, SDP flag algebra, compute router | Concept + implementation knowledge |
+| `personas/` | 21 pages + `_synthesis.md` | Gauss, Riemann, Tao, Conway, Polya, Hilbert, Cohn, Razborov, … | Hand-curated per mathematician |
+| `findings/` | 47 pages | Q→A pages with cites — incl. 2 from this branch: `m5-max-utilization-strategy`, `dead-end-slug-as-arxiv-phrase-query` | Single-problem or council outputs |
+| `problems/` | 22 + `_inventory.md` | One short index per arena problem | Per-problem rollup |
+| `questions/` | 17+ pages | "Why does X work?" with status: open/answered/abandoned | Council dispatch + gap detect + gap_search auto-file |
+| `../source/` | 197+ papers | 1:1 distillations of ingested artifacts; see [`source/INDEX.md`](../source/INDEX.md) | `/wiki-ingest` (interactive) or `docs/tools/seed_ingest.py` (bulk) |
 
 ## Search
 
@@ -167,6 +168,8 @@ Trigger words override:
 | Approach failed | Write the *why* into `wiki/findings/dead-end-<slug>.md` |
 | Worktree-done distillation | Reusable concept/technique → `wiki/concepts|techniques/` |
 | Finding cited 3+ times | Promote to a concept (human-gated) |
+| Autonomous-loop cycle | `scripts/autonomous_loop.py` appends one row to `docs/agent/cycle-log.md`; `docs/tools/cycle_runner.sh` runs `refresh_qmd` → `wiki_graph --file-questions` → `gap_search` → `wiki_lint` → promotion-log check |
+| Bulk seed ingest | `docs/tools/seed_ingest.py {propose, author-sweep, citation-crawl}` writes candidates JSON; human approves; `apply` runs parallel-download + batch PDF→md → `docs/source/*.md` |
 
 ## Precedence
 
