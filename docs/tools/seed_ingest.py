@@ -55,6 +55,11 @@ from gap_search import MATH_CATEGORIES, build_query, search_arxiv  # type: ignor
 import pdf_to_md  # type: ignore[import-not-found]
 
 try:
+    import llm_distill  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover
+    llm_distill = None  # type: ignore[assignment]
+
+try:
     import yaml  # type: ignore[import-not-found]
 except ImportError:  # pragma: no cover — pyyaml is a project dep
     yaml = None  # type: ignore[assignment]
@@ -252,6 +257,150 @@ def _build_vocab_query(phrases: list[str]) -> str:
     kw_query = " OR ".join(f'all:"{p}"' for p in cleaned)
     cat_query = " OR ".join(f"cat:{c}" for c in MATH_CATEGORIES)
     return f"({kw_query}) AND ({cat_query})"
+
+
+# ---------------- citation-graph crawl ----------------
+
+S2_API_BASE = "https://api.semanticscholar.org/graph/v1/paper"
+S2_REFERENCES_FIELDS = "externalIds,title,abstract,year,authors"
+
+
+def _collect_arxiv_ids(source_dir: Path) -> list[str]:
+    """Scan docs/source/*.md frontmatter for arxiv ids — version-stripped."""
+    ids: set[str] = set()
+    if not source_dir.is_dir():
+        return []
+    arxiv_re = re.compile(r"arxiv\.org/(?:abs|pdf)/([^v\s\"'?#]+(?:\.[^v\s\"'?#]+)?)")
+    for path in source_dir.glob("*.md"):
+        try:
+            text = path.read_text()
+        except OSError:
+            continue
+        m = arxiv_re.search(text)
+        if m:
+            stem = re.sub(r"v\d+$", "", m.group(1))
+            stem = re.sub(r"\.pdf$", "", stem)
+            ids.add(stem)
+    return sorted(ids)
+
+
+def _s2_refs_to_candidates(refs: list[dict]) -> list[dict]:
+    """Map semanticscholar reference records → seed_ingest candidate dicts.
+
+    Drops references without an arxiv id (s2 includes DOI-only papers we
+    can't fetch via arxiv).
+    """
+    out: list[dict] = []
+    for r in refs:
+        ext_ids = r.get("externalIds") or {}
+        arxiv_id = ext_ids.get("ArXiv") or ext_ids.get("arxiv")
+        if not arxiv_id:
+            continue
+        title = (r.get("title") or "").strip()
+        if not title:
+            continue
+        authors_list = r.get("authors") or []
+        authors_str = ", ".join(a.get("name", "") for a in authors_list if a.get("name"))
+        year_raw = r.get("year")
+        year = str(year_raw) if year_raw else ""
+        abs_url = f"https://arxiv.org/abs/{arxiv_id}"
+        cand = {
+            "title": title,
+            "authors": authors_str,
+            "year": year,
+            "abs_url": abs_url,
+            "summary": (r.get("abstract") or "")[:500],
+        }
+        cand["slug"] = _slug_from_metadata(title=title, year=year, authors=authors_str)
+        out.append(cand)
+    return out
+
+
+def _s2_fetch_references(arxiv_id: str) -> list[dict]:
+    """Fetch the 'references' list for an arxiv paper via semanticscholar.
+
+    Returns a list of s2 reference records. On failure, returns empty list.
+    """
+    url = f"{S2_API_BASE}/ARXIV:{arxiv_id}/references?fields={S2_REFERENCES_FIELDS}&limit=200"
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "einstein-seed-ingest/1",
+        "Accept": "application/json",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read())
+    except HTTPError as e:
+        if e.code == 429:
+            log.warning("s2 429 for %s — back off + retry", arxiv_id)
+            time.sleep(8)
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    data = json.loads(resp.read())
+            except Exception as e2:
+                log.error("s2 retry failed for %s: %s", arxiv_id, e2)
+                return []
+        else:
+            log.warning("s2 HTTP %d for %s: %s", e.code, arxiv_id, e)
+            return []
+    except (URLError, json.JSONDecodeError, TimeoutError) as e:
+        log.warning("s2 fetch failed for %s: %s", arxiv_id, e)
+        return []
+
+    # s2 wraps each reference as {"citedPaper": {...}}
+    refs: list[dict] = []
+    for entry in data.get("data", []):
+        cited = entry.get("citedPaper") or {}
+        if cited:
+            refs.append(cited)
+    return refs
+
+
+def citation_crawl(
+    *,
+    arxiv_ids: list[str],
+    source_dir: Path,
+    rate_limit_seconds: float = 1.0,
+    max_refs_per_paper: int = 200,
+) -> list[dict]:
+    """Crawl semanticscholar references for each arxiv id; dedup against existing.
+
+    Returns a flat list of candidate dicts (approved=None) ready to be
+    folded into a candidates JSON. Rate-limited politely; semanticscholar
+    is more permissive than arxiv (often 100 req/sec with API key) so the
+    default delay is conservative-1s without an API key.
+    """
+    existing_seen = _existing_source_urls(source_dir)
+    # Also dedup against arxiv IDs we just crawled (a ref appearing in two source
+    # papers should only show up once in the candidates).
+    seen_arxiv: set[str] = set()
+    for url in existing_seen:
+        stem = _arxiv_id_stem(url)
+        if stem:
+            seen_arxiv.add(stem)
+
+    candidates: list[dict] = []
+    for i, aid in enumerate(arxiv_ids):
+        log.info("[%d/%d] citation-crawl: %s", i + 1, len(arxiv_ids), aid)
+        refs = _s2_fetch_references(aid)[:max_refs_per_paper]
+        cand_dicts = _s2_refs_to_candidates(refs)
+        fresh = 0
+        for c in cand_dicts:
+            stem = _arxiv_id_stem(c["abs_url"])
+            if stem in seen_arxiv:
+                continue
+            seen_arxiv.add(stem)
+            c["approved"] = None
+            c["relevance"] = round(
+                _relevance_score(candidate=c, phrases=["mathematics", "optimization"]), 4
+            )
+            candidates.append(c)
+            fresh += 1
+        log.info("    %d refs → %d fresh", len(cand_dicts), fresh)
+        if i + 1 < len(arxiv_ids) and rate_limit_seconds > 0:
+            time.sleep(rate_limit_seconds)
+    log.info("citation_crawl: %d fresh candidates across %d source papers",
+             len(candidates), len(arxiv_ids))
+    return candidates
 
 
 # ---------------- author + category sweep helpers ----------------
@@ -630,7 +779,10 @@ def propose(*, coverage_json: Path, out_path: Path, top_n: int = 5,
 def apply(*, candidates_json: Path, docs_root: Path | None = None,
           dry_run: bool = False,
           download_workers: int = 10,
-          download_retries: int = 3) -> list[Path]:
+          download_retries: int = 3,
+          llm_distill_enabled: bool = True,
+          llm_model: str = "claude-opus-4-7[1m]",
+          llm_workers: int = 4) -> list[Path]:
     """Step 2: download approved candidates + write source/ entries.
 
     Refactored from one-PDF-at-a-time to:
@@ -735,7 +887,42 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
                 log.error("pdf_to_md failed for %s: %s", w["pdf_path"], e2)
                 w["pdf_to_md_ok"] = False
 
-    # Phase 4: write source/ entries (frontmatter + body)
+    # Phase 3.5: LLM-distill the extracted markdowns (Karpathy llm-wiki style)
+    # via Claude Code's headless `claude -p` — runs under the user's Claude Code
+    # subscription, no API key needed. One-shot, parallelized via ThreadPool.
+    distilled: dict[str, str] = {}     # slug → distilled summary text
+    if llm_distill_enabled and llm_distill is not None:
+        distill_items: list[dict] = []
+        for w in successful:
+            body_md_path = body_temp / f"{w['slug']}.md"
+            if not body_md_path.is_file():
+                continue
+            cand = w["cand"]
+            distill_items.append({
+                "slug": w["slug"],
+                "extracted_md": body_md_path.read_text(),
+                "metadata": {
+                    "title": cand.get("title", ""),
+                    "authors": cand.get("authors", ""),
+                    "year": cand.get("year", ""),
+                    "source_url": cand["abs_url"],
+                },
+            })
+
+        if distill_items:
+            log.info("phase 3.5: LLM-distill %d papers via claude -p (model %s, "
+                     "%d workers)", len(distill_items), llm_model, llm_workers)
+            distill_results = llm_distill.distill_batch(
+                distill_items, model=llm_model, max_workers=llm_workers,
+            )
+            for r in distill_results:
+                if r["ok"]:
+                    distilled[r["slug"]] = r["summary"]
+                else:
+                    log.error("llm-distill failed for %s: %s", r["slug"], r["error"])
+
+    # Phase 4: write source/ entries (frontmatter + body — distilled if available,
+    # else falling back to raw extraction so we never lose the paper outright)
     written: list[Path] = []
     for w in successful:
         if w.get("pdf_to_md_ok") is False:
@@ -744,7 +931,13 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
         if not body_md.is_file():
             log.warning("body markdown missing for %s — skipping", w["slug"])
             continue
-        body = body_md.read_text()
+
+        body = distilled.get(w["slug"])
+        if not body:
+            # No distillation (either disabled or failed) — keep raw extraction
+            # as fallback. Better to have an oversized entry than no entry.
+            body = body_md.read_text()
+            log.warning("no LLM distillation for %s — using raw extraction", w["slug"])
         body_md.unlink()
 
         cand = w["cand"]
@@ -802,10 +995,27 @@ def main(argv: list[str] | None = None) -> int:
     p_author.add_argument("--auto-approve-above", type=float, default=None,
                           metavar="THRESHOLD")
 
+    p_citation = sub.add_parser("citation-crawl",
+                                help="For each arxiv id in source/, fetch semanticscholar "
+                                     "references and emit fresh candidates JSON.")
+    p_citation.add_argument("--out", type=Path, required=True)
+    p_citation.add_argument("--source-dir", type=Path, default=None)
+    p_citation.add_argument("--rate-limit", type=float, default=1.0)
+    p_citation.add_argument("--max-refs-per-paper", type=int, default=200)
+    p_citation.add_argument("--auto-approve-above", type=float, default=None,
+                            metavar="THRESHOLD")
+
     p_apply = sub.add_parser("apply", help="Download approved candidates + write source/ entries.")
     p_apply.add_argument("--candidates", type=Path, required=True)
     p_apply.add_argument("--docs-root", type=Path, default=None)
     p_apply.add_argument("--dry-run", action="store_true")
+    p_apply.add_argument("--no-llm", action="store_true",
+                         help="Skip LLM distillation (raw extraction goes to source/). "
+                              "Default: LLM-distill via claude -p.")
+    p_apply.add_argument("--llm-model", default="claude-opus-4-7[1m]",
+                         help="Model alias for claude -p distillation.")
+    p_apply.add_argument("--llm-workers", type=int, default=4,
+                         help="Parallel claude -p invocations during distillation.")
 
     args = parser.parse_args(argv)
 
@@ -819,9 +1029,43 @@ def main(argv: list[str] | None = None) -> int:
             source_dir=args.source_dir,
             auto_approve_threshold=args.auto_approve_above,
         )
+    elif args.cmd == "citation-crawl":
+        src = args.source_dir if args.source_dir is not None else (_REPO / "docs" / "source")
+        arxiv_ids = _collect_arxiv_ids(src)
+        log.info("citation-crawl: %d arxiv ids found in source/", len(arxiv_ids))
+        candidates = citation_crawl(
+            arxiv_ids=arxiv_ids, source_dir=src,
+            rate_limit_seconds=args.rate_limit,
+            max_refs_per_paper=args.max_refs_per_paper,
+        )
+        threshold = args.auto_approve_above
+        if threshold is not None:
+            n_auto = 0
+            for c in candidates:
+                if c.get("relevance", 0) >= threshold:
+                    c["approved"] = True
+                    c["auto_approved"] = True
+                    n_auto += 1
+            log.info("auto-approved %d/%d (relevance ≥ %.2f)",
+                     n_auto, len(candidates), threshold)
+        out = {
+            "generated_at": dt.date.today().isoformat(),
+            "concepts": [{
+                "kind": "citation-crawl",
+                "candidates": candidates,
+            }],
+        }
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(out, indent=2) + "\n")
+        log.info("wrote %d candidates → %s", len(candidates), args.out)
     elif args.cmd == "apply":
-        results = apply(candidates_json=args.candidates,
-                        docs_root=args.docs_root, dry_run=args.dry_run)
+        results = apply(
+            candidates_json=args.candidates,
+            docs_root=args.docs_root, dry_run=args.dry_run,
+            llm_distill_enabled=not args.no_llm,
+            llm_model=args.llm_model,
+            llm_workers=args.llm_workers,
+        )
         log.info("%s %d source/ entries",
                  "would write" if args.dry_run else "wrote", len(results))
     return 0

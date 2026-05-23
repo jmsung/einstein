@@ -305,6 +305,86 @@ def _candidates_doc(*, approved: bool, slug: str = "2020-smith-test") -> dict:
     }
 
 
+def test_collect_arxiv_ids_from_source_dir(tmp_path: Path) -> None:
+    src = tmp_path / "source"
+    src.mkdir()
+    (src / "a.md").write_text("---\nsource_url: http://arxiv.org/abs/2103.04567v2\n---\n")
+    (src / "b.md").write_text("---\nsource_url: https://arxiv.org/abs/2204.99888\n---\n")
+    (src / "c.md").write_text("---\nsource_url: https://doi.org/10.4153/some-non-arxiv\n---\n")
+    ids = si._collect_arxiv_ids(src)
+    # Should pick up arxiv IDs (strip versions), skip non-arxiv DOIs
+    assert "2103.04567" in ids
+    assert "2204.99888" in ids
+    assert all("10.4153" not in i for i in ids)
+
+
+def test_parse_s2_references_to_candidates() -> None:
+    """semanticscholar 'references' shape → candidate dicts (slug, abs_url, ...)."""
+    s2_refs = [
+        {
+            "externalIds": {"ArXiv": "2103.12345"},
+            "title": "Paper Title",
+            "abstract": "An abstract about something.",
+            "year": 2021,
+            "authors": [{"name": "A. Author"}, {"name": "B. Author"}],
+        },
+        {
+            "externalIds": {"DOI": "10.1234/x"},   # no arxiv → drop
+            "title": "Non-arxiv paper",
+            "year": 2020,
+        },
+        {
+            "externalIds": {"ArXiv": "2204.99999"},
+            "title": "Another",
+            "abstract": "",
+            "year": 2022,
+            "authors": [{"name": "C. Author"}],
+        },
+    ]
+    out = si._s2_refs_to_candidates(s2_refs)
+    assert len(out) == 2
+    arxiv_ids = [c["abs_url"] for c in out]
+    assert any("2103.12345" in u for u in arxiv_ids)
+    assert any("2204.99999" in u for u in arxiv_ids)
+    # All have slug + summary fields
+    for c in out:
+        assert "slug" in c
+        assert "abs_url" in c
+
+
+def test_citation_crawl_dedups_against_existing(tmp_path: Path) -> None:
+    """End-to-end: given a list of arxiv IDs + a mock s2-API, the crawl drops
+    references already in source/ and yields the rest as candidates."""
+    src = tmp_path / "source"
+    src.mkdir()
+    (src / "existing.md").write_text(
+        "---\nsource_url: http://arxiv.org/abs/9999.99999\n---\n"
+    )
+
+    def fake_s2_fetch(arxiv_id: str) -> list[dict]:
+        # Returns 2 refs per source paper: one new, one already-existing
+        return [
+            {"externalIds": {"ArXiv": "9999.99999"}, "title": "dup", "year": 2020},
+            {"externalIds": {"ArXiv": f"{arxiv_id}-ref1"}, "title": "new", "year": 2022},
+        ]
+
+    with patch.object(si, "_s2_fetch_references", side_effect=fake_s2_fetch):
+        candidates = si.citation_crawl(
+            arxiv_ids=["2103.04567", "2204.99888"],
+            source_dir=src,
+            rate_limit_seconds=0,
+        )
+
+    # 4 total raw refs (2 papers × 2 each), 2 are 9999.99999 dups → 2 fresh
+    assert len(candidates) == 2
+    abs_urls = [c["abs_url"] for c in candidates]
+    assert all("9999.99999" not in u for u in abs_urls)
+    # All candidates have approved=None and a slug
+    for c in candidates:
+        assert c["approved"] is None
+        assert c.get("slug")
+
+
 def test_download_with_retry_succeeds_on_second_attempt(tmp_path: Path) -> None:
     dst = tmp_path / "out.pdf"
     attempts = {"n": 0}
@@ -549,8 +629,14 @@ def test_apply_downloads_and_writes_source_for_approved(tmp_path: Path) -> None:
     def fake_p2m(pdf: Path, out_md: Path) -> None:
         out_md.write_text("# Test paper\n\nbody with $x$ math.\n")
 
+    # Mock llm_distill so the apply test doesn't shell out to claude -p
+    def fake_distill_batch(items, **kwargs):
+        return [{"slug": it["slug"], "ok": True,
+                 "summary": "# distilled\n\nbody with $x$ math.\n"} for it in items]
+
     with patch.object(si, "_download_pdf", side_effect=fake_download), \
-         patch.object(si, "_run_pdf_to_md", side_effect=fake_p2m):
+         patch.object(si, "_run_pdf_to_md", side_effect=fake_p2m), \
+         patch.object(si.llm_distill, "distill_batch", side_effect=fake_distill_batch):
         results = si.apply(candidates_json=cand_path, docs_root=docs)
 
     assert len(results) == 1
@@ -677,6 +763,32 @@ def test_propose_no_threshold_leaves_approval_null(tmp_path: Path) -> None:
     assert cands[0]["approved"] is None
 
 
+def test_apply_no_llm_uses_raw_extraction(tmp_path: Path) -> None:
+    """--no-llm bypasses claude -p; the raw opendataloader text goes to source/."""
+    docs = tmp_path / "docs"
+    (docs / "source").mkdir(parents=True)
+    (docs / "raw").mkdir(parents=True)
+    cand_path = tmp_path / "candidates.json"
+    cand_path.write_text(json.dumps(_candidates_doc(approved=True)))
+
+    def fake_download(url: str, dst: Path) -> None:
+        dst.write_bytes(b"%PDF stub")
+
+    def fake_p2m(pdf: Path, out_md: Path) -> None:
+        out_md.write_text("# raw extracted body\n\nfull text\n")
+
+    with patch.object(si, "_download_pdf", side_effect=fake_download), \
+         patch.object(si, "_run_pdf_to_md", side_effect=fake_p2m), \
+         patch.object(si.llm_distill, "distill_batch") as mock_distill:
+        results = si.apply(candidates_json=cand_path, docs_root=docs,
+                           llm_distill_enabled=False)
+    # distill_batch must NOT have been called
+    mock_distill.assert_not_called()
+    # Source body is the raw extraction
+    text = results[0].read_text()
+    assert "raw extracted body" in text
+
+
 def test_apply_uses_batch_pdf_conversion(tmp_path: Path) -> None:
     """Happy path: apply() should call pdf_to_md.convert_batch once for the
     full set of approved candidates, not per-paper convert_pdf."""
@@ -711,7 +823,11 @@ def test_apply_uses_batch_pdf_conversion(tmp_path: Path) -> None:
             (out_dir / f"{stem}.md").write_text(f"# body for {stem}\n")
 
     with patch.object(si, "_download_pdf", side_effect=fake_download), \
-         patch("seed_ingest.pdf_to_md.convert_batch", side_effect=fake_batch):
+         patch("seed_ingest.pdf_to_md.convert_batch", side_effect=fake_batch), \
+         patch.object(si.llm_distill, "distill_batch",
+                      side_effect=lambda items, **kwargs: [
+                          {"slug": it["slug"], "ok": True, "summary": "# x\n"}
+                          for it in items]):
         results = si.apply(candidates_json=cand_path, docs_root=docs,
                            download_workers=2)
 
