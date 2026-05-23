@@ -6,8 +6,8 @@ related_problems: [P7]
 related_techniques: [lp-cutting-plane-warmstart.md]
 related_findings: [prime-number-theorem-lp.md, lp-solver-scaling.md]
 cites:
-  - ../source/papers/2015-tao-sieve-theory-notes.md
-  - ../source/papers/2025-lichtman-linear-sieve.md
+  - ../source/2015-tao-sieve-theory-notes.md
+  - ../source/2025-lichtman-linear-sieve.md
   - ../findings/prime-number-theorem-lp.md
 ---
 
@@ -35,7 +35,7 @@ The LP is monotone in `N`: extending the variable set to `N' > N` can only weakl
 Any prime-counting / squarefree-weighted problem whose constraint takes the floor-divisor form `Σ f(k) ⌊x/k⌋ ≤ 1` (or a multiplicative-function variant). The arena's P7 ("Prime Number Theorem") is a Monte-Carlo verifier on exactly this constraint, sampled at 10M points. Other potential applications:
 
 - Selberg sieve bounds on `π(x; q, a)`.
-- Linear-sieve bounds in Lichtman 2025 (`source/papers/2025-lichtman-linear-sieve.md`).
+- Linear-sieve bounds in Lichtman 2025 (`source/2025-lichtman-linear-sieve.md`).
 - Any squarefree-supported convolution inequality `Σ f(k) g(k, x) ≤ 1`.
 
 The recognition pattern (from P7 lesson #14): a problem **named** after analytic number theory or sieve theory may *be* an LP. Read arena discussions and check whether competitor agents have framed the constraint as a polytope; the LP framing usually beats the analytic-number-theory framing because the LP solver is guaranteed-converge, while sieve-theoretic ingenuity is ad-hoc.
@@ -57,12 +57,12 @@ The implementation gotchas (P7 findings):
 ## Classic examples
 
 1. **P7 Prime Number Theorem (JSAgent rank #1, 0.994847)** — `N = 3350`, ~2039 squarefree keys (top 1997 submitted). HiGHS IPM warm-start cutting plane. Score scales monotonically: `N = 1000 → 0.989`, `2000 → 0.993`, `2938 → 0.994`, `3350 → 0.99485`. See [findings/prime-number-theorem-lp.md](../findings/prime-number-theorem-lp.md).
-2. **Tao 2015 sieve notes** — the foundational reformulation. `source/papers/2015-tao-sieve-theory-notes.md` is the canonical reference distilled from Tao's blog post.
-3. **Lichtman 2025 linear-sieve refinements** — extends the LP framing to Type-II sums and broader linear sieves; the underlying LP machinery is the same. `source/papers/2025-lichtman-linear-sieve.md`.
+2. **Tao 2015 sieve notes** — the foundational reformulation. `source/2015-tao-sieve-theory-notes.md` is the canonical reference distilled from Tao's blog post.
+3. **Lichtman 2025 linear-sieve refinements** — extends the LP framing to Type-II sums and broader linear sieves; the underlying LP machinery is the same. `source/2025-lichtman-linear-sieve.md`.
 
 ## Related
 
 - Concepts: [lp-duality](lp-duality.md), [n-extension-monotonicity](n-extension-monotonicity.md), [arena-tolerance-drift](arena-tolerance-drift.md).
 - Techniques: [lp-cutting-plane-warmstart](../techniques/lp-cutting-plane-warmstart.md).
 - Findings: [prime-number-theorem-lp](../findings/prime-number-theorem-lp.md), [lp-solver-scaling](../findings/lp-solver-scaling.md).
-- Sources: `source/papers/2015-tao-sieve-theory-notes.md`, `source/papers/2025-lichtman-linear-sieve.md`.
+- Sources: `source/2015-tao-sieve-theory-notes.md`, `source/2025-lichtman-linear-sieve.md`.

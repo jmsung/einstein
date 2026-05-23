@@ -6,12 +6,12 @@ related_problems: [P5, P6, P10, P11, P14, P17a, P17b, P22, P23]
 related_techniques: [slsqp-active-pair-polish.md, parallel-tempering-sa.md, mpmath-ulp-polish.md, basin-hopping-multistart.md]
 related_findings: [packing-techniques.md, basin-rigidity.md, float64-ceiling.md, sa-parallel-tempering.md]
 cites:
-  - ../source/papers/1971-leech-sphere-packing.md
-  - ../source/papers/1959-barnes-wall-lattice.md
-  - ../source/papers/2024-cohn-li-kissing.md
-  - ../source/papers/2024-delaat-kissing-sdp.md
-  - ../source/blog/cohn-kissing-numbers.md
-  - ../source/blog/friedman-packing-records.md
+  - ../source/1971-leech-sphere-packing.md
+  - ../source/1959-barnes-wall-lattice.md
+  - ../source/2024-cohn-li-kissing.md
+  - ../source/2024-delaat-kissing-sdp.md
+  - ../source/cohn-kissing-numbers.md
+  - ../source/friedman-packing-records.md
   - ../personas/archimedes.md
   - ../personas/cohn.md
   - ../personas/conway.md
@@ -31,8 +31,8 @@ Sphere packing asks: how densely can equal-radius spheres tile `ℝᵈ` (or fit 
 
 Two formulations:
 
-- **Lattice / infinite-density packing in `ℝᵈ`**: density `Δ = lim_{R → ∞} (vol(B_R ∩ packing) / vol(B_R))`. Optimal in `d = 1` trivially, `d = 2` hexagonal (Thue 1910), `d = 3` FCC (Hales 1998), `d = 8` E₈ (Viazovska 2016), `d = 24` Leech (Cohn–Kumar–Miller–Radchenko–Viazovska 2017; see `source/papers/1971-leech-sphere-packing.md`).
-- **Bounded-region packing**: pack `n` disks/spheres in a fixed container (square, rectangle, hexagon, sphere) maximizing some functional (sum of radii, minimum gap, count for fixed radius). Reference databases: Packomania (Specht), Friedman's packing records (`source/blog/friedman-packing-records.md`), Hardin-Sloane (sphere codes).
+- **Lattice / infinite-density packing in `ℝᵈ`**: density `Δ = lim_{R → ∞} (vol(B_R ∩ packing) / vol(B_R))`. Optimal in `d = 1` trivially, `d = 2` hexagonal (Thue 1910), `d = 3` FCC (Hales 1998), `d = 8` E₈ (Viazovska 2016), `d = 24` Leech (Cohn–Kumar–Miller–Radchenko–Viazovska 2017; see `source/1971-leech-sphere-packing.md`).
+- **Bounded-region packing**: pack `n` disks/spheres in a fixed container (square, rectangle, hexagon, sphere) maximizing some functional (sum of radii, minimum gap, count for fixed radius). Reference databases: Packomania (Specht), Friedman's packing records (`source/friedman-packing-records.md`), Hardin-Sloane (sphere codes).
 
 The **kissing variant** (`κ(d)`, see [kissing-number](kissing-number.md)) is a local-density question: how many `d`-spheres can simultaneously touch one. Different from infinite-density but sharing tools (LP/SDP bounds, lattice constructions, Cohn–Elkies duality).
 
@@ -49,7 +49,7 @@ Concept umbrella for:
 
 Three load-bearing concepts power all sphere-packing work in this codebase:
 
-1. **Cohn–Elkies LP upper bound** (`source/papers/2024-cohn-li-kissing.md`). For density: minimize `f(0) / f̂(0)` over Schwartz `f` with `f(x) ≤ 0` for `‖x‖ ≥ 1` and `f̂(ξ) ≥ 0`. Strong duality says any feasible `f` gives an upper bound. See [lp-duality](lp-duality.md).
+1. **Cohn–Elkies LP upper bound** (`source/2024-cohn-li-kissing.md`). For density: minimize `f(0) / f̂(0)` over Schwartz `f` with `f(x) ≤ 0` for `‖x‖ ≥ 1` and `f̂(ξ) ≥ 0`. Strong duality says any feasible `f` gives an upper bound. See [lp-duality](lp-duality.md).
 2. **Magic functions via modular forms** (Viazovska 2016 for `d = 8`; CKMRV 2017 for `d = 24`). Construct `f` as `(1 − ‖x‖²)`-times a Laplace transform of a quasimodular form; verify positivity by Eisenstein-series computation. The function *exists* because of unique modular structure in `d = 8, 24`. See [modular-forms-magic-function](modular-forms-magic-function.md).
 3. **Contact graph + rigidity**. For finite-`n` arena packings: count active touching pairs (contact graph edges) vs DOF. Over-determined ⇒ basin-rigid; multistart wasted; KKT solution unique. See [contact-graph-rigidity](contact-graph-rigidity.md), [basin-rigidity](basin-rigidity.md).
 
@@ -71,4 +71,4 @@ The arena practitioner's trio:
 - Concepts: [kissing-number](kissing-number.md), [contact-graph-rigidity](contact-graph-rigidity.md), [basin-rigidity](basin-rigidity.md), [lp-duality](lp-duality.md), [modular-forms-magic-function](modular-forms-magic-function.md), [float64-ceiling](float64-ceiling.md), [hinge-overlap](hinge-overlap.md), [arena-tolerance-drift](arena-tolerance-drift.md), [first-order-link-tangent-test](first-order-link-tangent-test.md).
 - Techniques: [slsqp-active-pair-polish](../techniques/slsqp-active-pair-polish.md), [parallel-tempering-sa](../techniques/parallel-tempering-sa.md), [mpmath-ulp-polish](../techniques/mpmath-ulp-polish.md), [basin-hopping-multistart](../techniques/basin-hopping-multistart.md).
 - Findings: [packing-techniques](../findings/packing-techniques.md), [basin-rigidity](../findings/basin-rigidity.md), [float64-ceiling](../findings/float64-ceiling.md), [sa-parallel-tempering](../findings/sa-parallel-tempering.md), [perturbation-landscape](../findings/perturbation-landscape.md).
-- Sources: `source/papers/1971-leech-sphere-packing.md`, `source/papers/1959-barnes-wall-lattice.md`, `source/papers/2024-cohn-li-kissing.md`, `source/papers/2024-delaat-kissing-sdp.md`, `source/blog/cohn-kissing-numbers.md`, `source/blog/friedman-packing-records.md`.
+- Sources: `source/1971-leech-sphere-packing.md`, `source/1959-barnes-wall-lattice.md`, `source/2024-cohn-li-kissing.md`, `source/2024-delaat-kissing-sdp.md`, `source/cohn-kissing-numbers.md`, `source/friedman-packing-records.md`.

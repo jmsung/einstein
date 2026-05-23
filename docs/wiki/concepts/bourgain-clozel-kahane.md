@@ -11,8 +11,8 @@ cites:
   - cohn-elkies-bound.md
   - modular-forms-magic-function.md
   - lp-duality.md
-  - ../source/papers/2017-goncalves-hermite-uncertainty.md
-  - ../source/papers/2019-cohn-uncertainty-d12.md
+  - ../source/2017-goncalves-hermite-uncertainty.md
+  - ../source/2019-cohn-uncertainty-d12.md
 ---
 
 # Bourgain–Clozel–Kahane sign-uncertainty principle
@@ -116,7 +116,7 @@ The dual would-be Cohn–Elkies-style: maximize a packing density subject to a "
 - **Concepts**: [uncertainty-principle](uncertainty-principle.md), [cohn-elkies-bound](cohn-elkies-bound.md), [modular-forms-magic-function](modular-forms-magic-function.md), [lp-duality](lp-duality.md).
 - **Techniques**: [k-climbing](../techniques/k-climbing.md), [gap-space-parameterization](../techniques/gap-space-parameterization.md).
 - **Findings**: [k-climbing](../findings/k-climbing.md), [verification-patterns](../findings/verification-patterns.md), [structural-cap-at-score-2-meta](../findings/structural-cap-at-score-2-meta.md), [p22-d12-construction-survey](../findings/p22-d12-construction-survey.md).
-- **Sources**: [`source/papers/2017-goncalves-hermite-uncertainty.md`](../../source/papers/2017-goncalves-hermite-uncertainty.md), [`source/papers/2019-cohn-uncertainty-d12.md`](../../source/papers/2019-cohn-uncertainty-d12.md).
+- **Sources**: [`source/2017-goncalves-hermite-uncertainty.md`](../../source/2017-goncalves-hermite-uncertainty.md), [`source/2019-cohn-uncertainty-d12.md`](../../source/2019-cohn-uncertainty-d12.md).
 
 ## References
 

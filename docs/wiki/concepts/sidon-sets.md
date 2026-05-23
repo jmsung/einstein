@@ -6,10 +6,10 @@ related_problems: [P2, P3, P19]
 related_techniques: [bnb-exhaustive-w3.md, kronecker-search-decomposition.md]
 related_findings: []
 cites:
-  - ../source/papers/2010-vinuesa-sidon-thesis.md
-  - ../source/papers/2017-cloninger-autoconvolution-sidon.md
-  - ../source/papers/2007-gyarmati-sums-differences.md
-  - ../source/papers/2010-matolcsi-autoconvolution.md
+  - ../source/2010-vinuesa-sidon-thesis.md
+  - ../source/2017-cloninger-autoconvolution-sidon.md
+  - ../source/2007-gyarmati-sums-differences.md
+  - ../source/2010-matolcsi-autoconvolution.md
   - ../personas/erdos.md
   - ../personas/gauss.md
   - ../personas/ramanujan.md
@@ -53,21 +53,21 @@ Recognition pattern: if the objective involves `f ⋆ f` or `1_A ± 1_A`, the li
 
 Three structural connections:
 
-1. **Sidon = max-bound = `1_A ⋆ 1_A` characterization.** Vinuesa's 2010 thesis (`source/papers/2010-vinuesa-sidon-thesis.md`) is the canonical reference connecting discrete Sidon-set extremal theory with the continuous autoconvolution problem. Every continuous extremal `f` corresponds to a sequence of discrete `1_{A_n} / |A_n|^{1/2}` whose Sidon-like properties converge.
-2. **Cloninger–Steinerberger autoconvolution Sidon bounds.** `source/papers/2017-cloninger-autoconvolution-sidon.md` proves explicit lower bounds on `inf_f ‖f ⋆ f‖_∞ / (∫f)²` via the Sidon-set interpretation. These bounds inform what's *achievable* for P2, P3.
-3. **Gyarmati on sums and differences.** `source/papers/2007-gyarmati-sums-differences.md` covers the dual `B_2⁻[g]` family — directly relevant to P19's difference-base question.
+1. **Sidon = max-bound = `1_A ⋆ 1_A` characterization.** Vinuesa's 2010 thesis (`source/2010-vinuesa-sidon-thesis.md`) is the canonical reference connecting discrete Sidon-set extremal theory with the continuous autoconvolution problem. Every continuous extremal `f` corresponds to a sequence of discrete `1_{A_n} / |A_n|^{1/2}` whose Sidon-like properties converge.
+2. **Cloninger–Steinerberger autoconvolution Sidon bounds.** `source/2017-cloninger-autoconvolution-sidon.md` proves explicit lower bounds on `inf_f ‖f ⋆ f‖_∞ / (∫f)²` via the Sidon-set interpretation. These bounds inform what's *achievable* for P2, P3.
+3. **Gyarmati on sums and differences.** `source/2007-gyarmati-sums-differences.md` covers the dual `B_2⁻[g]` family — directly relevant to P19's difference-base question.
 
 The practical implication: when the optimizer stalls on an autocorrelation problem, the Sidon-set bound (a discrete construction) often improves on the smooth-optimizer continuous solution. Discrete extremal constructions are the "hidden" structure that pure-numerical optimization misses.
 
 ## Classic examples
 
-1. **P2 First Autocorrelation** — Cloninger–Steinerberger 2017 gives an explicit lower bound construction for `‖f ⋆ f‖_∞ / (∫f)²`. JSAgent's rank-#1 score `1.502861628` is consistent with the continuous Sidon-bound asymptotics. Source: `source/papers/2017-cloninger-autoconvolution-sidon.md`.
+1. **P2 First Autocorrelation** — Cloninger–Steinerberger 2017 gives an explicit lower bound construction for `‖f ⋆ f‖_∞ / (∫f)²`. JSAgent's rank-#1 score `1.502861628` is consistent with the continuous Sidon-bound asymptotics. Source: `source/2017-cloninger-autoconvolution-sidon.md`.
 2. **P19 Difference Bases** — `B_h⁻[g]` machinery + Kronecker decomposition `A ⊕ 8011 · {0,1,4,6}`. The Singer/Bose/Paley constructions (cited in P19 strategy.md) are classical Sidon-flavored constructions in finite fields.
-3. **Vinuesa thesis 2010** — the unifying reference. `source/papers/2010-vinuesa-sidon-thesis.md` covers Sidon sets, generalized Sidon, autoconvolution, and the bridge to discrete Fourier analysis.
+3. **Vinuesa thesis 2010** — the unifying reference. `source/2010-vinuesa-sidon-thesis.md` covers Sidon sets, generalized Sidon, autoconvolution, and the bridge to discrete Fourier analysis.
 
 ## Related
 
 - Concepts: [autocorrelation-inequality](autocorrelation-inequality.md), [kronecker-decomposition](kronecker-decomposition.md), [equioscillation](equioscillation.md), [discretization-as-structure](discretization-as-structure.md).
 - Techniques: [bnb-exhaustive-w3](../techniques/bnb-exhaustive-w3.md), [kronecker-search-decomposition](../techniques/kronecker-search-decomposition.md).
 - Findings: P19 strategy.md (council finding on Kronecker decomposition).
-- Sources: `source/papers/2010-vinuesa-sidon-thesis.md`, `source/papers/2017-cloninger-autoconvolution-sidon.md`, `source/papers/2007-gyarmati-sums-differences.md`, `source/papers/2010-matolcsi-autoconvolution.md`.
+- Sources: `source/2010-vinuesa-sidon-thesis.md`, `source/2017-cloninger-autoconvolution-sidon.md`, `source/2007-gyarmati-sums-differences.md`, `source/2010-matolcsi-autoconvolution.md`.

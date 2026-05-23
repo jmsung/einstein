@@ -9,21 +9,17 @@ layers:
   notes: ../../mb/notes/        # private; agent never writes
   wiki: ./
 
-raw_subfolders: [papers, arxiv, repos, blog, oeis]
-
-raw_format:
-  papers: pdf
-  arxiv: pdf
-  repos: md
-  blog: md
-  oeis: md
+structure: flat   # raw/ and source/ are flat — provenance lives in source/<file>.md frontmatter (kind: paper|arxiv|repo|blog|oeis), not in subfolders
 
 filename_conventions:
-  papers: "<year>-<firstAuthor>-<slug>"
+  paper: "<year>-<firstAuthor>-<slug>"
   arxiv: "<year>-<firstAuthor>-<slug>"
-  repos: "<org>-<repo>"
-  blog: "<YYYY-MM-DD>-<domain>-<slug>"
+  repo: "<org>-<repo>"
+  blog: "<year>-<domain>-<slug>"
   oeis: "<oeis-id>-<slug>"
+
+source_frontmatter_required: [type, kind, source_url, ingested_at, ingested_by]
+source_frontmatter_optional: [title, authors, year, source_local, source_hash, status, summary, tags, cites, related_problems, drive_backup, level]
 
 ingest:
   human_gated: true
@@ -86,10 +82,8 @@ The YAML frontmatter above is the **machine-readable contract** — wiki skills 
 ## Layers
 
 ```
-../raw/        # GITIGNORED. Local cache of native-format originals (PDFs, html, md).
-  papers/  arxiv/  repos/  blog/  oeis/
-../source/     # in-git. 1:1 LLM-distilled .md per raw artifact.
-  papers/  arxiv/  repos/  blog/  oeis/
+../raw/        # GITIGNORED. Local cache of native-format originals (PDFs, html, md). FLAT.
+../source/     # in-git. 1:1 LLM-distilled .md per raw artifact. FLAT. Provenance in frontmatter.
 ./             # synthesized, hand- or agent-curated pages
   home.md      # narrative front door
   index.md     # catalog

@@ -6,11 +6,11 @@ related_problems: [P1, P2, P3, P4]
 related_techniques: [larger-n-cascade.md, dinkelbach-fractional-programming.md, remez-equioscillation-diagnostic.md]
 related_findings: [equioscillation-escape.md, optimizer-recipes.md]
 cites:
-  - ../source/papers/2010-matolcsi-autoconvolution.md
-  - ../source/papers/2017-cloninger-autoconvolution-sidon.md
-  - ../source/papers/2025-jaech-autoconvolution.md
-  - ../source/papers/2026-rechnitzer-autoconvolution-digits.md
-  - ../source/papers/2025-boyer-autoconvolution.md
+  - ../source/2010-matolcsi-autoconvolution.md
+  - ../source/2017-cloninger-autoconvolution-sidon.md
+  - ../source/2025-jaech-autoconvolution.md
+  - ../source/2026-rechnitzer-autoconvolution-digits.md
+  - ../source/2025-boyer-autoconvolution.md
   - ../personas/hilbert.md
   - ../personas/riemann.md
   - ../personas/tao.md
@@ -49,7 +49,7 @@ This concept is the umbrella for:
 
 - B_h[g] / Sidon set autocorrelation bounds — `f ⋆ f` controls the maximum representation count of integers as sums.
 - Ramsey/additive-combinatorics extremal density — autoconvolution structure of indicator functions.
-- Matolcsi 2010, Cloninger–Steinerberger 2017 (`source/papers/2017-cloninger-autoconvolution-sidon.md`), Jaech–Joseph 2025, Rechnitzer 2026, Boyer 2025 — the literature is rich and converging.
+- Matolcsi 2010, Cloninger–Steinerberger 2017 (`source/2017-cloninger-autoconvolution-sidon.md`), Jaech–Joseph 2025, Rechnitzer 2026, Boyer 2025 — the literature is rich and converging.
 
 ## Why it works (and where it traps)
 
@@ -72,4 +72,4 @@ The combination — Fourier-dual + equioscillation + resolution-dependence — i
 - Concepts: [equioscillation](equioscillation.md), [parameterization-selection](parameterization-selection.md), [discretization-as-structure](discretization-as-structure.md), [smooth-max-approximation](smooth-max-approximation.md), [fractional-programming-dinkelbach](fractional-programming-dinkelbach.md), [sidon-sets](sidon-sets.md), [n-extension-monotonicity](n-extension-monotonicity.md).
 - Techniques: [larger-n-cascade](../techniques/larger-n-cascade.md), [dinkelbach-fractional-programming](../techniques/dinkelbach-fractional-programming.md), [remez-equioscillation-diagnostic](../techniques/remez-equioscillation-diagnostic.md), [cross-resolution-basin-transfer](../techniques/cross-resolution-basin-transfer.md).
 - Findings: [equioscillation-escape](../findings/equioscillation-escape.md), [optimizer-recipes](../findings/optimizer-recipes.md).
-- Sources: `source/papers/2010-matolcsi-autoconvolution.md`, `source/papers/2017-cloninger-autoconvolution-sidon.md`, `source/papers/2025-jaech-autoconvolution.md`, `source/papers/2026-rechnitzer-autoconvolution-digits.md`, `source/papers/2025-boyer-autoconvolution.md`.
+- Sources: `source/2010-matolcsi-autoconvolution.md`, `source/2017-cloninger-autoconvolution-sidon.md`, `source/2025-jaech-autoconvolution.md`, `source/2026-rechnitzer-autoconvolution-digits.md`, `source/2025-boyer-autoconvolution.md`.

@@ -50,6 +50,6 @@ If yes → JSAgent breaks the 7-way SOTA tie at 2.639027 with a structural const
 - `wiki/concepts/sidon-sets.md`
 - `wiki/techniques/kronecker-search-decomposition.md`
 - `wiki/techniques/bnb-exhaustive-w3.md`
-- `source/papers/2010-vinuesa-sidon-thesis.md`
-- `source/papers/2007-gyarmati-sums-differences.md`
+- `source/2010-vinuesa-sidon-thesis.md`
+- `source/2007-gyarmati-sums-differences.md`
 - Private tracking: `mb/tracking/problem-19-difference-bases/strategy.md` (Kronecker discovery + BnB w=3,4 results)

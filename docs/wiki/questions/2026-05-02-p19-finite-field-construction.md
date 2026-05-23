@@ -44,5 +44,5 @@ Hidden algebraic structure (modular forms / Ramanujan graphs / character sums) h
 - `wiki/concepts/modular-forms-magic-function.md`
 - `wiki/personas/ramanujan.md`
 - `wiki/personas/gauss.md`
-- `source/papers/2010-vinuesa-sidon-thesis.md`
-- `source/papers/2022-ganzhinov-symmetric-lines.md` (Lubotzky-Phillips-Sarnak Ramanujan graphs)
+- `source/2010-vinuesa-sidon-thesis.md`
+- `source/2022-ganzhinov-symmetric-lines.md` (Lubotzky-Phillips-Sarnak Ramanujan graphs)

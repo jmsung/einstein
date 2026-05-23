@@ -74,7 +74,7 @@ The n=8 case is folklore: the *packing* optimum is the cube, but the *minimum-pa
 - **Conway-Sloane SPLAG** ([`personas/conway.md`](../personas/conway.md)) — the comprehensive sphere-packing reference. Hardin-Sloane is specifically the spherical-codes subset; SPLAG covers lattices, sphere packings in general, and related codes.
 - **Packomania** (Specht) — analogous database for *bounded-region packings* (disks in square, rectangle, hexagon). Not for spherical problems.
 - **Wales-Doye Cambridge database** — Coulomb-energy spherical configurations. Used alongside Hardin-Sloane for Thomson-type problems.
-- **Friedman's packing records** ([`source/blog/friedman-packing-records.md`](../../source/blog/friedman-packing-records.md)) — yet another database, focused on min/max distance ratios in 2D.
+- **Friedman's packing records** ([`source/friedman-packing-records.md`](../../source/friedman-packing-records.md)) — yet another database, focused on min/max distance ratios in 2D.
 
 ## How the agent should use it
 

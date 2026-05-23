@@ -48,7 +48,7 @@ Sieve-theory problems are linear programs in disguise — formulate with squaref
 - Tao (2015), sieve-theory LP reformulation.
 - Cohn LP duality for arithmetic problems.
 - HiGHS open-source LP/IPM solver.
-- See `source/papers/` distillations on sieve theory.
+- See `source/` distillations on sieve theory.
 
 ## Private tracking
 For owner's reference: `mb/tracking/problem-7-prime-number-theorem/` contains the LP scaling table and IPM warm-start recipe. Not part of the public artifact.

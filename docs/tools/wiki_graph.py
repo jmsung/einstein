@@ -244,7 +244,7 @@ def compute_type1_concept_gaps(nodes, edges):
         if rp.startswith(("concepts/", "techniques/", "personas/")):
             topic_slugs.add(Path(rp).stem.lower())
     # Also pull source/ slugs (paper/blog references) — covers cases like
-    # "erich friedman" where the topic exists at source/blog/friedman-packing-records
+    # "erich friedman" where the topic exists at source/friedman-packing-records
     # but isn't in concepts/. Walk the source/ tree and add stems.
     source_dir = WIKI.parent / "source"
     if source_dir.exists():
@@ -285,7 +285,7 @@ def compute_type1_concept_gaps(nodes, edges):
                 problem_title_phrases.add(f"{words[i]} {words[i+1]} {words[i+2]}")
             break  # one H1 per page
 
-    # v6: extract author surnames from source/papers/ filenames (year-author-topic.md
+    # v6: extract author surnames from source/ filenames (year-author-topic.md
     # convention). Filters out proper-name false positives like "erich friedman"
     # where the surname is in source/ but the full name isn't a concept.
     author_surnames = set()
@@ -356,7 +356,7 @@ def compute_type1_concept_gaps(nodes, edges):
             if phrase in problem_title_phrases:
                 continue
             # v6: skip phrases where any word matches an author surname from source/
-            # (catches "erich friedman" where source/blog/friedman-packing-records
+            # (catches "erich friedman" where source/friedman-packing-records
             # documents the topic; not a concept gap)
             if any(w in author_surnames for w in phrase.split()):
                 continue

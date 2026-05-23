@@ -67,4 +67,4 @@ The kinks are the **Turán construction transitions**. They are not artifacts; t
 - Concepts: [flag-algebra](flag-algebra.md), [lp-duality](lp-duality.md), [equioscillation](equioscillation.md).
 - Techniques: [sdp-flag-algebra](../techniques/sdp-flag-algebra.md).
 - Findings: P13 strategy and optimizer-recipes lessons on per-region sigmoid + boundary-snap.
-- Sources: Erdős–Stone (1946), Bollobás (1976), Razborov 2007 — not yet ingested into `source/papers/` (gap for future wiki-ingest).
+- Sources: Erdős–Stone (1946), Bollobás (1976), Razborov 2007 — not yet ingested into `source/` (gap for future wiki-ingest).

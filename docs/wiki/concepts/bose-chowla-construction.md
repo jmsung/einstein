@@ -11,7 +11,7 @@ cites:
   - lp-duality.md
   - kronecker-decomposition.md
   - ../personas/gauss.md
-  - ../source/papers/2010-vinuesa-sidon-thesis.md
+  - ../source/2010-vinuesa-sidon-thesis.md
 ---
 
 # Bose–Chowla Sidon-set construction
@@ -35,7 +35,7 @@ Reproducer: `cb/scripts/difference_bases/bose_chowla.py`. For `q=89`, produces a
 **Where Bose–Chowla shines:**
 
 - **Construction of Sidon-set extremal lower bounds** — paired with the trivial counting bound `|B| ≤ q+1` for `B_2[1]` in `[1, q²]`, Bose–Chowla certifies the bound is tight.
-- **B_h[g] generalization base case** — Vinuesa thesis ([source/papers/2010-vinuesa-sidon-thesis.md](../source/papers/2010-vinuesa-sidon-thesis.md)) builds B_h[g] constructions from Bose–Chowla seeds.
+- **B_h[g] generalization base case** — Vinuesa thesis ([source/2010-vinuesa-sidon-thesis.md](../source/2010-vinuesa-sidon-thesis.md)) builds B_h[g] constructions from Bose–Chowla seeds.
 - **Cyclic difference families** — Bose–Chowla difference sets connect to perfect difference families on cyclic groups (see Buratti et al. 2025 framework).
 - **Lattice constructions in dimensions `d ∣ q²−1`** — for example, `q=29` gives `q²−1 = 840`, which matches the empirical kissing-number cap κ(12) = 840 for P22's d=12 (open question whether this is coincidence or structural — see [questions/](../questions/) for the open seed).
 - **B_2[g] sets for autoconvolution problems** — the Vinuesa machinery applies to P2/P3 autocorrelation lower-bound constructions when `g ≥ 2`.
@@ -123,6 +123,6 @@ Filed as `wiki/questions/2026-05-02-bose-chowla-840-kissing-d12.md` for future r
 - [`concepts/kronecker-decomposition.md`](kronecker-decomposition.md) — the Kronecker structure P19 uses; Bose–Chowla doesn't fit because of contiguous-prefix mismatch
 - [`findings/dead-end-p19-bose-chowla.md`](../findings/dead-end-p19-bose-chowla.md) — formal closure of P19's H1 algebraic-construction sub-question
 - [`personas/gauss.md`](../personas/gauss.md), [`personas/erdos.md`](../personas/erdos.md) — personas that reach for Bose–Chowla
-- [`source/papers/2010-vinuesa-sidon-thesis.md`](../source/papers/2010-vinuesa-sidon-thesis.md) — `B_h[g]` machinery built on Bose–Chowla foundations
+- [`source/2010-vinuesa-sidon-thesis.md`](../source/2010-vinuesa-sidon-thesis.md) — `B_h[g]` machinery built on Bose–Chowla foundations
 
 *Last updated: 2026-05-02*

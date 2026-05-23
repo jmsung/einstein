@@ -7,9 +7,9 @@ status: answered
 related_problems: [P2]
 related_concepts: [autocorrelation-inequality.md, lp-duality.md, sidon-sets.md]
 cites:
-  - ../../source/papers/2017-cloninger-autoconvolution-sidon.md
-  - ../../source/papers/2010-matolcsi-autoconvolution.md
-  - ../../source/papers/2010-vinuesa-sidon-thesis.md
+  - ../../source/2017-cloninger-autoconvolution-sidon.md
+  - ../../source/2010-matolcsi-autoconvolution.md
+  - ../../source/2010-vinuesa-sidon-thesis.md
 ---
 
 # Why P2 lower bounds aren't advancing past 1.28
@@ -76,7 +76,7 @@ This is a structurally different argument: the C-S relaxation is a *finite* LP p
 - Concept: [sidon-sets](../concepts/sidon-sets.md) (Sidon-set transfer baseline)
 - Open question (now partially answered): [2026-05-02-p2-sos-lasserre-feasibility](../questions/2026-05-02-p2-sos-lasserre-feasibility.md)
 - Follow-up finding: [dead-end-p2-lasserre-l2-weaker-than-cs](dead-end-p2-lasserre-l2-weaker-than-cs.md) — Lasserre L2 closes sub-questions 1+2 negatively
-- Source: [2017-cloninger-autoconvolution-sidon](../../source/papers/2017-cloninger-autoconvolution-sidon.md)
-- Source: [2010-matolcsi-autoconvolution](../../source/papers/2010-matolcsi-autoconvolution.md)
+- Source: [2017-cloninger-autoconvolution-sidon](../../source/2017-cloninger-autoconvolution-sidon.md)
+- Source: [2010-matolcsi-autoconvolution](../../source/2010-matolcsi-autoconvolution.md)
 - Tracking: `mb/tracking/problem-2-first-autocorrelation/lower-bounds.md`
 - Tracking (full survey): `mb/tracking/problem-3-autocorrelation/lower-bounds-first.md`

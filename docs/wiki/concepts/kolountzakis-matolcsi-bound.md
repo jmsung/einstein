@@ -11,9 +11,9 @@ cites:
   - hardy-hilbert-inequality.md
   - sidon-sets.md
   - lp-duality.md
-  - ../source/papers/2010-matolcsi-autoconvolution.md
-  - ../source/papers/2017-cloninger-autoconvolution-sidon.md
-  - ../source/papers/2010-vinuesa-sidon-thesis.md
+  - ../source/2010-matolcsi-autoconvolution.md
+  - ../source/2017-cloninger-autoconvolution-sidon.md
+  - ../source/2010-vinuesa-sidon-thesis.md
 ---
 
 # Kolountzakis–Matolcsi LP bound (autoconvolution-supremum framework)
@@ -105,7 +105,7 @@ The pedagogical lesson: K–M is the **autoconvolution-shaped sibling** of Cohn�
 - **Concepts**: [autocorrelation-inequality](autocorrelation-inequality.md), [hardy-hilbert-inequality](hardy-hilbert-inequality.md), [sidon-sets](sidon-sets.md), [lp-duality](lp-duality.md), [cohn-elkies-bound](cohn-elkies-bound.md).
 - **Techniques**: [dinkelbach-fractional-programming](../techniques/dinkelbach-fractional-programming.md), [frank-wolfe](../techniques/frank-wolfe.md).
 - **Findings**: [lp-solver-scaling](../findings/lp-solver-scaling.md) (lessons #47, #57, #95), [equioscillation-escape](../findings/equioscillation-escape.md), [optimizer-recipes](../findings/optimizer-recipes.md).
-- **Sources**: [`source/papers/2010-matolcsi-autoconvolution.md`](../../source/papers/2010-matolcsi-autoconvolution.md), [`source/papers/2017-cloninger-autoconvolution-sidon.md`](../../source/papers/2017-cloninger-autoconvolution-sidon.md), [`source/papers/2010-vinuesa-sidon-thesis.md`](../../source/papers/2010-vinuesa-sidon-thesis.md).
+- **Sources**: [`source/2010-matolcsi-autoconvolution.md`](../../source/2010-matolcsi-autoconvolution.md), [`source/2017-cloninger-autoconvolution-sidon.md`](../../source/2017-cloninger-autoconvolution-sidon.md), [`source/2010-vinuesa-sidon-thesis.md`](../../source/2010-vinuesa-sidon-thesis.md).
 
 ## References
 

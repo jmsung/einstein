@@ -58,4 +58,4 @@ For P13 the "flag-algebra" content is in the *envelope formula*; the arena probl
 - Concepts: [turan-density](turan-density.md), [lp-duality](lp-duality.md).
 - Techniques: [sdp-flag-algebra](../techniques/sdp-flag-algebra.md), [bounded-lbfgs-per-region-sigmoid](../techniques/bounded-lbfgs-per-region-sigmoid.md), [boundary-snap-for-kinks](../techniques/boundary-snap-for-kinks.md), [greedy-insert-cd-redistribute](../techniques/greedy-insert-cd-redistribute.md).
 - Findings: P13 strategy and `findings/optimizer-recipes.md` lessons #31, #32, #67–#71 (per-region sigmoid, boundary-snap, slope-N interpolation).
-- Sources: Razborov 2007 "Flag algebras" (foundational; not yet ingested into `source/papers/`).
+- Sources: Razborov 2007 "Flag algebras" (foundational; not yet ingested into `source/`).

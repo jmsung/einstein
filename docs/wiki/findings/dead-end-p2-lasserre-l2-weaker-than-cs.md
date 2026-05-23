@@ -9,7 +9,7 @@ related_concepts: [autocorrelation-inequality.md, lp-duality.md]
 related_findings: [p2-lower-bound-research-state.md]
 cites:
   - ../findings/p2-lower-bound-research-state.md
-  - ../../source/papers/2017-cloninger-autoconvolution-sidon.md
+  - ../../source/2017-cloninger-autoconvolution-sidon.md
   - ../questions/2026-05-02-p2-sos-lasserre-feasibility.md
   - ../../scripts/first_autocorrelation/lasserre_lower_bound.py
 ---
@@ -89,5 +89,5 @@ This is a known phenomenon: Lasserre L2 = LP-style relaxation, which is what C-S
 
 - Open question (now partially answered): [2026-05-02-p2-sos-lasserre-feasibility](../questions/2026-05-02-p2-sos-lasserre-feasibility.md). Sub-questions 1 and 2 closed by this finding; sub-question 3 (hybrid SDP+BnB) remains open as a much-narrower follow-up.
 - Background: [p2-lower-bound-research-state](p2-lower-bound-research-state.md) — the meta-finding identifying SOS/Lasserre as the only published-literature gap.
-- Source: [`source/papers/2017-cloninger-autoconvolution-sidon.md`](../../source/papers/2017-cloninger-autoconvolution-sidon.md).
+- Source: [`source/2017-cloninger-autoconvolution-sidon.md`](../../source/2017-cloninger-autoconvolution-sidon.md).
 - Script: [`scripts/first_autocorrelation/lasserre_lower_bound.py`](../../scripts/first_autocorrelation/lasserre_lower_bound.py).

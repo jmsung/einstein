@@ -6,8 +6,8 @@ level: 1
 source_type: agent_analysis
 cites:
   - knowledge.yaml
-  - ../source/repos/jmsung-einstein.md
-  - ../source/repos/jmsung-einstein-codebase.md
+  - ../source/jmsung-einstein.md
+  - ../source/jmsung-einstein-codebase.md
 ---
 
 # GPU & Modal Cloud Compute

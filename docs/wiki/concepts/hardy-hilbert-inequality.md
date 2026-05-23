@@ -66,8 +66,8 @@ This is the same machinery Cohn–Elkies use for sphere-packing LP bounds (diffe
 
 1. **The original 1925 Hardy–Hilbert inequality** (Hilbert 1906 lectures, written up by Hardy 1925). The constant `π` is sharp; equality only in the limit.
 2. **Schur test (Schur 1911)** — generalizes Hardy–Hilbert: any positive integral operator with a "test function" obeying the dual conditions has operator norm bounded by the test constant. Workhorse for deriving sharp bounds on autoconvolution.
-3. **Continuous autoconvolution bounds (Cloninger–Steinerberger 2017)** ([source/papers/2017-cloninger-autoconvolution-sidon.md](../../source/papers/2017-cloninger-autoconvolution-sidon.md)) — improved Hardy–Hilbert-like bound for the autoconvolution-supremum problem; the LP relaxation we use for P2/P3 is essentially a discretization of this.
-4. **Matolcsi–Vinuesa (2010)** ([source/papers/2010-matolcsi-autoconvolution.md](../../source/papers/2010-matolcsi-autoconvolution.md)) — disproof of the Schinzel–Schmidt symmetry conjecture via an explicit asymmetric `f` that nearly saturates a Hardy–Hilbert-style bound.
+3. **Continuous autoconvolution bounds (Cloninger–Steinerberger 2017)** ([source/2017-cloninger-autoconvolution-sidon.md](../../source/2017-cloninger-autoconvolution-sidon.md)) — improved Hardy–Hilbert-like bound for the autoconvolution-supremum problem; the LP relaxation we use for P2/P3 is essentially a discretization of this.
+4. **Matolcsi–Vinuesa (2010)** ([source/2010-matolcsi-autoconvolution.md](../../source/2010-matolcsi-autoconvolution.md)) — disproof of the Schinzel–Schmidt symmetry conjecture via an explicit asymmetric `f` that nearly saturates a Hardy–Hilbert-style bound.
 
 ## Related to / distinguished from
 
@@ -96,6 +96,6 @@ When the council dispatch returns an autocorrelation-family problem (P2/P3/P4):
 
 - [`personas/hilbert.md`](../personas/hilbert.md) — the persona that reaches for Hardy–Hilbert
 - [`concepts/autocorrelation-inequality.md`](autocorrelation-inequality.md) — target problem family
-- [`source/papers/2017-cloninger-autoconvolution-sidon.md`](../../source/papers/2017-cloninger-autoconvolution-sidon.md) — sharper kernels for autoconvolution
-- [`source/papers/2010-matolcsi-autoconvolution.md`](../../source/papers/2010-matolcsi-autoconvolution.md) — explicit Hardy–Hilbert-saturating extremizer
-- [`source/papers/2010-vinuesa-sidon-thesis.md`](../../source/papers/2010-vinuesa-sidon-thesis.md) — B_h[g] machinery built on Hardy–Hilbert
+- [`source/2017-cloninger-autoconvolution-sidon.md`](../../source/2017-cloninger-autoconvolution-sidon.md) — sharper kernels for autoconvolution
+- [`source/2010-matolcsi-autoconvolution.md`](../../source/2010-matolcsi-autoconvolution.md) — explicit Hardy–Hilbert-saturating extremizer
+- [`source/2010-vinuesa-sidon-thesis.md`](../../source/2010-vinuesa-sidon-thesis.md) — B_h[g] machinery built on Hardy–Hilbert
