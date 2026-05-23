@@ -42,7 +42,7 @@ Two first-class compute environments. Route every workload to its best home **be
 
 2. **Match against the matrix.** If clear, go.
 
-3. **If unclear**, run `tools/compute_router.py <spec>` (see Goal 13) for a recommendation, OR run `python -m einstein.gpu_tempering.benchmark` (existing) for the GPU-specific call.
+3. **If unclear**, run `scripts/compute_router.py <spec>` (see Goal 13) for a recommendation, OR run `python -m einstein.gpu_tempering.benchmark` (existing) for the GPU-specific call.
 
 4. **If recommendation is `STAY ON CPU`** for a workload you assumed needed GPU, trust it. The GPU sits idle on sequential workloads.
 

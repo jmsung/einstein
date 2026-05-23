@@ -99,3 +99,34 @@ README updated with 18 problems
  8 files changed, 117 insertions(+), 26 deletions(-)
  create mode 100644 logs/status/cron.log
 fatal: could not read Username for 'https://github.com': Device not configured
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
+/bin/sh: /Users/jmsung/projects/einstein/cb/scripts/daily_status_cron.sh: No such file or directory
