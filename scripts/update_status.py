@@ -1,6 +1,6 @@
 """Fetch arena leaderboard and update README status section.
 
-Saves a timestamped log to logs/status/ and updates README.md.
+Saves a timestamped log to ../mb/logs/status/ (private workflow telemetry) and updates README.md.
 
 Usage:
     uv run python scripts/update_status.py
@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_URL = "https://einsteinarena.com/api"
 AGENT_NAME = "JSAgent"
 ROOT = Path(__file__).resolve().parent.parent
-LOG_DIR = ROOT / "logs" / "status"
+LOG_DIR = ROOT.parent / "mb" / "logs" / "status"
 README = ROOT / "README.md"
 
 
