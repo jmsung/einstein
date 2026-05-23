@@ -1,0 +1,141 @@
+# Wiki slug → arxiv-vocabulary translation
+#
+# Per `docs/wiki/findings/dead-end-slug-as-arxiv-phrase-query.md`: wiki slugs
+# are agent-internal jargon, not literature vocabulary. Verbatim phrase queries
+# against arxiv return ~0 hits. This file maps slugs to phrases that DO appear
+# in the math literature.
+#
+# Schema:
+#   <slug-with-.md-suffix>:
+#     - "<phrase 1>"
+#     - "<phrase 2>"
+#     ...
+#
+# All phrases for a slug are OR-ed into one arxiv query (one API call per slug,
+# preserves the rate-limit budget). Slugs not present here fall back to the
+# slug-as-phrase strategy in seed_ingest.py (yields ~0 hits — by design, forces
+# humans to add a mapping or accept the slug is unsearchable).
+#
+# Curated 2026-05-23 against the 36 actionable rows in concept-coverage.json.
+# Add new mappings as the wiki grows. Empty list `[]` means "intentionally
+# unmapped — slug is project-coined with no literature analog."
+
+# ---------- concepts ----------
+
+basin-rigidity.md:
+  - "first-order rigidity"
+  - "isolated local minimum"
+  - "rigidity sphere packing"
+
+contact-graph-rigidity.md:
+  - "contact graph rigidity"
+  - "infinitesimal rigidity disk packing"
+
+parameterization-selection.md:
+  - "reparameterization optimization landscape"
+  - "change of variables nonconvex"
+
+parameterization-induced-rank-deficiency.md:
+  - "rank deficient parameterization"
+  - "Hessian degeneracy optimization"
+
+float64-ceiling.md:
+  - "high precision optimization sphere packing"
+  - "multiprecision arithmetic numerical"
+
+smooth-max-approximation.md:
+  - "log-sum-exp smoothing"
+  - "smoothed maximum approximation"
+
+symmetry-and-fundamental-domain.md:
+  - "fundamental domain symmetry sphere packing"
+  - "symmetry reduction nonlinear optimization"
+
+probabilistic-method.md:
+  - "probabilistic method Erdos"
+  - "Lovasz local lemma"
+
+first-order-link-tangent-test.md:
+  - "first-order optimality conditions kissing"
+  - "tangent space sphere arrangement"
+
+hinge-overlap.md:
+  - "kissing number hinge loss"
+  - "ReLU penalty sphere packing"
+
+k-climbing-and-dof-augmentation.md:
+  - "polynomial degree extremal uncertainty"
+  - "degrees of freedom Hermite"
+
+arena-tolerance-drift.md: []     # project-specific (arena verifier behavior)
+minimprovement-gate.md: []       # project-specific (arena gating policy)
+
+# ---------- techniques ----------
+
+basin-hopping-multistart.md:
+  - "basin hopping global optimization"
+  - "multistart nonconvex"
+
+mpmath-ulp-polish.md:
+  - "multiprecision arithmetic optimization"
+  - "high precision floating point"
+
+slsqp-active-pair-polish.md:
+  - "sequential quadratic programming active set"
+  - "SQP nonlinear programming"
+
+cma-es-with-warmstart.md:
+  - "CMA-ES"
+  - "covariance matrix adaptation evolution"
+
+bounded-lbfgs-per-region-sigmoid.md:
+  - "L-BFGS bound constrained"
+  - "piecewise smooth nonlinear optimization"
+
+larger-n-cascade.md:
+  - "discretization refinement nonlinear"
+  - "mesh refinement optimal control"
+
+micro-perturbation-multiscale.md:
+  - "multiscale perturbation global optimization"
+  - "stochastic local search sphere packing"
+
+memetic-tabu-search.md:
+  - "memetic algorithm combinatorial optimization"
+  - "tabu search flat polynomial"
+
+lp-cutting-plane-warmstart.md:
+  - "cutting plane linear programming"
+  - "LP relaxation autocorrelation inequality"
+
+gap-space-parameterization.md:
+  - "uncertainty principle Hermite Laguerre"
+  - "gap parameterization spectral"
+
+k-climbing.md:
+  - "polynomial degree augmentation optimization"
+
+warm-start-from-leader.md:
+  - "warm start nonlinear optimization"
+
+arena-tolerance-slsqp.md: []                     # project-specific
+uniform-radius-shrink-fallback.md: []            # project-specific
+multistart-with-rotation-lottery.md: []          # project-specific
+gpu-decision-framework.md: []                    # internal-tooling, not lit
+first-order-link-tangent-test.md: []             # duplicates concept entry, leave technique unmapped
+
+# ---------- findings ----------
+
+equioscillation-escape.md:
+  - "Chebyshev equioscillation"
+  - "Remez exchange algorithm"
+
+p2-peak-locking-hessian-mechanism.md:
+  - "Hessian degeneracy autocorrelation"
+  - "peak locking optimization"
+
+hinge-overlap-rank3-squeeze.md: []  # project-specific finding name
+
+packing-techniques.md:
+  - "circle packing algorithm"
+  - "disk packing optimization"
