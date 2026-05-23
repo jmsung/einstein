@@ -118,12 +118,41 @@ def _build_prompt(*, extracted_md: str, metadata: dict) -> str:
 
 
 _FENCE_RE = re.compile(r"^```(?:markdown|md)?\s*\n(.*?)\n```\s*$", re.DOTALL)
+_REQUIRED_HEADINGS = (
+    "## One-line",
+    "## Key claim",
+    "## Method",
+    "## Why it matters here",
+    "## Open questions / connections",
+    "## Key terms",
+)
+_CLAUDE_UNAVAILABLE_PATTERNS = (
+    "you've hit your session limit",
+    "usage-credits",
+    "failed to authenticate",
+    "invalid authentication credentials",
+    "not logged in",
+    "please run /login",
+    "api error: 401",
+)
 
 
 def _strip_fence(text: str) -> str:
     """If the output is wrapped in a ```markdown\n...\n``` fence, unwrap it."""
     m = _FENCE_RE.match(text.strip())
     return m.group(1) if m else text
+
+
+def _validate_summary(text: str) -> None:
+    """Reject Claude Code auth/quota messages and malformed distill outputs."""
+    lower = text.lower()
+    for pattern in _CLAUDE_UNAVAILABLE_PATTERNS:
+        if pattern in lower:
+            raise DistillError("Claude Code unavailable: auth/session-limit response")
+    missing = [heading for heading in _REQUIRED_HEADINGS if heading not in text]
+    if missing:
+        raise DistillError("claude output missing required headings: "
+                           + ", ".join(missing))
 
 
 def distill_via_claude_code(*, extracted_md: str, metadata: dict,
@@ -144,7 +173,9 @@ def distill_via_claude_code(*, extracted_md: str, metadata: dict,
         raise DistillError(
             f"claude -p exit {result.returncode}: {result.stderr.strip() or 'unknown'}"
         )
-    return _strip_fence(result.stdout).strip() + "\n"
+    summary = _strip_fence(result.stdout).strip()
+    _validate_summary(summary)
+    return summary + "\n"
 
 
 # ---------------- batch ----------------

@@ -13,6 +13,31 @@ sys.path.insert(0, str(_REPO / "docs" / "tools"))
 import llm_distill as ld  # noqa: E402
 
 
+SUMMARY = """# Distilled
+
+## One-line
+One sentence.
+
+## Key claim
+The claim.
+
+## Method
+The method.
+
+## Result
+The result.
+
+## Why it matters here
+It matters.
+
+## Open questions / connections
+- A connection.
+
+## Key terms
+a, b, c
+"""
+
+
 def test_build_prompt_includes_metadata_and_body() -> None:
     prompt = ld._build_prompt(
         extracted_md="### Abstract\nWe prove X.\n\n### Method\nWe use Y.",
@@ -49,7 +74,7 @@ def test_build_prompt_truncates_long_body() -> None:
 
 def test_distill_via_claude_code_runs_subprocess(tmp_path: Path) -> None:
     """Happy path: invoke claude -p, return stdout."""
-    fake_result = MagicMock(returncode=0, stdout="# Distilled\n\nbody", stderr="")
+    fake_result = MagicMock(returncode=0, stdout=SUMMARY, stderr="")
     with patch.object(ld.subprocess, "run", return_value=fake_result) as mock_run:
         result = ld.distill_via_claude_code(
             extracted_md="### Abstract\nshort",
@@ -79,16 +104,42 @@ def test_distill_via_claude_code_raises_on_nonzero_exit() -> None:
 def test_distill_strips_markdown_fence_if_present() -> None:
     """If claude returns ```markdown\n...\n```, the fences should be stripped."""
     fake_result = MagicMock(returncode=0,
-                             stdout="```markdown\n# Title\n\nbody\n```\n",
+                             stdout=f"```markdown\n{SUMMARY}\n```\n",
                              stderr="")
     with patch.object(ld.subprocess, "run", return_value=fake_result):
         result = ld.distill_via_claude_code(
             extracted_md="x",
             metadata={"title": "T", "authors": "A", "year": "2020",
                       "source_url": "http://x"},
-        )
+    )
     assert "```" not in result
-    assert result.startswith("# Title")
+    assert result.startswith("# Distilled")
+
+
+def test_distill_rejects_claude_session_limit_output() -> None:
+    fake_result = MagicMock(
+        returncode=0,
+        stdout="You've hit your session limit · resets 5:20pm\n/usage-credits\n",
+        stderr="",
+    )
+    with patch.object(ld.subprocess, "run", return_value=fake_result):
+        with pytest.raises(ld.DistillError, match="Claude Code unavailable"):
+            ld.distill_via_claude_code(
+                extracted_md="x",
+                metadata={"title": "T", "authors": "A", "year": "2020",
+                          "source_url": "http://x"},
+            )
+
+
+def test_distill_rejects_malformed_output() -> None:
+    fake_result = MagicMock(returncode=0, stdout="# not the schema\n", stderr="")
+    with patch.object(ld.subprocess, "run", return_value=fake_result):
+        with pytest.raises(ld.DistillError, match="missing required headings"):
+            ld.distill_via_claude_code(
+                extracted_md="x",
+                metadata={"title": "T", "authors": "A", "year": "2020",
+                          "source_url": "http://x"},
+            )
 
 
 def test_distill_batch_runs_concurrently(tmp_path: Path) -> None:
@@ -104,7 +155,7 @@ def test_distill_batch_runs_concurrently(tmp_path: Path) -> None:
         # Find slug encoded in the prompt
         prompt = args[-1] if isinstance(args[-1], str) else ""
         return MagicMock(returncode=0,
-                          stdout=f"# Summary\n\n{prompt[:50]}",
+                          stdout=SUMMARY + f"\n<!-- {prompt[:50]} -->",
                           stderr="")
 
     with patch.object(ld.subprocess, "run", side_effect=fake_run):
@@ -113,7 +164,7 @@ def test_distill_batch_runs_concurrently(tmp_path: Path) -> None:
     assert len(results) == 4
     for r in results:
         assert r["ok"] is True
-        assert r["summary"].startswith("# Summary")
+        assert r["summary"].startswith("# Distilled")
 
 
 def test_distill_batch_isolates_failures(tmp_path: Path) -> None:
@@ -130,7 +181,7 @@ def test_distill_batch_isolates_failures(tmp_path: Path) -> None:
         prompt = args[-1] if isinstance(args[-1], str) else ""
         if "fail body" in prompt:
             return MagicMock(returncode=2, stdout="", stderr="boom")
-        return MagicMock(returncode=0, stdout="# OK\n", stderr="")
+        return MagicMock(returncode=0, stdout=SUMMARY, stderr="")
 
     with patch.object(ld.subprocess, "run", side_effect=selective):
         results = ld.distill_batch(items, model="haiku", max_workers=2)

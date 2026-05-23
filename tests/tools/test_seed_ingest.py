@@ -829,6 +829,31 @@ def test_apply_no_llm_uses_raw_extraction(tmp_path: Path) -> None:
     assert "raw extracted body" in text
 
 
+def test_apply_aborts_on_claude_unavailable_before_raw_fallback(tmp_path: Path) -> None:
+    """Claude quota/auth failures should not create raw fallback source entries."""
+    docs = tmp_path / "docs"
+    (docs / "source").mkdir(parents=True)
+    (docs / "raw").mkdir(parents=True)
+    cand_path = tmp_path / "candidates.json"
+    cand_path.write_text(json.dumps(_candidates_doc(approved=True)))
+
+    def fake_download(url: str, dst: Path) -> None:
+        dst.write_bytes(b"%PDF stub")
+
+    def fake_batch(pdfs, out_dir, *, hybrid=None, overwrite=False):
+        (out_dir / "2020-smith-test.md").write_text("# raw extracted body\n")
+
+    with patch.object(si, "_download_pdf", side_effect=fake_download), \
+         patch("seed_ingest.pdf_to_md.convert_batch", side_effect=fake_batch), \
+         patch.object(si.llm_distill, "distill_batch",
+                      return_value=[{"slug": "2020-smith-test", "ok": False,
+                                     "error": "Claude Code unavailable: session limit"}]):
+        with pytest.raises(RuntimeError, match="LLM distillation unavailable"):
+            si.apply(candidates_json=cand_path, docs_root=docs)
+
+    assert not (docs / "source" / "2020-smith-test.md").exists()
+
+
 def test_apply_uses_batch_pdf_conversion(tmp_path: Path) -> None:
     """Happy path: apply() should call pdf_to_md.convert_batch once for the
     full set of approved candidates, not per-paper convert_pdf."""
