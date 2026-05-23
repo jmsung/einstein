@@ -12,7 +12,7 @@ This repo is the artifact. It has three layers that grow together:
 |---|---|---|
 | **Docs — the brain** | [`docs/wiki/`](docs/wiki/) | Math knowledge: concepts, techniques, mathematician personas, findings, problems, open questions. Either human or agent may author, with mandatory frontmatter attribution. |
 | **Rules — the policy** | [`.claude/rules/`](.claude/rules/) | Behavioral rules that govern how the agent reads, thinks, asks, distills, and writes back. |
-| **Agent — the dynamics** | [`agent/`](agent/) | Self-improvement infrastructure: append-only cycle log, skill library with hit-rates, metrics, ablations. |
+| **Agent — the dynamics** | [`docs/agent/`](docs/agent/) | Self-improvement infrastructure: append-only cycle log, skill library with hit-rates, metrics, ablations. |
 
 Plus the supporting layers: [`docs/source/`](docs/source/) (1:1 LLM distillations of papers/repos/blogs), [`docs/raw/`](docs/raw/) (gitignored cache of native originals), and the code in [`src/`](src/), [`scripts/`](scripts/), [`tests/`](tests/).
 

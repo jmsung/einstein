@@ -1,13 +1,13 @@
 ---
-description: Run the close-of-cycle reflection. After a problem cycle ends, distill what worked / failed / generalized into wiki entries, append a row to agent/cycle-log.md, update agent/skill-library.md citation counts. Enforces .claude/rules/cycle-discipline.md.
+description: Run the close-of-cycle reflection. After a problem cycle ends, distill what worked / failed / generalized into wiki entries, append a row to docs/agent/cycle-log.md, update docs/agent/skill-library.md citation counts. Enforces .claude/rules/cycle-discipline.md.
 ---
 
 # /agent-reflect — close-of-cycle reflection
 
 Run at the end of every problem cycle (typically inside `/worktree-done` distill). Produces:
 
-1. One row appended to `agent/cycle-log.md`
-2. Updated `agent/skill-library.md` citation counts
+1. One row appended to `docs/agent/cycle-log.md`
+2. Updated `docs/agent/skill-library.md` citation counts
 3. Any new `docs/wiki/findings/` (positive or dead-end) authored
 4. Any new `docs/wiki/concepts/` (if a finding is invoked across 3+ problems)
 5. Wiki questions closed (status: open → answered, with `answer_finding:`)
@@ -29,8 +29,8 @@ Run at the end of every problem cycle (typically inside `/worktree-done` distill
    - For each unanswered question → `docs/wiki/questions/<YYYY-MM-DD>-<slug>.md` (status: open)
 
 4. **Update tracking**:
-   - Append cycle row to `agent/cycle-log.md` (per cycle-discipline rule)
-   - Increment `tried` / `top3` / `finding` counts in `agent/skill-library.md`
+   - Append cycle row to `docs/agent/cycle-log.md` (per cycle-discipline rule)
+   - Increment `tried` / `top3` / `finding` counts in `docs/agent/skill-library.md`
 
 5. **Close any in-flight questions** that this cycle answered:
    - Set frontmatter `status: answered`, `answered_at: <date>`, `answer_finding: <path>`

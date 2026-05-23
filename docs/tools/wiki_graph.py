@@ -17,7 +17,7 @@ documented in `docs/wiki/findings/finding-the-fertile-gaps.md` but not built her
 
 Usage:
     uv run python docs/tools/wiki_graph.py                      # full report -> stdout
-    uv run python docs/tools/wiki_graph.py --out agent/wiki-gaps-2026-05-02.md
+    uv run python docs/tools/wiki_graph.py --out docs/agent/wiki-gaps-2026-05-02.md
     uv run python docs/tools/wiki_graph.py --file-questions     # auto-file top-3 as docs/wiki/questions/
 
 Companion: cross-pollination-not-compute.md (the filter for which candidates
@@ -39,7 +39,7 @@ _REPO = Path(__file__).resolve().parents[2]  # docs/tools/wiki_graph.py → cb/
 WIKI = _REPO / "docs" / "wiki"
 SOURCE = _REPO / "docs" / "source"
 QUESTIONS = WIKI / "questions"
-AGENT_OUT = _REPO / "agent"
+AGENT_OUT = _REPO / "docs" / "agent"
 
 SIMILARITY_THRESHOLD = 0.50  # qmd score above which we treat as latent edge
                               # (was 0.70 — first run found 0 hits; lowered to 0.50 per
