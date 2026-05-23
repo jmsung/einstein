@@ -956,11 +956,19 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
                  if _REPO in w["source_path"].parents else w["source_path"])
         written.append(w["source_path"])
 
-    # Clean up the temp body dir if empty
-    try:
-        body_temp.rmdir()
-    except OSError:
-        pass
+    # Clean up the temp body dir. We hard-remove it (including any
+    # leftover files from interrupted runs) so docs/source/_pdf_to_md_tmp
+    # never accumulates as a stale subdirectory.
+    if body_temp.is_dir():
+        for stray in body_temp.glob("*"):
+            try:
+                stray.unlink()
+            except OSError:
+                pass
+        try:
+            body_temp.rmdir()
+        except OSError:
+            pass
 
     return written
 
