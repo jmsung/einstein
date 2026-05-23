@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Einstein Arena competition solver"
 requires-python = ">=3.13"
 dependencies = [
-    "anthropic>=0.104.1",
     "clarabel>=0.11.1",
     "cma>=4.4.4",
     "cvxpy>=1.8.2",
