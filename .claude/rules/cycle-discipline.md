@@ -1,10 +1,10 @@
 # Cycle discipline — every cycle logged, no cherry-picking
 
-Every problem-attempt cycle MUST produce one row in `agent/cycle-log.md`. Failures count. Cherry-picking is forbidden.
+Every problem-attempt cycle MUST produce one row in `docs/agent/cycle-log.md`. Failures count. Cherry-picking is forbidden.
 
-**Why:** The whole `agent/` layer — `cycle-log.md`, `skill-library.md`, `metrics.md`, `ablations/` — measures whether the agent actually self-improves. Without strict 1:1 cycle:log discipline, the metric becomes "best-of-N selected log" which is theatrically self-improving without being actually so. Honesty over optics.
+**Why:** The whole `docs/agent/` layer — `cycle-log.md`, `skill-library.md`, `metrics.md`, `ablations/` — measures whether the agent actually self-improves. Without strict 1:1 cycle:log discipline, the metric becomes "best-of-N selected log" which is theatrically self-improving without being actually so. Honesty over optics.
 
-This rule is the structural enforcement of the four honesty checks (`agent/README.md` → "Why this layer exists").
+This rule is the structural enforcement of the four honesty checks (`docs/agent/README.md` → "Why this layer exists").
 
 **How to apply:**
 
@@ -21,8 +21,8 @@ This rule is the structural enforcement of the four honesty checks (`agent/READM
 
 3. **Run `docs/tools/refresh_qmd.sh`** before any merge. The qmd index does NOT auto-detect new files; without refresh, the NEXT cycle can't query this cycle's findings — silently breaks the wiki-first discipline. Refusal: don't mark cycle complete if qmd is stale.
 4. **Run `docs/tools/wiki_graph.py --file-questions`** to surface structural gaps (Types 1, 2, 4, 5 — see `docs/wiki/findings/finding-the-fertile-gaps.md`). Top-3 Type-2 candidates auto-file as `docs/wiki/questions/<date>-gap-<slug>.md`. The next cycle's council dispatch picks them up alongside persona questions. The gap-detector says *what to consider*; the cross-pollination-not-compute filter says *what to keep*.
-5. **Append exactly one row** to `agent/cycle-log.md` for the cycle. Schema in the file header. Failures and abandons count — note `outcome: blocked | no-change | new-finding-no-improvement` as appropriate.
-6. **Update `agent/skill-library.md`** for every technique invoked during the cycle: increment `tried`; increment `top3` if the cycle reached top-3 on the problem; increment `finding` if the cycle produced any new wiki finding (positive OR dead-end).
+5. **Append exactly one row** to `docs/agent/cycle-log.md` for the cycle. Schema in the file header. Failures and abandons count — note `outcome: blocked | no-change | new-finding-no-improvement` as appropriate.
+6. **Update `docs/agent/skill-library.md`** for every technique invoked during the cycle: increment `tried`; increment `top3` if the cycle reached top-3 on the problem; increment `finding` if the cycle produced any new wiki finding (positive OR dead-end).
 7. **Verify `author:` fields** on every wiki page touched/added in the cycle. The mix is the self-improvement signal.
 8. **Failure-finding obligation** — if any approach was abandoned during the cycle, `docs/wiki/findings/dead-end-<slug>.md` must exist for it. If not, block the worktree-done step.
 
@@ -37,4 +37,4 @@ This rule is the structural enforcement of the four honesty checks (`agent/READM
 
 **Triggering pattern:** end of every `/worktree-done`. The skill should refuse to complete if `cycle-log.md` wasn't appended.
 
-See also: [agent/README.md](../../agent/README.md), [failure-is-a-finding](failure-is-a-finding.md), [wiki-attribution](wiki-attribution.md).
+See also: [agent/README.md](../../docs/agent/README.md), [failure-is-a-finding](failure-is-a-finding.md), [wiki-attribution](wiki-attribution.md).

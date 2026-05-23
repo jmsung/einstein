@@ -5,7 +5,7 @@ Usage:
     python scripts/compute_router.py --workload sequential --precision f64 --hours 8 --ram 16
     python scripts/compute_router.py --workload parallel-batched --precision f32 --hours 12
 
-Reads agent/local-calibration.json (produced by local_benchmark.py) for the
+Reads docs/agent/local-calibration.json (produced by local_benchmark.py) for the
 machine-specific calibration constants. If calibration is missing, falls back
 to conservative defaults and prints a warning.
 
@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 
-CALIBRATION = Path(__file__).parent.parent / "agent" / "local-calibration.json"
+CALIBRATION = Path(__file__).parent.parent / "docs" / "agent" / "local-calibration.json"
 
 
 def load_calibration():
@@ -119,7 +119,7 @@ def main():
         print(f"  - {line}")
     print()
     print("See .claude/rules/compute-router.md for the full decision matrix.")
-    print("See agent/local-calibration.json for machine-specific constants.")
+    print("See docs/agent/local-calibration.json for machine-specific constants.")
 
 
 if __name__ == "__main__":

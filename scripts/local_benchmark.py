@@ -8,7 +8,7 @@ Measures:
 - RAM headroom (allocate large array, measure peak)
 - mpmath sequential throughput (high-precision computation)
 
-Output: prints calibration constants + writes to agent/local-calibration.json
+Output: prints calibration constants + writes to docs/agent/local-calibration.json
 for compute_router.py to consume.
 
 Run periodically (every few weeks) — calibration drifts with macOS updates,
@@ -171,7 +171,7 @@ def main():
     out["ram"] = ram_headroom()
     print()
 
-    out_path = Path(__file__).parent.parent / "agent" / "local-calibration.json"
+    out_path = Path(__file__).parent.parent / "docs" / "agent" / "local-calibration.json"
     out_path.write_text(json.dumps(out, indent=2))
     print(f"calibration written to {out_path}")
 
