@@ -129,3 +129,25 @@ After ingest, the next concrete steps in priority order:
 - `source/2010-vinuesa-sidon-thesis.md` — `B_h[g]` framework
 - (pending ingest) Bernshteyn & Tait 2019 — the load-bearing paper
 - Parent question: [`2026-05-02-p19-structural-cap-conjecture.md`](2026-05-02-p19-structural-cap-conjecture.md)
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"p19 fully resolved" OR all:"lp duality" OR all:"Bernshteyn–Tait 2019 lower bound `d* ≥") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+### 1. Explicit criterion of uniform LP duality for linear problems of copositive optimization (2023)
+**Authors:** Kostyukova O. I., Tchemisova T., Dudina O. S
+**URL:** http://arxiv.org/abs/2302.09348v1
+**Abstract:** An uniform LP duality is an useful property of conic matrix systems. A consistent linear conic optimization problem yields uniform LP duality if for any linear cost function, for which the primal problem has finite optimal value, the corresponding Lagrange dual problem is attaina...
+
+### 2. From Riesz to Kakutani: Representation Theorems and the Analytical Foundations of Probablility (2026)
+**Authors:** Cedeño-Pérez Luis Antonio, Reyna-Castañeda Hugo Guadalup, Sandoval-Romero María de los Ángeles
+**URL:** http://arxiv.org/abs/2602.00964v1
+**Abstract:** The analytical foundations of modern probability trace back to a sequence of representation theorems that reshaped functional analysis in the twentieth century. From Fréchet identification of linear functionals with vectors in Hilbert spaces to Kakutani characterization of measur...
+
+### 3. Inverse optimization problems with multiple weight functions (2022)
+**Authors:** Kristóf Bérczi, Lydia Mirabel Mendoza-Cadena, Kitti Varga
+**URL:** http://arxiv.org/abs/2201.03078v1
+**Abstract:** We introduce a new class of inverse optimization problems in which an input solution is given together with $k$ linear weight functions, and the goal is to modify the weights by the same deviation vector $p$ so that the input solution becomes optimal with respect to each of them,...
+

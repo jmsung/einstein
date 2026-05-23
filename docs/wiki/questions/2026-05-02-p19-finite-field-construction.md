@@ -46,3 +46,25 @@ Hidden algebraic structure (modular forms / Ramanujan graphs / character sums) h
 - `wiki/personas/gauss.md`
 - `source/2010-vinuesa-sidon-thesis.md`
 - `source/2022-ganzhinov-symmetric-lines.md` (Lubotzky-Phillips-Sarnak Ramanujan graphs)
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"kronecker decomposition" OR all:"sidon sets" OR all:"finite-field character-sum construction generate a ratio") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+### 1. Sidon sets in algebraic geometry (2023)
+**Authors:** Arthur Forey, Javier Fresán, Emmanuel Kowalski
+**URL:** http://arxiv.org/abs/2301.12878v3
+**Abstract:** We report new examples of Sidon sets in abelian groups arising from generalized jacobians of curves, and discuss some of their properties with respect to size and structure.
+
+### 2. On large Sidon sets (2024)
+**Authors:** Ingo Czerwinski, Alexander Pott
+**URL:** http://arxiv.org/abs/2411.12911v3
+**Abstract:** A Sidon set $M$ is a subset of $\mathbb{F}_2^t$ such that the sum of four distinct elements of $M$ is never 0. The goal is to find Sidon sets of large size. In this note we show that the graphs of almost perfect nonlinear (APN) functions with high linearity can be used to constru...
+
+### 3. Constructions of Generalized Sidon Sets (2004)
+**Authors:** Greg Martin, Kevin O'Bryant
+**URL:** http://arxiv.org/abs/math/0408081v2
+**Abstract:** We give explicit constructions of sets S with the property that for each integer k, there are at most g solutions to k=s_1+s_2, s_i\in S; such sets are called Sidon sets if g=2 and generalized Sidon sets if g\ge 3. We extend to generalized Sidon sets the Sidon-set constructions o...
+

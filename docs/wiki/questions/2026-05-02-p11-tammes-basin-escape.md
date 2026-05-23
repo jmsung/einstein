@@ -67,3 +67,11 @@ Ordered by cheapest-informative-move to most-decisive:
 - Hardin–Sloane sphere codes — `http://neilsloane.com/packings/dim3/pack.3.50.txt`
 - Conway and Sloane, *Sphere Packings, Lattices and Groups* (Ch. 1, sphere-codes catalogue)
 - Musin and Tarasov, *The Tammes Problem for N = 14* (Experimental Mathematics, 2015) — only proven case in this n-range
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"float64 ceiling" OR all:"basin rigidity" OR all:"Hardin–Sloane n=50 contact graph the global") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*
