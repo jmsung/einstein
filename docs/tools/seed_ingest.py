@@ -172,6 +172,53 @@ def _frontmatter_to_yaml(fm: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+# ---------------- relevance scoring ----------------
+
+
+def _relevance_score(*, candidate: dict, phrases: list[str]) -> float:
+    """Heuristic [0, 1] relevance of an arxiv candidate to the search phrases.
+
+    Composed of:
+      - keyword overlap (0..0.85): fraction of phrase words appearing in
+        title + summary, weighted: title hits 2x summary hits.
+      - recency bonus (0..0.15): newer papers get a small lift.
+
+    Heuristic by design — the goal is a useful auto-approve threshold,
+    not a perfect ranker. Threshold tuning happens at the caller.
+    """
+    title = candidate.get("title", "").lower()
+    summary = candidate.get("summary", "").lower()
+    year_raw = candidate.get("year", "0")
+    try:
+        year = int(re.sub(r"[^0-9]", "", year_raw)[:4] or "0")
+    except ValueError:
+        year = 0
+
+    # Tokenize phrases into words (excluding stop-y short ones)
+    words: set[str] = set()
+    for p in phrases:
+        for w in re.split(r"[^a-zA-Z0-9]+", p.lower()):
+            if len(w) >= 3:
+                words.add(w)
+    if not words:
+        return 0.0
+
+    # Count weighted hits
+    title_hits = sum(1 for w in words if w in title)
+    summary_hits = sum(1 for w in words if w in summary)
+    # Title weighted 2x; max possible = 3 * len(words)
+    weighted_hits = 2 * title_hits + summary_hits
+    overlap_score = min(weighted_hits / (3 * len(words)), 1.0)
+
+    # Recency: linear bonus for papers from 2020+, capped at 2026.
+    if year >= 2020:
+        recency_score = min((year - 2020) / 6.0, 1.0)
+    else:
+        recency_score = 0.0
+
+    return 0.85 * overlap_score + 0.15 * recency_score
+
+
 # ---------------- vocab mapping ----------------
 
 
@@ -258,7 +305,8 @@ def _merge_preserve_approvals(existing: dict, fresh_candidates: list[dict]) -> l
 
 def propose(*, coverage_json: Path, out_path: Path, top_n: int = 5,
             rate_limit_seconds: float = ARXIV_RATE_LIMIT_SECONDS,
-            vocab_path: Path | None = None) -> None:
+            vocab_path: Path | None = None,
+            auto_approve_threshold: float | None = None) -> None:
     """Step 1: search arxiv for each actionable coverage row; write candidates JSON.
 
     If `vocab_path` is provided (or `concept-search-terms.yaml` sits next to this
@@ -307,11 +355,21 @@ def propose(*, coverage_json: Path, out_path: Path, top_n: int = 5,
         n_searched += 1
         log.info("    %d hits", len(results))
 
+        phrases = vocab.get(name) or [name.removesuffix(".md").replace("-", " ")]
+        n_auto = 0
         for r in results:
             r["slug"] = _slug_from_metadata(
                 title=r["title"], year=r.get("year", ""), authors=r.get("authors", "")
             )
             r["approved"] = None
+            r["relevance"] = round(_relevance_score(candidate=r, phrases=phrases), 4)
+            if auto_approve_threshold is not None and r["relevance"] >= auto_approve_threshold:
+                r["approved"] = True
+                r["auto_approved"] = True
+                n_auto += 1
+        if auto_approve_threshold is not None and n_auto:
+            log.info("    auto-approved %d/%d (relevance ≥ %.2f)",
+                     n_auto, len(results), auto_approve_threshold)
 
         merged = _merge_preserve_approvals(existing.get(name, {}), results)
         block.update({"query": query, "candidates": merged})
@@ -432,6 +490,11 @@ def main(argv: list[str] | None = None) -> int:
     p_propose.add_argument("--top-n", type=int, default=5)
     p_propose.add_argument("--vocab", type=Path, default=None,
                            help=f"Slug → search-phrase YAML (default: {DEFAULT_VOCAB_PATH.name}).")
+    p_propose.add_argument("--auto-approve-above", type=float, default=None,
+                           metavar="THRESHOLD",
+                           help="Auto-flag candidates with relevance ≥ THRESHOLD "
+                                "as approved (skip human gate for high-confidence "
+                                "matches). Typical: 0.5.")
 
     p_apply = sub.add_parser("apply", help="Download approved candidates + write source/ entries.")
     p_apply.add_argument("--candidates", type=Path, required=True)
@@ -442,7 +505,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "propose":
         propose(coverage_json=args.coverage, out_path=args.out, top_n=args.top_n,
-                vocab_path=args.vocab)
+                vocab_path=args.vocab,
+                auto_approve_threshold=args.auto_approve_above)
     elif args.cmd == "apply":
         results = apply(candidates_json=args.candidates,
                         docs_root=args.docs_root, dry_run=args.dry_run)
