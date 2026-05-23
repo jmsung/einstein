@@ -6,7 +6,7 @@ Layout overview. The substantive rules live in `rules/`; this file stays short.
 
 einstein is a **single-developer math knowledge base + agent codebase**, public, with two layers that grow together:
 
-- `wiki/` — the math wisdom (concepts, techniques, personas, findings, problems, questions). Either human or agent may author, with mandatory frontmatter attribution.
+- `docs/wiki/` — the math wisdom (concepts, techniques, personas, findings, problems, questions). Either human or agent may author, with mandatory frontmatter attribution.
 - `src/` — the agent code that solves Einstein Arena problems and writes back to the wiki.
 
 The work loop is **understand → wiki-first → council dispatch → gap detect → research → distill → specialize → execute → look back → failure-log → commit**. Each cycle compounds in the wiki.
@@ -56,5 +56,5 @@ Each rule body: rule itself → **Why** (triggering incident if applicable) → 
 
 - **No `commands/`** — older mechanism; superseded by skills. Don't add it back.
 - **Root `CLAUDE.md` (cb/CLAUDE.md)** is the repo's umbrella contract (code conventions + pointers to wiki and rules). Edit there for code-level rules; here for behavioral rules.
-- **`wiki/CLAUDE.md`** is the wiki contract (machine-readable + prose). Edit there for wiki-layer changes.
+- **`docs/wiki/CLAUDE.md`** is the wiki contract (machine-readable + prose). Edit there for wiki-layer changes.
 - **harness/** holds global agents/skills/CLAUDE.md applying to all repos. Check there before adding einstein-specific equivalents.

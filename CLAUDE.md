@@ -8,17 +8,17 @@ This repo is the public artifact. It has three layers, each with its own contrac
 
 | Layer | Path | Contract | What lives here |
 |---|---|---|---|
-| **Code** | `src/`, `scripts/`, `tests/`, `docs/`, `results/` | this file (below) | optimizer code, evaluators, per-problem scripts, public approach docs |
-| **Wiki** | `wiki/` | [`wiki/CLAUDE.md`](wiki/CLAUDE.md) | math knowledge — concepts, techniques, personas, findings, problems, questions |
+| **Code** | `src/`, `scripts/`, `tests/`, `results/` | this file (below) | optimizer code, evaluators, per-problem scripts |
+| **Docs** | `docs/` | this file (below) + [`docs/wiki/CLAUDE.md`](docs/wiki/CLAUDE.md) | the knowledge layer: `wiki/` (synthesis), `source/` (1:1 distillations), `raw/` (gitignored originals), plus narrative pages (`arena.md`, `timeline.md`, `posts/`) |
 | **Rules** | `.claude/rules/` | [`.claude/CLAUDE.md`](.claude/CLAUDE.md) | behavioral rules for human + agent (one topic per file) |
 
-`raw/` (gitignored) holds native originals; `source/` holds 1:1 LLM distillations. Both feed the wiki. Worktree tracking lives in `mb/` (private repo, sibling of cb).
+`docs/raw/` (gitignored) holds native originals; `docs/source/` holds 1:1 LLM distillations. Both feed `docs/wiki/`. Worktree tracking lives in `mb/` (private repo, sibling of cb).
 
 ## Goal
 
 **Generalized math wisdom**, not arena rank. The agent solves problems, learns from failure, and writes back to the wiki. Each cycle compounds. Submission is a wisdom-verification tool, not a goal — minimum 6 hours between submissions per problem; user-approved each time. **No external posts** — all knowledge stays on this repo + wiki.
 
-See [`mb/tracking/completed/js-refactor-wiki-bootstrap.md`](../mb/tracking/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `wiki/home.md`).
+See [`mb/tracking/completed/js-refactor-wiki-bootstrap.md`](../mb/tracking/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `docs/wiki/home.md`).
 
 ## Setup
 
@@ -36,11 +36,11 @@ modal run ...                          # GPU scripts (needs Modal account)
 - `src/einstein/optimizer.py`, `knowledge.py` — shared modules
 - `scripts/{problem}/` — per-problem optimizer entry points (public)
 - `tests/{problem}/` — per-problem pytest tests
-- `docs/problem-{id}-{name}.md` — one public MD per problem (high-level approach + results only; deep wisdom goes in `wiki/`)
+- `docs/wiki/problems/{id}-{name}.md` — per-problem index in the wiki (deep wisdom and approach)
 - `results/problem-{id}-{name}/` — result files (gitignored)
 
 ### Compute routing
-Two first-class environments. Always route the workload before launching — see `wiki/techniques/compute-router.md` and `.claude/rules/compute-router.md`.
+Two first-class environments. Always route the workload before launching — see `docs/wiki/techniques/compute-router.md` and `.claude/rules/compute-router.md`.
 
 - **Local a local workstation (high-memory)**: mpmath polish, sequential CPU optimizers (L-BFGS / NM / SLSQP), small basin-hopping, MPS float32 batch ops, large multistart with multiprocess
 - **Modal A100/H100**: sustained float64 GPU parallel (parallel tempering, CMA-ES large-pop float64), large LP/SDP that's RAM-bound
@@ -64,6 +64,6 @@ For math problems: every hard problem follows the **math-solving protocol** in `
 
 ## See also
 
-- `wiki/home.md` — narrative front door of the math knowledge base
-- `wiki/problems/_inventory.md` — concept-coverage compass across 23 problems
+- `docs/wiki/home.md` — narrative front door of the math knowledge base
+- `docs/wiki/problems/_inventory.md` — concept-coverage compass across 23 problems
 - `mb/tracking/progress.md` — branch state

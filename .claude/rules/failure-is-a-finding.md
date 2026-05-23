@@ -1,6 +1,6 @@
 # Failure is a finding
 
-Every dead-end becomes a `wiki/findings/dead-end-<slug>.md` with the *why*. No exceptions.
+Every dead-end becomes a `docs/wiki/findings/dead-end-<slug>.md` with the *why*. No exceptions.
 
 **Why:** Tomorrow's breakthrough sits on yesterday's articulated obstruction. Riemann's notebooks, Tao's blog, Wiles's seven-year diary — all are full of failed approaches *with reasons*. Failure without articulated why is wasted compute. Failure with articulated why is data the next cycle stands on.
 
@@ -41,7 +41,7 @@ cites: [...]
 - The next door, given this obstruction.
 ```
 
-**Filename pattern:** `wiki/findings/dead-end-<approach>-<problem-or-class>.md`
+**Filename pattern:** `docs/wiki/findings/dead-end-<approach>-<problem-or-class>.md`
 
 **Threshold:** A "failure worth a finding" is one that would have been worth trying — i.e., the approach was reasonable a priori. Trivial misconfigurations don't qualify. The test: would a peer mathematician/agent have considered this approach and learned something from why it didn't work?
 
@@ -49,4 +49,4 @@ cites: [...]
 
 **Triggering pattern:** any session-end where ≥1 approach was abandoned without producing a finding for each. Block end-of-session until filed.
 
-See also: [self-improvement-loop](self-improvement-loop.md), [math-solving-protocol](math-solving-protocol.md) step 10, [wiki/findings/README](../../wiki/findings/README.md).
+See also: [self-improvement-loop](self-improvement-loop.md), [math-solving-protocol](math-solving-protocol.md) step 10, [docs/wiki/findings/README](../../docs/wiki/findings/README.md).

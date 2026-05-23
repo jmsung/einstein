@@ -10,18 +10,18 @@ This repo is the artifact. It has three layers that grow together:
 
 | Layer | Path | What lives there |
 |---|---|---|
-| **Wiki — the brain** | [`wiki/`](wiki/) | Math knowledge: concepts, techniques, mathematician personas, findings, problems, open questions. Either human or agent may author, with mandatory frontmatter attribution. |
+| **Docs — the brain** | [`docs/wiki/`](docs/wiki/) | Math knowledge: concepts, techniques, mathematician personas, findings, problems, open questions. Either human or agent may author, with mandatory frontmatter attribution. |
 | **Rules — the policy** | [`.claude/rules/`](.claude/rules/) | Behavioral rules that govern how the agent reads, thinks, asks, distills, and writes back. |
 | **Agent — the dynamics** | [`agent/`](agent/) | Self-improvement infrastructure: append-only cycle log, skill library with hit-rates, metrics, ablations. |
 
-Plus the supporting layers: [`source/`](source/) (1:1 LLM distillations of papers/repos/blogs), [`raw/`](raw/) (gitignored cache of native originals), and the code in [`src/`](src/), [`scripts/`](scripts/), [`tests/`](tests/).
+Plus the supporting layers: [`docs/source/`](docs/source/) (1:1 LLM distillations of papers/repos/blogs), [`docs/raw/`](docs/raw/) (gitignored cache of native originals), and the code in [`src/`](src/), [`scripts/`](scripts/), [`tests/`](tests/).
 
 **Start here:**
 
-- [`wiki/home.md`](wiki/home.md) — narrative front door
-- [`wiki/problems/_inventory.md`](wiki/problems/_inventory.md) — concept-coverage compass across 23 arena problems
-- [`wiki/personas/_synthesis.md`](wiki/personas/_synthesis.md) — the 12 stances drawn from how the great mathematicians actually work
-- [`wiki/CLAUDE.md`](wiki/CLAUDE.md) — the wiki contract (machine-readable + prose)
+- [`docs/wiki/home.md`](docs/wiki/home.md) — narrative front door
+- [`docs/wiki/problems/_inventory.md`](docs/wiki/problems/_inventory.md) — concept-coverage compass across 23 arena problems
+- [`docs/wiki/personas/_synthesis.md`](docs/wiki/personas/_synthesis.md) — the 12 stances drawn from how the great mathematicians actually work
+- [`docs/wiki/CLAUDE.md`](docs/wiki/CLAUDE.md) — the wiki contract (machine-readable + prose)
 
 ## The thesis
 
@@ -151,17 +151,18 @@ uv sync
 
 ### Cross-Problem Guides
 
+- [docs/wiki/home.md](docs/wiki/home.md) — Wiki front door — concepts, techniques, personas, findings, problems
 - [docs/timeline.md](docs/timeline.md) — Discovery timeline — dated breakthroughs for attribution clarity
-- [docs/methodology.md](docs/methodology.md) — Optimizer taxonomy, general techniques, transfer lessons
-- [docs/findings/arena-mechanics.md](docs/findings/arena-mechanics.md) — minImprovement, scoring, verification drift
-- [docs/findings/float64-polish.md](docs/findings/float64-polish.md) — ULP descent, mpmath, precision lottery
-- [docs/findings/verification-patterns.md](docs/findings/verification-patterns.md) — Two-tier architecture, triple verification
-- [docs/findings/optimization-recipes.md](docs/findings/optimization-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits, platform mechanics
+- [docs/findings/arena-mechanics.md](docs/findings/arena-mechanics.md) — minImprovement, scoring, verification drift
+- [docs/findings/optimization-recipes.md](docs/findings/optimization-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
+- [docs/wiki/techniques/](docs/wiki/techniques/) — Optimizer taxonomy, general techniques, transfer lessons
+- [docs/wiki/findings/float64-polish.md](docs/wiki/findings/float64-polish.md) — ULP descent, mpmath, precision lottery
+- [docs/wiki/findings/verification-patterns.md](docs/wiki/findings/verification-patterns.md) — Two-tier architecture, triple verification
 
 ### Arena Discussion Posts & Per-Problem Deep Dives
 
-Strategy writeups are linked from the [Discovery Timeline](docs/timeline.md). Per-problem deep dives with approaches, results, and key insights are in [docs/](docs/) (one file per problem).
+Strategy writeups are linked from the [Discovery Timeline](docs/timeline.md) and `docs/posts/`. Per-problem deep dives with approaches, results, and key insights are in [docs/wiki/problems/](docs/wiki/problems/) (one file per problem).
 
 ## Citation
 

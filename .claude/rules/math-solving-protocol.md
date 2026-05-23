@@ -1,17 +1,17 @@
 # Math-solving protocol — Polya / Hadamard / Tao loop
 
-Every hard math problem in this repo follows this loop. It's drawn from how the great mathematicians actually work (see `wiki/personas/_synthesis.md` for the 12 stances).
+Every hard math problem in this repo follows this loop. It's drawn from how the great mathematicians actually work (see `docs/wiki/personas/_synthesis.md` for the 12 stances).
 
 ```
 1. UNDERSTAND        Restate problem in own words. Write unknowns / data / conditions
                      explicitly in mb/tracking/<problem>/strategy.md. Most "stuck" is
                      "haven't really read it." (Polya)
 
-2. WIKI-FIRST        Query wiki/concepts, /techniques, /findings, /problems for prior
+2. WIKI-FIRST        Query docs/wiki/concepts, /techniques, /findings, /problems for prior
                      work, related concepts, similar problems. Cite. (See wiki-first-lookup.)
 
-3. COUNCIL DISPATCH  Pick 3–5 personas from wiki/personas/ based on problem category.
-                     EACH writes a QUESTION (not a solution) to wiki/questions/.
+3. COUNCIL DISPATCH  Pick 3–5 personas from docs/wiki/personas/ based on problem category.
+                     EACH writes a QUESTION (not a solution) to docs/wiki/questions/.
                      (See council-dispatch.)
 
 4. GAP DETECT        For each question:
@@ -19,10 +19,10 @@ Every hard math problem in this repo follows this loop. It's drawn from how the 
                        partial?           → flag for refinement
                        absent?            → escalate to (5)
 
-5. RESEARCH          /wiki-research; user-gated /wiki-ingest into raw/+source/.
-                     For each ingested artifact, distill into source/.
+5. RESEARCH          /wiki-research; user-gated /wiki-ingest into docs/raw/+docs/source/.
+                     For each ingested artifact, distill into docs/source/.
 
-6. DISTILL           /wiki-learn turns the answer into wiki/findings/<slug>.md
+6. DISTILL           /wiki-learn turns the answer into docs/wiki/findings/<slug>.md
                      with author: agent|human|hybrid attribution and cites.
 
 7. SPECIALIZE        Try n=2,3,4 by hand BEFORE the optimizer. (Polya / Tao)
@@ -32,10 +32,10 @@ Every hard math problem in this repo follows this loop. It's drawn from how the 
                      experiment-log.md. Compute routed via compute-router rule.
 
 9. LOOK BACK         After any result, ask: does this generalize? where else?
-                     what was the key idea? Update or create wiki/concepts/<x>.md.
+                     what was the key idea? Update or create docs/wiki/concepts/<x>.md.
                      (This is the only step that compounds. Polya's most-skipped.)
 
-10. FAILURE LOG      Every dead-end → wiki/findings/dead-end-<slug>.md with the WHY.
+10. FAILURE LOG      Every dead-end → docs/wiki/findings/dead-end-<slug>.md with the WHY.
                      (See failure-is-a-finding.)
 ```
 
@@ -52,4 +52,4 @@ Every hard math problem in this repo follows this loop. It's drawn from how the 
 
 **Trigger:** any branch named `feat/<problem-N>-*`, `research/<problem-N>-*`, or `polish/<problem-N>-*`. Plus any time the agent dispatches the council.
 
-See also: [self-improvement-loop](self-improvement-loop.md), [council-dispatch](council-dispatch.md), [ask-the-question-first](ask-the-question-first.md), [triple-verify](triple-verify.md), [wiki/personas/_synthesis.md](../../wiki/personas/_synthesis.md).
+See also: [self-improvement-loop](self-improvement-loop.md), [council-dispatch](council-dispatch.md), [ask-the-question-first](ask-the-question-first.md), [triple-verify](triple-verify.md), [docs/wiki/personas/_synthesis.md](../../docs/wiki/personas/_synthesis.md).

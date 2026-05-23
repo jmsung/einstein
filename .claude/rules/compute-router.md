@@ -56,4 +56,4 @@ Two first-class compute environments. Route every workload to its best home **be
 
 **Triggering pattern:** any time the agent is about to write `import torch` + `cuda` OR `modal.function`, the router check runs first. Local-first by default; cloud only when justified.
 
-See also: [wiki/techniques/compute-router.md](../../wiki/techniques/compute-router.md) (built in Goal 13), [findings/gpu-modal-compute.md](../../wiki/findings/gpu-modal-compute.md), [axioms](axioms.md) (A4 GPU/compute pre-audit).
+See also: [docs/wiki/techniques/compute-router.md](../../docs/wiki/techniques/compute-router.md) (built in Goal 13), [findings/gpu-modal-compute.md](../../docs/wiki/findings/gpu-modal-compute.md), [axioms](axioms.md) (A4 GPU/compute pre-audit).
