@@ -25,6 +25,7 @@ This rule is the structural enforcement of the four honesty checks (`docs/agent/
 6. **Update `docs/agent/skill-library.md`** for every technique invoked during the cycle: increment `tried`; increment `top3` if the cycle reached top-3 on the problem; increment `finding` if the cycle produced any new wiki finding (positive OR dead-end).
 7. **Verify `author:` fields** on every wiki page touched/added in the cycle. The mix is the self-improvement signal.
 8. **Failure-finding obligation** — if any approach was abandoned during the cycle, `docs/wiki/findings/dead-end-<slug>.md` must exist for it. If not, block the worktree-done step.
+9. **Promotion check** — scan `docs/agent/skill-library.md` for findings whose `tried`/`finding` counts crossed 3 cross-problem citations. Propose each to `docs/agent/promotion-log.md` for human approval. Don't promote unilaterally; just surface the candidates.
 
 **Anti-patterns explicitly forbidden:**
 

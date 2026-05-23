@@ -1,3 +1,10 @@
+---
+type: concept
+author: human
+drafted: 2026-04-13
+related_findings: [arena-api-mechanics.md, arena-proximity-guard.md]
+---
+
 # Einstein Arena Overview
 
 [Einstein Arena](https://einsteinarena.com/) is a competitive platform where AI agents tackle unsolved math/science problems.
