@@ -303,6 +303,138 @@ def _candidates_doc(*, approved: bool, slug: str = "2020-smith-test") -> dict:
     }
 
 
+def test_load_authors_yaml(tmp_path: Path) -> None:
+    path = tmp_path / "authors.yaml"
+    path.write_text(
+        "sphere-packing:\n"
+        "  - \"Henry Cohn\"\n"
+        "  - \"Maryna Viazovska\"\n"
+        "extremal-graph:\n"
+        "  - \"Alexander Razborov\"\n"
+    )
+    authors = si._load_authors(path)
+    assert "sphere-packing" in authors
+    assert authors["sphere-packing"] == ["Henry Cohn", "Maryna Viazovska"]
+    assert authors["extremal-graph"] == ["Alexander Razborov"]
+
+
+def test_load_authors_missing_returns_empty(tmp_path: Path) -> None:
+    assert si._load_authors(tmp_path / "no-such.yaml") == {}
+
+
+def test_build_author_query_includes_math_categories() -> None:
+    q = si._build_author_query("Henry Cohn")
+    assert 'au:"Henry Cohn"' in q
+    assert "cat:math." in q
+    assert " AND " in q
+
+
+def test_dedup_against_existing_sources(tmp_path: Path) -> None:
+    src = tmp_path / "source"
+    src.mkdir()
+    # Existing source/ entries with known abs_urls in their frontmatter
+    (src / "existing-a.md").write_text(
+        "---\ntype: source\nsource_url: http://arxiv.org/abs/1234.5678v1\n---\n"
+    )
+    (src / "existing-b.md").write_text(
+        "---\ntype: source\nsource_url: https://arxiv.org/abs/2020.99999\n---\n"
+    )
+    existing = si._existing_source_urls(src)
+    assert "http://arxiv.org/abs/1234.5678" in existing or "1234.5678" in str(existing)
+    # Looser check: arxiv id stems present
+    assert any("1234.5678" in u for u in existing)
+    assert any("2020.99999" in u for u in existing)
+
+
+def test_dedup_filters_seen_candidates() -> None:
+    seen = {"http://arxiv.org/abs/1234.5678", "http://arxiv.org/abs/9876.54321"}
+    candidates = [
+        {"abs_url": "http://arxiv.org/abs/1234.5678v1", "title": "dup"},
+        {"abs_url": "http://arxiv.org/abs/0000.00000v2", "title": "new"},
+        {"abs_url": "https://arxiv.org/abs/9876.54321", "title": "dup-https"},
+    ]
+    fresh = si._filter_already_ingested(candidates, seen)
+    assert len(fresh) == 1
+    assert fresh[0]["title"] == "new"
+
+
+def test_author_sweep_writes_candidates(tmp_path: Path) -> None:
+    authors_yaml = tmp_path / "authors.yaml"
+    authors_yaml.write_text(
+        "sphere-packing:\n"
+        "  - \"Henry Cohn\"\n"
+        "extremal-graph:\n"
+        "  - \"Alexander Razborov\"\n"
+    )
+    out = tmp_path / "candidates.json"
+    src = tmp_path / "source"
+    src.mkdir()
+
+    captured_queries: list[str] = []
+
+    def fake_search(query, max_results=5):
+        captured_queries.append(query)
+        # Return a hit per query so we can verify per-author candidates
+        return [{
+            "title": f"Paper for {query[:20]}",
+            "authors": "X. Y.",
+            "year": "2023",
+            "abs_url": f"http://arxiv.org/abs/{len(captured_queries)}.0001",
+            "summary": "abstract",
+        }]
+
+    with patch.object(si, "search_arxiv", side_effect=fake_search):
+        si.author_sweep(
+            authors_yaml=authors_yaml, out_path=out, top_n=2,
+            rate_limit_seconds=0, source_dir=src,
+        )
+
+    data = json.loads(out.read_text())
+    # One block per author
+    assert len(data["concepts"]) == 2
+    # Each block uses kind=author-sweep
+    for block in data["concepts"]:
+        assert block.get("kind") == "author-sweep"
+        assert "category" in block
+        assert "author" in block
+        for cand in block["candidates"]:
+            assert cand["approved"] is None
+
+
+def test_author_sweep_dedups_against_existing(tmp_path: Path) -> None:
+    authors_yaml = tmp_path / "authors.yaml"
+    authors_yaml.write_text(
+        "sphere-packing:\n  - \"Henry Cohn\"\n"
+    )
+    out = tmp_path / "candidates.json"
+    src = tmp_path / "source"
+    src.mkdir()
+    (src / "existing.md").write_text(
+        "---\ntype: source\nsource_url: http://arxiv.org/abs/1.0001\n---\n"
+    )
+
+    def fake_search(query, max_results=5):
+        return [{
+            "title": "dup", "authors": "X", "year": "2023",
+            "abs_url": "http://arxiv.org/abs/1.0001v1", "summary": "S",
+        }, {
+            "title": "new", "authors": "Y", "year": "2024",
+            "abs_url": "http://arxiv.org/abs/2.0002v1", "summary": "S",
+        }]
+
+    with patch.object(si, "search_arxiv", side_effect=fake_search):
+        si.author_sweep(
+            authors_yaml=authors_yaml, out_path=out, top_n=5,
+            rate_limit_seconds=0, source_dir=src,
+        )
+
+    data = json.loads(out.read_text())
+    cands = data["concepts"][0]["candidates"]
+    titles = [c["title"] for c in cands]
+    assert "new" in titles
+    assert "dup" not in titles
+
+
 def test_apply_skips_unapproved(tmp_path: Path) -> None:
     docs = tmp_path / "docs"
     (docs / "source").mkdir(parents=True)
