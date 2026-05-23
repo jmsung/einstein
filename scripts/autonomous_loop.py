@@ -28,9 +28,11 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import logging
+import os
 import re
 import subprocess
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -40,6 +42,7 @@ DEFAULT_PROBLEMS_DIR = _REPO / "docs" / "wiki" / "problems"
 DEFAULT_CYCLE_LOG = _REPO / "docs" / "agent" / "cycle-log.md"
 DEFAULT_CYCLE_RUNNER = _REPO / "docs" / "tools" / "cycle_runner.sh"
 DEFAULT_SKILL_LIBRARY = _REPO / "docs" / "agent" / "skill-library.md"
+DEFAULT_LOCKFILE = _REPO / ".autonomous-loop.lock"
 
 # Local imports — strategy_picker lives in docs/tools/
 sys.path.insert(0, str(_REPO / "docs" / "tools"))
@@ -364,6 +367,64 @@ def run_one_problem(
                        outcome=result["outcome"], notes=result["notes"])
 
 
+# ---------------- concurrency lock ----------------
+
+
+class _LockHeld(RuntimeError):
+    """Raised when the lockfile already exists (another loop is running)."""
+
+
+def _acquire_lock(lockfile: Path) -> int:
+    """Acquire an exclusive lock by creating `lockfile` with O_CREAT|O_EXCL.
+
+    Returns the file descriptor (caller is responsible for releasing). On
+    contention, raises _LockHeld with the holding pid + age.
+    """
+    try:
+        fd = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    except FileExistsError:
+        try:
+            stale = lockfile.read_text().strip()
+        except OSError:
+            stale = "(unknown)"
+        try:
+            age = time.time() - lockfile.stat().st_mtime
+            age_str = f"{age:.0f}s old"
+        except OSError:
+            age_str = "(age unknown)"
+        raise _LockHeld(
+            f"another autonomous_loop is running (lockfile {lockfile} "
+            f"held by {stale}, {age_str}). Remove the lockfile if stale."
+        )
+    os.write(fd, f"pid={os.getpid()} started={dt.datetime.now().isoformat()}\n".encode())
+    return fd
+
+
+def _release_lock(fd: int, lockfile: Path) -> None:
+    try:
+        os.close(fd)
+    except OSError:
+        pass
+    try:
+        lockfile.unlink()
+    except FileNotFoundError:
+        pass
+
+
+# ---------------- recency skip ----------------
+
+
+def _has_recent_cycle(cycle_log: Path, *, minutes: int) -> bool:
+    """Return True iff the cycle-log was modified within the last `minutes`.
+
+    Used for cron/loop safety: skip running if a cycle landed very recently.
+    """
+    if not cycle_log.is_file():
+        return False
+    age_sec = time.time() - cycle_log.stat().st_mtime
+    return age_sec < minutes * 60
+
+
 def run_queue(
     *,
     problems_dir: Path = DEFAULT_PROBLEMS_DIR,
@@ -400,6 +461,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="Print plan only; do not append cycle-log or call cycle_runner.")
     parser.add_argument("--queue-only", action="store_true",
                         help="Print the current active queue and exit.")
+    parser.add_argument("--skip-if-recent", type=int, default=0, metavar="MINUTES",
+                        help="Skip the run (exit 0) if cycle-log was modified within "
+                             "MINUTES. Useful under cron / loop to avoid clobbering "
+                             "an in-flight cycle.")
+    parser.add_argument("--no-lock", action="store_true",
+                        help="Skip the concurrency lockfile (use for explicit "
+                             "manual concurrent runs).")
+    parser.add_argument("--lockfile", type=Path, default=DEFAULT_LOCKFILE,
+                        help="Path to the concurrency lockfile.")
     args = parser.parse_args(argv)
 
     if args.queue_only:
@@ -412,15 +482,34 @@ def main(argv: list[str] | None = None) -> int:
                   f"score={score:>14}  status={p.status:<30}  {p.slug}")
         return 0
 
-    max_problems = 1 if args.one_problem else args.max_problems
-    results = run_queue(
-        problems_dir=args.problems_dir,
-        cycle_log=args.cycle_log,
-        max_problems=max_problems,
-        dry_run=args.dry_run,
-    )
-    log.info("completed %d cycles", len(results))
-    return 0
+    # cron/loop safety: skip if a cycle just landed
+    if args.skip_if_recent > 0 and _has_recent_cycle(args.cycle_log, minutes=args.skip_if_recent):
+        log.info("cycle-log mtime within %d min — skipping run (cron/loop safety)",
+                 args.skip_if_recent)
+        return 0
+
+    # concurrency lock
+    fd: int | None = None
+    if not args.no_lock and not args.dry_run:
+        try:
+            fd = _acquire_lock(args.lockfile)
+        except _LockHeld as e:
+            log.error("%s", e)
+            return 75   # EX_TEMPFAIL — cron will retry next interval
+
+    try:
+        max_problems = 1 if args.one_problem else args.max_problems
+        results = run_queue(
+            problems_dir=args.problems_dir,
+            cycle_log=args.cycle_log,
+            max_problems=max_problems,
+            dry_run=args.dry_run,
+        )
+        log.info("completed %d cycles", len(results))
+        return 0
+    finally:
+        if fd is not None:
+            _release_lock(fd, args.lockfile)
 
 
 if __name__ == "__main__":

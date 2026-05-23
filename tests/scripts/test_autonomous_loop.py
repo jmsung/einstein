@@ -248,6 +248,38 @@ def test_run_one_problem_appends_row_and_calls_cycle_runner(tmp_path: Path) -> N
     assert "P1-alpha" in text or "1-alpha" in text
 
 
+def test_acquire_lock_succeeds_when_free(tmp_path: Path) -> None:
+    lockfile = tmp_path / "lock"
+    fd = al._acquire_lock(lockfile)
+    try:
+        assert lockfile.is_file()
+        content = lockfile.read_text()
+        assert "pid=" in content
+    finally:
+        al._release_lock(fd, lockfile)
+    assert not lockfile.exists()
+
+
+def test_acquire_lock_raises_when_held(tmp_path: Path) -> None:
+    lockfile = tmp_path / "lock"
+    fd = al._acquire_lock(lockfile)
+    try:
+        with pytest.raises(al._LockHeld):
+            al._acquire_lock(lockfile)
+    finally:
+        al._release_lock(fd, lockfile)
+
+
+def test_has_recent_cycle_true_for_just_modified(tmp_path: Path) -> None:
+    log = tmp_path / "cycle-log.md"
+    log.write_text("# log")
+    assert al._has_recent_cycle(log, minutes=60) is True
+
+
+def test_has_recent_cycle_false_for_missing(tmp_path: Path) -> None:
+    assert al._has_recent_cycle(tmp_path / "no-such.md", minutes=60) is False
+
+
 def test_run_one_problem_no_active_problems_returns_none(tmp_path: Path) -> None:
     pdir = _build_wiki_with_problems(tmp_path, [
         dict(problem_id=1, slug="frozen", tier="S", status="frozen"),
