@@ -7,7 +7,13 @@ from pathlib import Path
 
 from einstein.knowledge import KNOWLEDGE_PATH
 
+_no_yaml = pytest.mark.skipif(
+    KNOWLEDGE_PATH is None,
+    reason="knowledge.yaml removed in wiki refactor — data shredded to docs/wiki/techniques/",
+)
 
+
+@_no_yaml
 class TestKnowledgeSchema:
     """Verify the knowledge YAML has required structure and valid data."""
 
@@ -59,6 +65,7 @@ class TestKnowledgeLoader:
         assert "strategies" in k
         assert "problems" in k
 
+    @_no_yaml
     def test_get_strategy_priors_known_category(self):
         from einstein.knowledge import get_strategy_priors
         priors = get_strategy_priors("fourier-analysis")
@@ -70,11 +77,19 @@ class TestKnowledgeLoader:
             assert isinstance(weight, (int, float))
             assert weight > 0
 
+    @_no_yaml
     def test_get_strategy_priors_unknown_category(self):
         from einstein.knowledge import get_strategy_priors
         priors = get_strategy_priors("unknown-category")
         assert isinstance(priors, list)
         assert len(priors) > 0  # should return uniform priors
+
+    def test_get_strategy_priors_empty_when_no_yaml(self):
+        """Post-refactor: with knowledge.yaml removed, priors is an empty list."""
+        from einstein.knowledge import get_strategy_priors
+        if KNOWLEDGE_PATH is not None:
+            pytest.skip("knowledge.yaml present — covered by the other priors tests")
+        assert get_strategy_priors("any-category") == []
 
     def test_get_problem_insights(self):
         from einstein.knowledge import get_problem_insights
