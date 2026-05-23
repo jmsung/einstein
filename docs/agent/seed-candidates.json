@@ -1,0 +1,691 @@
+{
+  "generated_at": "2026-05-23",
+  "concepts": [
+    {
+      "concept": "basin-rigidity.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        6,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        19,
+        22
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "Some notes on the equivalence of first-order rigidity in various geometries",
+          "authors": "Franco V. Saliola, Walter Whiteley",
+          "year": "2007",
+          "abs_url": "http://arxiv.org/abs/0709.3354v1",
+          "summary": "These pages serve two purposes. First, they are notes to accompany the talk \"Hyperbolic and projective geometry in constraint programming for CAD\" by Walter Whiteley at the \"Janos Bolyai Conference on Hyperbolic Geometry\", 8--12 July 2002, in Budapest, Hungary. Second, they sketc...",
+          "slug": "2007-saliola-some-notes-equivalence-first-order",
+          "approved": true
+        },
+        {
+          "title": "Enumerating rigid sphere packings",
+          "authors": "Miranda C. Holmes-Cerfon",
+          "year": "2014",
+          "abs_url": "http://arxiv.org/abs/1407.3285v2",
+          "summary": "Packing problems, which ask how to arrange a collection of objects in space to meet certain criteria, are important in a great many physical and biological systems, where geometrical arrangements at small scales control behaviour at larger ones. In many systems there is no single...",
+          "slug": "2014-holmescerfon-enumerating-rigid-sphere-packings",
+          "approved": true
+        },
+        {
+          "title": "Potentialities of Nonsmooth Optimization",
+          "authors": "Vsevolod Ivanov Ivanov",
+          "year": "2013",
+          "abs_url": "http://arxiv.org/abs/1311.2367v1",
+          "summary": "In this paper, we show that higher-order optimality conditions can be obtain for arbitrary nonsmooth function. We introduce a new higher-order directional derivative and higher-order subdifferential of Hadamard type of a given proper extended real function. This derivative is con...",
+          "slug": "2013-ivanov-potentialities-nonsmooth-optimization",
+          "approved": null
+        }
+      ]
+    },
+    {
+      "concept": "slsqp-active-pair-polish.md",
+      "kind": "technique",
+      "refs": [
+        5,
+        6,
+        11,
+        14,
+        15,
+        16,
+        18,
+        22
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"sequential quadratic programming active set\" OR all:\"SQP nonlinear programming\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "basin-hopping-multistart.md",
+      "kind": "technique",
+      "refs": [
+        1,
+        10,
+        12,
+        13,
+        15,
+        16,
+        17
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"basin hopping global optimization\" OR all:\"multistart nonconvex\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "Proximal basin hopping: global optimization with guarantees",
+          "authors": "Guillaume Lauga, Cesare Molinari, Samuel Vaiter",
+          "year": "2026",
+          "abs_url": "http://arxiv.org/abs/2605.18364v1",
+          "summary": "Global optimization is a challenging problem, with plenty of algorithms displaying empirical success, but scarce theoretical backing. In this work, we propose a new theoretical framework called Proximal Basin Hopping (PBH), carefully tailored to combine proximal optimization and ...",
+          "slug": "2026-lauga-proximal-basin-hopping-global",
+          "approved": true
+        }
+      ]
+    },
+    {
+      "concept": "mpmath-ulp-polish.md",
+      "kind": "technique",
+      "refs": [
+        5,
+        6,
+        9,
+        10,
+        11,
+        14,
+        18
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"multiprecision arithmetic optimization\" OR all:\"high precision floating point\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "The first 128 digits of an autoconvolution inequality",
+          "authors": "Andrew Rechnitzer",
+          "year": "2026",
+          "abs_url": "http://arxiv.org/abs/2602.07292v1",
+          "summary": "Using rigorous high-precision floating point arithmetic we compute very tight rigorous bounds on the auto-convolution constant \\[   \u03bd_2^2 = \\inf_f \\|f \\ast f\\|_2^2 = \\inf_f \\int_{-1}^1 (f \\ast f)^2 \\] where the infimum is taken over all unit mass functions $f \\in L^1(-1/2,1/2)$. ...",
+          "slug": "2026-rechnitzer-first-128-digits-autoconvolution",
+          "approved": true
+        },
+        {
+          "title": "When Chaos Meets Computers",
+          "authors": "Shujun Li",
+          "year": "2004",
+          "abs_url": "http://arxiv.org/abs/nlin/0405038v3",
+          "summary": "This paper focuses on an interesting phenomenon when chaos meets computers. It is found that digital computers are absolutely incapable of showing true long-time dynamics of some chaotic systems, including the tent map, the Bernoulli shift map and their analogues, even in a high-...",
+          "slug": "2004-li-when-chaos-meets-computers",
+          "approved": null
+        },
+        {
+          "title": "Wanted: Floating-Point Add Round-off Error instruction",
+          "authors": "Marat Dukhan, Richard Vuduc, Jason Riedy",
+          "year": "2016",
+          "abs_url": "http://arxiv.org/abs/1603.00491v1",
+          "summary": "We propose a new instruction (FPADDRE) that computes the round-off error in floating-point addition. We explain how this instruction benefits high-precision arithmetic operations in applications where double precision is not sufficient. Performance estimates on Intel Haswell, Int...",
+          "slug": "2016-dukhan-wanted-floating-point-add-round-off",
+          "approved": null
+        }
+      ]
+    },
+    {
+      "concept": "parameterization-selection.md",
+      "kind": "concept",
+      "refs": [
+        2,
+        3,
+        4,
+        9,
+        13,
+        18
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"reparameterization optimization landscape\" OR all:\"change of variables nonconvex\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "warm-start-from-leader.md",
+      "kind": "technique",
+      "refs": [
+        2,
+        7,
+        11,
+        16,
+        17,
+        18
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"warm start nonlinear optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "float64-ceiling.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        11,
+        14,
+        17,
+        18
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"high precision optimization sphere packing\" OR all:\"multiprecision arithmetic numerical\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "multistart-with-rotation-lottery.md",
+      "kind": "technique",
+      "refs": [
+        5,
+        11,
+        12,
+        13,
+        16
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": "arena-tolerance-drift.md",
+      "kind": "concept",
+      "refs": [
+        7,
+        9,
+        14,
+        18
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": "minimprovement-gate.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        15,
+        16,
+        18
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": "symmetry-and-fundamental-domain.md",
+      "kind": "concept",
+      "refs": [
+        10,
+        15,
+        16,
+        17
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"fundamental domain symmetry sphere packing\" OR all:\"symmetry reduction nonlinear optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "smooth-max-approximation.md",
+      "kind": "concept",
+      "refs": [
+        1,
+        2,
+        4
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"log-sum-exp smoothing\" OR all:\"smoothed maximum approximation\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "basin-rigidity.md",
+      "kind": "finding",
+      "refs": [
+        5,
+        15,
+        16
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "equioscillation-escape.md",
+      "kind": "finding",
+      "refs": [
+        1,
+        2,
+        4
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"Chebyshev equioscillation\" OR all:\"Remez exchange algorithm\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "On Min-Max affine approximants of convex or concave real valued functions from $\\mathbb R^k$, Chebyshev equioscillation and graphics",
+          "authors": "Steven B. Damelin, David L. Ragozin, Michael Werman",
+          "year": "2018",
+          "abs_url": "http://arxiv.org/abs/1812.02302v10",
+          "summary": "We study Min-Max affine approximants of a continuous convex or concave function $f:\u0394\\subset \\mathbb R^k\\xrightarrow{} \\mathbb R$ where $\u0394$ is a convex compact subset of $\\mathbb R^k$. In the case when $\u0394$ is a simplex we prove that there is a vertical translate of the supporting ...",
+          "slug": "2018-damelin-min-max-affine-approximants-convex",
+          "approved": true
+        }
+      ]
+    },
+    {
+      "concept": "p2-peak-locking-hessian-mechanism.md",
+      "kind": "finding",
+      "refs": [
+        2,
+        3,
+        4
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"Hessian degeneracy autocorrelation\" OR all:\"peak locking optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "packing-techniques.md",
+      "kind": "finding",
+      "refs": [
+        14,
+        17,
+        18
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"circle packing algorithm\" OR all:\"disk packing optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "Hinged Kite Mirror Dissection",
+          "authors": "David Eppstein",
+          "year": "2001",
+          "abs_url": "http://arxiv.org/abs/cs/0106032v1",
+          "summary": "Any two polygons of equal area can be partitioned into congruent sets of polygonal pieces, and in many cases one can connect the pieces by flexible hinges while still allowing the connected set to form both polygons. However it is open whether such a hinged dissection always exis...",
+          "slug": "2001-eppstein-hinged-kite-mirror-dissection",
+          "approved": null
+        }
+      ]
+    },
+    {
+      "concept": "bounded-lbfgs-per-region-sigmoid.md",
+      "kind": "technique",
+      "refs": [
+        2,
+        4,
+        13
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"L-BFGS bound constrained\" OR all:\"piecewise smooth nonlinear optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "cma-es-with-warmstart.md",
+      "kind": "technique",
+      "refs": [
+        9,
+        15,
+        16
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"CMA-ES\" OR all:\"covariance matrix adaptation evolution\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "CMA-ES with Learning Rate Adaptation",
+          "authors": "Masahiro Nomura, Youhei Akimoto, Isao Ono",
+          "year": "2024",
+          "abs_url": "http://arxiv.org/abs/2401.15876v2",
+          "summary": "The covariance matrix adaptation evolution strategy (CMA-ES) is one of the most successful methods for solving continuous black-box optimization problems. A practically useful aspect of the CMA-ES is that it can be used without hyperparameter tuning. However, the hyperparameter s...",
+          "slug": "2024-nomura-cma-es-learning-rate-adaptation",
+          "approved": true
+        },
+        {
+          "title": "A parallel implementation of the covariance matrix adaptation evolution strategy",
+          "authors": "Najeeb Khan",
+          "year": "2018",
+          "abs_url": "http://arxiv.org/abs/1805.11201v1",
+          "summary": "In many practical optimization problems, the derivatives of the functions to be optimized are unavailable or unreliable. Such optimization problems are solved using derivative-free optimization techniques. One of the state-of-the-art techniques for derivative-free optimization is...",
+          "slug": "2018-khan-parallel-implementation-covariance-matrix",
+          "approved": true
+        },
+        {
+          "title": "CMA-ES with Learning Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal and Noisy Problems?",
+          "authors": "Masahiro Nomura, Youhei Akimoto, Isao Ono",
+          "year": "2023",
+          "abs_url": "http://arxiv.org/abs/2304.03473v3",
+          "summary": "The covariance matrix adaptation evolution strategy (CMA-ES) is one of the most successful methods for solving black-box continuous optimization problems. One practically useful aspect of the CMA-ES is that it can be used without hyperparameter tuning. However, the hyperparameter...",
+          "slug": "2023-nomura-cma-es-learning-rate-adaptation",
+          "approved": true
+        }
+      ]
+    },
+    {
+      "concept": "larger-n-cascade.md",
+      "kind": "technique",
+      "refs": [
+        2,
+        3,
+        4
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"discretization refinement nonlinear\" OR all:\"mesh refinement optimal control\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "micro-perturbation-multiscale.md",
+      "kind": "technique",
+      "refs": [
+        4,
+        6,
+        22
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"multiscale perturbation global optimization\" OR all:\"stochastic local search sphere packing\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "contact-graph-rigidity.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        11
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"contact graph rigidity\" OR all:\"infinitesimal rigidity disk packing\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "first-order-link-tangent-test.md",
+      "kind": "concept",
+      "refs": [
+        22,
+        23
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": "hinge-overlap.md",
+      "kind": "concept",
+      "refs": [
+        6,
+        22
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"kissing number hinge loss\" OR all:\"ReLU penalty sphere packing\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "k-climbing-and-dof-augmentation.md",
+      "kind": "concept",
+      "refs": [
+        9,
+        18
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"polynomial degree extremal uncertainty\" OR all:\"degrees of freedom Hermite\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "parameterization-induced-rank-deficiency.md",
+      "kind": "concept",
+      "refs": [
+        2,
+        3
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"rank deficient parameterization\" OR all:\"Hessian degeneracy optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "Condition numbers for the Moore-Penrose inverse and the least squares problem involving rank-structured matrices",
+          "authors": "Sk. Safique Ahmad, Pinki Khatun",
+          "year": "2023",
+          "abs_url": "http://arxiv.org/abs/2306.12177v3",
+          "summary": "Perturbation theory plays a crucial role in sensitivity analysis, which is extensively used to assess the robustness of numerical techniques. To quantify the relative sensitivity of any problem, it becomes essential to investigate structured condition numbers (CNs) via componentw...",
+          "slug": "2023-ahmad-condition-numbers-moore-penrose-inverse",
+          "approved": null
+        }
+      ]
+    },
+    {
+      "concept": "probabilistic-method.md",
+      "kind": "concept",
+      "refs": [
+        12,
+        19
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"probabilistic method Erdos\" OR all:\"Lovasz local lemma\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "An Algorithmic Proof of the Lovasz Local Lemma via Resampling Oracles",
+          "authors": "Nicholas Harvey, Jan Vondrak",
+          "year": "2015",
+          "abs_url": "http://arxiv.org/abs/1504.02044v3",
+          "summary": "The Lovasz Local Lemma is a seminal result in probabilistic combinatorics. It gives a sufficient condition on a probability space and a collection of events for the existence of an outcome that simultaneously avoids all of those events. Finding such an outcome by an efficient alg...",
+          "slug": "2015-harvey-algorithmic-proof-lovasz-local",
+          "approved": true
+        },
+        {
+          "title": "Extensions of the Algorithmic Lovasz Local Lemma",
+          "authors": "Vladimir Kolmogorov",
+          "year": "2019",
+          "abs_url": "http://arxiv.org/abs/1910.01552v3",
+          "summary": "We consider recent formulations of the algorithmic Lovasz Local Lemma by Achlioptas-Iliopoulos-Kolmogorov [2] and by Achlioptas-Iliopoulos-Sinclair [3]. These papers analyze a random walk algorithm for finding objects that avoid undesired \"bad events\" (or \"flaws\"), and prove that...",
+          "slug": "2019-kolmogorov-extensions-algorithmic-lovasz-local",
+          "approved": true
+        },
+        {
+          "title": "Comparison of two convergence criteria for the variable-assignment Lopsided Lovasz Local Lemma",
+          "authors": "David G. Harris",
+          "year": "2016",
+          "abs_url": "http://arxiv.org/abs/1610.01926v9",
+          "summary": "The Lopsided Lovasz Local Lemma (LLLL) is a cornerstone probabilistic tool for showing that it is possible to avoid a collection of \"bad\" events as long as their probabilities and interdependencies are sufficiently small. The strongest possible criterion in these terms is due to ...",
+          "slug": "2016-harris-comparison-two-convergence-criteria",
+          "approved": true
+        }
+      ]
+    },
+    {
+      "concept": "float64-ceiling.md",
+      "kind": "finding",
+      "refs": [
+        5,
+        11
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"high precision optimization sphere packing\" OR all:\"multiprecision arithmetic numerical\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "hinge-overlap-rank3-squeeze.md",
+      "kind": "finding",
+      "refs": [
+        6,
+        22
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": "arena-tolerance-slsqp.md",
+      "kind": "technique",
+      "refs": [
+        14,
+        18
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": "first-order-link-tangent-test.md",
+      "kind": "technique",
+      "refs": [
+        22,
+        23
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": "gap-space-parameterization.md",
+      "kind": "technique",
+      "refs": [
+        9,
+        18
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"uncertainty principle Hermite Laguerre\" OR all:\"gap parameterization spectral\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "gpu-decision-framework.md",
+      "kind": "technique",
+      "refs": [
+        3,
+        6
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": "k-climbing.md",
+      "kind": "technique",
+      "refs": [
+        9,
+        18
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"polynomial degree augmentation optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "lp-cutting-plane-warmstart.md",
+      "kind": "technique",
+      "refs": [
+        2,
+        7
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"cutting plane linear programming\" OR all:\"LP relaxation autocorrelation inequality\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "memetic-tabu-search.md",
+      "kind": "technique",
+      "refs": [
+        12,
+        19
+      ],
+      "vocab_status": "mapped",
+      "query": "(all:\"memetic algorithm combinatorial optimization\" OR all:\"tabu search flat polynomial\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "concept": "uniform-radius-shrink-fallback.md",
+      "kind": "technique",
+      "refs": [
+        14,
+        18
+      ],
+      "query": "",
+      "vocab_status": "intentionally-unmapped",
+      "candidates": []
+    },
+    {
+      "concept": null,
+      "kind": "general-knowledge",
+      "topic": "agentic-harness",
+      "refs": [],
+      "query": "manual user-curated reading list",
+      "vocab_status": "manual",
+      "candidates": [
+        {
+          "title": "Code as Agent Harness",
+          "authors": "Xuying Ning, Katherine Tieu, Dongqi Fu, Tianxin Wei, Zihao Li, et al.",
+          "year": "2026",
+          "abs_url": "https://arxiv.org/abs/2605.18747",
+          "summary": "Survey of code as infrastructure for AI agents: harness interfaces, mechanisms, scaling, applications in coding/GUI/embodied/scientific discovery.",
+          "slug": "2026-ning-code-as-agent-harness",
+          "approved": true
+        },
+        {
+          "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+          "authors": "Zhuofeng Li, Haoxiang Zhang, et al.",
+          "year": "2026",
+          "abs_url": "https://arxiv.org/abs/2605.05242",
+          "summary": "Direct Corpus Interaction: agents use grep/file-reads on raw corpora, outperforming embedding-based retrieval. Resolution-of-interface argument.",
+          "slug": "2026-li-direct-corpus-interaction-dci",
+          "approved": true
+        },
+        {
+          "title": "Harnessing Agentic Evolution",
+          "authors": "Jiayi Zhang, Yongfeng Gu, et al.",
+          "year": "2026",
+          "abs_url": "https://arxiv.org/abs/2605.13821",
+          "summary": "AEvo: meta-editing framework where a meta-agent edits procedure/context to steer agentic evolution. 26% gain over strongest baseline.",
+          "slug": "2026-zhang-aevo-agentic-evolution",
+          "approved": true
+        },
+        {
+          "title": "Frontier Coding Agents Implement an AlphaZero Self-Play Pipeline for Connect Four",
+          "authors": "Joshua Sherwood, Ben Aybar, Benjamin Kaplan",
+          "year": "2026",
+          "abs_url": "https://arxiv.org/abs/2604.25067",
+          "summary": "Benchmark for agents implementing full ML pipelines autonomously. Claude Opus 4.7 beat Pascal Pons solver 7/8 trials.",
+          "slug": "2026-sherwood-alphazero-coding-agents",
+          "approved": true
+        },
+        {
+          "title": "Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses",
+          "authors": "Jiahang Lin, Shichun Liu, Chengjun Pan, et al.",
+          "year": "2026",
+          "abs_url": "https://arxiv.org/abs/2604.25850",
+          "summary": "AHE: closed-loop harness evolution via component/experience/decision observability. 77.0 pass@1 Terminal-Bench 2. Branch-named analog.",
+          "slug": "2026-lin-agentic-harness-engineering-ahe",
+          "approved": true
+        },
+        {
+          "title": "ASI-Evolve: AI Accelerates AI",
+          "authors": "Weixian Xu, Tiantian Mi, et al.",
+          "year": "2026",
+          "abs_url": "https://arxiv.org/abs/2603.29640",
+          "summary": "Agentic framework with learn-design-experiment-analyze cycle autonomously driving AI research in architectures + RL algorithms.",
+          "slug": "2026-xu-asi-evolve",
+          "approved": true
+        },
+        {
+          "title": "OpenAI gpt-5 disproves a discrete-geometry conjecture (unit-distance bound)",
+          "authors": "OpenAI",
+          "year": "2026",
+          "abs_url": "https://openai.com/index/model-disproves-discrete-geometry-conjecture/",
+          "pdf_url": "https://cdn.openai.com/pdf/74c24085-19b0-4534-9c90-465b8e29ad73/unit-distance-proof.pdf",
+          "source_type": "openai-release",
+          "summary": "OpenAI announces gpt-5 disproved a unit-distance / discrete-geometry conjecture. Directly relevant to math-by-AI agent class.",
+          "slug": "2026-openai-gpt5-unit-distance-disproof",
+          "approved": true
+        },
+        {
+          "title": "Recursive Multi-Agent Systems (RecursiveMAS)",
+          "authors": "Jiaru Zou et al.",
+          "year": "2026",
+          "abs_url": "https://arxiv.org/abs/2604.25917",
+          "summary": "Scaling agent collaboration through latent-space recursion. Official paper impl; HF 1st paper of the week.",
+          "slug": "2026-zou-recursive-multi-agent-systems",
+          "approved": true
+        }
+      ]
+    }
+  ]
+}

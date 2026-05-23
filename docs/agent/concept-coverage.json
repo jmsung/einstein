@@ -1,0 +1,899 @@
+{
+  "generated_at": "2026-05-23",
+  "rows": [
+    {
+      "name": "basin-rigidity.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        6,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        19,
+        22
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "slsqp-active-pair-polish.md",
+      "kind": "technique",
+      "refs": [
+        5,
+        6,
+        11,
+        14,
+        15,
+        16,
+        18,
+        22
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "basin-hopping-multistart.md",
+      "kind": "technique",
+      "refs": [
+        1,
+        10,
+        12,
+        13,
+        15,
+        16,
+        17
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "mpmath-ulp-polish.md",
+      "kind": "technique",
+      "refs": [
+        5,
+        6,
+        9,
+        10,
+        11,
+        14,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "parameterization-selection.md",
+      "kind": "concept",
+      "refs": [
+        2,
+        3,
+        4,
+        9,
+        13,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "warm-start-from-leader.md",
+      "kind": "technique",
+      "refs": [
+        2,
+        7,
+        11,
+        16,
+        17,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "float64-ceiling.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        11,
+        14,
+        17,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "multistart-with-rotation-lottery.md",
+      "kind": "technique",
+      "refs": [
+        5,
+        11,
+        12,
+        13,
+        16
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "arena-tolerance-drift.md",
+      "kind": "concept",
+      "refs": [
+        7,
+        9,
+        14,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "minimprovement-gate.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        15,
+        16,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "symmetry-and-fundamental-domain.md",
+      "kind": "concept",
+      "refs": [
+        10,
+        15,
+        16,
+        17
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "smooth-max-approximation.md",
+      "kind": "concept",
+      "refs": [
+        1,
+        2,
+        4
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "basin-rigidity.md",
+      "kind": "finding",
+      "refs": [
+        5,
+        15,
+        16
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "equioscillation-escape.md",
+      "kind": "finding",
+      "refs": [
+        1,
+        2,
+        4
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "p2-peak-locking-hessian-mechanism.md",
+      "kind": "finding",
+      "refs": [
+        2,
+        3,
+        4
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "packing-techniques.md",
+      "kind": "finding",
+      "refs": [
+        14,
+        17,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "bounded-lbfgs-per-region-sigmoid.md",
+      "kind": "technique",
+      "refs": [
+        2,
+        4,
+        13
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "cma-es-with-warmstart.md",
+      "kind": "technique",
+      "refs": [
+        9,
+        15,
+        16
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "larger-n-cascade.md",
+      "kind": "technique",
+      "refs": [
+        2,
+        3,
+        4
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "micro-perturbation-multiscale.md",
+      "kind": "technique",
+      "refs": [
+        4,
+        6,
+        22
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "contact-graph-rigidity.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        11
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "first-order-link-tangent-test.md",
+      "kind": "concept",
+      "refs": [
+        22,
+        23
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "hinge-overlap.md",
+      "kind": "concept",
+      "refs": [
+        6,
+        22
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "k-climbing-and-dof-augmentation.md",
+      "kind": "concept",
+      "refs": [
+        9,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "parameterization-induced-rank-deficiency.md",
+      "kind": "concept",
+      "refs": [
+        2,
+        3
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "probabilistic-method.md",
+      "kind": "concept",
+      "refs": [
+        12,
+        19
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "float64-ceiling.md",
+      "kind": "finding",
+      "refs": [
+        5,
+        11
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "hinge-overlap-rank3-squeeze.md",
+      "kind": "finding",
+      "refs": [
+        6,
+        22
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "arena-tolerance-slsqp.md",
+      "kind": "technique",
+      "refs": [
+        14,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "first-order-link-tangent-test.md",
+      "kind": "technique",
+      "refs": [
+        22,
+        23
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "gap-space-parameterization.md",
+      "kind": "technique",
+      "refs": [
+        9,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "gpu-decision-framework.md",
+      "kind": "technique",
+      "refs": [
+        3,
+        6
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "k-climbing.md",
+      "kind": "technique",
+      "refs": [
+        9,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "lp-cutting-plane-warmstart.md",
+      "kind": "technique",
+      "refs": [
+        2,
+        7
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "memetic-tabu-search.md",
+      "kind": "technique",
+      "refs": [
+        12,
+        19
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "uniform-radius-shrink-fallback.md",
+      "kind": "technique",
+      "refs": [
+        14,
+        18
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "under-sourced"
+    },
+    {
+      "name": "sphere-packing.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        6,
+        10,
+        11,
+        14,
+        17,
+        18,
+        22,
+        23
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "equioscillation.md",
+      "kind": "concept",
+      "refs": [
+        1,
+        2,
+        4,
+        13,
+        15,
+        16
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "optimizer-recipes.md",
+      "kind": "finding",
+      "refs": [
+        2,
+        3,
+        4,
+        13
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "autocorrelation-inequality.md",
+      "kind": "concept",
+      "refs": [
+        2,
+        3,
+        4
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "circle-packing.md",
+      "kind": "concept",
+      "refs": [
+        14,
+        17,
+        18
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "kissing-number.md",
+      "kind": "concept",
+      "refs": [
+        6,
+        22,
+        23
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "sidon-sets.md",
+      "kind": "concept",
+      "refs": [
+        2,
+        3,
+        19
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "arena-proximity-guard.md",
+      "kind": "finding",
+      "refs": [
+        14,
+        16,
+        18
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "parallel-tempering-sa.md",
+      "kind": "technique",
+      "refs": [
+        6,
+        10,
+        22
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "bourgain-clozel-kahane.md",
+      "kind": "concept",
+      "refs": [
+        9,
+        18
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "lp-duality.md",
+      "kind": "concept",
+      "refs": [
+        1,
+        7
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "uncertainty-principle.md",
+      "kind": "concept",
+      "refs": [
+        9,
+        18
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "discrete-optimization.md",
+      "kind": "finding",
+      "refs": [
+        12,
+        19
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "gpu-modal-compute.md",
+      "kind": "finding",
+      "refs": [
+        3,
+        6
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "verification-patterns.md",
+      "kind": "finding",
+      "refs": [
+        9,
+        18
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "discretization-as-structure.md",
+      "kind": "concept",
+      "refs": [
+        12
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "flag-algebra.md",
+      "kind": "concept",
+      "refs": [
+        13
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "fractal-perturbation-landscape.md",
+      "kind": "concept",
+      "refs": [
+        6
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "fractional-programming-dinkelbach.md",
+      "kind": "concept",
+      "refs": [
+        3
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "kronecker-decomposition.md",
+      "kind": "concept",
+      "refs": [
+        19
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "n-extension-monotonicity.md",
+      "kind": "concept",
+      "refs": [
+        7
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "provable-floor-and-frozen-problems.md",
+      "kind": "concept",
+      "refs": [
+        10
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "sieve-theory-as-lp.md",
+      "kind": "concept",
+      "refs": [
+        7
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "turan-density.md",
+      "kind": "concept",
+      "refs": [
+        13
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "float64-polish.md",
+      "kind": "finding",
+      "refs": [
+        6
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "frozen-problem-triage.md",
+      "kind": "finding",
+      "refs": [
+        10
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "lp-solver-scaling.md",
+      "kind": "finding",
+      "refs": [
+        7
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "p22-d12-construction-survey.md",
+      "kind": "finding",
+      "refs": [
+        22
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "perturbation-landscape.md",
+      "kind": "finding",
+      "refs": [
+        6
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "polish-race-dynamics.md",
+      "kind": "finding",
+      "refs": [
+        13
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "prime-number-theorem-lp.md",
+      "kind": "finding",
+      "refs": [
+        7
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "sa-parallel-tempering.md",
+      "kind": "finding",
+      "refs": [
+        6
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "bnb-exhaustive-w3.md",
+      "kind": "technique",
+      "refs": [
+        19
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "boundary-snap-for-kinks.md",
+      "kind": "technique",
+      "refs": [
+        13
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "compute-router.md",
+      "kind": "technique",
+      "refs": [
+        6
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "cross-resolution-basin-transfer.md",
+      "kind": "technique",
+      "refs": [
+        3
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "dinkelbach-fractional-programming.md",
+      "kind": "technique",
+      "refs": [
+        3
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "greedy-insert-cd-redistribute.md",
+      "kind": "technique",
+      "refs": [
+        13
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "kronecker-search-decomposition.md",
+      "kind": "technique",
+      "refs": [
+        19
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "remez-equioscillation-diagnostic.md",
+      "kind": "technique",
+      "refs": [
+        1
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    },
+    {
+      "name": "sdp-flag-algebra.md",
+      "kind": "technique",
+      "refs": [
+        1
+      ],
+      "has_page": true,
+      "has_source": false,
+      "classification": "orphan-or-singleton"
+    }
+  ]
+}
