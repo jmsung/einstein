@@ -67,8 +67,19 @@ else
 fi
 echo
 
-# 4. promotion-log check — surface findings cited 3+ times for human review
-echo "[4/4] promotion-log check"
+# 4. wiki_lint — structural health check (orphans / broken cites / body link gaps)
+echo "[4/5] wiki_lint — structural wiki health"
+if [[ -f docs/tools/wiki_lint.py ]]; then
+  if ! uv run python docs/tools/wiki_lint.py; then
+    echo "  warning: wiki_lint reported issues (continuing)"
+  fi
+else
+  echo "  skip: docs/tools/wiki_lint.py not present"
+fi
+echo
+
+# 5. promotion-log check — surface findings cited 3+ times for human review
+echo "[5/5] promotion-log check"
 PROMOTION_LOG="docs/agent/promotion-log.md"
 if [[ -f "$PROMOTION_LOG" ]]; then
   echo "  promotion-log exists at $PROMOTION_LOG"
