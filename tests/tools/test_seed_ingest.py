@@ -375,6 +375,93 @@ def test_apply_idempotent_skip_if_source_exists(tmp_path: Path) -> None:
     assert (docs / "source" / "2020-smith-test.md").read_text() == "preexisting\n"
 
 
+def test_relevance_score_keyword_overlap() -> None:
+    """Relevance score is keyword-overlap-based — more shared terms = higher."""
+    high = si._relevance_score(
+        candidate={"title": "First-order rigidity in sphere packings",
+                   "summary": "We study isolated local minima of sphere arrangements...",
+                   "year": "2024"},
+        phrases=["first-order rigidity", "isolated local minimum", "sphere packing"],
+    )
+    low = si._relevance_score(
+        candidate={"title": "Hinged kite mirror dissection",
+                   "summary": "Polygon piecewise dissection algorithms...",
+                   "year": "2001"},
+        phrases=["first-order rigidity", "isolated local minimum"],
+    )
+    assert high > low
+    assert 0.0 <= low < high <= 1.0
+
+
+def test_relevance_score_recency_factor() -> None:
+    """Newer papers get a small recency bonus, all else equal."""
+    new_score = si._relevance_score(
+        candidate={"title": "Foo", "summary": "Foo bar baz", "year": "2026"},
+        phrases=["foo"],
+    )
+    old_score = si._relevance_score(
+        candidate={"title": "Foo", "summary": "Foo bar baz", "year": "2010"},
+        phrases=["foo"],
+    )
+    assert new_score >= old_score
+
+
+def test_propose_auto_approves_above_threshold(tmp_path: Path) -> None:
+    coverage = _make_coverage(tmp_path, [
+        _coverage_row("basin-rigidity.md", refs=[1, 2]),
+    ])
+    out = tmp_path / "candidates.json"
+    vocab_path = tmp_path / "vocab.yaml"
+    vocab_path.write_text(
+        "basin-rigidity.md:\n  - \"first-order rigidity\"\n"
+    )
+
+    fake_results = [
+        {"title": "First-order rigidity in sphere packings",
+         "authors": "X. Y.", "year": "2024",
+         "abs_url": "http://arxiv.org/abs/1.1", "summary": "Strong overlap"},
+        {"title": "Unrelated topic",
+         "authors": "Z.", "year": "2019",
+         "abs_url": "http://arxiv.org/abs/1.2", "summary": "No overlap whatsoever"},
+    ]
+
+    with patch.object(si, "search_arxiv", return_value=fake_results):
+        si.propose(coverage_json=coverage, out_path=out, top_n=5,
+                   rate_limit_seconds=0, vocab_path=vocab_path,
+                   auto_approve_threshold=0.3)
+
+    data = json.loads(out.read_text())
+    cands = data["concepts"][0]["candidates"]
+    assert len(cands) == 2
+    # First should auto-approve, second should not
+    assert cands[0]["approved"] is True
+    assert cands[0].get("auto_approved") is True
+    assert cands[0].get("relevance", 0) >= 0.3
+    assert cands[1]["approved"] is None
+    assert cands[1].get("auto_approved") is not True
+
+
+def test_propose_no_threshold_leaves_approval_null(tmp_path: Path) -> None:
+    """Default behavior — no threshold given — all candidates approval=null."""
+    coverage = _make_coverage(tmp_path, [
+        _coverage_row("basin-rigidity.md", refs=[1, 2]),
+    ])
+    out = tmp_path / "candidates.json"
+    vocab_path = tmp_path / "vocab.yaml"
+    vocab_path.write_text(
+        "basin-rigidity.md:\n  - \"first-order rigidity\"\n"
+    )
+    with patch.object(si, "search_arxiv", return_value=[
+        {"title": "First-order rigidity match",
+         "authors": "X", "year": "2024",
+         "abs_url": "http://arxiv.org/abs/1.1", "summary": "Strong overlap"},
+    ]):
+        si.propose(coverage_json=coverage, out_path=out, top_n=3,
+                   rate_limit_seconds=0, vocab_path=vocab_path)
+    cands = json.loads(out.read_text())["concepts"][0]["candidates"]
+    assert cands[0]["approved"] is None
+
+
 def test_apply_dry_run_writes_nothing(tmp_path: Path) -> None:
     docs = tmp_path / "docs"
     (docs / "source").mkdir(parents=True)

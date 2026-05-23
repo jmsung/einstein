@@ -39,6 +39,14 @@ _REPO = Path(__file__).resolve().parents[1]
 DEFAULT_PROBLEMS_DIR = _REPO / "docs" / "wiki" / "problems"
 DEFAULT_CYCLE_LOG = _REPO / "docs" / "agent" / "cycle-log.md"
 DEFAULT_CYCLE_RUNNER = _REPO / "docs" / "tools" / "cycle_runner.sh"
+DEFAULT_SKILL_LIBRARY = _REPO / "docs" / "agent" / "skill-library.md"
+
+# Local imports — strategy_picker lives in docs/tools/
+sys.path.insert(0, str(_REPO / "docs" / "tools"))
+try:
+    import strategy_picker  # type: ignore[import-not-found]
+except ImportError:
+    strategy_picker = None  # type: ignore[assignment]
 
 log = logging.getLogger("autonomous_loop")
 
@@ -229,28 +237,66 @@ def next_cycle_id(cycle_log: Path) -> int:
 # ---------------- inner attempt placeholder ----------------
 
 
-def inner_attempt(problem: Problem, dry_run: bool = False) -> dict:
-    """Placeholder for Goal 4's strategy_picker + execute + triple-verify chain.
+def inner_attempt(problem: Problem, dry_run: bool = False,
+                  skill_library: Path = DEFAULT_SKILL_LIBRARY) -> dict:
+    """Reflection chain for one cycle attempt.
 
-    Returns a result dict the outer loop uses to compose the cycle-log row.
-    For now, just records the visit so the discipline machinery is exercised
-    end-to-end.
+    Order of operations:
+      1. category lookup (problem_id → category)
+      2. strategy_picker reads skill-library → (prior, novel) pick per the
+         autoresearch 1+1 rule
+      3. Execute step is intentionally a placeholder — per-problem optimizer
+         integration is Phase-5 work (the orchestrator can't know how to
+         invoke `scripts/<problem>/optimize.py` without the per-problem
+         entry point being canonicalized).
+
+    The cycle-log row captures whatever signal we did produce: the strategy
+    pick and the rationale. A subsequent Phase-5 commit will replace the
+    placeholder execute with a real per-problem dispatch.
     """
-    log.info("inner_attempt (placeholder) — problem=%s tier=%s status=%s",
+    log.info("inner_attempt — problem=%s tier=%s status=%s",
              problem.display, problem.tier, problem.status)
+
+    notes_parts: list[str] = []
+    if strategy_picker is None:
+        log.warning("strategy_picker not importable — skipping strategy pick")
+        notes_parts.append("strategy_picker unavailable")
+        outcome = "scaffold-no-attempt"
+    else:
+        category = strategy_picker.category_for(problem.problem_id)
+        log.info("  category=%s", category)
+        pick = strategy_picker.pick_strategy(skill_library, category=category)
+        log.info("  %s", pick.rationale)
+        notes_parts.append(f"category={category}")
+        if pick.prior is not None:
+            notes_parts.append(
+                f"prior={pick.prior.technique}({pick.prior.hit_rate:.2f})"
+            )
+        if pick.novel is not None:
+            notes_parts.append(
+                f"novel={pick.novel.technique}(finding_rate={pick.novel.finding_rate:.2f})"
+            )
+        if pick.prior is None and pick.novel is None:
+            outcome = "scaffold-no-attempt"
+            notes_parts.append("(no library matches — council needed)")
+        else:
+            outcome = "strategy-picked-no-execution"
+
+    notes = "autonomous_loop inner_attempt — " + "; ".join(notes_parts) + (
+        ". Execute step deferred to Phase 5 per-problem optimizer integration."
+    )
+
     return {
         "start_score": problem.score_current if problem.score_current is not None else "none",
         "end_score": problem.score_current if problem.score_current is not None else "none",
         "hours": 0.0,
-        "compute": "none-placeholder",
+        "compute": "none-strategy-only",
         "wiki_citations": 0,
         "findings_added": 0,
         "concepts_added": 0,
         "author_mix": {"agent": 1, "human": 0, "hybrid": 0},
-        "outcome": "scaffold-no-attempt",
-        "notes": ("autonomous_loop.py Phase-3 scaffold visit — inner attempt "
-                  "to be implemented in Goal 4 (strategy_picker + execute + "
-                  "triple-verify)"),
+        "outcome": outcome,
+        "notes": notes,
     }
 
 
