@@ -6,15 +6,15 @@ Math is one of the few systems where an agent's claimed understanding can be ver
 
 ## The artifact
 
-This repo is the artifact. It has three layers that grow together:
+This repo is the artifact. Three layers grow together:
 
 | Layer | Path | What lives there |
 |---|---|---|
-| **Docs — the brain** | [`docs/wiki/`](docs/wiki/) | Math knowledge: concepts, techniques, mathematician personas, findings, problems, open questions. Either human or agent may author, with mandatory frontmatter attribution. |
+| **Wiki — the brain** | [`docs/wiki/`](docs/wiki/) | Math knowledge: concepts, techniques, mathematician personas, findings, problems, open questions. Either human or agent may author, with mandatory frontmatter attribution. |
 | **Rules — the policy** | [`.claude/rules/`](.claude/rules/) | Behavioral rules that govern how the agent reads, thinks, asks, distills, and writes back. |
-| **Agent — the dynamics** | [`docs/agent/`](docs/agent/) | Self-improvement infrastructure: append-only cycle log, skill library with hit-rates, metrics, ablations. |
+| **Agent — the dynamics** | [`docs/agent/`](docs/agent/) | Self-improvement infrastructure: append-only cycle log, skill library with hit-rates, metrics, ablations, finding→concept promotion log. |
 
-Plus the supporting layers: [`docs/source/`](docs/source/) (1:1 LLM distillations of papers/repos/blogs), [`docs/raw/`](docs/raw/) (gitignored cache of native originals), and the code in [`src/`](src/), [`scripts/`](scripts/), [`tests/`](tests/).
+Supporting layers: [`docs/source/`](docs/source/) (1:1 LLM distillations of papers/repos/blogs), [`docs/raw/`](docs/raw/) (gitignored cache of native originals), [`docs/tools/`](docs/tools/) (wiki gap-detector + qmd reindex), and the code in [`src/`](src/), [`scripts/`](scripts/), [`tests/`](tests/).
 
 **Start here:**
 
@@ -22,12 +22,13 @@ Plus the supporting layers: [`docs/source/`](docs/source/) (1:1 LLM distillation
 - [`docs/wiki/problems/_inventory.md`](docs/wiki/problems/_inventory.md) — concept-coverage compass across 23 arena problems
 - [`docs/wiki/personas/_synthesis.md`](docs/wiki/personas/_synthesis.md) — the 12 stances drawn from how the great mathematicians actually work
 - [`docs/wiki/CLAUDE.md`](docs/wiki/CLAUDE.md) — the wiki contract (machine-readable + prose)
+- [`docs/wiki/timeline.md`](docs/wiki/timeline.md) — dated discovery breakthroughs
 
 ## The thesis
 
 The agent solves problems, fails, reflects, writes back to the wiki, and keeps going. Wisdom compounds across cycles in the wiki the same way understanding compounds across generations in biological evolution — selection on what worked, retention of what generalizes, ruthless pruning of what didn't.
 
-Math wisdom is the goal, not arena rank. Submission is a verification tool, not a goal — local triple-verify is the closed loop; the leaderboard is a second-rate signal that catches local-vs-arena verifier drift. No external posts; this repo is the publication channel.
+Math wisdom is the goal, not arena rank. Submission is a verification tool — local triple-verify is the closed loop; the leaderboard is a second-rate signal that catches local-vs-arena verifier drift. The wiki *is* the publication channel.
 
 JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einsteinarena) by Bianchi, Kwon, and Zou as a top-performing agent on the Einstein Arena. See also the [Einstein Arena source repo](https://github.com/vinid/einstein-arena) and Together AI's [EinsteinArena-new-SOTA](https://github.com/togethercomputer/EinsteinArena-new-SOTA).
 
@@ -60,109 +61,101 @@ JSAgent was cited in the [Together.ai blog post](https://together.ai/blog/einste
 
 <!-- ARENA_STATUS_END -->
 
-## How JSAgent Works
+## How JSAgent works
 
-JSAgent combines **deep mathematical research** with an **adaptive optimization loop** that learns what works across problems. Three core ideas make it effective on hard unsolved problems:
+Four ideas, in order of when they fire on a new problem.
 
-### 1. Mathematician Council — Multi-Perspective Research
+### 1. Mathematician council — multi-perspective research
 
-Before writing any optimizer, JSAgent deploys a **mathematician council** — a core of 10 always-on agents plus a conditional specialist bench — each embodying a different mathematical school of thought, to research the problem in parallel.
+Before writing any optimizer, JSAgent dispatches a **council of mathematician personas** in parallel — a core of 10 always-on personas plus a triggered specialist bench — each embodying a different mathematical school of thought.
 
-**Core council** (always runs on every problem):
+| Tier | Personas | When |
+|---|---|---|
+| Core (always) | Gauss, Riemann, Tao, Conway, Euler, Poincaré, Erdős, Noether, Cohn, Razborov | every problem |
+| Specialist bench | Viazovska, Szemerédi, Turán, Ramanujan, Archimedes, Hilbert | triggered per problem domain |
+| Meta-coaches | Polya, Hadamard, Grothendieck, Atiyah, Wiles | when stuck on protocol, not math |
 
-| Agent | Perspective | Example Contribution |
-|-------|-------------|---------------------|
-| **Gauss** | Number theory, algebraic constructions | CRT tensor products, Kloosterman sums |
-| **Riemann** | Complex analysis, spectral theory | Equioscillation analysis, Remez exchange |
-| **Tao** | Harmonic analysis, additive combinatorics | Difference sets, uncertainty principle bounds |
-| **Conway** | Sphere packings, lattices, SPLAG | Leech lattice, laminated lattices, contact graphs |
-| **Euler** | Combinatorial enumeration | Search space estimates, branch-and-bound |
-| **Poincaré** | Topology, dynamical systems | Basin structure, variable neighborhood search |
-| **Erdős** | Probabilistic method | Existence bounds, derandomized rounding |
-| **Noether** | Abstract algebra, symmetry | Group orbits, cyclotomic decomposition |
-| **Cohn** | LP bounds, sphere packing dual | Cohn-Elkies bound, linear programming bounds |
-| **Razborov** | Flag algebras, extremal combinatorics | Graph-density bounds, Turán-type problems |
+Each persona writes **questions, not solutions** (see [`.claude/rules/council-dispatch.md`](.claude/rules/council-dispatch.md)). Questions land in [`docs/wiki/questions/`](docs/wiki/questions/) for the gap-detect step. Full persona index: [`docs/wiki/personas/_synthesis.md`](docs/wiki/personas/_synthesis.md).
 
-**Specialist bench** (deployed only when the problem triggers them):
+### 2. Adaptive optimizer — problem-agnostic loop
 
-| Agent | Perspective | Triggers on |
-|-------|-------------|-------------|
-| **Viazovska** | Sphere packing optimality proofs | P6, P11 |
-| **Szemerédi** | Regularity lemma, extremal graph theory | P13, P15 |
-| **Turán** | Graph theory, Turán density | P13 |
-| **Ramanujan** | Modular forms, hidden algebraic structure | P6, P7, P11, P19 |
-| **Archimedes** | Classical geometric intuition, method of exhaustion | P5, P10, P11, P14, P17, P18 |
-| **Hilbert** | Integral inequalities, functional-analytic framing | P2, P3, P4, P9 |
+One loop handles continuous, discrete, manifold-constrained, and ratio objectives. Strategies that recently improved get boosted; stale ones get deprioritized. Ships with general-purpose strategies (hill-climb, Nelder-Mead, L-BFGS-B, perturbation) and accepts **problem-specific plugins**: Riemannian gradient descent for sphere problems, Dinkelbach for fractional programs, memetic tabu search for combinatorial landscapes, parallel-tempering SA for fractal hinge-loss landscapes, and more. Full taxonomy: [`docs/wiki/techniques/`](docs/wiki/techniques/).
 
-Each agent researches independently — scanning literature, analyzing SOTA solutions, and proposing approaches. A synthesis step then groups ideas, identifies novel angles, and ranks by likely impact. The core-plus-bench design keeps per-problem cost low while giving niche problems access to domain specialists.
+### 3. Self-improving loop — wisdom compounds across cycles
 
-### 2. Adaptive Optimizer — Learn What Works
-
-The core optimizer is **problem-agnostic**: one loop handles continuous, discrete, manifold-constrained, and ratio objectives alike.
+Each problem-attempt cycle goes:
 
 ```
-┌─────────────────────────────────────────┐
-│           Adaptive Optimizer            │
-│                                         │
-│  1. Load best solution                  │
-│  2. Select strategies (knowledge-based) │
-│  3. Run each strategy → candidates      │
-│  4. Verify with exact evaluator         │
-│  5. Update history & strategy weights   │
-│  6. Loop                                │
-└─────────────────────────────────────────┘
+understand → wiki-first lookup → council dispatch → gap-detect → research
+           → distill (cite source) → specialize (n=2,3,4) → execute → look back
+           → failure-as-finding → cycle-log append → promote
 ```
 
-**Strategy selection adapts each iteration**: strategies that recently improved the score get boosted; stale ones get deprioritized. The optimizer ships with general-purpose strategies (hill climbing, Nelder-Mead, L-BFGS-B, perturbation) and accepts **problem-specific strategies as plugins** — Riemannian gradient descent for sphere problems, Dinkelbach for fractional programs, memetic tabu search for combinatorial landscapes, and more.
+The honesty signals live in [`docs/agent/`](docs/agent/):
 
-### 3. Knowledge Layer — Transfer Across Problems
+- **`cycle-log.md`** — append-only row per cycle (failures count; cherry-picking forbidden)
+- **`skill-library.md`** — technique hit-rates per problem category
+- **`metrics.md`** — time-to-top-3, transfer count, score-per-GPU-hour, agent/human authorship mix
+- **`promotion-log.md`** — finding→concept graduations (human-gated)
+- **`ablations/`** — controlled experiments (cold-wiki vs warm-wiki, persona ablation)
 
-A structured knowledge base tracks **which strategies work for which problem categories**. When JSAgent encounters a new problem, it loads priors from similar solved problems — so a new Fourier analysis problem immediately benefits from lessons learned on earlier ones. This cross-problem transfer means JSAgent gets stronger with every problem it solves.
+Every dead-end becomes a `docs/wiki/findings/dead-end-<slug>.md` with the *why*. Tomorrow's breakthrough sits on yesterday's articulated obstruction.
 
-### Quality Gates — Triple Verification
+### 4. Triple verification — every score, three ways
 
-Every candidate score is verified three independent ways before it's trusted:
+Every candidate score must agree under three independent evaluations: a fast evaluator (drives the loop), an exact reimplementation (catches numerical drift), and a cross-check (analytical bound or different method). If any two disagree, the score is fake — debug before proceeding. This is the closed loop; submission to the arena is the second-rate signal that catches local↔arena verifier drift. See [`.claude/rules/triple-verify.md`](.claude/rules/triple-verify.md).
 
-1. **Fast evaluator** — for optimization loop speed
-2. **Exact reimplementation** — catches numerical drift and edge cases
-3. **Cross-check** — different method or known analytical bound
+## Compute routing
 
-If any two disagree, the improvement is rejected. This prevents "phantom scores" — a common failure mode where numerical bugs create the illusion of progress.
+Two first-class environments, picked per workload before launch:
 
-### GPU Acceleration — Only When It Helps
+- **Local M5 Max (128GB)** — mpmath polish, sequential CPU optimizers (L-BFGS / NM / SLSQP), small basin-hopping, MPS float32 batch ops, large multistart with multiprocess.
+- **Modal A100/H100** — sustained float64 GPU parallel (parallel tempering, CMA-ES large-pop float64), large LP/SDP that's RAM-bound.
 
-Before reaching for cloud GPU, JSAgent classifies the bottleneck:
-
-- **Math-limited** → more research, not more compute
-- **Compute-limited but sequential** → stay on CPU (Nelder-Mead, L-BFGS-B don't parallelize)
-- **Compute-limited and parallelizable** → vectorize with PyTorch, then scale to A100/H100 if ≥3x speedup
-- **GPU util > 50%** → use `torch.compile`, you're compute-bound
-- **GPU util < 50%** → custom Triton kernels fuse the entire SA inner loop into a single kernel launch — zero Python overhead per perturbation
+Decision matrix in [`docs/wiki/techniques/compute-router.md`](docs/wiki/techniques/compute-router.md); pre-launch audit rule in [`.claude/rules/compute-router.md`](.claude/rules/compute-router.md).
 
 ## Setup
 
-Requires Python 3.13+.
+Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uv sync
+uv sync                                # install all deps
+uv run python -m pytest tests/ -v      # run all tests
+uv run python scripts/<problem>/...    # run a per-problem entry point
+modal run scripts/<problem>/modal_*.py # GPU runs (needs Modal account)
+```
+
+## Layout
+
+```
+cb/                            # public artifact (this repo)
+├── docs/
+│   ├── wiki/                  # math knowledge: concepts/, techniques/, findings/,
+│   │                          # personas/, problems/, questions/, home.md, timeline.md
+│   ├── source/                # 1:1 LLM distillations of papers/blog/repos
+│   ├── raw/                   # gitignored — native originals (PDFs)
+│   ├── agent/                 # self-improvement infra
+│   └── tools/                 # wiki_graph.py + refresh_qmd.sh
+├── src/einstein/              # per-problem subpackages + shared modules
+├── scripts/                   # entry points (per-problem + cross-cutting)
+├── tests/                     # per-problem pytest
+└── .claude/rules/             # behavioral rules (always-loaded)
 ```
 
 ## Documentation
 
-### Cross-Problem Guides
+- [`docs/wiki/timeline.md`](docs/wiki/timeline.md) — dated breakthroughs
+- [`docs/wiki/concepts/arena-platform.md`](docs/wiki/concepts/arena-platform.md) — platform overview, API, rate limits
+- [`docs/wiki/findings/`](docs/wiki/findings/) — cross-problem findings (arena mechanics, float64 polish, verification patterns, optimizer recipes, …)
+- [`docs/wiki/techniques/`](docs/wiki/techniques/) — optimizer taxonomy + reusable methods
+- [`docs/wiki/problems/`](docs/wiki/problems/) — per-problem deep dives (one file per arena problem)
 
-- [docs/wiki/home.md](docs/wiki/home.md) — Wiki front door — concepts, techniques, personas, findings, problems
-- [docs/wiki/timeline.md](docs/wiki/timeline.md) — Discovery timeline — dated breakthroughs for attribution clarity
-- [docs/wiki/concepts/arena-platform.md](docs/wiki/concepts/arena-platform.md) — Platform overview, API, rate limits, platform mechanics
-- [docs/wiki/findings/arena-api-mechanics.md](docs/wiki/findings/arena-api-mechanics.md) — minImprovement, scoring, verification drift
-- [docs/wiki/findings/optimizer-recipes.md](docs/wiki/findings/optimizer-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
-- [docs/wiki/techniques/](docs/wiki/techniques/) — Optimizer taxonomy, general techniques, transfer lessons
-- [docs/wiki/findings/float64-polish.md](docs/wiki/findings/float64-polish.md) — ULP descent, mpmath, precision lottery
-- [docs/wiki/findings/verification-patterns.md](docs/wiki/findings/verification-patterns.md) — Two-tier architecture, triple verification
+Search the wiki with [qmd](https://github.com/tobi/qmd):
 
-### Arena Discussion Posts & Per-Problem Deep Dives
-
-Strategy writeups are linked from the [Discovery Timeline](docs/wiki/timeline.md). Per-problem deep dives with approaches, results, and key insights are in [docs/wiki/problems/](docs/wiki/problems/) (one file per problem).
+```bash
+qmd query "<question>" -c einstein-wiki -n 5            # synthesis layer
+qmd query "<question>" -c einstein-wiki-source -n 5     # distilled summaries
+```
 
 ## Citation
 
@@ -180,5 +173,4 @@ Strategy writeups are linked from the [Discovery Timeline](docs/wiki/timeline.md
 
 MIT
 
-*Last updated: 2026-04-19*
-
+*Last updated: 2026-05-22*
