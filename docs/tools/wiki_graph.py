@@ -16,9 +16,9 @@ Five gap types detected:
 documented in `docs/wiki/findings/finding-the-fertile-gaps.md` but not built here.)
 
 Usage:
-    uv run python tools/wiki_graph.py                      # full report -> stdout
-    uv run python tools/wiki_graph.py --out agent/wiki-gaps-2026-05-02.md
-    uv run python tools/wiki_graph.py --file-questions     # auto-file top-3 as docs/wiki/questions/
+    uv run python docs/tools/wiki_graph.py                      # full report -> stdout
+    uv run python docs/tools/wiki_graph.py --out agent/wiki-gaps-2026-05-02.md
+    uv run python docs/tools/wiki_graph.py --file-questions     # auto-file top-3 as docs/wiki/questions/
 
 Companion: cross-pollination-not-compute.md (the filter for which candidates
 to keep). This tool says what to *consider*. Together = the discipline.
@@ -35,7 +35,7 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-_REPO = Path(__file__).resolve().parent.parent
+_REPO = Path(__file__).resolve().parents[2]  # docs/tools/wiki_graph.py → cb/
 WIKI = _REPO / "docs" / "wiki"
 SOURCE = _REPO / "docs" / "source"
 QUESTIONS = WIKI / "questions"

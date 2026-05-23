@@ -2,8 +2,8 @@
 """compute_router.py — recommend local-cpu / local-mps / modal for a given workload.
 
 Usage:
-    python tools/compute_router.py --workload sequential --precision f64 --hours 8 --ram 16
-    python tools/compute_router.py --workload parallel-batched --precision f32 --hours 12
+    python scripts/compute_router.py --workload sequential --precision f64 --hours 8 --ram 16
+    python scripts/compute_router.py --workload parallel-batched --precision f32 --hours 12
 
 Reads agent/local-calibration.json (produced by local_benchmark.py) for the
 machine-specific calibration constants. If calibration is missing, falls back
@@ -29,7 +29,7 @@ def load_calibration():
         return json.loads(CALIBRATION.read_text())
     print(f"warning: no calibration at {CALIBRATION}; using conservative defaults",
           file=sys.stderr)
-    print("        run: python tools/local_benchmark.py", file=sys.stderr)
+    print("        run: python scripts/local_benchmark.py", file=sys.stderr)
     return {
         "cpu_multi_core": {"matmul_4096_seconds": 5.0},
         "mps": {"mps_available": True, "matmul_4096_f32_seconds": 0.5},
