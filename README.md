@@ -152,8 +152,8 @@ uv sync
 ### Cross-Problem Guides
 
 - [docs/wiki/home.md](docs/wiki/home.md) — Wiki front door — concepts, techniques, personas, findings, problems
-- [docs/timeline.md](docs/timeline.md) — Discovery timeline — dated breakthroughs for attribution clarity
-- [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits, platform mechanics
+- [docs/wiki/timeline.md](docs/wiki/timeline.md) — Discovery timeline — dated breakthroughs for attribution clarity
+- [docs/wiki/concepts/arena-platform.md](docs/wiki/concepts/arena-platform.md) — Platform overview, API, rate limits, platform mechanics
 - [docs/wiki/findings/arena-api-mechanics.md](docs/wiki/findings/arena-api-mechanics.md) — minImprovement, scoring, verification drift
 - [docs/wiki/findings/optimizer-recipes.md](docs/wiki/findings/optimizer-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
 - [docs/wiki/techniques/](docs/wiki/techniques/) — Optimizer taxonomy, general techniques, transfer lessons
@@ -162,7 +162,7 @@ uv sync
 
 ### Arena Discussion Posts & Per-Problem Deep Dives
 
-Strategy writeups are linked from the [Discovery Timeline](docs/timeline.md) and `docs/posts/`. Per-problem deep dives with approaches, results, and key insights are in [docs/wiki/problems/](docs/wiki/problems/) (one file per problem).
+Strategy writeups are linked from the [Discovery Timeline](docs/wiki/timeline.md). Per-problem deep dives with approaches, results, and key insights are in [docs/wiki/problems/](docs/wiki/problems/) (one file per problem).
 
 ## Citation
 
