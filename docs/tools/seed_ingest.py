@@ -36,6 +36,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import datetime as dt
 import json
 import logging
@@ -44,6 +45,7 @@ import sys
 import time
 import urllib.request
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 
 # Local imports — sibling tools
 _TOOLS = Path(__file__).resolve().parent
@@ -422,6 +424,78 @@ def _download_pdf(url: str, dst: Path) -> None:
         dst.write_bytes(resp.read())
 
 
+def _download_with_retry(url: str, dst: Path, *,
+                         max_retries: int = 3,
+                         base_delay: float = 1.0) -> None:
+    """Wrap `_download_pdf` with exponential backoff on transient errors.
+
+    Retries on URLError/HTTPError. HTTP 429 uses a longer base delay
+    (caller-tunable via base_delay arg). Raises the last exception if
+    all attempts fail. `max_retries` is the number of retries AFTER the
+    first attempt — so max_retries=3 makes up to 4 total attempts.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(max_retries + 1):
+        try:
+            _download_pdf(url, dst)
+            return
+        except HTTPError as e:
+            last_exc = e
+            # 429 → wait longer; 4xx other than 429 → don't retry
+            if e.code == 429:
+                wait = base_delay * (2 ** attempt) * 4  # 4x multiplier for rate-limit
+                log.warning("HTTP 429 for %s — sleep %.1fs (attempt %d/%d)",
+                            url, wait, attempt + 1, max_retries + 1)
+                time.sleep(wait)
+                continue
+            if 400 <= e.code < 500:
+                raise   # not transient
+            wait = base_delay * (2 ** attempt)
+            log.warning("HTTP %d for %s — sleep %.1fs (attempt %d/%d)",
+                        e.code, url, wait, attempt + 1, max_retries + 1)
+            time.sleep(wait)
+        except (URLError, TimeoutError, ConnectionError) as e:
+            last_exc = e
+            wait = base_delay * (2 ** attempt)
+            log.warning("network error for %s: %s — sleep %.1fs (attempt %d/%d)",
+                        url, e, wait, attempt + 1, max_retries + 1)
+            time.sleep(wait)
+    assert last_exc is not None
+    raise last_exc
+
+
+def _parallel_download(
+    items: list[tuple[str, Path]],
+    *,
+    max_workers: int = 10,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+) -> list[tuple[bool, Path, str | None]]:
+    """Download many (url, dst) pairs concurrently.
+
+    Returns a list of (success, dst, error_message) tuples in the same
+    order as `items`. Failures are isolated — one bad URL does not
+    affect the others.
+    """
+    results: list[tuple[bool, Path, str | None] | None] = [None] * len(items)
+
+    def _one(idx: int, url: str, dst: Path) -> tuple[int, bool, Path, str | None]:
+        try:
+            _download_with_retry(url, dst, max_retries=max_retries, base_delay=base_delay)
+            return (idx, True, dst, None)
+        except Exception as e:
+            return (idx, False, dst, f"{type(e).__name__}: {e}")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futures = [ex.submit(_one, i, url, dst) for i, (url, dst) in enumerate(items)]
+        for fut in concurrent.futures.as_completed(futures):
+            idx, ok, path, err = fut.result()
+            results[idx] = (ok, path, err)
+
+    # No item should be None by here
+    return [r for r in results if r is not None]
+
+
 def _run_pdf_to_md(pdf: Path, out_md: Path) -> None:
     """Run pdf_to_md.convert_pdf. Separate function so tests can patch it.
 
@@ -554,10 +628,19 @@ def propose(*, coverage_json: Path, out_path: Path, top_n: int = 5,
 
 
 def apply(*, candidates_json: Path, docs_root: Path | None = None,
-          dry_run: bool = False) -> list[Path]:
+          dry_run: bool = False,
+          download_workers: int = 10,
+          download_retries: int = 3) -> list[Path]:
     """Step 2: download approved candidates + write source/ entries.
 
-    Returns the list of source/ paths that were (or would be, if dry-run) created.
+    Refactored from one-PDF-at-a-time to:
+      1. Collect all approved + not-already-in-source candidates
+      2. Download all PDFs in parallel (ThreadPoolExecutor) with retry
+      3. One pdf_to_md.convert_batch call across all downloads
+         (single JVM, amortized startup) — only if backend supports batch
+      4. Compose source/ frontmatter + body, write each entry
+
+    Returns the list of source/ paths that were (or would be, dry-run) created.
     """
     docs = (docs_root or (_REPO / "docs")).resolve()
     source_dir = docs / "source"
@@ -566,17 +649,15 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
     source_dir.mkdir(parents=True, exist_ok=True)
 
     data = json.loads(candidates_json.read_text())
-    written: list[Path] = []
 
-    # Blocks live under "concepts" key for both concept-bound and
-    # general-knowledge entries. A block without a "concept" field (or with
-    # `kind: general-knowledge`) is treated as topic-tagged.
+    # Phase 1: collect work items
+    work: list[dict] = []
     for block in data["concepts"]:
         concept = block.get("concept")
         refs = block.get("refs", [])
-        topic = block.get("topic")  # for general-knowledge
+        topic = block.get("topic")
         kind = block.get("kind", "")
-        is_general = kind == "general-knowledge" or not concept
+        is_general = kind in ("general-knowledge", "author-sweep") or not concept
 
         for cand in block["candidates"]:
             if not cand.get("approved"):
@@ -584,54 +665,109 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
             slug = cand["slug"]
             source_path = source_dir / f"{slug}.md"
             if source_path.exists():
-                log.info("skip %s — %s exists", concept or topic, source_path.name)
+                log.info("skip %s — %s exists", concept or topic or "author-sweep", source_path.name)
                 continue
-
             pdf_path = raw_dir / f"{slug}.pdf"
-            written.append(source_path)
+            work.append({
+                "cand": cand, "block": block, "slug": slug,
+                "source_path": source_path, "pdf_path": pdf_path,
+                "concept": concept, "refs": refs, "topic": topic,
+                "is_general": is_general, "kind": kind,
+            })
 
-            if dry_run:
-                log.info("[dry-run] would ingest %s → %s", cand["abs_url"], source_path.name)
-                continue
+    if not work:
+        log.info("nothing to apply (all approved candidates already in source/ or no approvals)")
+        return []
 
+    if dry_run:
+        for w in work:
+            log.info("[dry-run] would ingest %s → %s",
+                     w["cand"]["abs_url"], w["source_path"].name)
+        return [w["source_path"] for w in work]
+
+    # Phase 2: parallel download
+    download_items = [
+        (w["cand"].get("pdf_url") or _abs_to_pdf_url(w["cand"]["abs_url"]), w["pdf_path"])
+        for w in work
+    ]
+    log.info("phase 2: parallel download of %d PDFs (%d workers, %d retries)",
+             len(download_items), download_workers, download_retries)
+    results = _parallel_download(download_items, max_workers=download_workers,
+                                 max_retries=download_retries)
+
+    # Mark download outcomes back onto the work items
+    successful: list[dict] = []
+    for w, (ok, _path, err) in zip(work, results):
+        if ok:
+            w["download_ok"] = True
+            successful.append(w)
+        else:
+            w["download_ok"] = False
+            w["download_error"] = err
+            log.error("download failed for %s: %s", w["cand"]["abs_url"], err)
+    log.info("phase 2: %d/%d downloads succeeded", len(successful), len(work))
+
+    if not successful:
+        return []
+
+    # Phase 3: batch PDF→md (one JVM startup amortized over all PDFs)
+    log.info("phase 3: pdf_to_md.convert_batch — %d PDFs through one JVM", len(successful))
+    body_temp = source_dir / "_pdf_to_md_tmp"
+    body_temp.mkdir(exist_ok=True)
+    try:
+        pdf_to_md.convert_batch(
+            [w["pdf_path"] for w in successful],
+            body_temp,
+            hybrid=None,        # deterministic mode — no docling server needed
+            overwrite=True,
+        )
+    except pdf_to_md.BackendMissing as e:
+        log.error("pdf_to_md backend missing — aborting: %s", e)
+        raise
+    except Exception as e:
+        log.error("pdf_to_md.convert_batch failed: %s — falling back to per-PDF", e)
+        # Fall back: per-PDF conversion so a single bad PDF doesn't sink the batch
+        for w in successful:
+            body_md = body_temp / f"{w['slug']}.md"
             try:
-                # General-knowledge candidates may carry a direct PDF URL
-                # (e.g. cdn.openai.com); arxiv abs URLs get rewritten to pdf URL.
-                download_url = cand.get("pdf_url") or _abs_to_pdf_url(cand["abs_url"])
-                _download_pdf(download_url, pdf_path)
-            except Exception as e:
-                log.error("download failed for %s: %s", cand["abs_url"], e)
-                written.pop()
-                continue
+                _run_pdf_to_md(w["pdf_path"], body_md)
+            except Exception as e2:
+                log.error("pdf_to_md failed for %s: %s", w["pdf_path"], e2)
+                w["pdf_to_md_ok"] = False
 
-            # Convert PDF to markdown body
-            body_md = source_dir / f"{slug}.body.md"
-            try:
-                _run_pdf_to_md(pdf_path, body_md)
-            except pdf_to_md.BackendMissing as e:
-                log.error("pdf_to_md backend missing — aborting: %s", e)
-                written.pop()
-                raise
-            except Exception as e:
-                log.error("pdf_to_md failed for %s: %s", pdf_path, e)
-                written.pop()
-                continue
+    # Phase 4: write source/ entries (frontmatter + body)
+    written: list[Path] = []
+    for w in successful:
+        if w.get("pdf_to_md_ok") is False:
+            continue
+        body_md = body_temp / f"{w['slug']}.md"
+        if not body_md.is_file():
+            log.warning("body markdown missing for %s — skipping", w["slug"])
+            continue
+        body = body_md.read_text()
+        body_md.unlink()
 
-            body = body_md.read_text() if body_md.exists() else ""
-            if body_md.exists():
-                body_md.unlink()
+        cand = w["cand"]
+        if w["is_general"]:
+            topic = w["topic"] or (w["kind"] if w["kind"] in ("author-sweep",) else "general-knowledge")
+            fm = _build_source_frontmatter(
+                candidate=cand, topic=topic,
+                source_type=cand.get("source_type", "arxiv"),
+            )
+        else:
+            fm = _build_source_frontmatter(
+                candidate=cand, concept=w["concept"], problem_refs=w["refs"],
+            )
+        w["source_path"].write_text(_frontmatter_to_yaml(fm) + "\n" + body)
+        log.info("wrote %s", w["source_path"].relative_to(_REPO)
+                 if _REPO in w["source_path"].parents else w["source_path"])
+        written.append(w["source_path"])
 
-            if is_general:
-                fm = _build_source_frontmatter(
-                    candidate=cand, topic=topic or "general-knowledge",
-                    source_type=cand.get("source_type", "arxiv"),
-                )
-            else:
-                fm = _build_source_frontmatter(
-                    candidate=cand, concept=concept, problem_refs=refs,
-                )
-            source_path.write_text(_frontmatter_to_yaml(fm) + "\n" + body)
-            log.info("wrote %s", source_path.relative_to(_REPO) if _REPO in source_path.parents else source_path)
+    # Clean up the temp body dir if empty
+    try:
+        body_temp.rmdir()
+    except OSError:
+        pass
 
     return written
 

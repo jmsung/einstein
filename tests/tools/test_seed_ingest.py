@@ -5,7 +5,8 @@ Two-step pipeline:
   apply:    candidates.json + Internet + pdf_to_md  →  docs/source/*.md
 
 Tests cover (a) pure helpers (slug, frontmatter, abs→pdf url),
-(b) propose with mocked arxiv, (c) apply with mocked download + pdf_to_md.
+(b) propose with mocked arxiv, (c) apply with mocked download + pdf_to_md,
+(d) retry-with-backoff + parallel download (engineering fixes for 1000-scale).
 """
 from __future__ import annotations
 
@@ -13,6 +14,7 @@ import json
 import sys
 from pathlib import Path
 from unittest.mock import patch
+from urllib.error import HTTPError, URLError
 
 import pytest
 
@@ -301,6 +303,87 @@ def _candidates_doc(*, approved: bool, slug: str = "2020-smith-test") -> dict:
             }
         ],
     }
+
+
+def test_download_with_retry_succeeds_on_second_attempt(tmp_path: Path) -> None:
+    dst = tmp_path / "out.pdf"
+    attempts = {"n": 0}
+
+    def flaky_fetch(url: str, dst_: Path) -> None:
+        attempts["n"] += 1
+        if attempts["n"] == 1:
+            raise URLError("transient network blip")
+        dst_.write_bytes(b"%PDF stub")
+
+    with patch.object(si, "_download_pdf", side_effect=flaky_fetch):
+        si._download_with_retry("http://x/y.pdf", dst, max_retries=3, base_delay=0.01)
+    assert attempts["n"] == 2
+    assert dst.is_file()
+
+
+def test_download_with_retry_gives_up_after_max_attempts(tmp_path: Path) -> None:
+    dst = tmp_path / "out.pdf"
+
+    def always_fail(url: str, dst_: Path) -> None:
+        raise URLError("always failing")
+
+    with patch.object(si, "_download_pdf", side_effect=always_fail):
+        with pytest.raises(URLError):
+            si._download_with_retry("http://x/y.pdf", dst, max_retries=2, base_delay=0.01)
+
+
+def test_download_with_retry_treats_429_specially(tmp_path: Path) -> None:
+    """HTTP 429 should still retry but with a longer wait (caller's job)."""
+    dst = tmp_path / "out.pdf"
+    attempts = {"n": 0}
+
+    def flaky_429(url: str, dst_: Path) -> None:
+        attempts["n"] += 1
+        if attempts["n"] < 3:
+            raise HTTPError(url, 429, "Too Many Requests", {}, None)
+        dst_.write_bytes(b"%PDF stub")
+
+    with patch.object(si, "_download_pdf", side_effect=flaky_429):
+        si._download_with_retry("http://x/y.pdf", dst, max_retries=4, base_delay=0.01)
+    assert attempts["n"] == 3
+    assert dst.is_file()
+
+
+def test_parallel_download_runs_concurrently(tmp_path: Path) -> None:
+    """Verifies parallel_download returns (success, path, error) per item."""
+    items = [(f"http://x/{i}.pdf", tmp_path / f"{i}.pdf") for i in range(5)]
+
+    def fake_dl(url: str, dst: Path) -> None:
+        dst.write_bytes(b"%PDF stub")
+
+    with patch.object(si, "_download_pdf", side_effect=fake_dl):
+        results = si._parallel_download(items, max_workers=3, max_retries=1)
+
+    assert len(results) == 5
+    for ok, path, err in results:
+        assert ok is True
+        assert path.is_file()
+        assert err is None
+
+
+def test_parallel_download_isolates_failures(tmp_path: Path) -> None:
+    """One failing download must not kill the others."""
+    items = [(f"http://x/{i}.pdf", tmp_path / f"{i}.pdf") for i in range(3)]
+
+    def selective_dl(url: str, dst: Path) -> None:
+        if "1" in url:
+            raise URLError("planned failure")
+        dst.write_bytes(b"%PDF stub")
+
+    with patch.object(si, "_download_pdf", side_effect=selective_dl):
+        results = si._parallel_download(items, max_workers=3, max_retries=1, base_delay=0.0)
+
+    statuses = [r[0] for r in results]
+    assert statuses.count(True) == 2
+    assert statuses.count(False) == 1
+    # The failed one carries an error
+    failed = next(r for r in results if not r[0])
+    assert failed[2] is not None
 
 
 def test_load_authors_yaml(tmp_path: Path) -> None:
@@ -592,6 +675,50 @@ def test_propose_no_threshold_leaves_approval_null(tmp_path: Path) -> None:
                    rate_limit_seconds=0, vocab_path=vocab_path)
     cands = json.loads(out.read_text())["concepts"][0]["candidates"]
     assert cands[0]["approved"] is None
+
+
+def test_apply_uses_batch_pdf_conversion(tmp_path: Path) -> None:
+    """Happy path: apply() should call pdf_to_md.convert_batch once for the
+    full set of approved candidates, not per-paper convert_pdf."""
+    docs = tmp_path / "docs"
+    (docs / "source").mkdir(parents=True)
+    (docs / "raw").mkdir(parents=True)
+
+    # 3 approved candidates in one block
+    cand_path = tmp_path / "candidates.json"
+    cand_path.write_text(json.dumps({
+        "generated_at": "2026-05-23",
+        "concepts": [{
+            "concept": "x.md", "kind": "concept", "refs": [1],
+            "candidates": [
+                {"title": f"P{i}", "authors": "X", "year": "2023",
+                 "abs_url": f"http://arxiv.org/abs/{i}.0001",
+                 "summary": "S", "slug": f"2023-x-p{i}", "approved": True}
+                for i in range(3)
+            ],
+        }],
+    }))
+
+    def fake_download(url: str, dst: Path) -> None:
+        dst.write_bytes(b"%PDF stub")
+
+    batch_calls: list = []
+
+    def fake_batch(pdfs, out_dir, *, hybrid=None, overwrite=False):
+        batch_calls.append(list(pdfs))
+        for pdf in pdfs:
+            stem = pdf.stem
+            (out_dir / f"{stem}.md").write_text(f"# body for {stem}\n")
+
+    with patch.object(si, "_download_pdf", side_effect=fake_download), \
+         patch("seed_ingest.pdf_to_md.convert_batch", side_effect=fake_batch):
+        results = si.apply(candidates_json=cand_path, docs_root=docs,
+                           download_workers=2)
+
+    # One batch call, not three per-PDF calls
+    assert len(batch_calls) == 1, "expected ONE convert_batch call"
+    assert len(batch_calls[0]) == 3
+    assert len(results) == 3
 
 
 def test_apply_dry_run_writes_nothing(tmp_path: Path) -> None:
