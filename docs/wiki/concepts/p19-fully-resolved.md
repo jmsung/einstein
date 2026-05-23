@@ -108,6 +108,6 @@ When dispatched on P19:
 - The 5 dead-end findings listed above
 - [`questions/2026-05-02-p19-kronecker-w4-existence.md`](../questions/2026-05-02-p19-kronecker-w4-existence.md), [`questions/2026-05-02-p19-finite-field-construction.md`](../questions/2026-05-02-p19-finite-field-construction.md), [`questions/2026-05-02-p19-structural-cap-conjecture.md`](../questions/2026-05-02-p19-structural-cap-conjecture.md) — the council-dispatched questions (most now answered)
 - [`findings/cross-pollination-not-compute.md`](../findings/cross-pollination-not-compute.md) — the meta-principle that filtered the search
-- [`mb/tracking/problem-19-difference-bases/strategy.md`](../../../mb/tracking/problem-19-difference-bases/strategy.md) — private operational tracking (BnB w=3,4 numerical artifacts; Singer/Paley empirical fails)
+- [`mb/problems/19-difference-bases/strategy.md`](../../../mb/problems/19-difference-bases/strategy.md) — private operational tracking (BnB w=3,4 numerical artifacts; Singer/Paley empirical fails)
 
 *Last updated: 2026-05-02*

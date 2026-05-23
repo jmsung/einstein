@@ -10,7 +10,7 @@ tier: A
 concepts_invoked: [sphere-packing.md, circle-packing.md, arena-tolerance-drift.md, float64-ceiling.md, minimprovement-gate.md]
 techniques_used: [arena-tolerance-slsqp.md, slsqp-active-pair-polish.md, uniform-radius-shrink-fallback.md, warm-start-from-leader.md]
 findings_produced: [packing-techniques.md, arena-proximity-guard.md]
-private_tracking: ../../mb/tracking/problem-17-circles-rectangle/
+private_tracking: ../../mb/problems/17-circles-rectangle/
 ---
 
 # Problem 17b — Circles in Rectangle (n=21)
@@ -50,4 +50,4 @@ Arena constraint tolerances are per-problem and drift over time — arena-tolera
 - Packomania circle-packing database (Specht).
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-17-circles-rectangle/` contains the arena-tolerance polish log and submission verification. Not part of the public artifact.
+For owner's reference: `mb/problems/17-circles-rectangle/` contains the arena-tolerance polish log and submission verification. Not part of the public artifact.

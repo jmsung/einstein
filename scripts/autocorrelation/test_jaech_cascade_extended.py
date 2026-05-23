@@ -1,7 +1,7 @@
 """Path-1 test: extend Jaech's Adam + upsampling cascade past n=50k → n=400k.
 
 Hypothesis: the existing `adam_peak_flatten.py` caps the upsampling cascade at
-50k and tops out at C ~ 0.908 (per `mb/tracking/problem-3-autocorrelation/strategy.md`).
+50k and tops out at C ~ 0.908 (per `mb/problems/3-autocorrelation/strategy.md`).
 That ceiling may be a *cascade-length* artifact, not a true from-scratch limit:
 Jaech & Joseph 2025 use upsampling all the way to their target n. If the
 extended cascade unlocks a basin > 0.91 from random init at n=400k, we have

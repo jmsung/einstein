@@ -10,7 +10,7 @@ tier: C
 concepts_invoked: [equioscillation.md, smooth-max-approximation.md, lp-duality.md]
 techniques_used: [remez-equioscillation-diagnostic.md, sdp-flag-algebra.md, basin-hopping-multistart.md]
 findings_produced: [equioscillation-escape.md]
-private_tracking: ../../mb/tracking/problem-1-erdos-overlap/
+private_tracking: ../../mb/problems/1-erdos-overlap/
 ---
 
 # Problem 1 — Erdős Minimum Overlap
@@ -49,4 +49,4 @@ Bilinear minimax problems defeat SDP relaxation regardless of discretization sca
 - See `source/2022-white-erdos-overlap.md`, `source/2016-haugland-min-overlap.md`.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-1-erdos-overlap/` contains experiment log, optimality proofs, and 111+ experiment audit trail. Not part of the public artifact.
+For owner's reference: `mb/problems/1-erdos-overlap/` contains experiment log, optimality proofs, and 111+ experiment audit trail. Not part of the public artifact.

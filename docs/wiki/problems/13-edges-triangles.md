@@ -10,7 +10,7 @@ tier: S
 concepts_invoked: [flag-algebra.md, turan-density.md, parameterization-selection.md, equioscillation.md, basin-rigidity.md]
 techniques_used: [bounded-lbfgs-per-region-sigmoid.md, boundary-snap-for-kinks.md, greedy-insert-cd-redistribute.md, basin-hopping-multistart.md, multistart-with-rotation-lottery.md]
 findings_produced: [polish-race-dynamics.md, optimizer-recipes.md]
-private_tracking: ../../mb/tracking/problem-13-edges-triangles/
+private_tracking: ../../mb/problems/13-edges-triangles/
 ---
 
 # Problem 13 — Edges vs Triangles
@@ -54,4 +54,4 @@ Piecewise-linear curves with discrete-index kinks require boundary-snap polishin
 - Szemerédi regularity lemma — context for asymptotic densities.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-13-edges-triangles/` contains the kink-aware polishing log, multi-seed BH summary, and the submission-rejection diagnostic. Not part of the public artifact.
+For owner's reference: `mb/problems/13-edges-triangles/` contains the kink-aware polishing log, multi-seed BH summary, and the submission-rejection diagnostic. Not part of the public artifact.

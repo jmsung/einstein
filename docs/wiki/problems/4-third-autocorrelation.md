@@ -10,7 +10,7 @@ tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, smooth-max-approximation.md, parameterization-selection.md]
 techniques_used: [larger-n-cascade.md, micro-perturbation-multiscale.md, bounded-lbfgs-per-region-sigmoid.md]
 findings_produced: [equioscillation-escape.md, optimizer-recipes.md, p2-peak-locking-hessian-mechanism.md]
-private_tracking: ../../mb/tracking/problem-4-third-autocorrelation/
+private_tracking: ../../mb/problems/4-third-autocorrelation/
 ---
 
 # Problem 4 — Third Autocorrelation Inequality
@@ -52,4 +52,4 @@ Larger-n escape through block-repeat plus perturbation breaks piecewise-constant
 - See `source/2025-jaech-autoconvolution.md`.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-4-third-autocorrelation/` contains experiment log and the larger-n escape reproduction recipe. Not part of the public artifact.
+For owner's reference: `mb/problems/4-third-autocorrelation/` contains experiment log and the larger-n escape reproduction recipe. Not part of the public artifact.

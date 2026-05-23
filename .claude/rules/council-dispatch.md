@@ -6,7 +6,7 @@ When starting a hard problem (recon phase), dispatch a council of mathematician 
 
 **How to apply:**
 
-1. **Parse problem category** from `mb/tracking/<problem>/strategy.md` and `docs/wiki/problems/_inventory.md`. Categories: sphere_packing, kissing_number, autocorrelation, discrete_geometry, packing, extremal_graph, sieve_theory, uncertainty, combinatorics, …
+1. **Parse problem category** from `mb/<problem>/strategy.md` and `docs/wiki/problems/_inventory.md`. Categories: sphere_packing, kissing_number, autocorrelation, discrete_geometry, packing, extremal_graph, sieve_theory, uncertainty, combinatorics, …
 
 2. **Read each persona's wiki page** (`docs/wiki/personas/<name>.md`) BEFORE dispatching. The page is the seed — without reading it, you're just pattern-matching on the name.
 

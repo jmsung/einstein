@@ -10,7 +10,7 @@ tier: S
 concepts_invoked: [sphere-packing.md, kissing-number.md, hinge-overlap.md, fractal-perturbation-landscape.md, basin-rigidity.md]
 techniques_used: [parallel-tempering-sa.md, micro-perturbation-multiscale.md, slsqp-active-pair-polish.md, mpmath-ulp-polish.md, gpu-decision-framework.md, compute-router.md]
 findings_produced: [perturbation-landscape.md, sa-parallel-tempering.md, hinge-overlap-rank3-squeeze.md, gpu-modal-compute.md, float64-polish.md]
-private_tracking: ../../mb/tracking/problem-6-kissing-number/
+private_tracking: ../../mb/problems/6-kissing-number/
 ---
 
 # Problem 6 — Kissing Number in Dimension 11 (n=594)
@@ -59,4 +59,4 @@ Hinge-loss landscapes are fractal at atomic scales (1e-14 can improve 1e-10) —
 - See `source/` distillations of the kissing-number literature.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-6-kissing-number/` contains the multi-scale perturbation calibration, the GPU tempering benchmark log, and the final solution that achieves loss = 0. Not part of the public artifact.
+For owner's reference: `mb/problems/6-kissing-number/` contains the multi-scale perturbation calibration, the GPU tempering benchmark log, and the final solution that achieves loss = 0. Not part of the public artifact.

@@ -7,7 +7,7 @@ related_problems: [P3]
 related_concepts: [autocorrelation-inequality.md, parameterization-selection.md]
 related_findings: [optimizer-recipes.md, dead-end-p3-jaech-cascade-extended.md]
 cites:
-  - ../../mb/tracking/problem-3-autocorrelation/strategy.md
+  - ../../mb/problems/3-autocorrelation/strategy.md
   - ../../source/2026-rechnitzer-autoconvolution-digits.md
   - ../../source/2025-jaech-autoconvolution.md
 ---

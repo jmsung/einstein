@@ -102,4 +102,4 @@ So H1 is in the same status as `κ(12) = 840` was before recent work: empiricall
 
 ## Cite hygiene note
 
-The 14-approach evidence list above is the public-wiki distillation of the per-experiment evidence in `mb/tracking/problem-11-tammes/literature.md` (private). The numerical claims (basin-hop 631, ulp lottery 3M, rotation lottery 30k) are reproduced from that source; full per-experiment parameters live in `mb/tracking/problem-11-tammes/experiment-log.md`.
+The 14-approach evidence list above is the public-wiki distillation of the per-experiment evidence in `mb/problems/11-tammes/literature.md` (private). The numerical claims (basin-hop 631, ulp lottery 3M, rotation lottery 30k) are reproduced from that source; full per-experiment parameters live in `mb/problems/11-tammes/experiment-log.md`.

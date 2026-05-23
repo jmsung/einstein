@@ -10,7 +10,7 @@ tier: B
 concepts_invoked: [sphere-packing.md, circle-packing.md, float64-ceiling.md, arena-tolerance-drift.md, basin-rigidity.md]
 techniques_used: [slsqp-active-pair-polish.md, arena-tolerance-slsqp.md, uniform-radius-shrink-fallback.md, mpmath-ulp-polish.md]
 findings_produced: [packing-techniques.md, arena-proximity-guard.md]
-private_tracking: ../../mb/tracking/problem-14-circle-packing-square/
+private_tracking: ../../mb/problems/14-circle-packing-square/
 ---
 
 # Problem 14 — Circle Packing in Square (n=26)
@@ -51,4 +51,4 @@ Arena tolerances drift per-problem and over time — always verify strict tol=0 
 - Erich Friedman, packing references.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-14-circle-packing-square/` contains the 10-approach parallel basin survey. Not part of the public artifact.
+For owner's reference: `mb/problems/14-circle-packing-square/` contains the 10-approach parallel basin survey. Not part of the public artifact.

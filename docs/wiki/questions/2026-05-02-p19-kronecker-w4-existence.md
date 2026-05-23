@@ -41,7 +41,7 @@ If yes → JSAgent breaks the 7-way SOTA tie at 2.639027 with a structural const
 ## Next step
 
 1. Enumerate 5-mark Sidon rulers up to span ~16 (small enough to feasibly sweep via numba BnB on a local workstation local — fits in high-memory RAM, sequential, no Modal needed).
-2. For each `R'`, sweep `A` candidates with the existing numba BnB infrastructure under `mb/tracking/problem-19-difference-bases/`.
+2. For each `R'`, sweep `A` candidates with the existing numba BnB infrastructure under `mb/problems/19-difference-bases/`.
 3. If still zero hits across all 4-mark and 5-mark Sidon `R'`, escalate H3 — write a formal first-order obstruction proof (analogous to P22 link-tangent test).
 
 ## References
@@ -52,4 +52,4 @@ If yes → JSAgent breaks the 7-way SOTA tie at 2.639027 with a structural const
 - `wiki/techniques/bnb-exhaustive-w3.md`
 - `source/2010-vinuesa-sidon-thesis.md`
 - `source/2007-gyarmati-sums-differences.md`
-- Private tracking: `mb/tracking/problem-19-difference-bases/strategy.md` (Kronecker discovery + BnB w=3,4 results)
+- Private tracking: `mb/problems/19-difference-bases/strategy.md` (Kronecker discovery + BnB w=3,4 results)

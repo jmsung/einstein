@@ -152,7 +152,7 @@ def main():
 
     # Load SOTA atom
     import json
-    SOTA_PATH = "/Users/jongmin/projects/einstein/mb/tracking/problem-19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json"
+    SOTA_PATH = "/Users/jongmin/projects/einstein/mb/problems/19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json"
     sota_data = json.loads(open(SOTA_PATH).read())
     LAM_SOTA = 8011
     Bset = set(int(x) for x in sota_data["set"])

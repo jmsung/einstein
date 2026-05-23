@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 
 # Load SOTA
-SOTA_PATH = Path("/Users/jongmin/projects/einstein/mb/tracking/problem-19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json")
+SOTA_PATH = Path("/Users/jongmin/projects/einstein/mb/problems/19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json")
 TARGET_SCORE = 2.6390274695066
 MIN_IMPROVEMENT = 1e-8
 

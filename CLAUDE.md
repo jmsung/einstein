@@ -18,7 +18,7 @@ This repo is the public artifact. It has three layers, each with its own contrac
 
 **Generalized math wisdom**, not arena rank. The agent solves problems, learns from failure, and writes back to the wiki. Each cycle compounds. Submission is a wisdom-verification tool, not a goal — minimum 6 hours between submissions per problem; user-approved each time. **No external posts** — all knowledge stays on this repo + wiki.
 
-See [`mb/tracking/completed/js-refactor-wiki-bootstrap.md`](../mb/tracking/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `docs/wiki/home.md`).
+See [`mb/completed/js-refactor-wiki-bootstrap.md`](../mb/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `docs/wiki/home.md`).
 
 ## Setup
 
@@ -58,7 +58,7 @@ Every score must be verified three ways before trusting: fast local evaluator, e
 
 ## Workflow
 
-`/where` → `/goal` → `/act` → `/commit` per the global skill set. Worktree state in `mb/tracking/active/<branch>.md`. Branch naming: `js/<type>/<description>`.
+`/where` → `/goal` → `/act` → `/commit` per the global skill set. Worktree state in `mb/active/<branch>.md`. Branch naming: `js/<type>/<description>`.
 
 For math problems: every hard problem follows the **math-solving protocol** in `.claude/rules/math-solving-protocol.md` — understand → wiki-first → council dispatch → gap detect → research → distill → specialize → execute → look back → failure log.
 
@@ -66,4 +66,4 @@ For math problems: every hard problem follows the **math-solving protocol** in `
 
 - `docs/wiki/home.md` — narrative front door of the math knowledge base
 - `docs/wiki/problems/_inventory.md` — concept-coverage compass across 23 problems
-- `mb/tracking/progress.md` — branch state
+- `mb/progress.md` — branch state

@@ -78,5 +78,5 @@ This is a structurally different argument: the C-S relaxation is a *finite* LP p
 - Follow-up finding: [dead-end-p2-lasserre-l2-weaker-than-cs](dead-end-p2-lasserre-l2-weaker-than-cs.md) — Lasserre L2 closes sub-questions 1+2 negatively
 - Source: [2017-cloninger-autoconvolution-sidon](../../source/2017-cloninger-autoconvolution-sidon.md)
 - Source: [2010-matolcsi-autoconvolution](../../source/2010-matolcsi-autoconvolution.md)
-- Tracking: `mb/tracking/problem-2-first-autocorrelation/lower-bounds.md`
-- Tracking (full survey): `mb/tracking/problem-3-autocorrelation/lower-bounds-first.md`
+- Tracking: `mb/problems/2-first-autocorrelation/lower-bounds.md`
+- Tracking (full survey): `mb/problems/3-autocorrelation/lower-bounds-first.md`

@@ -10,7 +10,7 @@ tier: A
 concepts_invoked: [basin-rigidity.md, equioscillation.md, minimprovement-gate.md, symmetry-and-fundamental-domain.md]
 techniques_used: [slsqp-active-pair-polish.md, basin-hopping-multistart.md, cma-es-with-warmstart.md, multistart-with-rotation-lottery.md, warm-start-from-leader.md]
 findings_produced: [basin-rigidity.md, arena-proximity-guard.md]
-private_tracking: ../../mb/tracking/problem-16-heilbronn-convex/
+private_tracking: ../../mb/problems/16-heilbronn-convex/
 ---
 
 # Problem 16 — Heilbronn Convex (n=14)
@@ -52,4 +52,4 @@ Multistart SLSQP from averaged leader solutions discovers sub-basins in the weig
 - Yang et al., Heilbronn convex variants.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-16-heilbronn-convex/` contains the multi-seed sub-basin discovery log and the 21-active solution archive. Not part of the public artifact.
+For owner's reference: `mb/problems/16-heilbronn-convex/` contains the multi-seed sub-basin discovery log and the 21-active solution archive. Not part of the public artifact.

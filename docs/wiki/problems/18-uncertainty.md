@@ -10,7 +10,7 @@ tier: A
 concepts_invoked: [uncertainty-principle.md, bourgain-clozel-kahane.md, k-climbing-and-dof-augmentation.md, parameterization-selection.md, arena-tolerance-drift.md]
 techniques_used: [k-climbing.md, gap-space-parameterization.md, mpmath-ulp-polish.md]
 findings_produced: [verification-patterns.md]
-private_tracking: ../../mb/tracking/problem-18-uncertainty/
+private_tracking: ../../mb/problems/18-uncertainty/
 ---
 
 # Problem 18 — Uncertainty (P18 slot)
@@ -49,4 +49,4 @@ k-climbing plus coarse-grid restart escapes fixed-k basin plateaus — but the v
 - vinid GitHub issue #51 — arena verifier bug.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-18-uncertainty/` and `mb/tracking/problem-18-uncertainty-principle/` contain divergent strategy snapshots and the constraint-verification audit. Not part of the public artifact.
+For owner's reference: `mb/problems/18-uncertainty/` and `mb/problems/18-uncertainty-principle/` contain divergent strategy snapshots and the constraint-verification audit. Not part of the public artifact.

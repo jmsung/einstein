@@ -10,7 +10,7 @@ tier: B
 concepts_invoked: [sphere-packing.md, contact-graph-rigidity.md, basin-rigidity.md, minimprovement-gate.md, float64-ceiling.md]
 techniques_used: [slsqp-active-pair-polish.md, multistart-with-rotation-lottery.md, mpmath-ulp-polish.md]
 findings_produced: [basin-rigidity.md, float64-ceiling.md]
-private_tracking: ../../mb/tracking/problem-5-min-distance-ratio/
+private_tracking: ../../mb/problems/5-min-distance-ratio/
 ---
 
 # Problem 5 — Min Distance Ratio (2D, n=16)
@@ -51,4 +51,4 @@ minImprovement proximity guards apply to both self-improvement AND first-time "c
 - See `source/resource-friedman-packing.md`.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-5-min-distance-ratio/` contains the 44K-config basin enumeration and the contact-graph diagnostics. Not part of the public artifact.
+For owner's reference: `mb/problems/5-min-distance-ratio/` contains the 44K-config basin enumeration and the contact-graph diagnostics. Not part of the public artifact.

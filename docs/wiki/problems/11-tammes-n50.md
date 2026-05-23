@@ -10,7 +10,7 @@ tier: B
 concepts_invoked: [sphere-packing.md, contact-graph-rigidity.md, float64-ceiling.md, basin-rigidity.md]
 techniques_used: [slsqp-active-pair-polish.md, mpmath-ulp-polish.md, multistart-with-rotation-lottery.md, warm-start-from-leader.md]
 findings_produced: [float64-ceiling.md]
-private_tracking: ../../mb/tracking/problem-11-tammes/
+private_tracking: ../../mb/problems/11-tammes/
 ---
 
 # Problem 11 — Tammes Problem (n=50)
@@ -56,4 +56,4 @@ Contact-graph-locked basins require wide active-pair tolerance (tol=1e-3) to cap
 - Tammes (1930), original biological motivation.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-11-tammes/` contains the SLSQP tolerance calibration log and rotation lottery statistics. Not part of the public artifact.
+For owner's reference: `mb/problems/11-tammes/` contains the SLSQP tolerance calibration log and rotation lottery statistics. Not part of the public artifact.

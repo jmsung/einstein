@@ -47,7 +47,7 @@ Before any compute job. Specifically: any time the agent is about to write `impo
    - **RAM footprint**: fits in high-memory / needs more
 3. **Match against the matrix.** If clear, go.
 4. **GPU-specific call**: defer to `gpu-decision-framework.md` and run `python -m einstein.gpu_tempering.benchmark`.
-5. **Cost gate** for Modal: `hours × $/hr`. Only proceed if speedup > 3× over local. Document estimate in `mb/tracking/<problem>/experiment-log.md`.
+5. **Cost gate** for Modal: `hours × $/hr`. Only proceed if speedup > 3× over local. Document estimate in `mb/<problem>/experiment-log.md`.
 6. **TBD (Goal 13)**: `tools/compute_router.py <spec>` will produce the recommendation programmatically.
 
 ## Pitfalls

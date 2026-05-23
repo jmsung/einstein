@@ -10,7 +10,7 @@ tier: B
 concepts_invoked: [discretization-as-structure.md, basin-rigidity.md, probabilistic-method.md]
 techniques_used: [memetic-tabu-search.md, basin-hopping-multistart.md, multistart-with-rotation-lottery.md]
 findings_produced: [discrete-optimization.md]
-private_tracking: ../../mb/tracking/problem-12-flat-polynomials/
+private_tracking: ../../mb/problems/12-flat-polynomials/
 ---
 
 # Problem 12 — Flat Polynomials (degree 69, +/-1 coefficients)
@@ -52,4 +52,4 @@ Discrete +/-1 combinatorics problems often have algebraically special optima unr
 - Erdős's flat polynomial conjectures.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-12-flat-polynomials/` contains the memetic tabu run log and algebraic-construction comparison. Not part of the public artifact.
+For owner's reference: `mb/problems/12-flat-polynomials/` contains the memetic tabu run log and algebraic-construction comparison. Not part of the public artifact.

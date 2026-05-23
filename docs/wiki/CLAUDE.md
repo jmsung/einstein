@@ -77,7 +77,7 @@ The YAML frontmatter above is the **machine-readable contract** — wiki skills 
 ## Scope
 
 - **In bounds**: math concepts (LP duality, Cohn–Elkies, equioscillation, modular forms, …), concrete techniques (parallel tempering, mpmath polish, Remez, SDP flag algebra, …), embodied mathematician personas (Gauss, Tao, Polya, …), cross-problem findings, per-arena-problem index pages, open math questions.
-- **Out of bounds**: per-problem live experiment state (in `mb/tracking/`), code (in `src/`), result files (in `results/`).
+- **Out of bounds**: per-problem live experiment state (in `mb/`), code (in `src/`), result files (in `results/`).
 
 ## Layers
 
@@ -179,7 +179,7 @@ See `precedence` in the frontmatter. Default for this wiki:
 
 ## What this wiki is NOT
 
-- Not per-problem live experiment state — that's `mb/tracking/<problem>/`.
+- Not per-problem live experiment state — that's `mb/<problem>/`.
 - Not code — that's `src/`.
 - Not result files — that's `results/`.
 - Not external posts — there are none. The wiki *is* the publication channel.
