@@ -925,6 +925,15 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
                     distilled[r["slug"]] = r["summary"]
                 else:
                     log.error("llm-distill failed for %s: %s", r["slug"], r["error"])
+            fatal_errors = [
+                r for r in distill_results
+                if not r["ok"] and "Claude Code unavailable" in r.get("error", "")
+            ]
+            if fatal_errors:
+                raise RuntimeError(
+                    "LLM distillation unavailable; aborting apply before writing "
+                    "raw fallbacks. Resume after Claude Code quota/auth recovers."
+                )
 
     # Phase 4: write source/ entries (frontmatter + body — distilled if available,
     # else falling back to raw extraction so we never lose the paper outright)
