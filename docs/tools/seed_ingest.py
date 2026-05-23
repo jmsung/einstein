@@ -804,6 +804,7 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
 
     # Phase 1: collect work items
     work: list[dict] = []
+    seen_slugs: set[str] = set()
     for block in data["concepts"]:
         concept = block.get("concept")
         refs = block.get("refs", [])
@@ -815,6 +816,10 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
             if not cand.get("approved"):
                 continue
             slug = cand["slug"]
+            if slug in seen_slugs:
+                log.info("skip duplicate candidate slug — %s", slug)
+                continue
+            seen_slugs.add(slug)
             source_path = source_dir / f"{slug}.md"
             if source_path.exists():
                 log.info("skip %s — %s exists", concept or topic or "author-sweep", source_path.name)

@@ -676,6 +676,46 @@ def test_apply_idempotent_skip_if_source_exists(tmp_path: Path) -> None:
     assert (docs / "source" / "2020-smith-test.md").read_text() == "preexisting\n"
 
 
+def test_apply_deduplicates_approved_slugs_within_run(tmp_path: Path) -> None:
+    """Duplicate approved candidates should not race the same source/pdf paths."""
+    docs = tmp_path / "docs"
+    (docs / "source").mkdir(parents=True)
+    (docs / "raw").mkdir(parents=True)
+    cand_path = tmp_path / "candidates.json"
+    cand_path.write_text(json.dumps({
+        "generated_at": "2026-05-23",
+        "concepts": [{
+            "concept": "x.md", "kind": "concept", "refs": [1],
+            "candidates": [
+                {"title": "P", "authors": "X", "year": "2023",
+                 "abs_url": "http://arxiv.org/abs/1.0001",
+                 "summary": "S", "slug": "2023-x-p", "approved": True},
+                {"title": "P duplicate", "authors": "X", "year": "2023",
+                 "abs_url": "http://arxiv.org/abs/1.0002",
+                 "summary": "S", "slug": "2023-x-p", "approved": True},
+            ],
+        }],
+    }))
+
+    def fake_download(url: str, dst: Path) -> None:
+        dst.write_bytes(b"%PDF stub")
+
+    def fake_batch(pdfs, out_dir, *, hybrid=None, overwrite=False):
+        assert len(pdfs) == 1
+        (out_dir / "2023-x-p.md").write_text("# body\n")
+
+    with patch.object(si, "_download_pdf", side_effect=fake_download) as mock_dl, \
+         patch("seed_ingest.pdf_to_md.convert_batch", side_effect=fake_batch), \
+         patch.object(si.llm_distill, "distill_batch",
+                      return_value=[{"slug": "2023-x-p", "ok": True,
+                                     "summary": "# distilled\n"}]):
+        results = si.apply(candidates_json=cand_path, docs_root=docs)
+
+    assert len(results) == 1
+    assert mock_dl.call_count == 1
+    assert results[0] == docs / "source" / "2023-x-p.md"
+
+
 def test_relevance_score_keyword_overlap() -> None:
     """Relevance score is keyword-overlap-based — more shared terms = higher."""
     high = si._relevance_score(
