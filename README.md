@@ -14,7 +14,7 @@ This repo is the artifact. Three layers grow together:
 | **Rules — the policy** | [`.claude/rules/`](.claude/rules/) | Behavioral rules that govern how the agent reads, thinks, asks, distills, and writes back. |
 | **Agent — the dynamics** | [`docs/agent/`](docs/agent/) | Self-improvement infrastructure: append-only cycle log, skill library with hit-rates, metrics, ablations, finding→concept promotion log. |
 
-Supporting layers: [`docs/source/`](docs/source/) (1:1 LLM distillations of papers/repos/blogs), [`docs/raw/`](docs/raw/) (gitignored cache of native originals), [`docs/tools/`](docs/tools/) (wiki gap-detector + qmd reindex), and the code in [`src/`](src/), [`scripts/`](scripts/), [`tests/`](tests/).
+Supporting layers: [`docs/source/`](docs/source/) (1:1 LLM distillations of papers/repos/blogs), `docs/raw/` (gitignored local cache of native originals; regenerable from each `source/` page's `source_url`), [`docs/tools/`](docs/tools/) (wiki gap-detector + qmd reindex), and the code in [`src/`](src/), [`scripts/`](scripts/), [`tests/`](tests/).
 
 **Start here:**
 
