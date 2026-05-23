@@ -12,7 +12,7 @@ cites:
   - provable-floor-and-frozen-problems.md
   - symmetry-and-fundamental-domain.md
   - reduced-hessian.md
-  - ../source/papers/2025-novikov-alphaevolve.md
+  - ../source/2025-novikov-alphaevolve.md
 ---
 
 # Heilbronn-type extremal problems (and the over-determined active-constraint pattern)
@@ -124,6 +124,6 @@ This protocol follows the [`provable-floor-and-frozen-problems.md`](provable-flo
 - [`concepts/symmetry-and-fundamental-domain.md`](symmetry-and-fundamental-domain.md) — affine quotient construction
 - [`findings/basin-rigidity.md`](../findings/basin-rigidity.md) — empirical lessons (Lessons #29, #84, #85, #88, #96)
 - [`findings/equioscillation-active-triple-diagnostic`](../findings/equioscillation-escape.md) (sister finding)
-- [`source/papers/2025-novikov-alphaevolve.md`](../../source/papers/2025-novikov-alphaevolve.md) — AlphaEvolve §6.48 figure, P15 SOTA construction
+- [`source/2025-novikov-alphaevolve.md`](../../source/2025-novikov-alphaevolve.md) — AlphaEvolve §6.48 figure, P15 SOTA construction
 
 *Last updated: 2026-05-02*

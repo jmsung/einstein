@@ -102,7 +102,7 @@ Below are four (problem, page) candidates — one per uplift mechanism from the 
 - **Prediction**:
   - **Score**: depends on which evaluator the agent implements. If correct evaluator (with constraint enforcement) → ~0.318 (matches warm baseline). If buggy evaluator (no constraint enforcement) → sub-0.2025 invalid score.
   - **Pages cited**: agent may cite `findings/verification-patterns.md` *but without the BCK floor concept*, the verification rule's force is reduced — "check against literature bounds" depends on knowing what the bounds are.
-  - **Re-derivation**: possible via `source/papers/2017-goncalves-hermite-uncertainty.md` (which does mention the BCK 2010 framing). Warm-minus-page might find this and re-derive the 0.2025 number.
+  - **Re-derivation**: possible via `source/2017-goncalves-hermite-uncertainty.md` (which does mention the BCK 2010 framing). Warm-minus-page might find this and re-derive the 0.2025 number.
   - **Probability of celebrating invalid score**: 20% (down from 30% in the cold-vs-warm audit, because the verification-patterns finding still exists; the floor itself is the missing piece).
 - **Verdict if confirmed**: BCK concept page is **load-bearing for validity** — its removal breaks the closed-form sanity check, but the verification rule still survives via the source paper.
 - **Verdict if falsified**: the source paper alone is sufficient — concept page is a redundant distillation.

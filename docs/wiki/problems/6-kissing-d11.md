@@ -56,7 +56,7 @@ Hinge-loss landscapes are fractal at atomic scales (1e-14 can improve 1e-10) —
 - Conway and Sloane, "Sphere Packings, Lattices and Groups."
 - Cohn-Elkies LP bounds for kissing numbers.
 - Viazovska's optimality proofs (d=8, d=24) — context.
-- See `source/papers/` distillations of the kissing-number literature.
+- See `source/` distillations of the kissing-number literature.
 
 ## Private tracking
 For owner's reference: `mb/tracking/problem-6-kissing-number/` contains the multi-scale perturbation calibration, the GPU tempering benchmark log, and the final solution that achieves loss = 0. Not part of the public artifact.

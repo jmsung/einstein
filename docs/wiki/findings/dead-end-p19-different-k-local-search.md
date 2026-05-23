@@ -7,8 +7,8 @@ status: answered
 related_concepts: [kronecker-decomposition.md, sidon-sets.md, basin-rigidity.md, provable-floor-and-frozen-problems.md]
 related_techniques: [basin-hopping-multistart.md, slsqp-active-pair-polish.md]
 cites:
-  - ../source/papers/2010-vinuesa-sidon-thesis.md
-  - ../source/papers/2007-gyarmati-sums-differences.md
+  - ../source/2010-vinuesa-sidon-thesis.md
+  - ../source/2007-gyarmati-sums-differences.md
   - ../questions/2026-05-02-p19-kronecker-w4-existence.md
 ---
 
@@ -58,7 +58,7 @@ Combined with prior work's formal lemma that no 3-swap of the SOTA atom achieves
 The remaining open paths require **non-local** moves:
 
 1. **Imperfect 5-mark Sidon rulers** with carefully placed gaps + custom A — the council's H1 question (different `R'` with non-perfect coverage). The "5-mark perfect Sidon doesn't exist" fact does NOT close non-perfect 5-mark cases.
-2. **LP/SDP cap certificate** (council's H2) — Leech 1956 gives c² ≥ 2.434 (via Rédei–Rényi `inf sin(θ)/θ`); Bernshteyn–Tait 2019 ([source](../../source/papers/2019-bernshteyn-tait-difference-bases.md)) strictly tightens this to `c² ≥ 2.434 + ε` (numerical `ε ≈ 10⁻³`) via 4×4 PSD constraints on Fourier coefficients. The gap to 2.639 is "moderate" per the council's Cohn analysis. Larger PSD truncations or a magic-function dual could prove 2.639 is the true floor.
+2. **LP/SDP cap certificate** (council's H2) — Leech 1956 gives c² ≥ 2.434 (via Rédei–Rényi `inf sin(θ)/θ`); Bernshteyn–Tait 2019 ([source](../../source/2019-bernshteyn-tait-difference-bases.md)) strictly tightens this to `c² ≥ 2.434 + ε` (numerical `ε ≈ 10⁻³`) via 4×4 PSD constraints on Fourier coefficients. The gap to 2.639 is "moderate" per the council's Cohn analysis. Larger PSD truncations or a magic-function dual could prove 2.639 is the true floor.
 3. **Algebraic constructions outside the Singer/Bose/Paley/GMW family** (council's H3) — Ramanujan graphs (LPS), modular form magic functions specific to integer rulers, etc.
 4. **Helper-mark optimization** at fixed k=360, holding atom A fixed but varying the 75 "above-v" helper marks. Prior search isolated the atom; helper marks were not deeply optimized as a separate DOF.
 

@@ -86,7 +86,7 @@ This is the audit half. The cold-side run requires a fresh Claude session.
 - `findings/structural-cap-at-score-2-meta.md` — **THE finding**. Tells the agent the floor is 2.0, not 0. Lists the 8-way structural cap (K₁₂ lattice, P₁₂ₐ Construction A, SDP cluster bound, Leech cross-section).
 - `findings/p22-d12-construction-survey.md` — exhaustive survey of construction families: P₁₂ₐ binary code, K₁₂ lattice cosets, Leech 12-section, BW-style binary lifts. Identifies P₁₂ₐ Construction A from `[12, 6, 4]` Hamming code as the 840-vector backbone.
 - `findings/hinge-overlap-rank3-squeeze.md` — the technique applied: P₁₂ₐ 840-core + one duplicate at `(1, 0, ..., 0)` + sub-ulp polish lands at score 2.0014.
-- `source/papers/2024-delaat-kissing-sdp.md` — de Laat–Leijenhorst 2024: `κ(12) ≤ 1355` formally; Cohn–Salmon believe the cap is at 840 itself.
+- `source/2024-delaat-kissing-sdp.md` — de Laat–Leijenhorst 2024: `κ(12) ≤ 1355` formally; Cohn–Salmon believe the cap is at 840 itself.
 
 ### Personas that would dispatch on P22
 

@@ -59,7 +59,7 @@ The cheapest informative move is (1); the most decisive is (4). (2) is the brute
 - `wiki/concepts/provable-floor-and-frozen-problems.md` — three flavors of frozen
 - `wiki/findings/float64-ceiling.md` — cross-problem inventory (P2, P11, P12 added 2026-05-02)
 - `wiki/findings/discrete-optimization.md` — ILP/BnB experience for ±1 problems
-- `cb/source/papers/2024-mossinghoff-turyn-mahler.md` (cited by literature.md)
-- `cb/source/papers/2019-balister-flat-littlewood.md` (already in source/)
+- `cb/source/2024-mossinghoff-turyn-mahler.md` (cited by literature.md)
+- `cb/source/2019-balister-flat-littlewood.md` (already in source/)
 - Erdős (1957), "Some unsolved problems" — flat-polynomial conjecture
 - Jedwab, Katz, Schmidt (2013), "Small L4 norm Littlewood polynomials" (arXiv:1205.0260)

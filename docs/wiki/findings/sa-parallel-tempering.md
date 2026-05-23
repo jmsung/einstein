@@ -7,7 +7,7 @@ source_type: agent_analysis
 cites:
   - knowledge.yaml
   - problem-6-kissing-number/strategy.md
-  - ../source/repos/jmsung-einstein-codebase.md
+  - ../source/jmsung-einstein-codebase.md
 ---
 
 # Simulated Annealing & Parallel Tempering

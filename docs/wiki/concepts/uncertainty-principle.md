@@ -6,8 +6,8 @@ related_problems: [P9]
 related_techniques: [gap-space-parameterization.md, k-climbing.md]
 related_findings: [k-climbing.md]
 cites:
-  - ../source/papers/2017-goncalves-hermite-uncertainty.md
-  - ../source/papers/2019-cohn-uncertainty-d12.md
+  - ../source/2017-goncalves-hermite-uncertainty.md
+  - ../source/2019-cohn-uncertainty-d12.md
   - ../personas/hilbert.md
   - bourgain-clozel-kahane.md
 related_personas: [hilbert.md]
@@ -25,7 +25,7 @@ Setup (Bourgain–Clozel–Kahane / Cohn–Gonçalves):
 
 - **Function class**: even Schwartz `f: ℝ → ℝ` (or `ℝᵈ` radial), with `f(0) < 0`, `f̂(0) < 0`, and `f(x) ≥ 0` for `‖x‖ ≥ r₁`, `f̂(ξ) ≥ 0` for `‖ξ‖ ≥ r₂`.
 - **Quantity to minimize**: the product `r₁ · r₂` (or, in normalized units, just `r₁` since one can rescale).
-- **Result**: there is a positive lower bound on `r₁ · r₂`. In `d = 12`, Cohn–Gonçalves 2019 (`source/papers/2019-cohn-uncertainty-d12.md`) computed the *tight* lower bound via an explicit Hermite/Laguerre eigensystem construction.
+- **Result**: there is a positive lower bound on `r₁ · r₂`. In `d = 12`, Cohn–Gonçalves 2019 (`source/2019-cohn-uncertainty-d12.md`) computed the *tight* lower bound via an explicit Hermite/Laguerre eigensystem construction.
 
 The arena's **P9 Uncertainty Principle**: a polynomial-based discretization of this question. The function `f` is parameterized by `k` roots in a "far cluster" plus a polynomial structure; minimize a functional `S(f) ≈ r₁ · r₂` subject to the sign and Fourier-positivity constraints. The verifier checks `f`-even, `f(0) < 0`, `f̂(0) < 0`, sign distribution.
 
@@ -50,12 +50,12 @@ For P9, the discrete version: the polynomial expansion has `k` "free" roots in t
 ## Classic examples
 
 1. **P9 Uncertainty Principle** — JSAgent rank #1 locally at `0.318169` via gap-space NM at `k = 14` (jumped from `k = 13` plateau at `S ≈ 0.31835`). k-climbing to `k = 15, 19, 50` showed rapidly diminishing returns. Currently HIDDEN by arena (verifier cannot enforce f-even / f̂(0) < 0). See [findings/k-climbing.md](../findings/k-climbing.md).
-2. **Cohn–Gonçalves 2019 (d=12 uncertainty)** — `source/papers/2019-cohn-uncertainty-d12.md`. Tight lower bound via explicit Laguerre-eigensystem construction. Same algebraic machinery that gives Viazovska's d=8 magic function.
-3. **Gonçalves 2017, Hermite uncertainty** — `source/papers/2017-goncalves-hermite-uncertainty.md`. Foundational paper on Hermite-eigenfunction extremals; the d=12 result is a direct refinement.
+2. **Cohn–Gonçalves 2019 (d=12 uncertainty)** — `source/2019-cohn-uncertainty-d12.md`. Tight lower bound via explicit Laguerre-eigensystem construction. Same algebraic machinery that gives Viazovska's d=8 magic function.
+3. **Gonçalves 2017, Hermite uncertainty** — `source/2017-goncalves-hermite-uncertainty.md`. Foundational paper on Hermite-eigenfunction extremals; the d=12 result is a direct refinement.
 
 ## Related
 
 - Concepts: [modular-forms-magic-function](modular-forms-magic-function.md), [k-climbing-and-dof-augmentation](k-climbing-and-dof-augmentation.md), [parameterization-selection](parameterization-selection.md), [lp-duality](lp-duality.md).
 - Techniques: [gap-space-parameterization](../techniques/gap-space-parameterization.md), [k-climbing](../techniques/k-climbing.md).
 - Findings: [k-climbing](../findings/k-climbing.md).
-- Sources: `source/papers/2017-goncalves-hermite-uncertainty.md`, `source/papers/2019-cohn-uncertainty-d12.md`.
+- Sources: `source/2017-goncalves-hermite-uncertainty.md`, `source/2019-cohn-uncertainty-d12.md`.

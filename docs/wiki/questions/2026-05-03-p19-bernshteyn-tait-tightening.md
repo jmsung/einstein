@@ -12,12 +12,12 @@ cites:
   - ../concepts/p19-fully-resolved.md
   - ../findings/p19-kronecker-bridging-threshold.md
   - 2026-05-02-p19-structural-cap-conjecture.md
-  - ../../source/papers/2019-bernshteyn-tait-difference-bases.md
+  - ../../source/2019-bernshteyn-tait-difference-bases.md
 ---
 
 # Can the Bernshteyn–Tait 2019 lower bound `d* ≥ 2.4344 + ε` be tightened to `2.639` (the SOTA)?
 
-> **2026-05-03 update — paper ingested.** The actual contribution of Bernshteyn–Tait 2019 is *strictly tightening* Leech's 1956 bound `d* ≥ 2.4344…` to `d* ≥ 2.4344… + ε` for some `ε > 0`, with numerical estimate `ε ≈ 10⁻³` (not optimized). See [`source/papers/2019-bernshteyn-tait-difference-bases.md`](../../source/papers/2019-bernshteyn-tait-difference-bases.md). Earlier versions of this question conflated the two attributions; corrected throughout below.
+> **2026-05-03 update — paper ingested.** The actual contribution of Bernshteyn–Tait 2019 is *strictly tightening* Leech's 1956 bound `d* ≥ 2.4344…` to `d* ≥ 2.4344… + ε` for some `ε > 0`, with numerical estimate `ε ≈ 10⁻³` (not optimized). See [`source/2019-bernshteyn-tait-difference-bases.md`](../../source/2019-bernshteyn-tait-difference-bases.md). Earlier versions of this question conflated the two attributions; corrected throughout below.
 
 This is the **concrete attack-route scoping** for the open H2 question on P19. The parent question [`2026-05-02-p19-structural-cap-conjecture.md`](2026-05-02-p19-structural-cap-conjecture.md) asks whether *any* LP/SDP certificate exists; this question scopes the most promising path: tightening the Bernshteyn–Tait 2019 PSD-truncation bound directly.
 
@@ -48,7 +48,7 @@ Either outcome is wisdom. The (a) outcome is publication-grade; the (b) outcome 
 
 ## What is known about Bernshteyn–Tait 2019
 
-(Paper ingested 2026-05-03; full distillation at [`source/papers/2019-bernshteyn-tait-difference-bases.md`](../../source/papers/2019-bernshteyn-tait-difference-bases.md). Summary below.)
+(Paper ingested 2026-05-03; full distillation at [`source/2019-bernshteyn-tait-difference-bases.md`](../../source/2019-bernshteyn-tait-difference-bases.md). Summary below.)
 
 The Bernshteyn–Tait 2019 result reformulates the difference-basis question as a Fourier-coefficient problem on probability measures on the unit circle `𝕋`:
 
@@ -90,7 +90,7 @@ A Viazovska-style magic function `f : ℝ → ℝ` whose Fourier transform satis
 
 ## First step (concrete)
 
-**Done 2026-05-03**: BT 2019 paper ingested at [`source/papers/2019-bernshteyn-tait-difference-bases.md`](../../source/papers/2019-bernshteyn-tait-difference-bases.md). Constants and proof structure verified. Earlier "Bernshteyn–Tait 2019 gives `c² ≥ 2.434`" claims across 4 wiki pages were corrected to attribute `2.434` to Leech 1956 and `2.434 + ε` (numerical `ε ≈ 10⁻³`) to B-T 2019.
+**Done 2026-05-03**: BT 2019 paper ingested at [`source/2019-bernshteyn-tait-difference-bases.md`](../../source/2019-bernshteyn-tait-difference-bases.md). Constants and proof structure verified. Earlier "Bernshteyn–Tait 2019 gives `c² ≥ 2.434`" claims across 4 wiki pages were corrected to attribute `2.434` to Leech 1956 and `2.434 + ε` (numerical `ε ≈ 10⁻³`) to B-T 2019.
 
 After ingest, the next concrete steps in priority order:
 
@@ -125,7 +125,7 @@ After ingest, the next concrete steps in priority order:
 - [`wiki/findings/p19-kronecker-bridging-threshold.md`](../findings/p19-kronecker-bridging-threshold.md) — the conditional identity that defines the Kronecker manifold (input to H2.3)
 - [`wiki/concepts/kolountzakis-matolcsi-bound.md`](../concepts/kolountzakis-matolcsi-bound.md) — cutting-plane LP framework for autoconvolution; structurally adjacent to H2.1
 - [`wiki/concepts/cohn-elkies-bound.md`](../concepts/cohn-elkies-bound.md) — magic-function precedent for H2.4 (different domain but same machinery)
-- `source/papers/2010-matolcsi-autoconvolution.md` — adjacent autoconvolution-LP work
-- `source/papers/2010-vinuesa-sidon-thesis.md` — `B_h[g]` framework
+- `source/2010-matolcsi-autoconvolution.md` — adjacent autoconvolution-LP work
+- `source/2010-vinuesa-sidon-thesis.md` — `B_h[g]` framework
 - (pending ingest) Bernshteyn & Tait 2019 — the load-bearing paper
 - Parent question: [`2026-05-02-p19-structural-cap-conjecture.md`](2026-05-02-p19-structural-cap-conjecture.md)

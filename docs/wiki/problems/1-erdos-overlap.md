@@ -46,7 +46,7 @@ Bilinear minimax problems defeat SDP relaxation regardless of discretization sca
 ## References
 - White (2022), Erdős minimum overlap problem analysis.
 - Haugland (2016), tight numerical bounds.
-- See `source/papers/2022-white-erdos-overlap.md`, `source/papers/2016-haugland-min-overlap.md`.
+- See `source/2022-white-erdos-overlap.md`, `source/2016-haugland-min-overlap.md`.
 
 ## Private tracking
 For owner's reference: `mb/tracking/problem-1-erdos-overlap/` contains experiment log, optimality proofs, and 111+ experiment audit trail. Not part of the public artifact.

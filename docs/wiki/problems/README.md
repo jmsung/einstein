@@ -38,6 +38,6 @@ Body:
 2. **Approach** — what worked, what didn't (narrative-level, not param-level)
 3. **Result** — final score, rank, date
 4. **Wisdom hook** — the one-sentence generalizable insight this problem teaches
-5. **References** — links into concepts/techniques/findings/personas, and out to source/papers/
+5. **References** — links into concepts/techniques/findings/personas, and out to source/
 
 Per-problem index pages are populated in Goal 9 (tracking move), one per problem.

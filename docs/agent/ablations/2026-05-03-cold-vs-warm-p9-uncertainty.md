@@ -90,8 +90,8 @@ This is the audit half. The cold-side run requires a fresh Claude session with n
 
 ### Sources cited
 
-- `source/papers/2017-goncalves-hermite-uncertainty.md` — 1D BCK sharpening + double-root structural result.
-- `source/papers/2019-cohn-uncertainty-d12.md` — sharp d=12 via Eisenstein E₆.
+- `source/2017-goncalves-hermite-uncertainty.md` — 1D BCK sharpening + double-root structural result.
+- `source/2019-cohn-uncertainty-d12.md` — sharp d=12 via Eisenstein E₆.
 
 ### Personas that would dispatch on P9
 

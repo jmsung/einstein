@@ -7,7 +7,7 @@ related_techniques: [larger-n-cascade.md, cross-resolution-basin-transfer.md]
 related_findings: [equioscillation-escape.md, optimizer-recipes.md]
 cites:
   - ../findings/equioscillation-escape.md
-  - ../source/papers/2025-jaech-autoconvolution.md
+  - ../source/2025-jaech-autoconvolution.md
   - ../personas/tao.md
 related_personas: [tao.md]
 ---
@@ -57,4 +57,4 @@ The cross-resolution variant (P3): optimize at *higher* `n` than the target, the
 - Concepts: [equioscillation](equioscillation.md), [parameterization-selection](parameterization-selection.md), [autocorrelation-inequality](autocorrelation-inequality.md), [n-extension-monotonicity](n-extension-monotonicity.md).
 - Techniques: [larger-n-cascade](../techniques/larger-n-cascade.md), [cross-resolution-basin-transfer](../techniques/cross-resolution-basin-transfer.md).
 - Findings: [equioscillation-escape](../findings/equioscillation-escape.md), [optimizer-recipes](../findings/optimizer-recipes.md).
-- Sources: `source/papers/2025-jaech-autoconvolution.md` (multi-scale upsampling).
+- Sources: `source/2025-jaech-autoconvolution.md` (multi-scale upsampling).

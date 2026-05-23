@@ -12,7 +12,7 @@ cites:
   - basin-rigidity.md
   - float64-ceiling.md
   - hardin-sloane.md
-  - ../source/blog/friedman-packing-records.md
+  - ../source/friedman-packing-records.md
 ---
 
 # Circle Packing (2D bounded-region packings)
@@ -61,7 +61,7 @@ Three structural facts:
 
 Operational recipe for arena play:
 
-1. **Download SOTA from Packomania or Friedman**. URLs in `source/blog/friedman-packing-records.md`. The configuration comes as a list of `(xᵢ, yᵢ, rᵢ)` triples to high precision.
+1. **Download SOTA from Packomania or Friedman**. URLs in `source/friedman-packing-records.md`. The configuration comes as a list of `(xᵢ, yᵢ, rᵢ)` triples to high precision.
 2. **SLSQP active-pair polish** at `tol_active = 1e-3` (the wide-tolerance recipe; see [`techniques/slsqp-active-pair-polish.md`](../techniques/slsqp-active-pair-polish.md) and `findings/float64-ceiling.md` lessons #34/#43/#44 for calibration).
 3. **mpmath verification** at 60–80 dps confirms the float64 score lands at the basin's true-math optimum.
 4. **Rotation/reflection lottery** (gauge orbit): for symmetric containers (square: D₄, hexagon: D₆, rectangle: D₂), apply the symmetry group to produce equivalent configurations and pick the best ulp landing. See [`multistart-with-rotation-lottery.md`](../techniques/multistart-with-rotation-lottery.md).
@@ -87,7 +87,7 @@ A formal LP-bound certificate for circle packing in a square (analogous to Cohn�
 - **Concepts**: [sphere-packing](sphere-packing.md), [contact-graph-rigidity](contact-graph-rigidity.md), [basin-rigidity](basin-rigidity.md), [reduced-hessian](reduced-hessian.md), [float64-ceiling](float64-ceiling.md), [hardin-sloane](hardin-sloane.md), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md).
 - **Techniques**: [slsqp-active-pair-polish](../techniques/slsqp-active-pair-polish.md), [mpmath-ulp-polish](../techniques/mpmath-ulp-polish.md), [warm-start-from-leader](../techniques/warm-start-from-leader.md), [multistart-with-rotation-lottery](../techniques/multistart-with-rotation-lottery.md).
 - **Findings**: [packing-techniques](../findings/packing-techniques.md), [float64-ceiling](../findings/float64-ceiling.md), [arena-proximity-guard](../findings/arena-proximity-guard.md), [basin-rigidity](../findings/basin-rigidity.md).
-- **Sources**: [`source/blog/friedman-packing-records.md`](../source/blog/friedman-packing-records.md) — Erich Friedman's tables; primary reference for non-square containers.
+- **Sources**: [`source/friedman-packing-records.md`](../source/friedman-packing-records.md) — Erich Friedman's tables; primary reference for non-square containers.
 
 ## References
 

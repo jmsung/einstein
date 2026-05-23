@@ -6,9 +6,9 @@ related_problems: [P1, P6, P7, P11, P22, P23]
 related_techniques: [lp-cutting-plane-warmstart.md, sdp-flag-algebra.md]
 related_findings: [prime-number-theorem-lp.md, lp-solver-scaling.md]
 cites:
-  - ../source/papers/2015-tao-sieve-theory-notes.md
-  - ../source/papers/2024-cohn-li-kissing.md
-  - ../source/papers/2024-delaat-kissing-sdp.md
+  - ../source/2015-tao-sieve-theory-notes.md
+  - ../source/2024-cohn-li-kissing.md
+  - ../source/2024-delaat-kissing-sdp.md
   - ../findings/prime-number-theorem-lp.md
   - ../personas/atiyah.md
   - ../personas/cohn.md
@@ -65,9 +65,9 @@ The certificate role is what distinguishes "we computed a number" from "we *prov
 
 ## Classic examples
 
-1. **P7 Prime Number Theorem** — the problem looks like analytic number theory but is actually an LP (lesson #14, see [findings/prime-number-theorem-lp.md](../findings/prime-number-theorem-lp.md)). Variables: `f(k)` for squarefree `k ∈ [2, N]`. Constraint: `Σ f(k) ⌊x/k⌋ ≤ 1` for all integer `x`. Objective: maximize `−Σ f(k) log(k) / k`. HiGHS IPM on `N = 3350` reclaimed rank #1 at score 0.994847. Source: `source/papers/2015-tao-sieve-theory-notes.md`.
-2. **P6 Kissing d=11** — the score-0 configuration (KawaiiCorgi 2026-04-10) is a *primal-feasible point* matching the Cohn–Elkies LP/SDP upper bound for κ(11) ≥ 594. The fact that this is achievable, not merely conjectured, is itself an LP certificate: a feasible 594-packing exists. Source: `source/papers/2024-cohn-li-kissing.md`.
-3. **P22 / P23 Kissing d=12, d=16** — de Laat–Leijenhorst's clustered low-rank SDP gives `κ(12) ≤ 1355`, `κ(16) ≤ 7355`. P22 sits at 840 (lower bound from `P₁₂ₐ` construction); the gap to the SDP upper bound is the formal feasibility window. The first-order link-tangent test (see [first-order-link-tangent-test](first-order-link-tangent-test.md)) establishes the structural cap at 840 within this window. Source: `source/papers/2024-delaat-kissing-sdp.md`.
+1. **P7 Prime Number Theorem** — the problem looks like analytic number theory but is actually an LP (lesson #14, see [findings/prime-number-theorem-lp.md](../findings/prime-number-theorem-lp.md)). Variables: `f(k)` for squarefree `k ∈ [2, N]`. Constraint: `Σ f(k) ⌊x/k⌋ ≤ 1` for all integer `x`. Objective: maximize `−Σ f(k) log(k) / k`. HiGHS IPM on `N = 3350` reclaimed rank #1 at score 0.994847. Source: `source/2015-tao-sieve-theory-notes.md`.
+2. **P6 Kissing d=11** — the score-0 configuration (KawaiiCorgi 2026-04-10) is a *primal-feasible point* matching the Cohn–Elkies LP/SDP upper bound for κ(11) ≥ 594. The fact that this is achievable, not merely conjectured, is itself an LP certificate: a feasible 594-packing exists. Source: `source/2024-cohn-li-kissing.md`.
+3. **P22 / P23 Kissing d=12, d=16** — de Laat–Leijenhorst's clustered low-rank SDP gives `κ(12) ≤ 1355`, `κ(16) ≤ 7355`. P22 sits at 840 (lower bound from `P₁₂ₐ` construction); the gap to the SDP upper bound is the formal feasibility window. The first-order link-tangent test (see [first-order-link-tangent-test](first-order-link-tangent-test.md)) establishes the structural cap at 840 within this window. Source: `source/2024-delaat-kissing-sdp.md`.
 
 ## Related
 

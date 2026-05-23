@@ -16,7 +16,7 @@ drafted: YYYY-MM-DD
 related_problems: [P2, P3, P4, ...]
 related_techniques: [parallel-tempering.md, ...]
 related_findings: [...]
-cites: [source/papers/..., wiki/findings/...]
+cites: [source/..., wiki/findings/...]
 ---
 ```
 

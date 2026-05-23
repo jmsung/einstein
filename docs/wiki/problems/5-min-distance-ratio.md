@@ -48,7 +48,7 @@ minImprovement proximity guards apply to both self-improvement AND first-time "c
 
 ## References
 - Erich Friedman, packing references.
-- See `source/papers/resource-friedman-packing.md`.
+- See `source/resource-friedman-packing.md`.
 
 ## Private tracking
 For owner's reference: `mb/tracking/problem-5-min-distance-ratio/` contains the 44K-config basin enumeration and the contact-graph diagnostics. Not part of the public artifact.
