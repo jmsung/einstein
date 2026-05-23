@@ -50,3 +50,4 @@ Every problem-attempt cycle gets one row. Failures count. Cherry-picking is forb
 Starts when the first new problem is attempted post-merge. Cycle 1 will be a Tier-S problem from `wiki/problems/_inventory.md`; the bootstrap friction log identified P19 (Difference Bases) as the natural first target — questions already filed.
 
 *This file is append-only. Edits to past rows require a separate `corrigendum:` row referencing the original `cycle_id`.*
+| 21 | P16-heilbronn-convex | 0.027835580459939 (no Δ) | 0 | none-placeholder | 0 | 0 | 0 | a:1/h:0/hyb:0 | scaffold-no-attempt | autonomous_loop.py Phase-3 scaffold visit — inner attempt to be implemented in Goal 4 (strategy_picker + execute + triple-verify) |
