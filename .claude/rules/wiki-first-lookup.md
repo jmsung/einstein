@@ -23,12 +23,12 @@ qmd query "<question>" -c einstein-wiki-source -n 5  # raw distillations
 # qmd doesn't multi-collection — query each in turn
 ```
 
-Or, when faster: `grep`/`find` against `wiki/` and `source/`, or read a specific path the user references.
+Or, when faster: `grep`/`find` against `docs/wiki/` and `docs/source/`, or read a specific path the user references.
 
 After the lookup:
 
-- **Hit found:** answer from it, cite the path (e.g. `wiki/concepts/equioscillation.md`). Don't paraphrase a paper's abstract when the distillation is already the better framing.
-- **Empty or low relevance:** say "the wiki has nothing on this" explicitly before falling back to training. Offer to ingest via `/wiki-ingest` if the topic warrants it. **File the question** in `wiki/questions/` per the [self-improvement-loop](self-improvement-loop.md).
+- **Hit found:** answer from it, cite the path (e.g. `docs/wiki/concepts/equioscillation.md`). Don't paraphrase a paper's abstract when the distillation is already the better framing.
+- **Empty or low relevance:** say "the wiki has nothing on this" explicitly before falling back to training. Offer to ingest via `/wiki-ingest` if the topic warrants it. **File the question** in `docs/wiki/questions/` per the [self-improvement-loop](self-improvement-loop.md).
 - **Conflict with training:** trust the wiki for "what is this thing in our context"; trust training for general background. The wiki was made deliberately; training was scraped.
 
 Out-of-scope subjects (general programming, language syntax, common ML terms) — answer from training as usual.

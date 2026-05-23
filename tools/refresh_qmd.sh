@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Refresh qmd indices for the einstein wiki + source collections.
 #
-# Run this after any commit that touches wiki/ or source/. The qmd index
+# Run this after any commit that touches docs/wiki/ or docs/source/. The qmd index
 # does NOT auto-detect new files; without this, the agent's NEXT cycle
 # can't query its prior cycle's findings.
 #

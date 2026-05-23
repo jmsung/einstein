@@ -8,7 +8,7 @@ This is also Polya's first heuristic: most "stuck" is "haven't really read the p
 
 **How to apply:**
 
-- **Before any web search**: write a 1-sentence question to `wiki/questions/<YYYY-MM-DD>-<slug>.md`. Status: open. The search becomes "find the answer to *this exact question*," not "look around."
+- **Before any web search**: write a 1-sentence question to `docs/wiki/questions/<YYYY-MM-DD>-<slug>.md`. Status: open. The search becomes "find the answer to *this exact question*," not "look around."
 - **Before dispatching the council**: state the master question. The personas inherit it.
 - **Before launching a long compute job**: write the question the job is meant to answer. If you can't articulate the question, the job is fishing.
 - **Before claiming "I understand X"**: write the question X was meant to answer. Re-read your answer against it.
@@ -22,6 +22,6 @@ This is also Polya's first heuristic: most "stuck" is "haven't really read the p
 Bad: "How do we improve P11?"
 Good: "Is there a Hardin-Sloane n=50 configuration with smaller-distance contact graph that the SLSQP active-pair polish missed because of tolerance < 1e-3?"
 
-**Filing:** every written question lives in `wiki/questions/`. Closed questions stay (with status: answered + link to finding); the trail of "what we asked" is the self-improvement evidence. Never delete a question.
+**Filing:** every written question lives in `docs/wiki/questions/`. Closed questions stay (with status: answered + link to finding); the trail of "what we asked" is the self-improvement evidence. Never delete a question.
 
 See also: [math-solving-protocol](math-solving-protocol.md), [self-improvement-loop](self-improvement-loop.md), [failure-is-a-finding](failure-is-a-finding.md).

@@ -13,12 +13,12 @@ Five gap types detected:
 - TYPE 5 — missing umbrella  : cluster of related pages with no abstracting concept
 
 (TYPE 3 — structural analogy across problem statements — is LLM-only;
-documented in `wiki/findings/finding-the-fertile-gaps.md` but not built here.)
+documented in `docs/wiki/findings/finding-the-fertile-gaps.md` but not built here.)
 
 Usage:
     uv run python tools/wiki_graph.py                      # full report -> stdout
     uv run python tools/wiki_graph.py --out agent/wiki-gaps-2026-05-02.md
-    uv run python tools/wiki_graph.py --file-questions     # auto-file top-3 as wiki/questions/
+    uv run python tools/wiki_graph.py --file-questions     # auto-file top-3 as docs/wiki/questions/
 
 Companion: cross-pollination-not-compute.md (the filter for which candidates
 to keep). This tool says what to *consider*. Together = the discipline.
@@ -35,10 +35,11 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-WIKI = Path("/Users/jongmin/projects/einstein/cb/wiki")
-SOURCE = Path("/Users/jongmin/projects/einstein/cb/source")
+_REPO = Path(__file__).resolve().parent.parent
+WIKI = _REPO / "docs" / "wiki"
+SOURCE = _REPO / "docs" / "source"
 QUESTIONS = WIKI / "questions"
-AGENT_OUT = Path("/Users/jongmin/projects/einstein/cb/agent")
+AGENT_OUT = _REPO / "agent"
 
 SIMILARITY_THRESHOLD = 0.50  # qmd score above which we treat as latent edge
                               # (was 0.70 — first run found 0 hits; lowered to 0.50 per
@@ -596,14 +597,14 @@ def file_top_questions(type1, type2, today: str, n: int = 3) -> list[Path]:
             f"\n"
             f"## Why it matters\n"
             f"\n"
-            f"Per `wiki/findings/finding-the-fertile-gaps.md`: pages with high semantic similarity but no explicit link likely share an underlying concept that hasn't been articulated. Either:\n"
+            f"Per `docs/wiki/findings/finding-the-fertile-gaps.md`: pages with high semantic similarity but no explicit link likely share an underlying concept that hasn't been articulated. Either:\n"
             f"\n"
             f"1. The connection is real and a bridge page should be authored, OR\n"
             f"2. The similarity is superficial (qmd false-positive) and we should note that.\n"
             f"\n"
             f"## Next step\n"
             f"\n"
-            f"Read both pages. If a structural connection exists, file as `wiki/findings/<bridge-slug>.md`. If not, close this question with `status: superseded` and a one-line explanation.\n"
+            f"Read both pages. If a structural connection exists, file as `docs/wiki/findings/<bridge-slug>.md`. If not, close this question with `status: superseded` and a one-line explanation.\n"
         )
         files_written.append(out)
     return files_written
@@ -613,7 +614,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--out", help="Output report path (default: stdout)")
     p.add_argument("--file-questions", action="store_true",
-                   help="Auto-file top-3 Type-2 candidates as wiki/questions/")
+                   help="Auto-file top-3 Type-2 candidates as docs/wiki/questions/")
     p.add_argument("--no-qmd", action="store_true",
                    help="Skip semantic-similarity layer (faster; Types 1, 5 only)")
     args = p.parse_args()
