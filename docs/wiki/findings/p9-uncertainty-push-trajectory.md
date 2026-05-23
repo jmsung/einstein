@@ -1,3 +1,12 @@
+---
+type: finding
+author: human
+drafted: 2026-04-18
+related_problems: [9-uncertainty-principle.md]
+related_techniques: [k-climbing.md, cma-es-with-warmstart.md]
+status: archived
+---
+
 # Uncertainty Principle Push — Optimization Trajectory
 
 > **Note (2026-04-19):** Scores below 0.2025 in this log are invalid. The known lower bound is 0.2025 (Georgiev et al., 2025). Our local evaluator did not enforce problem constraints, allowing impossible scores through. The log is preserved as-is for the optimization methodology record.

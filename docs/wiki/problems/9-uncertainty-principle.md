@@ -44,6 +44,7 @@ k-climbing (adding DOF via dimensionality increase) escapes fixed-k basin platea
 
 ## Findings
 - [verification-patterns.md](../findings/verification-patterns.md)
+- [p9-uncertainty-push-trajectory.md](../findings/p9-uncertainty-push-trajectory.md) — 2026-04-18 CMA-ES + k-climbing optimization log; invalid scores below the 0.2025 floor preserved as methodology record
 
 ## References
 - Bourgain, Clozel, Kahane (2010) — sign uncertainty bounds.

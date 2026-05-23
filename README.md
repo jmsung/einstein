@@ -154,8 +154,8 @@ uv sync
 - [docs/wiki/home.md](docs/wiki/home.md) — Wiki front door — concepts, techniques, personas, findings, problems
 - [docs/timeline.md](docs/timeline.md) — Discovery timeline — dated breakthroughs for attribution clarity
 - [docs/arena.md](docs/arena.md) — Platform overview, API, rate limits, platform mechanics
-- [docs/findings/arena-mechanics.md](docs/findings/arena-mechanics.md) — minImprovement, scoring, verification drift
-- [docs/findings/optimization-recipes.md](docs/findings/optimization-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
+- [docs/wiki/findings/arena-api-mechanics.md](docs/wiki/findings/arena-api-mechanics.md) — minImprovement, scoring, verification drift
+- [docs/wiki/findings/optimizer-recipes.md](docs/wiki/findings/optimizer-recipes.md) — Dinkelbach, sigmoid bounding, k-climbing, and more
 - [docs/wiki/techniques/](docs/wiki/techniques/) — Optimizer taxonomy, general techniques, transfer lessons
 - [docs/wiki/findings/float64-polish.md](docs/wiki/findings/float64-polish.md) — ULP descent, mpmath, precision lottery
 - [docs/wiki/findings/verification-patterns.md](docs/wiki/findings/verification-patterns.md) — Two-tier architecture, triple verification
