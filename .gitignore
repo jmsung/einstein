@@ -28,9 +28,8 @@ scripts/*/*.plist
 results/
 results-temp/
 
-# Optimizer logs and CMA output (but keep daily status tracking)
-logs/*
-!logs/status/
+# Optimizer logs and CMA output (status telemetry now lives in mb/logs/)
+logs/
 outcmaes/
 
 # Workbench symlink
