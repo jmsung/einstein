@@ -99,7 +99,7 @@ uv run python scripts/difference_bases/atom_bnb.py \
 uv run python scripts/difference_bases/cross_block_analysis.py
 ```
 
-`atom_bnb.py` was promoted from `mb/tracking/.../private-scripts/` to public during cycle 12 with the post-refactor `SOTA_PATH` fix. JIT-compiled inner loop, ~2M nodes/sec on M5 Max.
+`atom_bnb.py` was promoted from `mb/.../private-scripts/` to public during cycle 12 with the post-refactor `SOTA_PATH` fix. JIT-compiled inner loop, ~2M nodes/sec on M5 Max.
 
 ## See also
 

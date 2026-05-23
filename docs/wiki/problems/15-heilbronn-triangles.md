@@ -10,7 +10,7 @@ tier: C
 concepts_invoked: [basin-rigidity.md, equioscillation.md, symmetry-and-fundamental-domain.md, minimprovement-gate.md]
 techniques_used: [slsqp-active-pair-polish.md, basin-hopping-multistart.md, cma-es-with-warmstart.md]
 findings_produced: [basin-rigidity.md]
-private_tracking: ../../mb/tracking/problem-15-heilbronn-triangles/
+private_tracking: ../../mb/problems/15-heilbronn-triangles/
 ---
 
 # Problem 15 — Heilbronn Triangles (n=11)
@@ -50,4 +50,4 @@ Over-determined equioscillation systems (active constraints > DOF) are locally r
 - Heilbronn's classical problem (1950s).
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-15-heilbronn-triangles/` contains the 5000-seed multistart enumeration. Not part of the public artifact.
+For owner's reference: `mb/problems/15-heilbronn-triangles/` contains the 5000-seed multistart enumeration. Not part of the public artifact.

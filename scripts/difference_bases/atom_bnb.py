@@ -29,7 +29,7 @@ import numba as nb
 
 SOTA_PATH = (
     Path.home()
-    / "projects/einstein/mb/tracking/problem-19-difference-bases"
+    / "projects/einstein/mb/problems/19-difference-bases"
     / "solutions/sota-rank01-CHRONOS-score2.6390274695.json"
 )
 RESULTS_DIR = Path("results/problem-19-difference-bases")

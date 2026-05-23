@@ -10,7 +10,7 @@ tier: S
 concepts_invoked: [sidon-sets.md, kronecker-decomposition.md, probabilistic-method.md, basin-rigidity.md]
 techniques_used: [bnb-exhaustive-w3.md, kronecker-search-decomposition.md, memetic-tabu-search.md]
 findings_produced: [discrete-optimization.md]
-private_tracking: ../../mb/tracking/problem-19-difference-bases/
+private_tracking: ../../mb/problems/19-difference-bases/
 ---
 
 # Problem 19 â€” Difference Bases
@@ -57,4 +57,4 @@ Kronecker product structures in combinatorics reduce search space dramatically â
 - Singer, Bose, Paley algebraic difference-set constructions.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-19-difference-bases/` contains the BnB w=3 exhaustive summary, partial w=4 results, and Kronecker decomposition diagnostic. Not part of the public artifact.
+For owner's reference: `mb/problems/19-difference-bases/` contains the BnB w=3 exhaustive summary, partial w=4 results, and Kronecker decomposition diagnostic. Not part of the public artifact.

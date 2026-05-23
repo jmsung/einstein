@@ -71,6 +71,6 @@ cd cb/
 uv run python scripts/difference_bases/k_sweep_analysis.py
 ```
 
-Expected: ~10 seconds. Reads SOTA from `mb/tracking/problem-19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json`. Output reproduces the v_after numbers in this finding.
+Expected: ~10 seconds. Reads SOTA from `mb/problems/19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json`. Output reproduces the v_after numbers in this finding.
 
 *Last updated: 2026-05-02*

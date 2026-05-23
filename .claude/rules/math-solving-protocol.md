@@ -4,7 +4,7 @@ Every hard math problem in this repo follows this loop. It's drawn from how the 
 
 ```
 1. UNDERSTAND        Restate problem in own words. Write unknowns / data / conditions
-                     explicitly in mb/tracking/<problem>/strategy.md. Most "stuck" is
+                     explicitly in mb/<problem>/strategy.md. Most "stuck" is
                      "haven't really read it." (Polya)
 
 2. WIKI-FIRST        Query docs/wiki/concepts, /techniques, /findings, /problems for prior
@@ -28,7 +28,7 @@ Every hard math problem in this repo follows this loop. It's drawn from how the 
 7. SPECIALIZE        Try n=2,3,4 by hand BEFORE the optimizer. (Polya / Tao)
                      Compute small examples, look for patterns. (Gauss / Euler)
 
-8. EXECUTE           Implement in src/. Tracking goes to mb/tracking/<problem>/
+8. EXECUTE           Implement in src/. Tracking goes to mb/<problem>/
                      experiment-log.md. Compute routed via compute-router rule.
 
 9. LOOK BACK         After any result, ask: does this generalize? where else?

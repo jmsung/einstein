@@ -10,7 +10,7 @@ tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, parameterization-selection.md, parameterization-induced-rank-deficiency.md, sidon-sets.md, smooth-max-approximation.md]
 techniques_used: [larger-n-cascade.md, lp-cutting-plane-warmstart.md, bounded-lbfgs-per-region-sigmoid.md, warm-start-from-leader.md]
 findings_produced: [optimizer-recipes.md, equioscillation-escape.md, p2-peak-locking-hessian-mechanism.md]
-private_tracking: ../../mb/tracking/problem-2-first-autocorrelation/
+private_tracking: ../../mb/problems/2-first-autocorrelation/
 ---
 
 # Problem 2 — First Autocorrelation Inequality
@@ -56,4 +56,4 @@ Peak-locking via exp(v) parameterization is fundamental to equioscillation basin
 - See `source/2010-matolcsi-autoconvolution.md` and related distillations.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-2-first-autocorrelation/` contains experiment log, v3 reproduction recipe, and breakthrough notes. Not part of the public artifact.
+For owner's reference: `mb/problems/2-first-autocorrelation/` contains experiment log, v3 reproduction recipe, and breakthrough notes. Not part of the public artifact.

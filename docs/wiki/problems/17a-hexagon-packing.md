@@ -10,7 +10,7 @@ tier: C
 concepts_invoked: [sphere-packing.md, circle-packing.md, symmetry-and-fundamental-domain.md, float64-ceiling.md]
 techniques_used: [warm-start-from-leader.md, basin-hopping-multistart.md]
 findings_produced: [packing-techniques.md]
-private_tracking: ../../mb/tracking/problem-17-hexagon-packing/
+private_tracking: ../../mb/problems/17-hexagon-packing/
 ---
 
 # Problem 17a — Hexagon Packing (n=12)
@@ -47,4 +47,4 @@ Symmetric packing problems converge to a unique basin — rank determined by flo
 - Specht hexagonal packing tables.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-17-hexagon-packing/` contains the warm-start polish log. Not part of the public artifact.
+For owner's reference: `mb/problems/17-hexagon-packing/` contains the warm-start polish log. Not part of the public artifact.

@@ -46,7 +46,7 @@ Two first-class compute environments. Route every workload to its best home **be
 
 4. **If recommendation is `STAY ON CPU`** for a workload you assumed needed GPU, trust it. The GPU sits idle on sequential workloads.
 
-5. **Cost gate** for Modal: `hours × $/hr`. Only proceed if expected speedup > 3× over local. Document the cost estimate in `mb/tracking/<problem>/experiment-log.md`.
+5. **Cost gate** for Modal: `hours × $/hr`. Only proceed if expected speedup > 3× over local. Document the cost estimate in `mb/<problem>/experiment-log.md`.
 
 **Common pitfalls:**
 - Running Python `for` loop on GPU → idle GPU, slow wall-clock, $$$ wasted

@@ -10,7 +10,7 @@ tier: A
 concepts_invoked: [kissing-number.md, sphere-packing.md, hinge-overlap.md, first-order-link-tangent-test.md, basin-rigidity.md]
 techniques_used: [first-order-link-tangent-test.md, parallel-tempering-sa.md, slsqp-active-pair-polish.md, micro-perturbation-multiscale.md]
 findings_produced: [hinge-overlap-rank3-squeeze.md, p22-d12-construction-survey.md]
-private_tracking: ../../mb/tracking/problem-22-kissing-d12/
+private_tracking: ../../mb/problems/22-kissing-d12/
 ---
 
 # Problem 22 — Kissing Number in Dimension 12 (n=841)
@@ -54,4 +54,4 @@ Kissing-tight problems with known structural caps require first-order tangent-sp
 - Conway and Sloane, "Sphere Packings, Lattices and Groups."
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-22-kissing-d12/` contains the 8-way cap survey, the link-tangent calculation, and the rank-3 submission archive. Not part of the public artifact.
+For owner's reference: `mb/problems/22-kissing-d12/` contains the 8-way cap survey, the link-tangent calculation, and the rank-3 submission archive. Not part of the public artifact.

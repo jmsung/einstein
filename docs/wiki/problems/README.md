@@ -1,6 +1,6 @@
 # problems/
 
-One short index page per Einstein Arena problem. NOT the operational playbook — that lives in `mb/tracking/problem-{id}-{slug}/` (private, time-bound).
+One short index page per Einstein Arena problem. NOT the operational playbook — that lives in `mb/problems/{id}-{slug}/` (private, time-bound).
 
 Each `problems/<id>-<slug>.md` page is the *publishable* summary:
 - Problem statement
@@ -29,7 +29,7 @@ tier: S | A | B | C       # learning-ROI tier from _inventory.md
 concepts_invoked: [sphere-packing.md, hinge-loss.md, ...]
 techniques_used: [parallel-tempering.md, mpmath-ulp-polish.md, ...]
 findings_produced: [perturbation-landscape.md, ...]
-private_tracking: ../../../mb/tracking/problem-6-kissing-d11/
+private_tracking: ../../../mb/problems/6-kissing-d11/
 ---
 ```
 

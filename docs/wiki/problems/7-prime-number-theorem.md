@@ -10,7 +10,7 @@ tier: A
 concepts_invoked: [sieve-theory-as-lp.md, lp-duality.md, n-extension-monotonicity.md, arena-tolerance-drift.md]
 techniques_used: [lp-cutting-plane-warmstart.md, warm-start-from-leader.md]
 findings_produced: [prime-number-theorem-lp.md, lp-solver-scaling.md]
-private_tracking: ../../mb/tracking/problem-7-prime-number-theorem/
+private_tracking: ../../mb/problems/7-prime-number-theorem/
 ---
 
 # Problem 7 — Prime Number Theorem
@@ -51,4 +51,4 @@ Sieve-theory problems are linear programs in disguise — formulate with squaref
 - See `source/` distillations on sieve theory.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-7-prime-number-theorem/` contains the LP scaling table and IPM warm-start recipe. Not part of the public artifact.
+For owner's reference: `mb/problems/7-prime-number-theorem/` contains the LP scaling table and IPM warm-start recipe. Not part of the public artifact.

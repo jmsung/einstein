@@ -10,7 +10,7 @@ tier: A
 concepts_invoked: [uncertainty-principle.md, bourgain-clozel-kahane.md, k-climbing-and-dof-augmentation.md, parameterization-selection.md, arena-tolerance-drift.md]
 techniques_used: [k-climbing.md, gap-space-parameterization.md, cma-es-with-warmstart.md, mpmath-ulp-polish.md]
 findings_produced: [verification-patterns.md]
-private_tracking: ../../mb/tracking/problem-9-uncertainty-principle/
+private_tracking: ../../mb/problems/9-uncertainty-principle/
 ---
 
 # Problem 9 — Uncertainty Principle
@@ -54,4 +54,4 @@ k-climbing (adding DOF via dimensionality increase) escapes fixed-k basin platea
 - vinid GitHub issue #51 — arena verifier bug report.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-9-uncertainty-principle/` contains the constraint-verification audit, k-climbing log, and theoretical-bound writeup. Not part of the public artifact.
+For owner's reference: `mb/problems/9-uncertainty-principle/` contains the constraint-verification audit, k-climbing log, and theoretical-bound writeup. Not part of the public artifact.

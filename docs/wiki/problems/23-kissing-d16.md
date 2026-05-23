@@ -10,7 +10,7 @@ tier: C
 concepts_invoked: [kissing-number.md, sphere-packing.md, first-order-link-tangent-test.md]
 techniques_used: [first-order-link-tangent-test.md]
 findings_produced: []
-private_tracking: ../../mb/tracking/problem-23-kissing-d16/
+private_tracking: ../../mb/problems/23-kissing-d16/
 ---
 
 # Problem 23 — Kissing Number in Dimension 16 (n=4321)
@@ -48,4 +48,4 @@ None yet.
 - Conway and Sloane, "Sphere Packings, Lattices and Groups."
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-23-kissing-d16/` contains the link-projection survey and the BW_16 SOTA archive. Not part of the public artifact.
+For owner's reference: `mb/problems/23-kissing-d16/` contains the link-projection survey and the BW_16 SOTA archive. Not part of the public artifact.

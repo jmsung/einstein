@@ -17,7 +17,7 @@ This is also the closed loop. Submission to the arena is the *fourth* check, but
 - After any optimizer reports a new best score, run check #2 (exact reimplementation) BEFORE updating the tracking log.
 - Run check #3 (analytical / different method) before any submission decision. If no analytical bound exists for the problem, use a structurally different optimizer or a higher-precision computation (mpmath at 60 dps).
 - For float-precision-critical problems (P5, P6, P11, P14, P17), check #2 = mpmath at sufficient dps (typically 50–80).
-- Document the three numbers and the agreement (or disagreement) in `mb/tracking/<problem>/experiment-log.md`.
+- Document the three numbers and the agreement (or disagreement) in `mb/<problem>/experiment-log.md`.
 
 **Disagreement protocol:**
 - Two-way mismatch → bug. Stop. Find it.

@@ -14,7 +14,7 @@ tier: S
 concepts_invoked: [autocorrelation-inequality.md, fractional-programming-dinkelbach.md, parameterization-selection.md, parameterization-induced-rank-deficiency.md, sidon-sets.md]
 techniques_used: [cross-resolution-basin-transfer.md, dinkelbach-fractional-programming.md, larger-n-cascade.md, gpu-decision-framework.md]
 findings_produced: [optimizer-recipes.md, gpu-modal-compute.md, p2-peak-locking-hessian-mechanism.md]
-private_tracking: ../../mb/tracking/problem-3-autocorrelation/
+private_tracking: ../../mb/problems/3-autocorrelation/
 ---
 
 # Problem 3 — Second Autocorrelation Inequality
@@ -60,4 +60,4 @@ High-resolution solutions downsampled to target resolution create structurally n
 - See `source/2025-jaech-autoconvolution.md` and related distillations.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-3-autocorrelation/` contains experiment log and the cross-resolution transplant recipe. Not part of the public artifact.
+For owner's reference: `mb/problems/3-autocorrelation/` contains experiment log and the cross-resolution transplant recipe. Not part of the public artifact.

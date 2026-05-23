@@ -10,7 +10,7 @@ tier: B
 concepts_invoked: [sphere-packing.md, basin-rigidity.md, symmetry-and-fundamental-domain.md, provable-floor-and-frozen-problems.md]
 techniques_used: [basin-hopping-multistart.md, mpmath-ulp-polish.md, parallel-tempering-sa.md]
 findings_produced: [frozen-problem-triage.md]
-private_tracking: ../../mb/tracking/problem-10-thomson/
+private_tracking: ../../mb/problems/10-thomson/
 ---
 
 # Problem 10 — Thomson Problem (n=282)
@@ -50,4 +50,4 @@ Magic-number Thomson configurations (icosadeltahedral, n=282) sit at proven/puta
 - Caspar-Klug icosadeltahedral triangulation theory.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-10-thomson/` contains the basin diagnostic and the frozen-problem rationale. Not part of the public artifact.
+For owner's reference: `mb/problems/10-thomson/` contains the basin diagnostic and the frozen-problem rationale. Not part of the public artifact.

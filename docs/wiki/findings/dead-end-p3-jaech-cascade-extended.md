@@ -7,7 +7,7 @@ related_problems: [P3]
 related_concepts: [autocorrelation-inequality.md, parameterization-selection.md]
 related_findings: [optimizer-recipes.md]
 cites:
-  - ../../mb/tracking/problem-3-autocorrelation/strategy.md
+  - ../../mb/problems/3-autocorrelation/strategy.md
   - ../../source/2025-jaech-autoconvolution.md
 ---
 
@@ -41,7 +41,7 @@ This corroborates the strategy.md observation that "100k and 1.6M solutions live
 ## What this rules out
 
 - **Path (1) of the "ultimate limit" agenda** is closed: extending the upsampling cascade does not by itself find a higher basin from random init. The 0.91 from-scratch ceiling is *structural*, not an artifact of the existing 50k cap.
-- By inference (and per `mb/tracking/problem-3-autocorrelation/strategy.md` Campaign 3 dead-ends): the 0.96272 result requires the cross-resolution transplant from a public high-resolution source. The transplant has been thoroughly explored via every threshold, every interpolation method, every refinement variant. It tops at 0.96272.
+- By inference (and per `mb/problems/3-autocorrelation/strategy.md` Campaign 3 dead-ends): the 0.96272 result requires the cross-resolution transplant from a public high-resolution source. The transplant has been thoroughly explored via every threshold, every interpolation method, every refinement variant. It tops at 0.96272.
 
 ## What might still work (the residue)
 

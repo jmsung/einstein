@@ -10,7 +10,7 @@ tier: C
 concepts_invoked: []
 techniques_used: []
 findings_produced: []
-private_tracking: ../../mb/tracking/problem-21-lean-sum-formula/
+private_tracking: ../../mb/problems/21-lean-sum-formula/
 ---
 
 # Problem 21 — Lean Sum Formula
@@ -43,4 +43,4 @@ None.
 - Mathlib4 `Finset.sum_range_succ`.
 
 ## Private tracking
-For owner's reference: `mb/tracking/problem-21-lean-sum-formula/` contains the proof and a small log. Not part of the public artifact.
+For owner's reference: `mb/problems/21-lean-sum-formula/` contains the proof and a small log. Not part of the public artifact.

@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 
 SOTA_PATH = Path(
-    "/Users/jongmin/projects/einstein/mb/tracking/problem-19-difference-bases/"
+    "/Users/jongmin/projects/einstein/mb/problems/19-difference-bases/"
     "solutions/sota-rank01-CHRONOS-score2.6390274695.json"
 )
 LAM = 8011  # SOTA's lambda

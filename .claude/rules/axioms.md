@@ -31,7 +31,7 @@ The repo + wiki *is* the publication channel — auditable, version-controlled, 
 Solutions are the most important artifact. Never lose a solution.
 
 - **When**: after any optimizer run that produces a new record or competitive score; before any destructive operation; after arena submission; during `/worktree-done`.
-- **Where**: `mb/tracking/problem-{id}-{slug}/solutions/` with filename `solution-{branch}-{score}.json`. Maintain a `solution-best.json` symlink/copy.
+- **Where**: `mb/problems/{id}-{slug}/solutions/` with filename `solution-{branch}-{score}.json`. Maintain a `solution-best.json` symlink/copy.
 - **Reproduction recipe** in tracking `strategy.md`: exact command, key params (seeds, iterations, phase order), expected score range, time estimate.
 
 **Why L0:** solutions are the crystallized output of long compute campaigns. Loss is irrecoverable; cost is high. The publication-layer rule (`scripts/promote_to_mb.py`) keeps the publication layer clean by construction.
