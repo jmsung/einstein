@@ -64,6 +64,7 @@ ACTIONABLE_CLASSIFICATIONS = {"under-sourced", "missing-page"}
 MAX_SLUG_LEN = 60
 ARXIV_RATE_LIMIT_SECONDS = 3.5  # arxiv.org policy: ≥3 s between API hits
 DEFAULT_VOCAB_PATH = _TOOLS / "concept-search-terms.yaml"
+DEFAULT_AUTHORS_PATH = _TOOLS / "seed-authors.yaml"
 
 
 # ---------------- pure helpers ----------------
@@ -249,6 +250,165 @@ def _build_vocab_query(phrases: list[str]) -> str:
     kw_query = " OR ".join(f'all:"{p}"' for p in cleaned)
     cat_query = " OR ".join(f"cat:{c}" for c in MATH_CATEGORIES)
     return f"({kw_query}) AND ({cat_query})"
+
+
+# ---------------- author + category sweep helpers ----------------
+
+
+def _load_authors(path: Path) -> dict[str, list[str]]:
+    """{category: [author-name, ...]} — same shape as vocab loader."""
+    if not Path(path).is_file():
+        return {}
+    if yaml is None:  # pragma: no cover
+        return {}
+    data = yaml.safe_load(Path(path).read_text()) or {}
+    return {k: [str(a) for a in v] for k, v in data.items() if isinstance(v, list)}
+
+
+def _build_author_query(author: str) -> str:
+    """Build an arxiv query: au:"Name" AND (cat:math.* OR ...)."""
+    cat_query = " OR ".join(f"cat:{c}" for c in MATH_CATEGORIES)
+    return f'au:"{author}" AND ({cat_query})'
+
+
+def _arxiv_id_stem(abs_url: str) -> str:
+    """Pull the bare arxiv id from any abs/pdf URL — drops vN suffix.
+
+    'http://arxiv.org/abs/1234.5678v1' → '1234.5678'
+    'https://arxiv.org/pdf/2604.25850.pdf' → '2604.25850'
+    """
+    m = re.search(r"arxiv\.org/(?:abs|pdf)/([^v?.]+(?:\.[^v?]+)?)", abs_url)
+    if not m:
+        return abs_url
+    stem = m.group(1)
+    # Strip trailing version suffix like v1, v2
+    stem = re.sub(r"v\d+$", "", stem)
+    # Strip pdf extension
+    stem = re.sub(r"\.pdf$", "", stem)
+    return stem
+
+
+def _existing_source_urls(source_dir: Path) -> set[str]:
+    """Scan docs/source/*.md frontmatter for arxiv ids already ingested."""
+    seen: set[str] = set()
+    if not source_dir.is_dir():
+        return seen
+    for path in source_dir.glob("*.md"):
+        try:
+            text = path.read_text()
+        except OSError:
+            continue
+        m = re.search(r"^source_url:\s*(.+)$", text, re.MULTILINE)
+        if not m:
+            continue
+        url = m.group(1).strip().strip("\"'")
+        seen.add(url)
+        # Also store the bare arxiv id for loose-match
+        stem = _arxiv_id_stem(url)
+        if stem and stem != url:
+            seen.add(stem)
+            seen.add(f"arxiv:{stem}")
+    return seen
+
+
+def _filter_already_ingested(candidates: list[dict], seen: set[str]) -> list[dict]:
+    """Drop candidates whose arxiv abs URL (or id stem) is already in `seen`."""
+    fresh: list[dict] = []
+    for c in candidates:
+        url = c.get("abs_url", "")
+        stem = _arxiv_id_stem(url)
+        # Check both raw URL and stem (versions diverge: v1 vs v2 same paper)
+        if url in seen:
+            continue
+        if stem and any(stem in s or s in stem for s in seen):
+            continue
+        fresh.append(c)
+    return fresh
+
+
+def author_sweep(
+    *,
+    authors_yaml: Path,
+    out_path: Path,
+    top_n: int = 5,
+    rate_limit_seconds: float = ARXIV_RATE_LIMIT_SECONDS,
+    source_dir: Path | None = None,
+    auto_approve_threshold: float | None = None,
+) -> None:
+    """Iterate over (category, author) pairs from authors yaml; arxiv au: search
+    per author; filter against existing source/; write candidates JSON.
+
+    Output shape matches `propose()` so `apply()` can consume it directly:
+    each (category, author) becomes one block with `kind: author-sweep`.
+    """
+    authors = _load_authors(authors_yaml)
+    if not authors:
+        log.warning("no authors loaded from %s", authors_yaml)
+        return
+
+    src_dir = source_dir if source_dir is not None else (_REPO / "docs" / "source")
+    seen = _existing_source_urls(src_dir)
+    log.info("author-sweep: %d known source URLs to dedup against", len(seen))
+
+    pairs: list[tuple[str, str]] = [(cat, a) for cat, authors_list in authors.items() for a in authors_list]
+    log.info("author-sweep: %d (category, author) queries", len(pairs))
+
+    blocks: list[dict] = []
+    for i, (category, author) in enumerate(pairs):
+        query = _build_author_query(author)
+        log.info("[%d/%d] %s — %s", i + 1, len(pairs), author, category)
+        try:
+            results = search_arxiv(query, max_results=top_n)
+        except Exception as e:
+            log.error("    search failed: %s", e)
+            results = []
+
+        # Sort newest first so the top-N is the latest work
+        results.sort(key=lambda r: r.get("year", ""), reverse=True)
+        fresh = _filter_already_ingested(results, seen)
+        log.info("    %d hits → %d new", len(results), len(fresh))
+
+        n_auto = 0
+        for r in fresh:
+            r["slug"] = _slug_from_metadata(
+                title=r["title"], year=r.get("year", ""), authors=r.get("authors", "")
+            )
+            r["approved"] = None
+            r["relevance"] = round(
+                _relevance_score(candidate=r, phrases=[author, category.replace("-", " ")]),
+                4,
+            )
+            if auto_approve_threshold is not None and r["relevance"] >= auto_approve_threshold:
+                r["approved"] = True
+                r["auto_approved"] = True
+                n_auto += 1
+        if auto_approve_threshold is not None and n_auto:
+            log.info("    auto-approved %d/%d", n_auto, len(fresh))
+
+        # Track every fresh URL so the next author's results don't double-up
+        for r in fresh:
+            seen.add(r["abs_url"])
+            seen.add(_arxiv_id_stem(r["abs_url"]))
+
+        blocks.append({
+            "kind": "author-sweep",
+            "category": category,
+            "author": author,
+            "query": query,
+            "candidates": fresh,
+        })
+
+        if i + 1 < len(pairs) and rate_limit_seconds > 0:
+            time.sleep(rate_limit_seconds)
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps({
+        "generated_at": dt.date.today().isoformat(),
+        "concepts": blocks,
+    }, indent=2) + "\n")
+    total = sum(len(b["candidates"]) for b in blocks)
+    log.info("author-sweep complete: %d fresh candidates across %d blocks → %s",
+             total, len(blocks), out_path)
 
 
 # ---------------- network I/O (mockable seams) ----------------
@@ -496,6 +656,16 @@ def main(argv: list[str] | None = None) -> int:
                                 "as approved (skip human gate for high-confidence "
                                 "matches). Typical: 0.5.")
 
+    p_author = sub.add_parser("author-sweep",
+                              help="Search arxiv per author (seed-authors.yaml); "
+                                   "dedup against existing source/; write candidates.")
+    p_author.add_argument("--authors", type=Path, default=DEFAULT_AUTHORS_PATH)
+    p_author.add_argument("--out", type=Path, required=True)
+    p_author.add_argument("--top-n", type=int, default=5)
+    p_author.add_argument("--source-dir", type=Path, default=None)
+    p_author.add_argument("--auto-approve-above", type=float, default=None,
+                          metavar="THRESHOLD")
+
     p_apply = sub.add_parser("apply", help="Download approved candidates + write source/ entries.")
     p_apply.add_argument("--candidates", type=Path, required=True)
     p_apply.add_argument("--docs-root", type=Path, default=None)
@@ -507,6 +677,12 @@ def main(argv: list[str] | None = None) -> int:
         propose(coverage_json=args.coverage, out_path=args.out, top_n=args.top_n,
                 vocab_path=args.vocab,
                 auto_approve_threshold=args.auto_approve_above)
+    elif args.cmd == "author-sweep":
+        author_sweep(
+            authors_yaml=args.authors, out_path=args.out, top_n=args.top_n,
+            source_dir=args.source_dir,
+            auto_approve_threshold=args.auto_approve_above,
+        )
     elif args.cmd == "apply":
         results = apply(candidates_json=args.candidates,
                         docs_root=args.docs_root, dry_run=args.dry_run)
