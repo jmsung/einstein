@@ -6,14 +6,14 @@ related_problems: [P6, P9, P11, P22]
 related_techniques: []
 related_findings: []
 cites:
-  - ../source/2017-goncalves-hermite-uncertainty.md
-  - ../source/2019-cohn-uncertainty-d12.md
-  - ../source/2024-cohn-li-kissing.md
-  - ../source/1995-wiles-fermat.md
-  - ../source/1990-ribet-level-lowering.md
-  - ../source/1987-serre-mod-representations.md
-  - ../source/2005-diamond-modular-forms.md
-  - ../source/2026-angdinata-ramanujan-tau-primes.md
+  - ../../source/2017-goncalves-hermite-uncertainty.md
+  - ../../source/2019-cohn-uncertainty-d12.md
+  - ../../source/2024-cohn-li-kissing.md
+  - ../../source/1995-wiles-fermat.md
+  - ../../source/1990-ribet-level-lowering.md
+  - ../../source/1987-serre-mod-representations.md
+  - ../../source/2005-diamond-modular-forms.md
+  - ../../source/2026-angdinata-ramanujan-tau-primes.md
   - ../personas/atiyah.md
   - ../personas/cohn.md
   - ../personas/conway.md

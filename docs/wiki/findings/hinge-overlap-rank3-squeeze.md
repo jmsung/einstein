@@ -5,10 +5,6 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - ../problem-22-kissing-d12/strategy.md
-  - ../problem-22-kissing-d12/experiment-log.md
-  - ../problem-23-kissing-d16/strategy.md
-  - ../problem-23-kissing-d16/experiment-log.md
   - p22-d12-construction-survey.md
 ---
 
@@ -55,7 +51,7 @@ The duplicate is a **strict local min** iff `min_u S(u) > 1` where `S(u) = Σ [�
 
 **P22 result**: `min S(u) ≈ 8.02` (8x above the threshold of 1), strict first-order local min. This was the analytical confirmation that motivated abandoning the rank-#1 search after 60M+ exhaustive samples.
 
-**P23 reproduction (2026-04-25, branch `js/feat/p23-kissing-d16`)**: same pattern at d=16, n=4321, |link|=280. `min S(u) ≈ 16.67` (14× above threshold `2/√3 ≈ 1.155`) — even more rigid than P22 because the link is denser (280 vs ~24). Squeeze recipe with `δ=1e-7` produced score 2.0000026872584407 (submission id 2195) for **rank #2** (gap to bronze 2.873843 ≈ 0.87 — defensive moat far wider than P22's bronze-2.0028 gap). The pattern now confirmed across two dimensions (d=12, d=16); for any future kissing-tight problem use the squeeze recipe to lock rank-2 or rank-3 without spending GPU on rank-#1 attacks.
+**P23 reproduction (2026-04-25, branch `js/feat/p23-kissing-d16`; problem retired from arena 2026-05-23 — see [`retired-23-kissing-d16.md`](../problems/retired-23-kissing-d16.md))**: same pattern at d=16, n=4321, |link|=280. `min S(u) ≈ 16.67` (14× above threshold `2/√3 ≈ 1.155`) — even more rigid than P22 because the link is denser (280 vs ~24). Squeeze recipe with `δ=1e-7` produced score 2.0000026872584407 (submission id 2195) for **rank #2** (gap to bronze 2.873843 ≈ 0.87 — defensive moat far wider than P22's bronze-2.0028 gap). The pattern now confirmed across two dimensions (d=12, d=16); for any future kissing-tight problem use the squeeze recipe to lock rank-2 or rank-3 without spending GPU on rank-#1 attacks.
 
 **Generalization**: this analysis is the equivalent of "compute the gradient at SOTA and check it's zero" but for hinge-overlap with concave penalty (no smooth gradient at the duplicate). It strictly subsumes "polish from SOTA and see if you escape" because it gives the answer in seconds without any optimizer-tuning lottery. Run this BEFORE committing GPU compute to a kissing-tight problem.
 

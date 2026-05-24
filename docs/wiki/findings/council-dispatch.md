@@ -6,7 +6,6 @@ level: 1
 source_type: agent_analysis
 cites:
   - ../personas/_synthesis.md
-  - knowledge.yaml
 ---
 
 # Council of Mathematicians — Dispatch Patterns

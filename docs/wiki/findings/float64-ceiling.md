@@ -7,7 +7,7 @@ source_type: agent_analysis
 synthesized_into: ../concepts/float64-ceiling.md
 cites:
   - ../concepts/float64-ceiling.md
-  - ../source/2025-novikov-alphaevolve.md
+  - ../../source/2025-novikov-alphaevolve.md
 ---
 
 > **See also**: [`concepts/float64-ceiling.md`](../concepts/float64-ceiling.md) — the abstract concept distilled from the lessons below. This finding is the **provenance**: empirical per-problem episodes that grounded the concept. Read the concept first; come here for the receipts.

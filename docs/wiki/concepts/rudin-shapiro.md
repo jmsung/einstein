@@ -9,7 +9,7 @@ related_personas: [gauss.md, euler.md, ramanujan.md]
 cites:
   - sidon-sets.md
   - parameterization-selection.md
-  - ../source/2020-balister-flat-littlewood.md
+  - ../../source/2020-balister-flat-littlewood.md
 ---
 
 # Rudin–Shapiro polynomials

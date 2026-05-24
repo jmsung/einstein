@@ -11,8 +11,8 @@ cites:
   - sphere-packing.md
   - kissing-number.md
   - modular-forms-magic-function.md
-  - ../source/2024-delaat-kissing-sdp.md
-  - ../source/2024-cohn-li-kissing.md
+  - ../../source/2024-delaat-kissing-sdp.md
+  - ../../source/2024-cohn-li-kissing.md
 ---
 
 # Cohn–Elkies LP bound (and the magic-function dual certificate)

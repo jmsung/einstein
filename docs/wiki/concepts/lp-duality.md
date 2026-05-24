@@ -6,9 +6,9 @@ related_problems: [P1, P6, P7, P11, P22, P23]
 related_techniques: [lp-cutting-plane-warmstart.md, sdp-flag-algebra.md]
 related_findings: [prime-number-theorem-lp.md, lp-solver-scaling.md]
 cites:
-  - ../source/2015-tao-sieve-theory-notes.md
-  - ../source/2024-cohn-li-kissing.md
-  - ../source/2024-delaat-kissing-sdp.md
+  - ../../source/2015-tao-sieve-theory-notes.md
+  - ../../source/2024-cohn-li-kissing.md
+  - ../../source/2024-delaat-kissing-sdp.md
   - ../findings/prime-number-theorem-lp.md
   - ../personas/atiyah.md
   - ../personas/cohn.md
