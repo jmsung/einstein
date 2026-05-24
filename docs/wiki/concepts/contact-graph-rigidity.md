@@ -2,7 +2,8 @@
 type: concept
 author: agent
 drafted: 2026-05-02
-related_problems: [P5, P11, P14, P16, P17a, P17b]
+revised: 2026-05-23
+related_problems: [P5, P11, P14, P16, P17a, P17b, P22]
 related_techniques: [slsqp-active-pair-polish.md, mpmath-ulp-polish.md]
 related_findings: [basin-rigidity.md, packing-techniques.md, float64-ceiling.md]
 cites:
@@ -10,6 +11,7 @@ cites:
   - ../findings/packing-techniques.md
   - ../personas/archimedes.md
   - reduced-hessian.md
+  - ../../source/2011-cohn-rigidity-spherical-codes.md
 related_personas: [archimedes.md]
 ---
 
@@ -79,8 +81,26 @@ In arena practice, contact-graph rigidity tells you to:
 2. **P14 Circle Packing in Square (n=26)** — Packomania-known-optimal contact graph. All top agents converge to the same contact graph; competition reduces to float64 polish quality.
 3. **P17b Circles in Rectangle (n=21)** — KKT 0-DOF: 64 active constraints on 64 variables. Exactly contact-graph-rigid (no slack, no over-determination). Arena-tolerance SLSQP exploits the strict tolerance band for the only available improvement.
 
+## Literature: Cohn et al. on spherical-code rigidity
+
+The exact LP formulation of contact-graph rigidity on the sphere is in **Cohn–Jiao–Kumar–Torquato 2011** ([`source/2011-cohn-rigidity-spherical-codes.md`](../../source/2011-cohn-rigidity-spherical-codes.md)). The setup is identical to what JSAgent uses for P11:
+
+```
+perturb x_i → x_i + ε y_i  with  ⟨x_i, y_i⟩ = 0  (stay on sphere),
+constraints: ⟨x_i, y_j⟩ + ⟨x_j, y_i⟩ ≤ 0  on every contact pair (i,j),
+rigid iff every feasible y is an infinitesimal rotation (y_i = Φ x_i, Φ skew-symmetric).
+```
+
+Two facts from the paper that directly apply to arena work:
+
+1. **Connelly–Roth–Whiteley** (cited in §2): *infinitesimal* jamming $\Rightarrow$ finite jamming via tensegrity frameworks with bars to origin and struts between neighbors. Practical implication — the LP certificate (cheap) implies the basin-floor certificate (otherwise verified by mpmath polish). The two checks should agree; disagreement means an off-by-one in the contact tolerance.
+2. **$K_{12}$ is not jammed.** The Coxeter–Todd kissing configuration in $\mathbb{R}^{12}$ is *not* infinitesimally jammed, despite being a record. The paper exploits this non-jamming to construct *new* kissing-number records in $\mathbb{R}^{25}$–$\mathbb{R}^{31}$ (e.g. $230872$ in $\mathbb{R}^{31}$). **Cautionary tale for P22**: "current record" does not entail "rigid"; an LP test could reveal a non-trivial deformation and a route to improvement. The exact-rational `QSopt_ex` LP is the certificate of record.
+
+The paper also lists configurations that *are* infinitesimally jammed: $D_n$ for $n \ge 4$, $E_6, E_7, E_8$, Barnes–Wall $\Lambda_{16}$, and all best known kissing configs in dimensions 4–12. These match the arena's empirical "frozen" set.
+
 ## Related
 
 - Concepts: [basin-rigidity](basin-rigidity.md), [sphere-packing](sphere-packing.md), [kissing-number](kissing-number.md), [symmetry-and-fundamental-domain](symmetry-and-fundamental-domain.md), [float64-ceiling](float64-ceiling.md), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md).
 - Techniques: [slsqp-active-pair-polish](../techniques/slsqp-active-pair-polish.md), [mpmath-ulp-polish](../techniques/mpmath-ulp-polish.md).
 - Findings: [basin-rigidity](../findings/basin-rigidity.md), [packing-techniques](../findings/packing-techniques.md), [float64-ceiling](../findings/float64-ceiling.md).
+- Sources: [Cohn–Jiao–Kumar–Torquato 2011](../../source/2011-cohn-rigidity-spherical-codes.md).

@@ -2,8 +2,9 @@
 type: technique
 author: agent
 drafted: 2026-05-02
-related_concepts: []
-related_problems: [P13, P14, P16, P17a, P17b]
+revised: 2026-05-23
+related_concepts: [basin-rigidity.md]
+related_problems: [P5, P13, P14, P15, P16-retired, P17a-retired, P17b-renamed-P18]
 compute_profile: [local-cpu, modal-gpu]
 cost_estimate: "minutes (10 BH seeds) to ~3 min Modal (44K multistart)"
 hit_rate: "TBD"
@@ -63,10 +64,31 @@ best = min(results, key=lambda r: r[0])
 - 5000 seeds: ~30 min local 16-core multiprocess.
 - 44K seeds across 8 strategies: ~3 min wall on Modal with 200 parallel containers, ~$3.
 
+## Case study: P16 Heilbronn-Convex (retired, dogfooded into Heilbronn-family wisdom)
+
+Distilled from [`retired-16-heilbronn-convex.md`](../problems/retired-16-heilbronn-convex.md). The arena P16 (place 14 points to maximize min-triangle-area / convex-hull-area) was retired 2026-05-23, but the multistart recipe transfers cleanly to **[P15 Heilbronn-Triangles](../problems/15-heilbronn-triangles.md)** (the live successor, n=11 in a triangular region) and to any future Heilbronn-family revival.
+
+**Setup that JSAgent faced.** Two pre-existing basins occupied by the top of the leaderboard:
+- 6-way tied group at 16–17 active triangles (AlphaEvolve Construction 2).
+- Solo rank-#1 holder (capybara007) at 20 active triangles.
+
+Both warm-start-from-leader polishes converged to their respective float64 floors. The textbook BH would have re-explored either group's basin and returned the same floor.
+
+**The discovery pattern**:
+
+1. **Leader-averaging entry seed** (not on the generic 8-strategy list above) — averaged the AlphaEvolve and capybara solutions point-wise (post affine-canonicalization), then polished. This seed *consistently* dropped into a third basin the cold-start strategies missed.
+2. **6 diverse seed strategies** running in parallel: `random`, `grid`, `lattice`, `symmetric`, `near-leader`, `near-runner-up`. (P16 used 6, not the generic 8; the missing two were `Halton` and `topology-swap`, both ineffective on the affine-normalized landscape.)
+3. **Scale gate**: 5000+ trials across the 6 strategies. The 21-active sub-basin showed up in <1% of trials — the leader-averaging seed converged to it ~20× more often than cold-starts.
+4. **Yield**: a distinct 21-active basin at `+9.001e-9` above the tied group, `-5.76e-11` below the #1 ceiling. Submitted at rank #2.
+
+**Phased polish pipeline** (post-discovery, to lock the basin to the float64 floor): LSE soft-min Adam → SLSQP epigraph with affine gauge → CMA-ES (sigma-collapse for second-order optimality) → D1-symmetric DE → null-space walk → rotation lottery (2M+ rotations, mostly futile on Heilbronn due to `minImprovement > ulp` — see [rotation-lottery pitfalls](multistart-with-rotation-lottery.md#pitfalls)).
+
+**Transferable lesson**: when *both* leader basins polish to the same family of float64 floors, the **leader-averaging seed is the strongest single discovery move**. Add it as a 9th strategy in the generic list above; deploy whenever rank #1 and rank #2 are in conflicting basins.
+
 ## References
 
 - `wiki/findings/optimizer-recipes.md` (#69 — multi-seed BH reveals warm-start polish sub-basins).
 - `wiki/findings/basin-rigidity.md` (lesson #84 — 44K multistart for P5 global-optimality proof).
 - knowledge.yaml strategies `distinct_basin_multistart`, `basin_hopping`; pattern `multi-seed-basin-hopping-for-warm-start-substructure`.
 - `mb/problems/13-edges-triangles/experiment-log.md` (seed 11 deeper basin).
-- `mb/problems/16-heilbronn-convex/strategy.md` (21-active distinct-basin rank-#2).
+- [`retired-16-heilbronn-convex.md`](../problems/retired-16-heilbronn-convex.md) + `mb/problems/16-heilbronn-convex/strategy.md` (21-active distinct-basin rank-#2; case study above).
