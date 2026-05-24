@@ -17,9 +17,11 @@ cites:
 
 # M5 Max utilization strategy — what 18-core + MPS + 128 GB actually buys
 
+> **Update 2026-05-24**: Modal cloud GPU is no longer in active use. Per the calibration below, the M5 Max covers everything we've actually needed in practice — including workloads the original routing recommended Modal for. The "→ Modal" recommendations in section D/E below are kept as forward-looking conditions for re-enabling cloud, NOT as current practice. Default is now: try local first; escalate only on a measured precision/throughput failure.
+
 ## TL;DR
 
-Apple M5 MacBook Pro Max (18 cores, 128 GB unified memory, MPS GPU) is **two distinct machines** for our purposes — a 418-GFLOPS f64 CPU **and** a 14.9-TFLOPS f32 GPU — sharing one address space. The router should prefer local for almost everything except sustained float64 parallel tempering. Three counter-intuitive findings make the difference:
+Apple M5 MacBook Pro Max (18 cores, 128 GB unified memory, MPS GPU) is **two distinct machines** for our purposes — a 418-GFLOPS f64 CPU **and** a 14.9-TFLOPS f32 GPU — sharing one address space. **The router now defaults to local for everything**; Modal re-enable requires a documented measurement. Three counter-intuitive findings make the difference:
 
 1. **MPS is competitive with Modal A100 for f32 workloads.** 14.9 TFLOPS measured vs ~10–12 TFLOPS A100 effective. Zero $/hr, no startup overhead, no PCIe transfer. Any float32 batched workload (basin-hopping pop, CMA-ES f32, large multistart pop with parallel evals) should route here unless you specifically need f64.
 2. **Apple Accelerate already saturates 18 cores at the BLAS level — naive `mp.Pool` workers fight each other.** Measured 1.4× speedup across 18 workers running BLAS-heavy numpy. Genuine multiprocess linearity (≈ 16× on 18 cores) requires *single-thread BLAS workers* (env vars set in the parent before numpy import) OR Python-bound per-worker payloads.
