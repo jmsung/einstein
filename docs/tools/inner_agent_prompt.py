@@ -46,6 +46,10 @@ DEFAULT_CYCLE_LOG = _REPO / "docs" / "agent" / "cycle-log.md"
 DEFAULT_SKILL_LIBRARY = _REPO / "docs" / "agent" / "skill-library.md"
 DEFAULT_EXPERIMENT_DIR = _REPO.parent / "mb" / "problems"
 
+# Single source of truth for the schema string — parser + prompt share it.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from inner_agent_output import OUTPUT_SCHEMA  # noqa: E402
+
 _FM_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 
 
@@ -122,18 +126,6 @@ def _cycle_rows_for(cycle_log: Path, problem_prefix: str, n: int = 10) -> list[C
 
 
 # ---------------- prompt sections ----------------
-
-
-OUTPUT_SCHEMA = """{
-  "strategy": "<one-line name of the approach tried this cycle>",
-  "score": <float | null>,
-  "payload": <object | null — solution payload for auto_submit, per-problem shape>,
-  "dead_end_finding": <"docs/wiki/findings/dead-end-..." | null>,
-  "new_questions": [<paths under docs/wiki/questions/ written this cycle>],
-  "wiki_writes": [<all paths written under docs/wiki/ or mb/ this cycle>],
-  "converged": <bool — true if no plausible next step remains>,
-  "notes": "<<= 200 chars, single line, for cycle-log notes column>"
-}"""
 
 
 TOOL_ALLOWLIST = """- Read, Grep
