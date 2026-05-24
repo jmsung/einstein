@@ -56,14 +56,13 @@ log = logging.getLogger("autonomous_loop")
 FM_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 ROW_ID_RE = re.compile(r"^\|\s*(\d+)\s*\|")
 
-TIER_ORDER = {"S": 0, "A": 1, "B": 2, "C": 3}
-# Statuses considered "ready to attempt". Anything else (frozen, conquered,
-# blocked, hidden, shelved, proximity-guard) is skipped by default.
-ACTIVE_STATUSES = {"open", "seed"}
-ACTIVE_PATTERNS = (
-    re.compile(r"^rank-\d+$"),         # rank-1, rank-2, rank-3
-    re.compile(r"^rank-\d+-tied$"),    # rank-1-tied
-)
+# Statuses considered permanently inactive — only `retired` (the 5 dead pages
+# archived 2026-05-23). Everything else — frozen, hidden, blocked, conquered,
+# rank-N-frozen, shelved, rank-N-frozen-by-proximity-guard — is still a live
+# arena problem. A more powerful agent should attempt every live problem in
+# id order; let inner-loop convergence-detect / strategy-picker decide if
+# real work is feasible. Local status often drifts from arena state anyway.
+SKIP_STATUSES = {"retired"}
 
 
 # ---------------- data model ----------------
@@ -157,19 +156,21 @@ def load_problems(problems_dir: Path) -> list[Problem]:
 
 
 def is_active(problem: Problem) -> bool:
-    """True if the problem is ready to attempt; False if frozen/conquered/etc."""
-    s = problem.status
-    if s in ACTIVE_STATUSES:
-        return True
-    return any(p.fullmatch(s) for p in ACTIVE_PATTERNS)
+    """True unless the problem is permanently inactive (retired)."""
+    return problem.status not in SKIP_STATUSES
 
 
 def build_queue(problems: list[Problem]) -> list[Problem]:
-    """Return active problems ordered by tier (S→C) then problem_id ascending."""
-    active = [p for p in problems if is_active(p)]
+    """Return live problems ordered by problem_id ascending.
+
+    Goes through every live arena problem regardless of local status (frozen,
+    conquered, blocked, hidden, etc.) — only `retired` is filtered. Tier-based
+    prioritization removed: a powerful agent should attempt every problem in
+    id order and let inner-loop logic decide viability.
+    """
     return sorted(
-        active,
-        key=lambda p: (TIER_ORDER.get(p.tier, 99), p.problem_id),
+        (p for p in problems if is_active(p)),
+        key=lambda p: p.problem_id,
     )
 
 
@@ -241,30 +242,28 @@ def next_cycle_id(cycle_log: Path) -> int:
 
 
 def inner_attempt(problem: Problem, dry_run: bool = False,
-                  skill_library: Path = DEFAULT_SKILL_LIBRARY) -> dict:
+                  skill_library: Path = DEFAULT_SKILL_LIBRARY,
+                  dispatcher: Callable[..., object] | None = None) -> dict:
     """Reflection chain for one cycle attempt.
 
     Order of operations:
       1. category lookup (problem_id → category)
-      2. strategy_picker reads skill-library → (prior, novel) pick per the
-         autoresearch 1+1 rule
-      3. Execute step is intentionally a placeholder — per-problem optimizer
-         integration is Phase-5 work (the orchestrator can't know how to
-         invoke `scripts/<problem>/optimize.py` without the per-problem
-         entry point being canonicalized).
+      2. strategy_picker reads skill-library → (prior, novel) pick
+      3. EXECUTE: optimizer_dispatch.dispatch(problem_id, strategy) — if the
+         problem has a manifest entry, invoke its optimizer and parse score.
+         If no manifest entry → fall through to strategy-picked-no-execution
+         (placeholder outcome, was the only behavior pre-A0).
 
-    The cycle-log row captures whatever signal we did produce: the strategy
-    pick and the rationale. A subsequent Phase-5 commit will replace the
-    placeholder execute with a real per-problem dispatch.
+    `dispatcher` is a test seam — defaults to `optimizer_dispatch.dispatch`.
     """
     log.info("inner_attempt — problem=%s tier=%s status=%s",
              problem.display, problem.tier, problem.status)
 
     notes_parts: list[str] = []
+    chosen_strategy: str | None = None
     if strategy_picker is None:
         log.warning("strategy_picker not importable — skipping strategy pick")
         notes_parts.append("strategy_picker unavailable")
-        outcome = "scaffold-no-attempt"
     else:
         category = strategy_picker.category_for(problem.problem_id)
         log.info("  category=%s", category)
@@ -275,25 +274,69 @@ def inner_attempt(problem: Problem, dry_run: bool = False,
             notes_parts.append(
                 f"prior={pick.prior.technique}({pick.prior.hit_rate:.2f})"
             )
+            chosen_strategy = pick.prior.technique
         if pick.novel is not None:
             notes_parts.append(
                 f"novel={pick.novel.technique}(finding_rate={pick.novel.finding_rate:.2f})"
             )
+            # Novel takes precedence as the strategy name passed to dispatch
+            chosen_strategy = pick.novel.technique
         if pick.prior is None and pick.novel is None:
-            outcome = "scaffold-no-attempt"
             notes_parts.append("(no library matches — council needed)")
-        else:
-            outcome = "strategy-picked-no-execution"
 
-    notes = "autonomous_loop inner_attempt — " + "; ".join(notes_parts) + (
-        ". Execute step deferred to Phase 5 per-problem optimizer integration."
-    )
+    # EXECUTE step — optimizer_dispatch
+    start_score = problem.score_current
+    end_score = problem.score_current
+    outcome = "scaffold-no-attempt"
+    runtime_hours = 0.0
+    compute_tag = "none-strategy-only"
+
+    if dispatcher is None:
+        # Lazy import — dispatch lives in src/einstein, not docs/tools
+        sys.path.insert(0, str(_REPO / "src"))
+        try:
+            from einstein.optimizer_dispatch import dispatch as _real_dispatch
+            dispatcher = _real_dispatch
+        except ImportError:
+            log.warning("optimizer_dispatch unavailable — skipping execute")
+            dispatcher = None
+
+    if dispatcher is not None and not dry_run:
+        result = dispatcher(problem_id=problem.problem_id, strategy=chosen_strategy)
+        if getattr(result, "error", None) and "no manifest entry" in result.error:
+            log.info("  no manifest entry for P%d — execute deferred",
+                     problem.problem_id)
+            notes_parts.append("dispatch: no-manifest-entry")
+            outcome = "strategy-picked-no-execution"
+        elif result.ok:
+            log.info("  dispatch ok: optimizer=%s score=%s runtime=%.1fs",
+                     result.optimizer, result.score, result.runtime_seconds)
+            notes_parts.append(
+                f"dispatch={result.optimizer} score={result.score}"
+            )
+            end_score = result.score
+            runtime_hours = result.runtime_seconds / 3600.0
+            compute_tag = "local-cpu"  # TODO: thread compute_router decision through
+            if (start_score is not None
+                    and result.score is not None
+                    and result.score < start_score):  # type: ignore[operator]
+                outcome = "improved-local"
+            else:
+                outcome = "no-change"
+        else:
+            log.warning("  dispatch failed: %s", result.error)
+            notes_parts.append(f"dispatch-failed: {result.error}")
+            outcome = "dispatch-failed"
+    elif dry_run:
+        notes_parts.append("dry-run (dispatch skipped)")
+
+    notes = "autonomous_loop inner_attempt — " + "; ".join(notes_parts)
 
     return {
-        "start_score": problem.score_current if problem.score_current is not None else "none",
-        "end_score": problem.score_current if problem.score_current is not None else "none",
-        "hours": 0.0,
-        "compute": "none-strategy-only",
+        "start_score": start_score if start_score is not None else "none",
+        "end_score": end_score if end_score is not None else "none",
+        "hours": runtime_hours,
+        "compute": compute_tag,
         "wiki_citations": 0,
         "findings_added": 0,
         "concepts_added": 0,
@@ -328,6 +371,7 @@ def run_one_problem(
     cycle_log: Path = DEFAULT_CYCLE_LOG,
     dry_run: bool = False,
     cycle_runner: CycleRunner | None = None,
+    skip_problem_ids: set[int] | None = None,
 ) -> CycleResult | None:
     """Pick the top-priority active problem and run one cycle on it.
 
@@ -335,6 +379,8 @@ def run_one_problem(
     """
     problems = load_problems(problems_dir)
     queue = build_queue(problems)
+    if skip_problem_ids:
+        queue = [p for p in queue if p.problem_id not in skip_problem_ids]
     if not queue:
         log.info("queue empty — no active problems")
         return None
@@ -431,16 +477,26 @@ def run_queue(
     cycle_log: Path = DEFAULT_CYCLE_LOG,
     max_problems: int = 1,
     dry_run: bool = False,
+    cycle_runner: CycleRunner | None = None,
 ) -> list[CycleResult]:
-    """Run up to `max_problems` cycles, one per top-priority problem."""
+    """Run up to `max_problems` cycles, one per distinct top-priority problem.
+
+    Tracks problems already cycled in this invocation so each call to
+    `run_one_problem` picks the next un-cycled problem (otherwise queue[0]
+    would re-select the same problem every iteration).
+    """
     results: list[CycleResult] = []
+    done_ids: set[int] = set()
     for i in range(max_problems):
         r = run_one_problem(
             problems_dir=problems_dir, cycle_log=cycle_log, dry_run=dry_run,
+            cycle_runner=cycle_runner,
+            skip_problem_ids=done_ids,
         )
         if r is None:
             log.info("queue exhausted after %d cycles", i)
             break
+        done_ids.add(r.problem.problem_id)
         results.append(r)
     return results
 
@@ -465,6 +521,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="Skip the run (exit 0) if cycle-log was modified within "
                              "MINUTES. Useful under cron / loop to avoid clobbering "
                              "an in-flight cycle.")
+    parser.add_argument("--discipline-once", action="store_true",
+                        help="For multi-cycle sweeps: skip per-cycle "
+                             "cycle_runner.sh (refresh_qmd, wiki_graph, "
+                             "gap_search, wiki_lint) and run it once at the "
+                             "end with the last cycle's info. Saves ~5min/"
+                             "cycle on full-queue sweeps where the wiki "
+                             "doesn't change between cycles.")
     parser.add_argument("--no-lock", action="store_true",
                         help="Skip the concurrency lockfile (use for explicit "
                              "manual concurrent runs).")
@@ -499,13 +562,24 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         max_problems = 1 if args.one_problem else args.max_problems
+        inner_runner: CycleRunner | None = None
+        if args.discipline_once and max_problems > 1:
+            inner_runner = lambda _cid, _slug: 0  # no-op for per-cycle
         results = run_queue(
             problems_dir=args.problems_dir,
             cycle_log=args.cycle_log,
             max_problems=max_problems,
             dry_run=args.dry_run,
+            cycle_runner=inner_runner,
         )
         log.info("completed %d cycles", len(results))
+        if args.discipline_once and results and not args.dry_run:
+            last = results[-1]
+            log.info("--discipline-once: running cycle_runner once at end "
+                     "(cycle %d, %s)", last.cycle_id, last.problem.file_slug)
+            rc = _shell_cycle_runner(last.cycle_id, last.problem.file_slug)
+            if rc != 0:
+                log.warning("end-of-sweep cycle_runner exited %d", rc)
         return 0
     finally:
         if fd is not None:

@@ -79,19 +79,25 @@ def test_load_problems_skips_readme_and_underscore_files(tmp_path: Path) -> None
 
 
 @pytest.mark.parametrize("status,active", [
+    # 2026-05-24: SKIP_STATUSES = {"retired"} only. Local status (frozen,
+    # conquered, hidden, blocked, etc.) often drifts from arena state — a
+    # powerful agent attempts every live problem and lets inner-loop logic
+    # decide viability rather than gating at the queue.
     ("open", True),
     ("rank-1-tied", True),
     ("rank-2", True),
     ("rank-3", True),
     ("seed", True),
-    ("conquered", False),       # already best; only re-enter on new gap
-    ("rank-2-frozen", False),   # frozen → skip
-    ("rank-5-frozen", False),
-    ("frozen", False),
-    ("blocked", False),
-    ("hidden", False),
-    ("shelved", False),
-    ("rank-3-frozen-by-proximity-guard", False),
+    ("conquered", True),        # arena may still be live; let inner loop decide
+    ("rank-2-frozen", True),
+    ("rank-5-frozen", True),
+    ("frozen", True),
+    ("blocked", True),
+    ("hidden", True),
+    ("shelved", True),
+    ("rank-3-frozen-by-proximity-guard", True),
+    # Only `retired` (5 dead pages archived 2026-05-23) is permanently inactive.
+    ("retired", False),
 ])
 def test_is_active_status_predicate(status: str, active: bool) -> None:
     p = al.Problem(problem_id=1, slug="x", tier="A", status=status,
@@ -99,10 +105,11 @@ def test_is_active_status_predicate(status: str, active: bool) -> None:
     assert al.is_active(p) is active
 
 
-# ---------------- priority ordering ----------------
+# ---------------- queue ordering ----------------
 
 
-def test_priority_orders_by_tier_then_id(tmp_path: Path) -> None:
+def test_queue_orders_by_problem_id_ascending(tmp_path: Path) -> None:
+    """Tier-based prioritization was removed 2026-05-24 — id ascending only."""
     pdir = _build_wiki_with_problems(tmp_path, [
         dict(problem_id=10, slug="b-tier-late", tier="B"),
         dict(problem_id=3, slug="s-tier-early", tier="S"),
@@ -113,29 +120,35 @@ def test_priority_orders_by_tier_then_id(tmp_path: Path) -> None:
     ])
     problems = al.load_problems(pdir)
     ordered = al.build_queue(problems)
-    # Expected: S2, S3, A5, A7, B10, C9
-    assert [p.problem_id for p in ordered] == [2, 3, 5, 7, 10, 9]
+    # Now: pure id ascending, regardless of tier
+    assert [p.problem_id for p in ordered] == [2, 3, 5, 7, 9, 10]
 
 
-def test_queue_filters_inactive(tmp_path: Path) -> None:
+def test_queue_filters_only_retired(tmp_path: Path) -> None:
+    """conquered / frozen / blocked / hidden / etc. all stay in the queue;
+    only `retired` is filtered."""
     pdir = _build_wiki_with_problems(tmp_path, [
         dict(problem_id=1, slug="active-s", tier="S", status="open"),
         dict(problem_id=2, slug="blocked", tier="S", status="blocked"),
         dict(problem_id=3, slug="frozen", tier="A", status="rank-2-frozen"),
         dict(problem_id=4, slug="active-a", tier="A", status="rank-1-tied"),
         dict(problem_id=5, slug="conquered", tier="S", status="conquered"),
+        dict(problem_id=6, slug="retired", tier="C", status="retired"),
     ])
     problems = al.load_problems(pdir)
     ordered = al.build_queue(problems)
-    assert [p.problem_id for p in ordered] == [1, 4]
+    # Everyone except retired survives, ordered by id
+    assert [p.problem_id for p in ordered] == [1, 2, 3, 4, 5]
 
 
-def test_queue_unknown_tier_sorts_last() -> None:
-    p_known = al.Problem(problem_id=1, slug="x", tier="A", status="open",
+def test_queue_unknown_tier_does_not_affect_order() -> None:
+    """Tier is purely informational now — queue order is id-only."""
+    p_known = al.Problem(problem_id=2, slug="x", tier="A", status="open",
                          score_current=None, path=Path("/x"))
-    p_unknown = al.Problem(problem_id=2, slug="y", tier="???", status="open",
+    p_unknown = al.Problem(problem_id=1, slug="y", tier="???", status="open",
                            score_current=None, path=Path("/y"))
-    ordered = al.build_queue([p_unknown, p_known])
+    ordered = al.build_queue([p_known, p_unknown])
+    # Pure id ascending — unknown tier still sorts by id
     assert [p.problem_id for p in ordered] == [1, 2]
 
 
@@ -281,8 +294,9 @@ def test_has_recent_cycle_false_for_missing(tmp_path: Path) -> None:
 
 
 def test_run_one_problem_no_active_problems_returns_none(tmp_path: Path) -> None:
+    """Only retired problems are inactive — use retired to test the no-active path."""
     pdir = _build_wiki_with_problems(tmp_path, [
-        dict(problem_id=1, slug="frozen", tier="S", status="frozen"),
+        dict(problem_id=1, slug="dead", tier="S", status="retired"),
     ])
     log = tmp_path / "cycle-log.md"
     log.write_text("## Cycles\n")
