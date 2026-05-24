@@ -23,14 +23,19 @@ Usage:
     uv run python docs/tools/llm_distill.py --input extracted.md --slug 2024-foo
     uv run python docs/tools/llm_distill.py --shrink docs/source/2007-saliola.md
 """
+
 from __future__ import annotations
 
 import argparse
 import concurrent.futures
 import logging
 import re
-import subprocess
+import sys
 from pathlib import Path
+
+# claude_headless lives alongside this module under docs/tools/.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_headless  # noqa: E402
 
 log = logging.getLogger("llm_distill")
 
@@ -126,15 +131,6 @@ _REQUIRED_HEADINGS = (
     "## Open questions / connections",
     "## Key terms",
 )
-_CLAUDE_UNAVAILABLE_PATTERNS = (
-    "you've hit your session limit",
-    "usage-credits",
-    "failed to authenticate",
-    "invalid authentication credentials",
-    "not logged in",
-    "please run /login",
-    "api error: 401",
-)
 
 
 def _strip_fence(text: str) -> str:
@@ -144,35 +140,30 @@ def _strip_fence(text: str) -> str:
 
 
 def _validate_summary(text: str) -> None:
-    """Reject Claude Code auth/quota messages and malformed distill outputs."""
-    lower = text.lower()
-    for pattern in _CLAUDE_UNAVAILABLE_PATTERNS:
-        if pattern in lower:
-            raise DistillError("Claude Code unavailable: auth/session-limit response")
+    """Reject malformed distill outputs (missing structural headings).
+
+    Auth/quota detection moved to `claude_headless._is_unavailable`. This
+    function now only enforces the distill-specific output schema.
+    """
     missing = [heading for heading in _REQUIRED_HEADINGS if heading not in text]
     if missing:
-        raise DistillError("claude output missing required headings: "
-                           + ", ".join(missing))
+        raise DistillError("claude output missing required headings: " + ", ".join(missing))
 
 
-def distill_via_claude_code(*, extracted_md: str, metadata: dict,
-                            model: str = "claude-opus-4-7[1m]",
-                            timeout: int = 180) -> str:
+def distill_via_claude_code(
+    *, extracted_md: str, metadata: dict, model: str = "claude-opus-4-7[1m]", timeout: int = 180
+) -> str:
     """Distill one paper via `claude -p`. Returns the markdown summary."""
     prompt = _build_prompt(extracted_md=extracted_md, metadata=metadata)
-    args = [
-        "claude", "-p",
-        "--model", model,
+    result = claude_headless.run(
         prompt,
-    ]
-    try:
-        result = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
-    except subprocess.TimeoutExpired as e:
-        raise DistillError(f"claude -p timed out after {timeout}s") from e
-    if result.returncode != 0:
-        raise DistillError(
-            f"claude -p exit {result.returncode}: {result.stderr.strip() or 'unknown'}"
-        )
+        model=model,
+        timeout_seconds=timeout,
+    )
+    if not result.ok:
+        if result.error_kind == "unavailable":
+            raise DistillError("Claude Code unavailable: auth/session-limit response")
+        raise DistillError(result.error_message)
     summary = _strip_fence(result.stdout).strip()
     _validate_summary(summary)
     return summary + "\n"
@@ -181,9 +172,14 @@ def distill_via_claude_code(*, extracted_md: str, metadata: dict,
 # ---------------- batch ----------------
 
 
-def distill_batch(items: list[dict], *, model: str = "claude-opus-4-7[1m]",
-                  max_workers: int = 4, timeout: int = 180,
-                  delay_seconds: float = 0) -> list[dict]:
+def distill_batch(
+    items: list[dict],
+    *,
+    model: str = "claude-opus-4-7[1m]",
+    max_workers: int = 4,
+    timeout: int = 180,
+    delay_seconds: float = 0,
+) -> list[dict]:
     """Distill N papers concurrently. Each item: {slug, extracted_md, metadata}.
 
     Returns a list of {slug, ok, summary | error} dicts in the same order
@@ -237,12 +233,16 @@ def _parse_frontmatter(text: str) -> tuple[dict, str]:
         kv = re.match(r"^([a-zA-Z_]+):\s*(.*)$", line)
         if kv:
             fm[kv.group(1)] = kv.group(2).strip().strip("\"'")
-    return fm, text[m.end():]
+    return fm, text[m.end() :]
 
 
-def shrink_source_entry(path: Path, *, model: str = "claude-opus-4-7[1m]",
-                        timeout: int = 180,
-                        min_size_bytes: int = 8000) -> bool:
+def shrink_source_entry(
+    path: Path,
+    *,
+    model: str = "claude-opus-4-7[1m]",
+    timeout: int = 180,
+    min_size_bytes: int = 8000,
+) -> bool:
     """Replace the body of a source/<slug>.md with an LLM-distilled summary.
 
     Skipped if the file is already small (< min_size_bytes — already
@@ -288,23 +288,29 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     g = p.add_mutually_exclusive_group(required=True)
-    g.add_argument("--input", type=Path,
-                   help="Path to an extracted markdown file to distill.")
-    g.add_argument("--shrink", type=Path,
-                   help="Shrink one docs/source/<slug>.md in place.")
-    g.add_argument("--shrink-all", type=Path,
-                   help="Shrink every *.md in the given directory.")
-    p.add_argument("--slug", type=str,
-                   help="Filename stem for --input output (required with --input).")
-    p.add_argument("--out-dir", type=Path, default=Path("docs/source"),
-                   help="Destination dir for --input mode.")
-    p.add_argument("--model", default="claude-opus-4-7[1m]",
-                   help="claude -p --model. Default: claude-opus-4-7[1m] "
-                        "(Opus 4.7 with 1M context — highest quality + "
-                        "handles long papers). One-time-per-paper distill, "
-                        "so quality > speed.")
-    p.add_argument("--workers", type=int, default=4,
-                   help="Parallel workers for --shrink-all (default 4).")
+    g.add_argument("--input", type=Path, help="Path to an extracted markdown file to distill.")
+    g.add_argument("--shrink", type=Path, help="Shrink one docs/source/<slug>.md in place.")
+    g.add_argument("--shrink-all", type=Path, help="Shrink every *.md in the given directory.")
+    p.add_argument(
+        "--slug", type=str, help="Filename stem for --input output (required with --input)."
+    )
+    p.add_argument(
+        "--out-dir",
+        type=Path,
+        default=Path("docs/source"),
+        help="Destination dir for --input mode.",
+    )
+    p.add_argument(
+        "--model",
+        default="claude-opus-4-7[1m]",
+        help="claude -p --model. Default: claude-opus-4-7[1m] "
+        "(Opus 4.7 with 1M context — highest quality + "
+        "handles long papers). One-time-per-paper distill, "
+        "so quality > speed.",
+    )
+    p.add_argument(
+        "--workers", type=int, default=4, help="Parallel workers for --shrink-all (default 4)."
+    )
     args = p.parse_args(argv)
 
     if args.input:
@@ -316,7 +322,9 @@ def main(argv: list[str] | None = None) -> int:
             log.error("no frontmatter on %s", args.input)
             return 1
         summary = distill_via_claude_code(
-            extracted_md=body, metadata=fm, model=args.model,
+            extracted_md=body,
+            metadata=fm,
+            model=args.model,
         )
         out = args.out_dir / f"{args.slug}.md"
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -330,10 +338,12 @@ def main(argv: list[str] | None = None) -> int:
         log.info("%s %s", "shrunk" if ok else "no-op", args.shrink)
         return 0
 
-    targets = sorted([t for t in args.shrink_all.glob("*.md")
-                      if t.name not in ("INDEX.md", "README.md")])
-    log.info("shrinking %d files with %d workers (model %s)",
-             len(targets), args.workers, args.model)
+    targets = sorted(
+        [t for t in args.shrink_all.glob("*.md") if t.name not in ("INDEX.md", "README.md")]
+    )
+    log.info(
+        "shrinking %d files with %d workers (model %s)", len(targets), args.workers, args.model
+    )
     total_before = sum(t.stat().st_size for t in targets)
 
     def _one(t: Path) -> tuple[Path, bool]:
@@ -349,10 +359,14 @@ def main(argv: list[str] | None = None) -> int:
                 log.info("·  %s (no-op)", t.name)
 
     total_after = sum(t.stat().st_size for t in targets)
-    log.info("shrunk %d/%d entries; %d → %d KB (%.1f%% reduction)",
-             n_shrunk, len(targets),
-             total_before // 1024, total_after // 1024,
-             100 * (1 - total_after / max(total_before, 1)))
+    log.info(
+        "shrunk %d/%d entries; %d → %d KB (%.1f%% reduction)",
+        n_shrunk,
+        len(targets),
+        total_before // 1024,
+        total_after // 1024,
+        100 * (1 - total_after / max(total_before, 1)),
+    )
     return 0
 
 
