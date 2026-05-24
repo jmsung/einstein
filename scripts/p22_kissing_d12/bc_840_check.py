@@ -20,6 +20,7 @@ Cardinality check is the first decisive test:
 - These play different mathematical roles; equality of cardinalities (30 vs 840) is required for any
   direct structural identification.
 """
+
 from __future__ import annotations
 
 import sys
@@ -36,7 +37,7 @@ def main():
     B = bose_chowla_set(q)
 
     print(f"Bose-Chowla q={q}: Sidon set in Z/{modulus}")
-    print(f"  |B| = {len(B)}  (= q+1 = {q+1})")
+    print(f"  |B| = {len(B)}  (= q+1 = {q + 1})")
     print(f"  Modulus = {modulus}  (= q²-1)")
     print()
     print(f"  B = {B}")
@@ -50,8 +51,8 @@ def main():
             d = min(d, modulus - d)
             diffs.add(d)
     print(f"  |B-B|+ (canonical, in Z/{modulus}) = {len(diffs)}")
-    print(f"  Expected for Sidon: |B|·(|B|-1)/2 = {len(B)*(len(B)-1)//2}")
-    print(f"  Sidon? {'✓' if len(diffs) == len(B)*(len(B)-1)//2 else '✗'}")
+    print(f"  Expected for Sidon: |B|·(|B|-1)/2 = {len(B) * (len(B) - 1) // 2}")
+    print(f"  Sidon? {'✓' if len(diffs) == len(B) * (len(B) - 1) // 2 else '✗'}")
     print()
 
     # Distribution analysis
@@ -65,7 +66,7 @@ def main():
     print(f"  In [300, 420]: {sum(1 for d in diffs if 300 <= d <= 420)} values")
     print()
 
-    print("="*70)
+    print("=" * 70)
     print("Comparison to P₁₂ₐ kissing-12 structure:")
     print()
     print("  κ(12) = 840 configuration:")
@@ -75,9 +76,9 @@ def main():
     print("    - All pairwise inner products in {0, ±¼, ±½, ±1}")
     print()
     print("  BC q=29 in Z/840:")
-    print(f"    - 30 elements of Z/840 (a Sidon difference SET)")
+    print("    - 30 elements of Z/840 (a Sidon difference SET)")
     print(f"    - {len(diffs)} distinct pairwise differences in Z/840")
-    print(f"    - Modulus 840 = (29-1)(29+1)")
+    print("    - Modulus 840 = (29-1)(29+1)")
     print()
     print("  Cardinality test: 30 (BC elements) vs 840 (kissing points) — MISMATCH.")
     print("  Even at the difference-set level: 435 (BC pairwise diffs) vs ??? (kissing diffs).")

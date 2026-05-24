@@ -55,7 +55,7 @@ def overlap_loss_fast(unit_vecs: np.ndarray) -> float:
 
 def incremental_loss(vecs, idx, old_total, old_vec):
     """O(n) incremental loss update."""
-    others = np.concatenate([vecs[:idx], vecs[idx+1:]], axis=0)
+    others = np.concatenate([vecs[:idx], vecs[idx + 1 :]], axis=0)
     old_cos = np.clip(old_vec @ others.T, -1.0, 1.0)
     old_dists = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - old_cos))
     old_pen = np.maximum(0.0, 2.0 - old_dists)
@@ -118,7 +118,7 @@ def targeted_perturb(vecs, scale, n_iters, seed=42, recompute_every=20_000):
             # Periodically sync with exact evaluator
             exact = overlap_loss_exact(best_vecs) if (it + 1) % 500_000 == 0 else best_loss
             print(
-                f"  [{scale:.0e}] iter {it+1:>8d} | fast {best_loss:.14f} | "
+                f"  [{scale:.0e}] iter {it + 1:>8d} | fast {best_loss:.14f} | "
                 f"impr {improvements} ({rate:.3f}%) | {elapsed:.0f}s"
                 + (f" | exact {exact:.14f}" if (it + 1) % 500_000 == 0 else "")
             )
@@ -156,9 +156,14 @@ def main():
     ]
 
     for i, (scale, iters, seed) in enumerate(configs):
-        print(f"\n--- Round {i+1}/{len(configs)}: scale={scale:.0e}, iters={iters:,}, seed={seed} ---")
+        print(
+            f"\n--- Round {i + 1}/{len(configs)}: scale={scale:.0e}, iters={iters:,}, seed={seed} ---"
+        )
         new_vecs, new_loss, n_impr = targeted_perturb(
-            best_vecs.copy(), scale=scale, n_iters=iters, seed=seed,
+            best_vecs.copy(),
+            scale=scale,
+            n_iters=iters,
+            seed=seed,
         )
         # Verify with exact evaluator
         exact_score = overlap_loss_exact(new_vecs)

@@ -165,9 +165,7 @@ def load_personas(path: Path | None = None) -> list[Persona]:
 
     # Split on the specialist bench header. Anything before is core; after
     # is bench. If the bench header is absent, treat the whole file as core.
-    bench_split = re.split(
-        r"^##\s+Specialist Bench.*$", raw, maxsplit=1, flags=re.MULTILINE
-    )
+    bench_split = re.split(r"^##\s+Specialist Bench.*$", raw, maxsplit=1, flags=re.MULTILINE)
     core_text = bench_split[0]
     bench_text = bench_split[1] if len(bench_split) == 2 else ""
 
@@ -175,7 +173,7 @@ def load_personas(path: Path | None = None) -> list[Persona]:
     # so we don't pick up persona-like headers from the preamble.
     core_match = re.search(r"^##\s+Core Council.*$", core_text, flags=re.MULTILINE)
     if core_match:
-        core_text = core_text[core_match.end():]
+        core_text = core_text[core_match.end() :]
 
     return _parse_section(core_text, "core") + _parse_section(bench_text, "bench")
 
@@ -205,9 +203,5 @@ def dispatch(
     if not personas:
         return []
     core = [p for p in personas if p.tier == "core"]
-    bench = [
-        p
-        for p in personas
-        if p.tier == "bench" and problem_category in p.trigger_categories
-    ]
+    bench = [p for p in personas if p.tier == "bench" and problem_category in p.trigger_categories]
     return core + bench

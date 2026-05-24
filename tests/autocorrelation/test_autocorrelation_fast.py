@@ -7,6 +7,7 @@ import time
 
 import numpy as np
 import pytest
+
 from einstein.autocorrelation import evaluate as arena_evaluate
 from einstein.autocorrelation.fast import diagnose, fast_evaluate
 
@@ -24,9 +25,9 @@ class TestFastMatchesArena:
         f = rng.random(n).tolist()
         fast = fast_evaluate(f)
         arena = arena_evaluate({"values": f})
-        assert fast == pytest.approx(arena, rel=1e-10), (
-            f"seed={seed}, n={n}: fast={fast}, arena={arena}"
-        )
+        assert fast == pytest.approx(
+            arena, rel=1e-10
+        ), f"seed={seed}, n={n}: fast={fast}, arena={arena}"
 
     @pytest.mark.parametrize("n", [1, 2, 10, 100, 1000, 5000])
     def test_constant_function(self, n):
@@ -108,7 +109,7 @@ class TestFastPerformance:
         for _ in range(10):
             fast_evaluate(f)
         elapsed = (time.perf_counter() - t0) / 10
-        assert elapsed < 0.01, f"n=100k took {elapsed*1000:.1f}ms (target < 10ms)"
+        assert elapsed < 0.01, f"n=100k took {elapsed * 1000:.1f}ms (target < 10ms)"
 
     def test_n500k_under_50ms(self):
         rng = np.random.default_rng(42)
@@ -118,7 +119,7 @@ class TestFastPerformance:
         for _ in range(3):
             fast_evaluate(f)
         elapsed = (time.perf_counter() - t0) / 3
-        assert elapsed < 0.05, f"n=500k took {elapsed*1000:.1f}ms (target < 50ms)"
+        assert elapsed < 0.05, f"n=500k took {elapsed * 1000:.1f}ms (target < 50ms)"
 
     def test_n1M_under_100ms(self):
         rng = np.random.default_rng(42)
@@ -127,7 +128,7 @@ class TestFastPerformance:
         t0 = time.perf_counter()
         fast_evaluate(f)
         elapsed = time.perf_counter() - t0
-        assert elapsed < 0.1, f"n=1M took {elapsed*1000:.1f}ms (target < 100ms)"
+        assert elapsed < 0.1, f"n=1M took {elapsed * 1000:.1f}ms (target < 100ms)"
 
     def test_100x_faster_than_arena_at_100k(self):
         """FFT evaluator must be at least 10x faster than arena at n=100k."""

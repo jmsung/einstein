@@ -36,9 +36,7 @@ NTRIPLES = 165  # C(11, 3)
 
 SQRT3 = math.sqrt(3.0)
 EQ_TRI_AREA = SQRT3 / 4.0
-EQ_TRI_VERTICES = np.array(
-    [[0.0, 0.0], [1.0, 0.0], [0.5, SQRT3 / 2.0]], dtype=np.float64
-)
+EQ_TRI_VERTICES = np.array([[0.0, 0.0], [1.0, 0.0], [0.5, SQRT3 / 2.0]], dtype=np.float64)
 
 # Precomputed triples
 _TRIPLES = np.array(list(itertools.combinations(range(N), 3)), dtype=np.int64)
@@ -60,21 +58,12 @@ def in_triangle(points, tol: float = 0.0) -> bool:
     x, y = pts[:, 0], pts[:, 1]
     # Edges: y >= 0, y <= sqrt3*x, y <= sqrt3*(1 - x)
     return bool(
-        np.all(y >= -tol)
-        and np.all(y - SQRT3 * x <= tol)
-        and np.all(y - SQRT3 * (1.0 - x) <= tol)
+        np.all(y >= -tol) and np.all(y - SQRT3 * x <= tol) and np.all(y - SQRT3 * (1.0 - x) <= tol)
     )
 
 
 def _tri_area_scalar(p1, p2, p3) -> float:
-    return (
-        abs(
-            p1[0] * (p2[1] - p3[1])
-            + p2[0] * (p3[1] - p1[1])
-            + p3[0] * (p1[1] - p2[1])
-        )
-        / 2.0
-    )
+    return abs(p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2.0
 
 
 def arena_score(points) -> float:
@@ -91,8 +80,7 @@ def arena_score(points) -> float:
     if not in_triangle(pts, tol=ARENA_CONTAIN_TOL):
         return -float("inf")
     min_area = min(
-        _tri_area_scalar(pts[i], pts[j], pts[k])
-        for i, j, k in itertools.combinations(range(N), 3)
+        _tri_area_scalar(pts[i], pts[j], pts[k]) for i, j, k in itertools.combinations(range(N), 3)
     )
     return float(min_area / EQ_TRI_AREA)
 
@@ -133,9 +121,7 @@ def fast_score(points) -> float:
     return float(areas.min() / EQ_TRI_AREA)
 
 
-def active_triples(
-    points, rel_tol: float = 1e-9
-) -> list[tuple[int, int, int]]:
+def active_triples(points, rel_tol: float = 1e-9) -> list[tuple[int, int, int]]:
     """Triples whose area is within rel_tol of the minimum."""
     areas = all_triangle_areas(points)
     mn = float(areas.min())

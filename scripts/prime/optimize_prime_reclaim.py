@@ -10,7 +10,6 @@ Also tries larger N with key selection.
 import json
 import math
 import os
-import sys
 import time
 
 import numpy as np
@@ -50,8 +49,7 @@ def solve_cutting_plane_fast(
 
     # Initial constraints: n=1..max_key + sparse beyond
     active_ns = sorted(
-        set(range(1, min(max_key + 1, max_n + 1)))
-        | set(range(max_key + 1, max_n + 1, 50))
+        set(range(1, min(max_key + 1, max_n + 1))) | set(range(max_key + 1, max_n + 1, 50))
     )
     current_margin = margin
 
@@ -70,7 +68,11 @@ def solve_cutting_plane_fast(
 
         t1 = time.time()
         result = linprog(
-            c_obj, A_ub=A, b_ub=b, bounds=bounds, method="highs-ipm",
+            c_obj,
+            A_ub=A,
+            b_ub=b,
+            bounds=bounds,
+            method="highs-ipm",
             options={
                 "time_limit": time_limit,
                 "primal_feasibility_tolerance": 1e-9,
@@ -84,7 +86,7 @@ def solve_cutting_plane_fast(
             log(f"  Round {rnd}: LP status: {result.message}, {t_solve:.0f}s")
             # If timed out with feasible solution, try using it
             if "Time limit" in str(result.message) and result.x is not None:
-                log(f"  Using time-limited feasible solution...")
+                log("  Using time-limited feasible solution...")
                 f_vec = result.x
                 score = -c_obj @ f_vec
             else:
@@ -104,7 +106,9 @@ def solve_cutting_plane_fast(
         for start in range(1, max_n + 1, chunk):
             end = min(start + chunk, max_n + 1)
             ns_check = np.arange(start, end, dtype=np.float64)
-            G = (np.floor(ns_check[:, None] / k_arr[None, :]) - ns_check[:, None] / k_arr[None, :]) @ f_vec
+            G = (
+                np.floor(ns_check[:, None] / k_arr[None, :]) - ns_check[:, None] / k_arr[None, :]
+            ) @ f_vec
             mask = G > 1.0 + 1e-12
             for idx in np.where(mask)[0]:
                 violations.append((start + idx, float(G[idx])))
@@ -164,6 +168,7 @@ def compute_score_only(pf: dict[int, float]) -> float:
 
 def evaluate_mc(pf: dict[int, float], n_samples: int = 10_000_000, seed: int = 42) -> float:
     from einstein.prime.evaluator import evaluate
+
     sol = {"partial_function": {str(k): v for k, v in pf.items()}}
     return evaluate(sol, n_samples=n_samples, seed=seed)
 
@@ -175,7 +180,7 @@ def main():
     target = current_best + 1e-5
     log(f"Current #1: {current_best:.15f}")
     log(f"Target:     {target:.15f}")
-    log(f"Need improvement >= 1e-05\n")
+    log("Need improvement >= 1e-05\n")
 
     best_pf = None
     best_score = 0.0
@@ -183,20 +188,18 @@ def main():
     experiments = [
         # (label, keys)
         ("all_int_3287", list(range(2, 3288))),  # All integers [2,3287] = 3286 keys
-        ("sf_4000", get_squarefree(4000)),        # SF up to 4000 = 2432 keys
-        ("sf_5000", get_squarefree(5000)),        # SF up to 5000 = 3041 keys
+        ("sf_4000", get_squarefree(4000)),  # SF up to 4000 = 2432 keys
+        ("sf_5000", get_squarefree(5000)),  # SF up to 5000 = 3041 keys
     ]
 
     for label, all_keys in experiments:
-        log(f"\n{'='*70}")
+        log(f"\n{'=' * 70}")
         log(f"Experiment: {label} ({len(all_keys)} keys)")
-        log(f"{'='*70}")
+        log(f"{'=' * 70}")
 
         # Phase 1: Solve LP with all keys
         log(f"\nPhase 1: Solve LP with all {len(all_keys)} keys")
-        f_vals, score1 = solve_cutting_plane_fast(
-            all_keys, margin=1e-7, time_limit=300
-        )
+        f_vals, score1 = solve_cutting_plane_fast(all_keys, margin=1e-7, time_limit=300)
 
         if f_vals is None:
             log("  Phase 1 failed — no feasible solution")
@@ -213,16 +216,16 @@ def main():
 
         # How many are non-squarefree?
         def is_sf(n):
-            for p in range(2, int(math.isqrt(n))+1):
-                if n % (p*p) == 0: return False
+            for p in range(2, int(math.isqrt(n)) + 1):
+                if n % (p * p) == 0:
+                    return False
             return True
+
         nsf = sum(1 for k in selected if not is_sf(k))
         if nsf > 0:
             log(f"  Non-squarefree keys in selection: {nsf}")
 
-        f_vals2, score2 = solve_cutting_plane_fast(
-            selected, margin=1e-7, time_limit=300
-        )
+        f_vals2, score2 = solve_cutting_plane_fast(selected, margin=1e-7, time_limit=300)
 
         if f_vals2 is None:
             log("  Phase 2 failed")
@@ -253,25 +256,27 @@ def main():
                 json.dump(sol, f)
 
             if improvement >= 1e-5:
-                log(f"\n  *** TARGET MET! ***")
-                log(f"  Running full 10M MC validation...")
+                log("\n  *** TARGET MET! ***")
+                log("  Running full 10M MC validation...")
                 mc_full = evaluate_mc(pf, n_samples=10_000_000, seed=42)
                 log(f"  MC(10M, seed=42):  {mc_full:.15f} {'PASS' if mc_full > 0 else 'FAIL'}")
 
                 if mc_full > 0:
                     mc_cross = evaluate_mc(pf, n_samples=10_000_000, seed=123)
-                    log(f"  MC(10M, seed=123): {mc_cross:.15f} {'PASS' if mc_cross > 0 else 'FAIL'}")
+                    log(
+                        f"  MC(10M, seed=123): {mc_cross:.15f} {'PASS' if mc_cross > 0 else 'FAIL'}"
+                    )
 
                     if mc_cross > 0:
                         with open("results/problem-7-prime/reclaim_best.json", "w") as f:
                             json.dump(sol, f)
-                        log(f"\n  *** SOLUTION VALIDATED — ready for submission ***")
+                        log("\n  *** SOLUTION VALIDATED — ready for submission ***")
                         log(f"  Score: {mc_full:.15f}")
                         log(f"  Keys: {len(pf)}")
                         return  # Early exit on success
 
     # Summary
-    log(f"\n{'='*70}")
+    log(f"\n{'=' * 70}")
     if best_pf:
         improvement = best_score - current_best
         log(f"Best reclaim score: {best_score:.15f}")

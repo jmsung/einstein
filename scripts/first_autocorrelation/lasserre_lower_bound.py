@@ -49,7 +49,9 @@ import time
 import cvxpy as cp
 
 
-def lasserre_l2_bound(n: int, *, max_iters: int = 30000, verbose: bool = False) -> tuple[float | None, str, float]:
+def lasserre_l2_bound(
+    n: int, *, max_iters: int = 30000, verbose: bool = False
+) -> tuple[float | None, str, float]:
     """Compute the level-2 Lasserre relaxation lower bound at discretization n.
 
     Returns (bound_value, solver_status, solve_time_seconds).

@@ -10,7 +10,7 @@ Variables: x = [cx_1, cy_1, r_1, …, cx_26, cy_26, r_26]. 78 variables,
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from scipy.optimize import minimize
@@ -40,12 +40,14 @@ def _wall_constraints(x: np.ndarray) -> np.ndarray:
     """Wall slacks ≥ 0 (4 per circle)."""
     c = _unpack(x)
     cx, cy, r = c[:, 0], c[:, 1], c[:, 2]
-    return np.concatenate([
-        cx - r,                      # left
-        SQUARE_SIDE - cx - r,        # right
-        cy - r,                      # bottom
-        SQUARE_SIDE - cy - r,        # top
-    ])
+    return np.concatenate(
+        [
+            cx - r,  # left
+            SQUARE_SIDE - cx - r,  # right
+            cy - r,  # bottom
+            SQUARE_SIDE - cy - r,  # top
+        ]
+    )
 
 
 def _pair_constraints(x: np.ndarray, slack: float = 0.0) -> np.ndarray:
@@ -63,8 +65,9 @@ def _pair_constraints(x: np.ndarray, slack: float = 0.0) -> np.ndarray:
     return out
 
 
-def _all_constraints(x: np.ndarray, slack: float = 0.0,
-                     wall_slack: float | None = None) -> np.ndarray:
+def _all_constraints(
+    x: np.ndarray, slack: float = 0.0, wall_slack: float | None = None
+) -> np.ndarray:
     """Combined constraints. ``slack`` applies to pair distances; ``wall_slack``
     (default same as ``slack``) applies to wall constraints. Use a small
     positive ``wall_slack`` to keep walls strictly satisfied while letting
@@ -102,11 +105,13 @@ def polish(
 
     x0 = _pack(circles)
 
-    constraints = [{
-        "type": "ineq",
-        "fun": _all_constraints,
-        "args": (overlap_slack,),
-    }]
+    constraints = [
+        {
+            "type": "ineq",
+            "fun": _all_constraints,
+            "args": (overlap_slack,),
+        }
+    ]
     bounds = [(0.0, 1.0)] * (3 * N_CIRCLES)
 
     if method == "SLSQP":
@@ -121,9 +126,8 @@ def polish(
         )
     else:
         from scipy.optimize import NonlinearConstraint
-        nlc = NonlinearConstraint(
-            lambda x: _all_constraints(x, slack=overlap_slack), 0, np.inf
-        )
+
+        nlc = NonlinearConstraint(lambda x: _all_constraints(x, slack=overlap_slack), 0, np.inf)
         result = minimize(
             _objective,
             x0,

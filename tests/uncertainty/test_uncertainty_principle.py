@@ -6,16 +6,23 @@ Validates both the exact symbolic verifier and the fast numerical evaluator.
 import numpy as np
 import pytest
 
-from einstein.uncertainty.verifier import evaluate as exact_evaluate
 from einstein.uncertainty.fast import fast_evaluate
-
+from einstein.uncertainty.verifier import evaluate as exact_evaluate
 
 # Reference k=13 roots for testing
 KNOWN_ROOTS = [
-    3.1427440085666496, 4.469993893132148, 6.078689469782297,
-    32.637646271046336, 38.265477818082566, 41.06153063739393,
-    43.09262298321874, 50.81816373872074, 58.61770809389174,
-    96.07661117430976, 111.48735817427675, 118.74229251036576,
+    3.1427440085666496,
+    4.469993893132148,
+    6.078689469782297,
+    32.637646271046336,
+    38.265477818082566,
+    41.06153063739393,
+    43.09262298321874,
+    50.81816373872074,
+    58.61770809389174,
+    96.07661117430976,
+    111.48735817427675,
+    118.74229251036576,
     141.09580664199572,
 ]
 

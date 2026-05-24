@@ -12,8 +12,8 @@ This eliminates the #1 bottleneck (Python loop overhead) and should give
 5-50x throughput improvement depending on K and R.
 """
 
-import torch
 import numpy as np
+import torch
 
 
 def compute_deltas_hinge(old_dots, new_dots, flat_indices, RK, device):
@@ -58,10 +58,10 @@ DELTA_FNS = {
 
 
 def fused_sa_step(
-    replicas: torch.Tensor,      # (R, N, D)
-    losses: torch.Tensor,        # (R,)
-    temps: torch.Tensor,         # (R,)
-    probs: torch.Tensor,         # (N,)
+    replicas: torch.Tensor,  # (R, N, D)
+    losses: torch.Tensor,  # (R,)
+    temps: torch.Tensor,  # (R,)
+    probs: torch.Tensor,  # (N,)
     scale: float,
     K: int,
     loss_type: str = "hinge",
@@ -181,7 +181,8 @@ def run_fused_tempering(
     sota = sota / sota.norm(dim=1, keepdim=True).clamp(min=1e-30)
 
     # Initial loss
-    from einstein.gpu_tempering.losses import HingeOverlapLoss, CoulombLoss
+    from einstein.gpu_tempering.losses import CoulombLoss, HingeOverlapLoss
+
     loss_fn = HingeOverlapLoss() if loss_type == "hinge" else CoulombLoss()
     initial_score = loss_fn.full_loss(sota).item()
     print(f"Initial: {initial_score:.15f}")
@@ -198,7 +199,9 @@ def run_fused_tempering(
 
     # Contribution probs
     probs = loss_fn.contributions(replicas[0])
-    probs = probs / probs.sum() if probs.sum() > 0 else torch.ones(N, device=device, dtype=dtype) / N
+    probs = (
+        probs / probs.sum() if probs.sum() > 0 else torch.ones(N, device=device, dtype=dtype) / N
+    )
 
     total_perts = 0
     total_accepts = 0
@@ -211,12 +214,14 @@ def run_fused_tempering(
     for step in range(n_steps):
         if step > 0 and step % recompute_every == 0:
             probs = loss_fn.contributions(replicas[0])
-            probs = probs / probs.sum() if probs.sum() > 0 else torch.ones(N, device=device, dtype=dtype) / N
+            probs = (
+                probs / probs.sum()
+                if probs.sum() > 0
+                else torch.ones(N, device=device, dtype=dtype) / N
+            )
 
         # ---- THE FUSED STEP: all R×K perturbations in one call ----
-        losses, n_acc = fused_sa_step(
-            replicas, losses, temps, probs, scale, K, loss_type
-        )
+        losses, n_acc = fused_sa_step(replicas, losses, temps, probs, scale, K, loss_type)
         total_perts += R * K
         total_accepts += n_acc
 
@@ -235,7 +240,9 @@ def run_fused_tempering(
                     continue
                 swaps_att += len(rl)
                 delta = (losses[rl] - losses[rh]) * (1.0 / temps[rl] - 1.0 / temps[rh])
-                sm = torch.rand(len(rl), device=device, dtype=dtype) < torch.exp(delta.clamp(max=50))
+                sm = torch.rand(len(rl), device=device, dtype=dtype) < torch.exp(
+                    delta.clamp(max=50)
+                )
                 if sm.any():
                     sl, sh = rl[sm], rh[sm]
                     swaps_acc += sm.sum().item()
@@ -255,8 +262,8 @@ def run_fused_tempering(
             pps = total_perts / elapsed
 
             print(
-                f"  step {step+1:>8,d} | {elapsed:.0f}s | {pps:,.0f} p/s | "
-                f"BEST={exact:.15f} (Δ={initial_score-exact:.2e}) | "
+                f"  step {step + 1:>8,d} | {elapsed:.0f}s | {pps:,.0f} p/s | "
+                f"BEST={exact:.15f} (Δ={initial_score - exact:.2e}) | "
                 f"acc={ar:.1f}% | swap={sr:.1f}%"
             )
 
@@ -266,19 +273,19 @@ def run_fused_tempering(
             swaps_acc = 0
 
         if time.time() - t0 > timeout_sec:
-            print(f"\nTimeout at step {step+1}")
+            print(f"\nTimeout at step {step + 1}")
             break
 
     final = loss_fn.full_loss(best_vecs).item()
     elapsed = time.time() - t0
     eff = (step + 1) * R * K
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"FINAL: {final:.15f}")
     print(f"START: {initial_score:.15f}")
     print(f"Delta: {initial_score - final:.2e}")
-    print(f"Time:  {elapsed:.0f}s | {eff/elapsed:,.0f} p/s | {eff:,} total")
-    print(f"{'='*70}")
+    print(f"Time:  {elapsed:.0f}s | {eff / elapsed:,.0f} p/s | {eff:,} total")
+    print(f"{'=' * 70}")
 
     return {
         "best_score": final,

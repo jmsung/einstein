@@ -10,7 +10,6 @@ Usage:
 
 import json
 import os
-import time
 from pathlib import Path
 
 import numpy as np
@@ -55,7 +54,7 @@ def vector_contributions(vecs):
 
 
 def incremental_loss(vecs, idx, old_total, old_vec):
-    others = np.concatenate([vecs[:idx], vecs[idx + 1:]], axis=0)
+    others = np.concatenate([vecs[:idx], vecs[idx + 1 :]], axis=0)
     old_cos = np.clip(old_vec @ others.T, -1.0, 1.0)
     old_d = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - old_cos))
     old_p = np.maximum(0.0, 2.0 - old_d)
@@ -86,7 +85,7 @@ def eigenvalue_analysis(vecs):
     thin_eigvec = eigvecs[:, thin_idx]  # (N,) — loading of each vector
 
     print(f"\n  Thin direction: λ_{thin_idx}={thin_eigval:.4f}")
-    print(f"  Top contributors to thin direction:")
+    print("  Top contributors to thin direction:")
     top_loading = np.argsort(-np.abs(thin_eigvec))[:10]
     for v in top_loading:
         print(f"    vec {v}: loading={thin_eigvec[v]:.6f}")
@@ -150,7 +149,7 @@ def eigenvalue_guided_perturbation(vecs, thin_eigvec, scale, n_iters, seed):
 
         if (it + 1) % 1_000_000 == 0:
             exact = overlap_loss(best_vecs)
-            print(f"    [{scale:.0e}+bias] {it+1:>8,d} | loss={exact:.15f} | impr={improvements}")
+            print(f"    [{scale:.0e}+bias] {it + 1:>8,d} | loss={exact:.15f} | impr={improvements}")
 
     return best_vecs, best_loss, improvements
 
@@ -185,7 +184,9 @@ def main():
     for scale in [1e-6, 1e-8, 1e-10, 1e-12]:
         iters = n_iters // 4
         print(f"\n  Scale {scale:.0e} + thin-direction bias:")
-        v, l, n = eigenvalue_guided_perturbation(best_vecs.copy(), thin_eigvec, scale, iters, seed=42)
+        v, l, n = eigenvalue_guided_perturbation(
+            best_vecs.copy(), thin_eigvec, scale, iters, seed=42
+        )
         exact = overlap_loss(v)
         print(f"  Result: {exact:.15f} (delta={best_score - exact:.2e})")
         if exact < best_score:
@@ -196,6 +197,7 @@ def main():
     # Step 3: Compare with unbiased perturbation at same scales
     print("\n=== Control: unbiased perturbation (same budget) ===")
     from scripts.kissing_number.optimize_harden import run_perturbation
+
     ctrl_vecs, ctrl_score = vecs.copy(), initial
     for scale in [1e-12, 1e-13]:
         iters = n_iters // 2
@@ -206,11 +208,11 @@ def main():
             ctrl_score = exact
             ctrl_vecs = v.copy()
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Eigenvalue-guided: {best_score:.15f} (delta={initial - best_score:.2e})")
     print(f"Control (unbiased): {ctrl_score:.15f} (delta={initial - ctrl_score:.2e})")
     print(f"Winner: {'EIGENVALUE' if best_score < ctrl_score else 'CONTROL'}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
 
 if __name__ == "__main__":

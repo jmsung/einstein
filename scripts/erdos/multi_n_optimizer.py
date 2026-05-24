@@ -29,9 +29,25 @@ OUTPUT_PATH = "/tmp/p1_multi_n_best.json"
 
 # Target discretization sizes to explore
 TARGET_NS = [
-    400, 500, 550, 580, 590, 595, 598, 599,
+    400,
+    500,
+    550,
+    580,
+    590,
+    595,
+    598,
+    599,
     600,
-    601, 602, 605, 610, 620, 650, 700, 800, 1000, 1200,
+    601,
+    602,
+    605,
+    610,
+    620,
+    650,
+    700,
+    800,
+    1000,
+    1200,
 ]
 
 
@@ -167,7 +183,7 @@ def mass_transport_polish(
             elapsed = time.time() - t0
             prefix = f"  [{label}] " if label else "  "
             print(
-                f"{prefix}iter {trial+1:>8d}/{n_iters}: "
+                f"{prefix}iter {trial + 1:>8d}/{n_iters}: "
                 f"C={best_score:.16f}, improved={improved}, "
                 f"time={elapsed:.1f}s"
             )
@@ -197,7 +213,7 @@ def phase1_survey(h_sota: np.ndarray) -> dict:
         print(f"  After interpolation: C={interp_score:.16f}")
 
         if interp_score == float("inf"):
-            print(f"  SKIP: invalid after interpolation")
+            print("  SKIP: invalid after interpolation")
             continue
 
         # Polish with 100k iterations
@@ -214,10 +230,7 @@ def phase1_survey(h_sota: np.ndarray) -> dict:
 
         elapsed = time.time() - t0
         improvement = interp_score - polished_score
-        print(
-            f"  Final: C={exact_score:.16f} "
-            f"(improvement={improvement:.2e}, time={elapsed:.1f}s)"
-        )
+        print(f"  Final: C={exact_score:.16f} (improvement={improvement:.2e}, time={elapsed:.1f}s)")
 
         results[target_n] = {
             "h": h_polished,
@@ -307,7 +320,7 @@ def phase3_roundtrip(results: dict, h_sota: np.ndarray) -> tuple[np.ndarray, flo
         print(f"  After downsample to 600: C={back_score:.16f}")
 
         if back_score == float("inf"):
-            print(f"  SKIP: invalid after downsample")
+            print("  SKIP: invalid after downsample")
             continue
 
         # Polish the downsampled solution
@@ -330,8 +343,9 @@ def phase3_roundtrip(results: dict, h_sota: np.ndarray) -> tuple[np.ndarray, flo
     return best_rt_h, best_rt_score
 
 
-def print_summary(results: dict, best_n: int, best_score: float,
-                   best_rt_score: float, sota_score: float):
+def print_summary(
+    results: dict, best_n: int, best_score: float, best_rt_score: float, sota_score: float
+):
     """Print a summary table of all results."""
     print("\n" + "=" * 70)
     print("SUMMARY")
@@ -358,7 +372,7 @@ def print_summary(results: dict, best_n: int, best_score: float,
         improvement = sota_score - min(best_score, best_rt_score)
         print(f"\n*** IMPROVEMENT FOUND: {improvement:.2e} ***")
     else:
-        print(f"\nNo improvement over SOTA found.")
+        print("\nNo improvement over SOTA found.")
 
 
 def main():
@@ -416,7 +430,7 @@ def main():
     print(f"\nSaved best result to {OUTPUT_PATH}")
 
     elapsed = time.time() - t_start
-    print(f"Total time: {elapsed:.0f}s ({elapsed/60:.1f}min)")
+    print(f"Total time: {elapsed:.0f}s ({elapsed / 60:.1f}min)")
 
 
 if __name__ == "__main__":

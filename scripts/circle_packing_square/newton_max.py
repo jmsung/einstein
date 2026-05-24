@@ -23,7 +23,7 @@ from pathlib import Path
 
 import numpy as np
 
-from einstein.circle_packing_square import N_CIRCLES, evaluate
+from einstein.circle_packing_square import N_CIRCLES
 from einstein.circle_packing_square.active_set import identify_active
 
 
@@ -143,12 +143,18 @@ def newton_solve(
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--base", type=str, default="results-temp/p14_top.json",
-                   help="warm-start solution")
-    p.add_argument("--pair-gap", type=float, default=-9e-10,
-                   help="target pair gap (negative = overlap allowed)")
-    p.add_argument("--wall-gap", type=float, default=1e-13,
-                   help="target wall slack (small positive)")
+    p.add_argument(
+        "--base", type=str, default="results-temp/p14_top.json", help="warm-start solution"
+    )
+    p.add_argument(
+        "--pair-gap",
+        type=float,
+        default=-9e-10,
+        help="target pair gap (negative = overlap allowed)",
+    )
+    p.add_argument(
+        "--wall-gap", type=float, default=1e-13, help="target wall slack (small positive)"
+    )
     p.add_argument("--output", type=str, default="results-temp/p14_newton.json")
     args = p.parse_args()
 
@@ -161,19 +167,22 @@ def main():
     else:
         raise ValueError("Unknown base format")
 
-    print(f"Base sum_r: {base[:,2].sum():.16f}")
+    print(f"Base sum_r: {base[:, 2].sum():.16f}")
     active = identify_active(base, eps=1e-9)
     n_act = len(active["pairs"]) + sum(len(active[k]) for k in ["left", "right", "bottom", "top"])
-    print(f"Active constraints: {n_act} (need {3*N_CIRCLES} for rigid)")
+    print(f"Active constraints: {n_act} (need {3 * N_CIRCLES} for rigid)")
 
     polished, info = newton_solve(
-        base, active,
+        base,
+        active,
         pair_gap=args.pair_gap,
         wall_gap=args.wall_gap,
         max_iter=50,
         tol=1e-16,
     )
-    print(f"Newton: score={info['score']:.16f}  iter={info['n_iter']}  residual={info['final_residual']:.3e}")
+    print(
+        f"Newton: score={info['score']:.16f}  iter={info['n_iter']}  residual={info['final_residual']:.3e}"
+    )
 
     AE = 2.6359830849176076
     print(f"Δ vs AE: {info['score'] - AE:+.4e}")
@@ -194,12 +203,16 @@ def main():
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "circles": polished.tolist(),
-            "sum_r": info["score"],
-            "pair_gap": args.pair_gap,
-            "wall_gap": args.wall_gap,
-        }, f, indent=2)
+        json.dump(
+            {
+                "circles": polished.tolist(),
+                "sum_r": info["score"],
+                "pair_gap": args.pair_gap,
+                "wall_gap": args.wall_gap,
+            },
+            f,
+            indent=2,
+        )
     print(f"\nSaved: {args.output}")
 
 

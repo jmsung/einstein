@@ -7,6 +7,7 @@ which catches all far sign changes.
 
 Usage: uv run python scripts/uncertainty/k14_polish.py [--rounds N] [--k 14]
 """
+
 import argparse
 import json
 import os
@@ -140,8 +141,10 @@ def main():
 
                     delta = best_hybrid - h_score
                     n_improvements += 1
-                    log(f"  [r{round_idx} #{n_improvements}] z[{i}] {d * step:+.6e}: "
-                        f"hyb={h_score:.16f} (Δ={delta:.4e})")
+                    log(
+                        f"  [r{round_idx} #{n_improvements}] z[{i}] {d * step:+.6e}: "
+                        f"hyb={h_score:.16f} (Δ={delta:.4e})"
+                    )
                     save_result(trial, h_score, f_score, f"k14pol_r{round_idx}_z{i}")
                     roots = trial
                     best_fast = f_score
@@ -157,14 +160,15 @@ def main():
 
         if not round_improved:
             step_sizes = [s * 0.3 for s in step_sizes]
-            log(f"  round {round_idx + 1}: no improvement, max step "
-                f"{max(step_sizes):.2e}")
+            log(f"  round {round_idx + 1}: no improvement, max step {max(step_sizes):.2e}")
             if max(step_sizes) < args.minstep:
                 log("  step sizes exhausted, stopping")
                 break
         else:
-            log(f"  round {round_idx + 1}: improved Δ={round_best_delta:.4e}, "
-                f"running total {base_hybrid - best_hybrid:.4e}")
+            log(
+                f"  round {round_idx + 1}: improved Δ={round_best_delta:.4e}, "
+                f"running total {base_hybrid - best_hybrid:.4e}"
+            )
 
     log("\n" + "=" * 70)
     log(f"FINAL: k=14, S={best_hybrid:.16f}")

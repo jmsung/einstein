@@ -37,8 +37,7 @@ def exact_check(vectors: np.ndarray) -> bool:
 
     max_sq_norm = max(squared_norms)
     min_sq_dist = min(
-        sum(int(a - b) ** 2 for a, b in zip(p, q))
-        for p, q in itertools.combinations(rounded, 2)
+        sum(int(a - b) ** 2 for a, b in zip(p, q)) for p, q in itertools.combinations(rounded, 2)
     )
     return min_sq_dist >= max_sq_norm
 
@@ -91,7 +90,8 @@ def overlap_loss_mpmath(vectors, dps: int = 50) -> float:
     whose pair distances are within a few ulps of 2.0. Use this as the
     ground-truth score for any submission decision.
     """
-    from mpmath import mp, mpf, sqrt as mpsqrt
+    from mpmath import mp, mpf
+    from mpmath import sqrt as mpsqrt
 
     arr = np.asarray(vectors, dtype=np.float64)
     if arr.ndim != 2 or arr.shape != (N_VECTORS, DIMENSION):

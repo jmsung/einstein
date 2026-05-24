@@ -106,7 +106,7 @@ def run_perturbation(vecs, scale, n_iters, seed):
             rate = improvements / (it + 1) * 100
             exact = overlap_loss_exact(best_vecs)
             print(
-                f"  [{scale:.0e}] {it+1:>10,d} | exact {exact:.15f} | "
+                f"  [{scale:.0e}] {it + 1:>10,d} | exact {exact:.15f} | "
                 f"impr {improvements:>6d} ({rate:.3f}%) | {elapsed:.0f}s"
             )
 
@@ -138,13 +138,10 @@ def main():
     best_vecs, best_score = vecs.copy(), initial
 
     rng = np.random.default_rng(2026)
-    configs = [
-        (scales[i % len(scales)], iters, int(rng.integers(100000)))
-        for i in range(n_rounds)
-    ]
+    configs = [(scales[i % len(scales)], iters, int(rng.integers(100000))) for i in range(n_rounds)]
 
     for i, (scale, it, seed) in enumerate(configs):
-        print(f"\n--- Round {i+1}/{len(configs)}: {scale:.0e}, {it:,}, seed={seed} ---")
+        print(f"\n--- Round {i + 1}/{len(configs)}: {scale:.0e}, {it:,}, seed={seed} ---")
         new_vecs, _, n_impr = run_perturbation(best_vecs.copy(), scale, it, seed)
         exact = overlap_loss_exact(new_vecs)
         delta = best_score - exact
@@ -155,11 +152,11 @@ def main():
             save_solution(best_vecs, best_score)
 
     final = overlap_loss_exact(best_vecs)
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Final: {final:.15f}")
     print(f"Start: {initial:.15f}")
     print(f"Delta: {initial - final:.2e}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
 
 if __name__ == "__main__":

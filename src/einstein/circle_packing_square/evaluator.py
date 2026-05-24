@@ -38,9 +38,7 @@ def verify_inside_square(circles: np.ndarray, tol: float = WALL_TOL) -> None:
     top = SQUARE_SIDE - (cy + r)
     worst = float(min(left.min(), right.min(), bottom.min(), top.min()))
     if worst < -tol:
-        raise AssertionError(
-            f"Circle outside unit square (slack={worst:.3e} < -{tol:.0e})"
-        )
+        raise AssertionError(f"Circle outside unit square (slack={worst:.3e} < -{tol:.0e})")
 
 
 def verify_circles_disjoint(circles: np.ndarray, tol: float = OVERLAP_TOL) -> None:
@@ -87,10 +85,7 @@ def evaluate_verbose(data: dict, eps: float = 1e-9) -> dict:
     worst_overlap = 0.0
     for i in range(n):
         for j in range(i + 1, n):
-            d = np.sqrt(
-                (circles[i, 0] - circles[j, 0]) ** 2
-                + (circles[i, 1] - circles[j, 1]) ** 2
-            )
+            d = np.sqrt((circles[i, 0] - circles[j, 0]) ** 2 + (circles[i, 1] - circles[j, 1]) ** 2)
             gap = d - circles[i, 2] - circles[j, 2]
             if gap < worst_overlap:
                 worst_overlap = float(gap)
@@ -110,7 +105,10 @@ def evaluate_verbose(data: dict, eps: float = 1e-9) -> dict:
         "n_inter_contacts": len(cc_pairs),
         "worst_overlap": worst_overlap,
         "wall_contacts": {
-            "left": left, "right": right, "bottom": bottom, "top": top,
+            "left": left,
+            "right": right,
+            "bottom": bottom,
+            "top": top,
         },
         "contact_pairs": cc_pairs,
     }

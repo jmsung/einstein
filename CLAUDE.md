@@ -23,8 +23,10 @@ See [`mb/completed/js-refactor-wiki-bootstrap.md`](../mb/completed/js-refactor-w
 ## Setup
 
 ```bash
-uv sync                                # install all deps
-uv run python -m pytest tests/ -v      # run all tests
+uv sync                                # install all deps (incl. dev: pytest, ruff, pre-commit)
+uv run pre-commit install              # enable lint + formatting on every commit
+uv run python -m pytest tests/ -v      # run all tests (also runs on CI)
+uv run ruff check .                    # lint manually
 uv run ...                             # run scripts
 modal run ...                          # GPU scripts (needs Modal account)
 ```

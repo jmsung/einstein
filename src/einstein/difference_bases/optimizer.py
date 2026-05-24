@@ -14,7 +14,7 @@ the previous v upward (closing breaks) or from the new lowest break downward.
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -61,6 +61,7 @@ class DiffMultiset:
         np.add.at(self.cnt, d, 1)
         # insert in sorted order
         import bisect
+
         bisect.insort(self.B, y)
         self.B_set.add(y)
         self._recompute_v()
@@ -92,6 +93,7 @@ class DiffMultiset:
         np.add.at(self.cnt, d_add, 1)
         self.B.remove(x)
         import bisect
+
         bisect.insort(self.B, y)
         self.B_set.remove(x)
         self.B_set.add(y)

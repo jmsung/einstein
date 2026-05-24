@@ -95,7 +95,9 @@ def main():
     print(f"  [{'x' if c3 else ' '}] 3. min wall slack {wmin:+.4e} ≥ 0")
 
     c4 = pmin >= -ARENA_PAIR_TOL
-    print(f"  [{'x' if c4 else ' '}] 4. min pair gap {pmin:+.4e} ≥ -{ARENA_PAIR_TOL:.0e} (arena tol)")
+    print(
+        f"  [{'x' if c4 else ' '}] 4. min pair gap {pmin:+.4e} ≥ -{ARENA_PAIR_TOL:.0e} (arena tol)"
+    )
 
     margin = pmin - (-ARENA_PAIR_TOL)
     # Require ≥1e-12 safety margin under the arena tolerance band
@@ -109,11 +111,13 @@ def main():
         own_score = own["score"]
         improvement = score - own_score
         c6 = improvement > min_improvement
-        print(f"  [{'x' if c6 else ' '}] 6. improvement vs own ({own_score:.13f}): "
-              f"{improvement:+.3e} > {min_improvement:.0e}")
+        print(
+            f"  [{'x' if c6 else ' '}] 6. improvement vs own ({own_score:.13f}): "
+            f"{improvement:+.3e} > {min_improvement:.0e}"
+        )
     else:
         c6 = True
-        print(f"  [x] 6. no prior submission — first submission gate auto-passes")
+        print("  [x] 6. no prior submission — first submission gate auto-passes")
 
     # Projected rank — accept top 3
     strictly_better = sum(1 for e in lb if e["score"] > score)

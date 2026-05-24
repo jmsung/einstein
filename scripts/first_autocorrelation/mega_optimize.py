@@ -13,6 +13,7 @@ Usage:
         --warmstart results/problem-2-first-autocorrelation/sol-01-*.json \
         --out results/problem-2-first-autocorrelation/mega_best.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,8 +31,8 @@ from einstein.first_autocorrelation.optimizer import (
     upsample,
 )
 
-
 # ── helpers ──────────────────────────────────────────────────────────────
+
 
 def block_repeat(f: np.ndarray, n_target: int) -> np.ndarray:
     assert n_target % len(f) == 0
@@ -52,8 +53,10 @@ def save_best(f: np.ndarray, score: float, path: Path, tag: str = ""):
 
 # ── L-BFGS cascade ──────────────────────────────────────────────────────
 
-def lbfgs_cascade(v_np: np.ndarray, betas: list[float], iters: int,
-                  lr: float = 1.0, history_size: int = 200) -> tuple[np.ndarray, float]:
+
+def lbfgs_cascade(
+    v_np: np.ndarray, betas: list[float], iters: int, lr: float = 1.0, history_size: int = 200
+) -> tuple[np.ndarray, float]:
     """Run L-BFGS cascade over smooth surrogate, return (f, exact_score)."""
     v = torch.tensor(v_np.copy(), dtype=torch.float64, requires_grad=True)
     best_c = float("inf")
@@ -61,15 +64,21 @@ def lbfgs_cascade(v_np: np.ndarray, betas: list[float], iters: int,
 
     for beta in betas:
         opt = torch.optim.LBFGS(
-            [v], lr=lr, max_iter=iters, tolerance_grad=1e-15,
-            tolerance_change=1e-20, history_size=history_size,
+            [v],
+            lr=lr,
+            max_iter=iters,
+            tolerance_grad=1e-15,
+            tolerance_change=1e-20,
+            history_size=history_size,
             line_search_fn="strong_wolfe",
         )
+
         def closure():
             opt.zero_grad()
             loss = surrogate_v(v, beta, fft=True)
             loss.backward()
             return loss
+
         opt.step(closure)
         f_np = np.exp(v.detach().cpu().numpy()).astype(np.float64)
         c = exact_score_f(f_np)
@@ -81,8 +90,9 @@ def lbfgs_cascade(v_np: np.ndarray, betas: list[float], iters: int,
     return best_f, best_c
 
 
-def multi_peak_polish(f: np.ndarray, iters: int = 200, topk: int = 500,
-                      lr0: float = 1e-5) -> tuple[np.ndarray, float]:
+def multi_peak_polish(
+    f: np.ndarray, iters: int = 200, topk: int = 500, lr0: float = 1e-5
+) -> tuple[np.ndarray, float]:
     """Subgradient polish on top-K peaks simultaneously."""
     f = f.astype(np.float64).copy()
     n = len(f)
@@ -156,6 +166,7 @@ def multi_peak_polish(f: np.ndarray, iters: int = 200, topk: int = 500,
 
 # ── Phase 1: Aggressive L-BFGS at native n ──────────────────────────────
 
+
 def phase1_native_lbfgs(f0: np.ndarray, seeds: int = 8) -> tuple[np.ndarray, float]:
     """L-BFGS from SOTA at native n with multiple noise seeds."""
     n = len(f0)
@@ -174,8 +185,7 @@ def phase1_native_lbfgs(f0: np.ndarray, seeds: int = 8) -> tuple[np.ndarray, flo
             v0 = v0 + rng.normal(scale=noise_scale, size=v0.shape)
 
         t0 = time.time()
-        f_new, c_new = lbfgs_cascade(v0, betas_aggressive, iters=2000,
-                                      history_size=200)
+        f_new, c_new = lbfgs_cascade(v0, betas_aggressive, iters=2000, history_size=200)
         dt = time.time() - t0
         tag = ""
         if c_new < best_c:
@@ -183,22 +193,23 @@ def phase1_native_lbfgs(f0: np.ndarray, seeds: int = 8) -> tuple[np.ndarray, flo
             best_c = c_new
             best_f = f_new.copy()
             tag = f"  *** NEW BEST  Δ={delta:.3e}"
-        print(f"  seed={seed} noise={noise_scale:.0e} C={c_new:.18f} "
-              f"({dt:.1f}s){tag}", flush=True)
+        print(f"  seed={seed} noise={noise_scale:.0e} C={c_new:.18f} ({dt:.1f}s){tag}", flush=True)
 
     return best_f, best_c
 
 
 # ── Phase 2: Higher resolution ───────────────────────────────────────────
 
-def phase2_higher_resolution(f0: np.ndarray, n_targets: list[int],
-                             seeds: int = 3) -> tuple[np.ndarray, float]:
+
+def phase2_higher_resolution(
+    f0: np.ndarray, n_targets: list[int], seeds: int = 3
+) -> tuple[np.ndarray, float]:
     """Upsample to higher n and optimize there."""
     best_c = exact_score_f(f0)
     best_f = f0.copy()
     best_n = len(f0)
     n_src = len(f0)
-    print(f"\n=== Phase 2: Higher Resolution ===")
+    print("\n=== Phase 2: Higher Resolution ===")
     print(f"Starting C = {best_c:.18f} at n={n_src}")
 
     betas = [1e8, 1e9, 1e10, 1e11, 1e12, 1e13]
@@ -235,17 +246,17 @@ def phase2_higher_resolution(f0: np.ndarray, n_targets: list[int],
 
 # ── Phase 3: Multi-resolution cycling ────────────────────────────────────
 
+
 def phase3_cycling(f0: np.ndarray, cycles: int = 3) -> tuple[np.ndarray, float]:
     """Cycle through different n values for basin escaping."""
     best_c = exact_score_f(f0)
     best_f = f0.copy()
     f_current = f0.copy()
-    print(f"\n=== Phase 3: Multi-Resolution Cycling ===")
+    print("\n=== Phase 3: Multi-Resolution Cycling ===")
     print(f"Starting C = {best_c:.18f}")
 
     # Choose n values that are NOT multiples of the current n to force resampling
-    ns = [29997, 30007, 30011, 30013, 29989, 29999, 30001, 30000,
-          60000, 45000, 50000]
+    ns = [29997, 30007, 30011, 30013, 29989, 29999, 30001, 30000, 60000, 45000, 50000]
     betas = [1e9, 1e10, 1e11, 1e12, 1e13]
 
     for cyc in range(cycles):
@@ -267,19 +278,19 @@ def phase3_cycling(f0: np.ndarray, cycles: int = 3) -> tuple[np.ndarray, float]:
 
 # ── Phase 4: Final polish ────────────────────────────────────────────────
 
+
 def phase4_polish(f0: np.ndarray, rounds: int = 5) -> tuple[np.ndarray, float]:
     """Alternating cascade + multi-peak polish."""
     best_c = exact_score_f(f0)
     best_f = f0.copy()
     f = f0.copy()
-    print(f"\n=== Phase 4: Final Polish ===")
+    print("\n=== Phase 4: Final Polish ===")
     print(f"Starting C = {best_c:.18f}")
 
     for r in range(rounds):
         # Cascade
         v0 = to_v(f, floor=1e-30)
-        f, c_cas = lbfgs_cascade(v0, [1e10, 1e11, 1e12, 1e13, 1e14], iters=3000,
-                                  history_size=250)
+        f, c_cas = lbfgs_cascade(v0, [1e10, 1e11, 1e12, 1e13, 1e14], iters=3000, history_size=250)
         if c_cas < best_c:
             best_c = c_cas
             best_f = f.copy()
@@ -297,12 +308,14 @@ def phase4_polish(f0: np.ndarray, rounds: int = 5) -> tuple[np.ndarray, float]:
 
 # ── Main ─────────────────────────────────────────────────────────────────
 
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--warmstart", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
-    p.add_argument("--phases", type=str, default="1,2,3,4",
-                   help="Comma-separated phase numbers to run")
+    p.add_argument(
+        "--phases", type=str, default="1,2,3,4", help="Comma-separated phase numbers to run"
+    )
     args = p.parse_args()
 
     with open(args.warmstart) as fh:
@@ -311,7 +324,7 @@ def main():
     c0 = exact_score_f(f0)
     print(f"Warmstart: {args.warmstart}")
     print(f"n={len(f0)}, C={c0:.18f}")
-    print(f"Target: < 1.502862758705311 (SOTA - 1e-7)")
+    print("Target: < 1.502862758705311 (SOTA - 1e-7)")
 
     phases = [int(x) for x in args.phases.split(",")]
     global_best_c = c0
@@ -346,11 +359,11 @@ def main():
             global_best_f = f4.copy()
 
     dt = time.time() - t_total
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"FINAL BEST: C = {global_best_c:.18f}  n={len(global_best_f)}")
-    print(f"SOTA:       C = 1.502862858705310556")
+    print("SOTA:       C = 1.502862858705310556")
     print(f"Delta:      {1.502862858705311 - global_best_c:+.3e}")
-    print(f"Target:     < 1.502862758705311 (need delta > 1e-7)")
+    print("Target:     < 1.502862758705311 (need delta > 1e-7)")
     print(f"Total time: {dt:.1f}s")
 
     save_best(global_best_f, global_best_c, args.out, tag="mega_optimize")

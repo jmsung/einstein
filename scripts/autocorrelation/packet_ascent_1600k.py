@@ -48,9 +48,7 @@ def main():
     print("Packet-Coordinate Ascent on 1.6M Solution")
     print("=" * 70)
 
-    f = np.maximum(
-        np.load(RESULTS / "public_best_1600k.npy").astype(np.float64), 0.0
-    )
+    f = np.maximum(np.load(RESULTS / "public_best_1600k.npy").astype(np.float64), 0.0)
     n = len(f)
     C_initial = score(f)
     print(f"Loaded: n={n}, C={C_initial:.13f}")
@@ -121,7 +119,7 @@ def main():
             n_improved += 1
             if gain > 1e-12:
                 print(
-                    f"  block {bi:5d} [{s:8d}:{e:8d}] w={e-s:3d}: "
+                    f"  block {bi:5d} [{s:8d}:{e:8d}] w={e - s:3d}: "
                     f"alpha={best_alpha:.6f}, dC={gain:+.2e}"
                 )
             C_best = best_C
@@ -133,24 +131,24 @@ def main():
             rate = (idx + 1) / elapsed
             eta = (len(small_blocks) - idx - 1) / rate
             print(
-                f"  ... {idx+1}/{len(small_blocks)}, C={C_best:.13f}, "
+                f"  ... {idx + 1}/{len(small_blocks)}, C={C_best:.13f}, "
                 f"{n_improved} improved, {rate:.1f} blocks/s, ETA {eta:.0f}s"
             )
 
     elapsed = time.time() - t0
     improvement = C_best - C_initial
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("RESULTS (1.6M)")
     print(f"  Initial C: {C_initial:.13f}")
     print(f"  Final C:   {C_best:.13f}")
     print(f"  Improvement: {improvement:+.2e}")
     print(f"  Time: {elapsed:.0f}s, {n_improved} blocks improved")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     # Save
     np.save(RESULTS / f"c2_n{n}_{C_best:.8f}_packet_ascent.npy", f_best)
-    print(f"Saved to results/")
+    print("Saved to results/")
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ Lower scores are better. Constraint: |B| ≤ 2000.
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 
 def _normalize(elements: Iterable[int]) -> list[int]:

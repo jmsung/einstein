@@ -12,9 +12,6 @@ wheels/
 # Claude Code local settings (machine-specific only — global rules tracked in .claude/rules/)
 .claude/settings.local.json
 
-# GitHub Actions (run via separate config)
-.github/
-
 # Environment / secrets
 .env
 

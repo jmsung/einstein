@@ -3,6 +3,7 @@
 Inspired by the prior branch's long_polish.py — random perturbations at
 several scales with greedy accept. For basin-floor residual improvement.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -33,8 +34,9 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--warmstart", type=Path, required=True)
     p.add_argument("--duration-sec", type=float, default=300)
-    p.add_argument("--scales", type=str,
-                   default="1e-16,1e-15,1e-14,1e-13,1e-12,1e-11,1e-10,1e-9,1e-8")
+    p.add_argument(
+        "--scales", type=str, default="1e-16,1e-15,1e-14,1e-13,1e-12,1e-11,1e-10,1e-9,1e-8"
+    )
     p.add_argument("--perturb-cells", type=int, nargs=2, default=[1, 100])
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", type=Path, required=True)
@@ -78,13 +80,18 @@ def main():
 
         if time.time() - last_report > 10:
             rate = n_trials / (time.time() - t0)
-            print(f"  t={time.time()-t0:.0f}s  trials={n_trials}  "
-                  f"accepted={n_accepted}  C={best_c:.18f}  "
-                  f"rate={rate:.0f}/s", flush=True)
+            print(
+                f"  t={time.time() - t0:.0f}s  trials={n_trials}  "
+                f"accepted={n_accepted}  C={best_c:.18f}  "
+                f"rate={rate:.0f}/s",
+                flush=True,
+            )
             last_report = time.time()
 
-    print(f"\nFinal C = {best_c:.18f}  ({time.time()-t0:.0f}s, "
-          f"{n_trials} trials, {n_accepted} accepted)")
+    print(
+        f"\nFinal C = {best_c:.18f}  ({time.time() - t0:.0f}s, "
+        f"{n_trials} trials, {n_accepted} accepted)"
+    )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as fh:
         json.dump({"values": f.tolist(), "score": best_c, "n": n}, fh)

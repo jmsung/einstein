@@ -67,7 +67,9 @@ def antipodal_representatives(W: np.ndarray) -> np.ndarray:
     return np.array(reps)
 
 
-def min_l1_subgrad(W: np.ndarray, n_restarts: int = 1000, n_iters: int = 5000, d: int = 11) -> tuple[float, np.ndarray]:
+def min_l1_subgrad(
+    W: np.ndarray, n_restarts: int = 1000, n_iters: int = 5000, d: int = 11
+) -> tuple[float, np.ndarray]:
     """Minimize sum |<u, w_k>| over ||u||=1 in R^d via projected subgradient.
     W is shape (K, d_full), but we know it's in d-dim subspace.
     """
@@ -142,8 +144,10 @@ def main() -> int:
         # S_full = (1/2) Σ_{i=1..136} |<u, w_i>| = Σ_{k=1..68} |<u, w_k>| = S_symm
         # So the first-order loss change per δ is 2δ*(S_symm - 1).
 
-    print(f"\n=== First-order verdict ===")
-    print(f"Net Δscore per δ movement = 2δ · (S_min - 1) = 2δ · ({best_val:.6f} - 1) = 2δ · ({best_val - 1:.6f})")
+    print("\n=== First-order verdict ===")
+    print(
+        f"Net Δscore per δ movement = 2δ · (S_min - 1) = 2δ · ({best_val:.6f} - 1) = 2δ · ({best_val - 1:.6f})"
+    )
     if best_val < 1 - 1e-6:
         print(">>> FIRST-ORDER ESCAPE EXISTS. Move in direction best_u to drop below 2.0.")
     else:

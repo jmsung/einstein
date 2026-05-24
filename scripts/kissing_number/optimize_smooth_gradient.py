@@ -82,8 +82,13 @@ def run_lbfgs_stage(vecs_np, beta, n_steps, lr=1e-4):
     """Run L-BFGS optimization at a given beta smoothing level."""
     vecs = torch.tensor(vecs_np, dtype=torch.float64, requires_grad=True)
     optimizer = torch.optim.LBFGS(
-        [vecs], lr=lr, max_iter=20, line_search_fn="strong_wolfe",
-        history_size=50, tolerance_grad=1e-20, tolerance_change=1e-20,
+        [vecs],
+        lr=lr,
+        max_iter=20,
+        line_search_fn="strong_wolfe",
+        history_size=50,
+        tolerance_grad=1e-20,
+        tolerance_change=1e-20,
     )
 
     best_hinge = float("inf")
@@ -91,6 +96,7 @@ def run_lbfgs_stage(vecs_np, beta, n_steps, lr=1e-4):
     t0 = time.time()
 
     for step in range(n_steps):
+
         def closure():
             optimizer.zero_grad()
             unit = project_to_sphere(vecs)
@@ -118,7 +124,7 @@ def run_lbfgs_stage(vecs_np, beta, n_steps, lr=1e-4):
 
             elapsed = time.time() - t0
             print(
-                f"  [beta={beta:.0f}] step {step+1:>4d} | "
+                f"  [beta={beta:.0f}] step {step + 1:>4d} | "
                 f"smooth={smooth:.12f} | hinge={hinge:.15f} | "
                 f"best={best_hinge:.15f} | {elapsed:.0f}s"
             )
@@ -167,7 +173,7 @@ def run_adam_stage(vecs_np, beta, n_steps, lr=1e-6):
             if (step + 1) % 500 == 0:
                 elapsed = time.time() - t0
                 print(
-                    f"  [Adam beta={beta:.0f}] step {step+1:>5d} | "
+                    f"  [Adam beta={beta:.0f}] step {step + 1:>5d} | "
                     f"smooth={smooth:.12f} | hinge={hinge:.15f} | "
                     f"best={best_hinge:.15f} | {elapsed:.0f}s"
                 )
@@ -236,6 +242,7 @@ def main():
     # Phase 5: Final polish with micro-perturbation at 1e-12
     print("\n=== Phase 5: Micro-perturbation polish ===")
     from scripts.kissing_number.optimize_harden import run_perturbation
+
     v, l, n = run_perturbation(best_vecs.copy(), 1e-12, 5_000_000, 7777)
     exact = overlap_loss_exact_np(v)
     print(f"  After polish: {exact:.15f}")
@@ -244,11 +251,11 @@ def main():
         best_vecs = v.copy()
 
     final = overlap_loss_exact_np(best_vecs)
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Final:   {final:.15f}")
     print(f"Start:   {initial:.15f}")
     print(f"Delta:   {initial - final:.2e}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     if final < initial:
         save_solution(best_vecs, final, "best")

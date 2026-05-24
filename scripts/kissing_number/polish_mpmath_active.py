@@ -29,7 +29,8 @@ import time
 from pathlib import Path
 
 import numpy as np
-from mpmath import mp, mpf, sqrt as mpsqrt
+from mpmath import mp, mpf
+from mpmath import sqrt as mpsqrt
 
 from einstein.kissing_number.evaluator import overlap_loss_mpmath
 
@@ -148,9 +149,7 @@ def score_and_active_grad_v(
     return total, grad, n_active
 
 
-def step_v(
-    V: list[list[mpf]], grad: list[list[mpf]], lr: mpf
-) -> list[list[mpf]]:
+def step_v(V: list[list[mpf]], grad: list[list[mpf]], lr: mpf) -> list[list[mpf]]:
     """Apply v_new = v + lr * grad. No renormalization — the score function
     normalizes internally, so the arena's normalization on submission matches.
     """

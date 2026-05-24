@@ -101,6 +101,7 @@ def verify_inscribed(cx, cy, r, all_circles, n_skip=None):
 def worker(args):
     seed, base_circles, swap_idx, soddy_pos = args
     import numpy as np
+
     from einstein.circle_packing_square import N_CIRCLES, evaluate
     from einstein.circle_packing_square.polish import polish
 
@@ -157,7 +158,7 @@ def main():
     else:
         raise ValueError("Unknown base format")
 
-    print(f"Base sum_r: {base[:,2].sum():.16f}")
+    print(f"Base sum_r: {base[:, 2].sum():.16f}")
 
     # Identify contacts
     n = len(base)
@@ -189,11 +190,11 @@ def main():
     soddy_candidates.sort(key=lambda x: -x[3])
     print(f"Feasible Soddy circles: {len(soddy_candidates)}")
     print()
-    print("Top 10 Soddy radii (vs smallest in AE = {:.6f}):".format(min(base[:, 2])))
+    print(f"Top 10 Soddy radii (vs smallest in AE = {min(base[:, 2]):.6f}):")
     smallest_idx = int(np.argmin(base[:, 2]))
     smallest_r = base[smallest_idx, 2]
     for tri, cx, cy, r in soddy_candidates[:10]:
-        print(f"  triangle {tri} → Soddy r={r:.6f}, gain={r-smallest_r:+.4e}")
+        print(f"  triangle {tri} → Soddy r={r:.6f}, gain={r - smallest_r:+.4e}")
 
     # Build swap tasks
     rng = np.random.default_rng(0)
@@ -232,19 +233,29 @@ def main():
                 best_c = circles
                 elapsed = time.time() - t0
                 marker = " <<< above AE!" if score > AE else ""
-                print(f"  seed={seed} swap=c{swap_idx} score={score:.16f} d_AE={score-AE:+.3e} ({elapsed:.1f}s){marker}", flush=True)
+                print(
+                    f"  seed={seed} swap=c{swap_idx} score={score:.16f} d_AE={score - AE:+.3e} ({elapsed:.1f}s){marker}",
+                    flush=True,
+                )
             if n_done % 50 == 0:
                 elapsed = time.time() - t0
-                print(f"  ...{n_done}/{len(tasks)} done, best={best_score:.16f}, {elapsed:.1f}s", flush=True)
+                print(
+                    f"  ...{n_done}/{len(tasks)} done, best={best_score:.16f}, {elapsed:.1f}s",
+                    flush=True,
+                )
 
-    print(f"\nFinal: best={best_score:.16f}  d_AE={best_score-AE:+.3e}")
+    print(f"\nFinal: best={best_score:.16f}  d_AE={best_score - AE:+.3e}")
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "base_score": AE,
-            "best_score": best_score,
-            "best_circles": best_c,
-        }, f, indent=2)
+        json.dump(
+            {
+                "base_score": AE,
+                "best_score": best_score,
+                "best_circles": best_c,
+            },
+            f,
+            indent=2,
+        )
     print(f"Saved: {args.output}")
 
 

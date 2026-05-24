@@ -14,12 +14,15 @@ Approaches:
 """
 
 import sys
+
 sys.path.insert(0, "src")
 
 import time
+
 import numpy as np
 from scipy.optimize import minimize
 from scipy.signal import fftconvolve
+
 from einstein.autocorrelation.fast import fast_evaluate, score_from_conv
 
 TOTAL_TIME = 3600  # 1 hour budget
@@ -113,7 +116,7 @@ for beta in beta_schedule:
         dphi_dc = dn_dc - lam * dd_dc
 
         dphi_df = 2.0 * fftconvolve(dphi_dc, f[::-1], mode="full")
-        dphi_df = dphi_df[n - 1: 2 * n - 1]
+        dphi_df = dphi_df[n - 1 : 2 * n - 1]
 
         dobj_dw = -dphi_df * 2.0 * ww
         scale = max(abs(numer), 1e-30)
@@ -128,8 +131,11 @@ for beta in beta_schedule:
             break
 
         res = minimize(
-            obj_grad, w, method="L-BFGS-B", jac=True,
-            options={"maxiter": 200, "ftol": 1e-15, "gtol": 1e-14, "maxfun": 500}
+            obj_grad,
+            w,
+            method="L-BFGS-B",
+            jac=True,
+            options={"maxiter": 200, "ftol": 1e-15, "gtol": 1e-14, "maxfun": 500},
         )
         w = res.x
         f_new = w * w
@@ -231,11 +237,11 @@ if remaining() > 120:
 
     # dC/df via correlation with reversed f
     dC_df = 2.0 * fftconvolve(dC_dc, f_work[::-1], mode="full")
-    dC_df = dC_df[n - 1: 2 * n - 1]
+    dC_df = dC_df[n - 1 : 2 * n - 1]
 
     # Find coordinates with largest positive gradient
     top_pos = np.argsort(dC_df)[-1000:]  # top 1000 positive gradient positions
-    top_neg = np.argsort(dC_df)[:1000]   # top 1000 negative gradient positions
+    top_neg = np.argsort(dC_df)[:1000]  # top 1000 negative gradient positions
 
     log(f"Max gradient: {np.max(dC_df):.6e}, Min: {np.min(dC_df):.6e}")
     log(f"Top positive grad positions: {len(top_pos)}")
@@ -321,7 +327,7 @@ if remaining() > 120:
                 dd_dc = 3.0 * (proxy + c_sum * d_proxy_dc)
                 dphi_dc = dn_dc - _lam * dd_dc
                 dphi_df = 2.0 * fftconvolve(dphi_dc, f[::-1], mode="full")
-                dphi_df = dphi_df[_n - 1: 2 * _n - 1]
+                dphi_df = dphi_df[_n - 1 : 2 * _n - 1]
                 dobj_dw = -dphi_df * 2.0 * ww
                 scale = max(abs(numer_v), 1e-30)
                 dobj_dw /= scale
@@ -330,8 +336,11 @@ if remaining() > 120:
                 return float(-phi / scale), dobj_dw
 
             res = minimize(
-                obj_grad_pool, w_pool, method="L-BFGS-B", jac=True,
-                options={"maxiter": 300, "ftol": 1e-15, "gtol": 1e-14}
+                obj_grad_pool,
+                w_pool,
+                method="L-BFGS-B",
+                jac=True,
+                options={"maxiter": 300, "ftol": 1e-15, "gtol": 1e-14},
             )
             w_pool = res.x
             f_pool = w_pool * w_pool
@@ -377,7 +386,7 @@ if remaining() > 300:
             w_init = np.zeros(n_small)
             width = rng.integers(20, 50)
             start = rng.integers(0, n_small - width)
-            w_init[start:start+width] = rng.exponential(1.0, width)
+            w_init[start : start + width] = rng.exponential(1.0, width)
         elif seed < 10:
             # Multiple blocks
             w_init = np.zeros(n_small)
@@ -385,7 +394,7 @@ if remaining() > 300:
             for _ in range(n_blocks):
                 width = rng.integers(5, 30)
                 start = rng.integers(0, max(1, n_small - width))
-                w_init[start:start+width] = rng.exponential(0.5, width)
+                w_init[start : start + width] = rng.exponential(0.5, width)
         elif seed < 15:
             # Uniform + noise
             w_init = rng.uniform(0.5, 1.5, n_small)
@@ -462,11 +471,11 @@ log("=" * 60)
 log(f"Original 1.6M score: {score_orig:.16f}")
 log(f"Best achieved:       {best_score:.16f}")
 log(f"Improvement:         {best_score - score_orig:.2e}")
-log(f"Target:              0.9627433187626762")
+log("Target:              0.9627433187626762")
 log(f"Gap to target:       {0.9627433187626762 - best_score:.2e}")
 log(f"Can submit #1?       {'YES' if best_score > 0.9627433 else 'NO'}")
 log(f"Total time:          {elapsed():.1f}s")
 
 # Save best solution
 np.save("/tmp/campaign3_best.npy", best_f)
-log(f"Best solution saved to /tmp/campaign3_best.npy")
+log("Best solution saved to /tmp/campaign3_best.npy")

@@ -17,10 +17,10 @@ v > 49109 = SOTA.
 Strategy: use SOTA's atom A_sota for fairness initially. If that doesn't
 work, try simple atom constructions (Wichmann-style) with stretched span.
 """
+
 from __future__ import annotations
 
 import json
-from itertools import combinations
 from pathlib import Path
 
 import numpy as np
@@ -124,23 +124,31 @@ def main():
     print()
 
     print("[2/3] For each ruler, compute v(B = A_sota ⊕ λ·R)")
-    print(f"  {'R':<22}{'L':<5}{'gaps':<14}{'v(B)':<10}{'k=|B|':<8}{'score':<14}{'beats SOTA?':<14}")
+    print(
+        f"  {'R':<22}{'L':<5}{'gaps':<14}{'v(B)':<10}{'k=|B|':<8}{'score':<14}{'beats SOTA?':<14}"
+    )
     results = []
     for info in [{"R": (0, 1, 4, 6), "L": 6, "gaps": [], "is_perfect": True}] + nonperfect:
         R = info["R"]
         L = info["L"]
         v, k = kronecker_v(A_sota, R, LAM)
-        score = k ** 2 / v if v > 0 else float("inf")
+        score = k**2 / v if v > 0 else float("inf")
         beats = "YES" if score < 2.6390274695 - 1e-9 else "no"
-        results.append({"R": R, "L": L, "gaps": info["gaps"], "v": v, "k": k, "score": score, "beats": beats})
+        results.append(
+            {"R": R, "L": L, "gaps": info["gaps"], "v": v, "k": k, "score": score, "beats": beats}
+        )
         if v > 30000 or info["L"] == 6 or beats == "YES":
-            print(f"  {str(R):<22}{L:<5}{str(info['gaps']):<14}{v:<10}{k:<8}{score:<14.6f}{beats:<14}")
+            print(
+                f"  {str(R):<22}{L:<5}{str(info['gaps']):<14}{v:<10}{k:<8}{score:<14.6f}{beats:<14}"
+            )
 
     print()
     print("[3/3] Top 5 by score (lowest = best)")
     results.sort(key=lambda r: r["score"])
     for r in results[:5]:
-        print(f"  R={r['R']}, L={r['L']}, gaps={r['gaps']}, v={r['v']}, k={r['k']}, score={r['score']:.6f}")
+        print(
+            f"  R={r['R']}, L={r['L']}, gaps={r['gaps']}, v={r['v']}, k={r['k']}, score={r['score']:.6f}"
+        )
 
     print()
     best = results[0]
@@ -148,9 +156,9 @@ def main():
         print(f"  ★ HIT: R={best['R']} gives score {best['score']:.10f} < 2.6390274695")
     else:
         print(f"  No hit. Best non-SOTA: R={best['R']}, score={best['score']:.6f}")
-        print(f"  Implication: SOTA's R={{0,1,4,6}} is locally optimal among 4-mark Sidon rulers")
-        print(f"               when paired with atom A_sota.")
-        print(f"  Note: this test FIXES the atom. Different (R', A') joint optimization is open.")
+        print("  Implication: SOTA's R={0,1,4,6} is locally optimal among 4-mark Sidon rulers")
+        print("               when paired with atom A_sota.")
+        print("  Note: this test FIXES the atom. Different (R', A') joint optimization is open.")
 
 
 if __name__ == "__main__":

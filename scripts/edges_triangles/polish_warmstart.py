@@ -9,7 +9,6 @@ import numpy as np
 # Make sibling import work
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 from optimize import (  # noqa: E402
     _score_from_arrays,
     basin_hopping_optimize,
@@ -18,6 +17,8 @@ from optimize import (  # noqa: E402
     redistribute,
     sa_perturb,
 )
+
+from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 
 
 def load_to_xy(path: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -42,15 +43,15 @@ def polish(input_path: Path, label: str) -> tuple[float, np.ndarray, np.ndarray]
     print(f"Initial: {initial:.14f}")
 
     # Quick CD polish first to bring it to local opt
-    print(f"  CD polish...")
+    print("  CD polish...")
     xs, ys = coordinate_descent(xs, ys, n_iters=30, step_fracs=[0.1, 0.03, 0.01, 0.003, 0.001])
     print(f"  After CD: {_score_from_arrays(xs, ys):.14f}")
 
-    print(f"  GS polish...")
+    print("  GS polish...")
     xs, ys = golden_section_sweep(xs, ys, n_sweeps=100)
     print(f"  After GS: {_score_from_arrays(xs, ys):.14f}")
 
-    print(f"  Basin-hopping (50 iters)...")
+    print("  Basin-hopping (50 iters)...")
     xs, ys = basin_hopping_optimize(xs, ys, n_iter=50, temp=1e-8)
     xs, ys = golden_section_sweep(xs, ys, n_sweeps=50)
     print(f"  After BH: {_score_from_arrays(xs, ys):.14f}")
@@ -59,11 +60,15 @@ def polish(input_path: Path, label: str) -> tuple[float, np.ndarray, np.ndarray]
     best_xs, best_ys = xs.copy(), ys.copy()
     best_score = _score_from_arrays(best_xs, best_ys)
     for mega in range(3):
-        xm, ym = sa_perturb(best_xs, best_ys, n_rounds=15, n_perturbations=80, seed=mega * 17 + 3, block_size=5)
+        xm, ym = sa_perturb(
+            best_xs, best_ys, n_rounds=15, n_perturbations=80, seed=mega * 17 + 3, block_size=5
+        )
         for _ in range(2):
             xm, ym = redistribute(xm, ym)
             xm, ym = golden_section_sweep(xm, ym, n_sweeps=80)
-        xm, ym = coordinate_descent(xm, ym, n_iters=20, step_fracs=[0.0001, 0.00003, 0.00001, 0.000003, 0.000001])
+        xm, ym = coordinate_descent(
+            xm, ym, n_iters=20, step_fracs=[0.0001, 0.00003, 0.00001, 0.000003, 0.000001]
+        )
         sm = _score_from_arrays(xm, ym)
         if sm > best_score:
             best_xs, best_ys, best_score = xm.copy(), ym.copy(), sm
@@ -97,7 +102,7 @@ def main():
     print("=" * 70)
     print(f"{'Warm-start':50s} {'Polished score':>22s}")
     for label, score, _, _ in results:
-        marker = ' *** BEATS OUR BEST ***' if score > our_score else ''
+        marker = " *** BEATS OUR BEST ***" if score > our_score else ""
         print(f"{label:50s} {score:22.14f}{marker}")
     print(f"{'Our current best':50s} {our_score:22.14f}")
 
@@ -110,6 +115,7 @@ def main():
         # Save it
         data_xs = best[2][1:-1]
         from einstein.edges_triangles.evaluator import turan_row
+
         weights = np.array([turan_row(np.clip(x, 0.0, 0.95)) for x in data_xs])
         verify = compute_score(weights)
         print(f"   Verified: {verify:.14f}")
@@ -119,7 +125,7 @@ def main():
             json.dump({"weights": weights.tolist()}, f)
         print(f"   Saved to {out}")
     else:
-        print(f"\nNo improvement. Our score still best.")
+        print("\nNo improvement. Our score still best.")
 
 
 if __name__ == "__main__":

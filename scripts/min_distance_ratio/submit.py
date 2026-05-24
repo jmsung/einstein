@@ -55,7 +55,9 @@ def main():
     # Pre-submission checklist
     print("Pre-submission checklist:")
     c1 = True
-    print(f"  [{'x' if c1 else ' '}] 1. Local evaluator uses tolerance=0 (strict; matches arena code)")
+    print(
+        f"  [{'x' if c1 else ' '}] 1. Local evaluator uses tolerance=0 (strict; matches arena code)"
+    )
 
     api_key = verify_api()
     c2 = bool(api_key)
@@ -64,15 +66,17 @@ def main():
     # Check 3: score is competitive (rank-3 floor enforced by check 6 below)
     c3 = True  # any score that lands in top 3 is acceptable
     sota_marker = "x" if score < best_sota else "~"
-    print(f"  [{sota_marker}] 3. Score vs SOTA: delta={best_sota - score:+.3e}  "
-          f"({'beats' if score < best_sota else 'within top 3 but does not beat'})")
+    print(
+        f"  [{sota_marker}] 3. Score vs SOTA: delta={best_sota - score:+.3e}  "
+        f"({'beats' if score < best_sota else 'within top 3 but does not beat'})"
+    )
 
     c4 = vectors.shape == (16, 2)
     print(f"  [{'x' if c4 else ' '}] 4. Shape valid ({vectors.shape})")
 
     # Check distinct points
     diff = vectors[:, None, :] - vectors[None, :, :]
-    D = np.sqrt((diff ** 2).sum(-1))
+    D = np.sqrt((diff**2).sum(-1))
     iu = np.triu_indices(16, 1)
     mind = D[iu].min()
     c5 = mind > 1e-12

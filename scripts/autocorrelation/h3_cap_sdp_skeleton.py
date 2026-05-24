@@ -23,7 +23,6 @@ Run order:
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 sys.path.insert(0, "src")
 
@@ -34,6 +33,7 @@ import numpy as np
 # future use.
 try:
     import cvxpy as cp
+
     HAVE_CVXPY = True
 except ImportError:
     HAVE_CVXPY = False
@@ -228,7 +228,7 @@ def sanity_check():
     conv = fftconvolve(f_unif, f_unif, mode="full")
     nc = len(conv)
     dx_unif = 1.0 / n  # spacing of x grid
-    l2_direct = np.sum(conv * conv) * (dx_unif ** 2) * dx_unif
+    l2_direct = np.sum(conv * conv) * (dx_unif**2) * dx_unif
     # adjust for normalization: discrete sum vs integral. Scaling subtle —
     # leave as a TODO and just compare to ||F*F||_inf as a relative scale.
     print(f"  ||F*F||_2^2 (direct, n={n}) ~ {l2_direct:.6f}  [scaling TBD]")
@@ -266,8 +266,8 @@ def main():
         prob, hat_f_var, C_var = build_sdp_for_max_S(T=8, M0=0.5)
         print(f"  Built: {len(prob.constraints)} constraints")
         print(f"  Variables: hat_f shape {hat_f_var.shape}, C scalar")
-        print(f"  TODO: SOS lifting for quartic constraints — see in-source notes")
-        print(f"  TODO: solve via prob.solve(solver='MOSEK', verbose=False)")
+        print("  TODO: SOS lifting for quartic constraints — see in-source notes")
+        print("  TODO: solve via prob.solve(solver='MOSEK', verbose=False)")
     except Exception as e:
         print(f"  Build failed: {e}")
     print()

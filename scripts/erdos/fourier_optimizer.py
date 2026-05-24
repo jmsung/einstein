@@ -23,7 +23,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-from scipy.optimize import minimize as scipy_minimize, differential_evolution
+from scipy.optimize import minimize as scipy_minimize
 from scipy.signal import fftconvolve
 
 sys.path.insert(0, "src")
@@ -151,8 +151,9 @@ def approach_a_sincos_objective(coeffs, n, beta):
     return logsumexp_max(corr, beta=beta) / n * 2
 
 
-def approach_a(n: int = 600, K_values: list[int] | None = None,
-               time_limit: float = 900.0) -> tuple[np.ndarray | None, float]:
+def approach_a(
+    n: int = 600, K_values: list[int] | None = None, time_limit: float = 900.0
+) -> tuple[np.ndarray | None, float]:
     """Approach A: Fourier parametrization with L-BFGS-B.
 
     Parametrize h as Fourier series. Optimize coefficients to minimize C
@@ -244,8 +245,7 @@ def approach_a(n: int = 600, K_values: list[int] | None = None,
                 break
 
             rng = np.random.default_rng(seed + K * 200 + 1000)
-            x0 = rng.standard_normal(2 * K) * 0.1 / np.sqrt(
-                np.repeat(np.arange(1, K + 1), 2))
+            x0 = rng.standard_normal(2 * K) * 0.1 / np.sqrt(np.repeat(np.arange(1, K + 1), 2))
 
             current_x = x0.copy()
             for beta in [30.0, 100.0, 300.0]:
@@ -325,9 +325,9 @@ def direct_h_objective(h_flat, n, beta):
     return logsumexp_max(corr, beta=beta) / n * 2
 
 
-def approach_a2_direct(n: int = 600, time_limit: float = 600.0,
-                       warm_h: np.ndarray | None = None
-                       ) -> tuple[np.ndarray | None, float]:
+def approach_a2_direct(
+    n: int = 600, time_limit: float = 600.0, warm_h: np.ndarray | None = None
+) -> tuple[np.ndarray | None, float]:
     """Direct L-BFGS-B optimization on all n values of h.
 
     Uses LogSumExp smooth max with annealing beta schedule.
@@ -417,16 +417,16 @@ def gradient_wrt_max_lag(h: np.ndarray) -> np.ndarray:
         j_minus_lag = j - lag
         j_plus_lag = j + lag
         if 0 <= j_minus_lag < n:
-            grad[j] += (1.0 - h[j_minus_lag])
+            grad[j] += 1.0 - h[j_minus_lag]
         if 0 <= j_plus_lag < n:
             grad[j] -= h[j_plus_lag]
 
     return grad * 2.0 / n
 
 
-def approach_b(n: int = 600, time_limit: float = 900.0,
-               warm_h: np.ndarray | None = None
-               ) -> tuple[np.ndarray | None, float]:
+def approach_b(
+    n: int = 600, time_limit: float = 900.0, warm_h: np.ndarray | None = None
+) -> tuple[np.ndarray | None, float]:
     """Approach B: Iterative Projection (POCS).
 
     Variant B1: Gradient descent with Fourier constraint projection.
@@ -523,8 +523,9 @@ def approach_b(n: int = 600, time_limit: float = 900.0,
             h = best_h.copy()
         else:
             K = 30 + seed * 20
-            coeffs = rng.standard_normal(min(K, 200)) * 0.12 / np.sqrt(
-                np.arange(1, min(K, 200) + 1))
+            coeffs = (
+                rng.standard_normal(min(K, 200)) * 0.12 / np.sqrt(np.arange(1, min(K, 200) + 1))
+            )
             h = fourier_to_h(coeffs, n)
 
         for iteration in range(1000):
@@ -598,8 +599,9 @@ def approach_b(n: int = 600, time_limit: float = 900.0,
                     stale_count = 0
 
             prev_score = score
-            print(f"    iter {iteration+1}: C = {score:.13f} lr={lr:.2e} "
-                  f"(best: {best_score:.13f})")
+            print(
+                f"    iter {iteration + 1}: C = {score:.13f} lr={lr:.2e} (best: {best_score:.13f})"
+            )
 
     elapsed = time.time() - t0
     print(f"\n  Approach B complete: best C = {best_score:.13f} ({elapsed:.0f}s)")
@@ -611,9 +613,9 @@ def approach_b(n: int = 600, time_limit: float = 900.0,
 # ---------------------------------------------------------------------------
 
 
-def approach_c(n_values: list[int] | None = None,
-               time_limit: float = 900.0
-               ) -> tuple[np.ndarray | None, float]:
+def approach_c(
+    n_values: list[int] | None = None, time_limit: float = 900.0
+) -> tuple[np.ndarray | None, float]:
     """Approach C: CVXPY-based optimization.
 
     C1: Autocorrelation LP relaxation — finds a lower bound and
@@ -681,11 +683,10 @@ def approach_c(n_values: list[int] | None = None,
             # Actually sum_{k=-(n-1)}^{n-1} r(|k|) = (sum h)^2
             # = r(0) + 2*sum_{k=1}^{n-1} r(k) = n^2/4
             sum_r_all = r[0] + 2 * cp.sum(r[1:])
-            constraints.append(sum_r_all == n_lp ** 2 / 4.0)
+            constraints.append(sum_r_all == n_lp**2 / 4.0)
 
             prob = cp.Problem(cp.Maximize(alpha), constraints)
-            prob.solve(solver=cp.SCS, max_iters=20000, verbose=False,
-                       eps_abs=1e-9, eps_rel=1e-9)
+            prob.solve(solver=cp.SCS, max_iters=20000, verbose=False, eps_abs=1e-9, eps_rel=1e-9)
 
             if prob.status in ["optimal", "optimal_inaccurate"]:
                 alpha_val = alpha.value
@@ -724,8 +725,10 @@ def approach_c(n_values: list[int] | None = None,
                         best_score = score_up
                         best_h = h_up.copy()
                         if trial < 10 or score_up < best_score + 0.001:
-                            print(f"    trial {trial}: small={score_small:.10f} "
-                                  f"up={score_up:.10f} ***")
+                            print(
+                                f"    trial {trial}: small={score_small:.10f} "
+                                f"up={score_up:.10f} ***"
+                            )
 
             else:
                 print(f"    LP status: {prob.status}")
@@ -780,7 +783,7 @@ def approach_c(n_values: list[int] | None = None,
                 #   ~ h_current[i]*h_var[i+k] + h_var[i]*h_current[i+k] - h_current[i]*h_current[i+k]
                 for k in range(n_cc):
                     valid = n_cc - k if k > 0 else n_cc
-                    h_sum = cp.sum(h_var[:n_cc - k]) if k > 0 else cp.sum(h_var)
+                    h_sum = cp.sum(h_var[: n_cc - k]) if k > 0 else cp.sum(h_var)
 
                     quad_approx = 0
                     for i in range(n_cc - k):
@@ -821,10 +824,12 @@ def approach_c(n_values: list[int] | None = None,
                     h_current = normalize(h_current)
 
                     if (ccp_iter + 1) % 5 == 0:
-                        print(f"    CCP iter {ccp_iter+1}: "
-                              f"C={score_new:.10f} bound={t_var.value:.10f}")
+                        print(
+                            f"    CCP iter {ccp_iter + 1}: "
+                            f"C={score_new:.10f} bound={t_var.value:.10f}"
+                        )
                 else:
-                    print(f"    CCP iter {ccp_iter+1}: {prob.status}")
+                    print(f"    CCP iter {ccp_iter + 1}: {prob.status}")
                     break
 
             # Final score
@@ -874,10 +879,12 @@ def approach_c(n_values: list[int] | None = None,
             ]
 
             # Schur complement: [[X, h], [h^T, 1]] >> 0
-            Y = cp.bmat([
-                [X, cp.reshape(h_var, (n_sdp, 1), order='C')],
-                [cp.reshape(h_var, (1, n_sdp), order='C'), np.ones((1, 1))]
-            ])
+            Y = cp.bmat(
+                [
+                    [X, cp.reshape(h_var, (n_sdp, 1), order="C")],
+                    [cp.reshape(h_var, (1, n_sdp), order="C"), np.ones((1, 1))],
+                ]
+            )
             constraints.append(Y >> 0)
 
             # X[i,i] <= h[i]
@@ -897,7 +904,7 @@ def approach_c(n_values: list[int] | None = None,
 
             # Overlap constraints
             for k in range(n_sdp):
-                h_sum = cp.sum(h_var[:n_sdp - k]) if k > 0 else cp.sum(h_var)
+                h_sum = cp.sum(h_var[: n_sdp - k]) if k > 0 else cp.sum(h_var)
                 x_sum = cp.sum([X[i, i + k] for i in range(n_sdp - k)])
                 constraints.append((h_sum - x_sum) * 2.0 / n_sdp <= t_var)
 
@@ -907,8 +914,7 @@ def approach_c(n_values: list[int] | None = None,
                 constraints.append((h_sum - x_sum) * 2.0 / n_sdp <= t_var)
 
             prob = cp.Problem(cp.Minimize(t_var), constraints)
-            prob.solve(solver=cp.SCS, max_iters=20000, verbose=False,
-                       eps_abs=1e-9, eps_rel=1e-9)
+            prob.solve(solver=cp.SCS, max_iters=20000, verbose=False, eps_abs=1e-9, eps_rel=1e-9)
 
             if prob.status in ["optimal", "optimal_inaccurate"]:
                 print(f"    SDP bound: {t_var.value:.10f}")
@@ -960,9 +966,9 @@ def approach_c(n_values: list[int] | None = None,
 # ---------------------------------------------------------------------------
 
 
-def local_polish(h: np.ndarray, n_iters: int = 2_000_000,
-                 time_limit: float = 300.0, seed: int = 0
-                 ) -> tuple[np.ndarray, float]:
+def local_polish(
+    h: np.ndarray, n_iters: int = 2_000_000, time_limit: float = 300.0, seed: int = 0
+) -> tuple[np.ndarray, float]:
     """Polish a solution with random zero-sum perturbations."""
     print("\n" + "=" * 70)
     print("LOCAL POLISHING")
@@ -1014,8 +1020,10 @@ def local_polish(h: np.ndarray, n_iters: int = 2_000_000,
 
         if (trial + 1) % 500_000 == 0:
             elapsed = time.time() - t0
-            print(f"    iter {trial+1}: C = {best:.13f}, "
-                  f"improved = {improved}, time = {elapsed:.0f}s")
+            print(
+                f"    iter {trial + 1}: C = {best:.13f}, "
+                f"improved = {improved}, time = {elapsed:.0f}s"
+            )
 
     elapsed = time.time() - t0
     print(f"  Polish done: C = {best:.13f}, improved = {improved} ({elapsed:.0f}s)")
@@ -1070,8 +1078,7 @@ def main():
         print(f"\n  >>> New global best from Approach A: C = {s_a:.13f}")
 
     # ===== Approach A2: Direct L-BFGS-B =====
-    h_a2, s_a2 = approach_a2_direct(
-        n=n, time_limit=180, warm_h=global_best_h)
+    h_a2, s_a2 = approach_a2_direct(n=n, time_limit=180, warm_h=global_best_h)
     results["A2_direct_lbfgsb"] = s_a2
     if h_a2 is not None and s_a2 < global_best_score:
         global_best_score = s_a2
@@ -1099,8 +1106,8 @@ def main():
         remaining = max(0, 1800 - (time.time() - t_global))
         if remaining > 30:
             h_pol, s_pol = local_polish(
-                global_best_h, n_iters=5_000_000,
-                time_limit=min(remaining, 300))
+                global_best_h, n_iters=5_000_000, time_limit=min(remaining, 300)
+            )
             results["polish"] = s_pol
             if s_pol < global_best_score:
                 global_best_score = s_pol
@@ -1147,7 +1154,7 @@ def main():
         print("\n  No valid solution found.")
 
     total_time = time.time() - t_global
-    print(f"  Total time: {total_time:.0f}s ({total_time/60:.1f}min)")
+    print(f"  Total time: {total_time:.0f}s ({total_time / 60:.1f}min)")
     print("=" * 70)
 
 

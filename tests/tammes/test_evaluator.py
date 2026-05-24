@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from einstein.tammes.evaluator import evaluate, min_distance, project_to_sphere
+from einstein.tammes.evaluator import evaluate, min_distance
 
 
 def _golden_set():

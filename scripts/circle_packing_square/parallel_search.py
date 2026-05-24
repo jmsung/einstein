@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import json
 import multiprocessing as mp
-import os
 import time
 from pathlib import Path
 
@@ -22,7 +21,9 @@ def worker(args):
     """Run one polish trial. Imports inside worker for fork safety."""
     seed, strategy, warm_circles = args
     import math
+
     import numpy as np
+
     from einstein.circle_packing_square import N_CIRCLES, evaluate
     from einstein.circle_packing_square.polish import polish
 
@@ -110,7 +111,11 @@ def worker(args):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--n-trials", type=int, default=200)
-    p.add_argument("--strategy", choices=["random", "perturb_large", "kick", "shuffle", "mixed"], default="mixed")
+    p.add_argument(
+        "--strategy",
+        choices=["random", "perturb_large", "kick", "shuffle", "mixed"],
+        default="mixed",
+    )
     p.add_argument("--warm", type=str, default="results-temp/p14_top.json")
     p.add_argument("--workers", type=int, default=None)
     p.add_argument("--seed-base", type=int, default=0)
@@ -131,9 +136,13 @@ def main():
         elif isinstance(data, dict) and "circles" in data:
             warm = np.array(data["circles"], dtype=np.float64)
         if warm is not None:
-            print(f"Loaded warm seed: sum_r={warm[:,2].sum():.13f}")
+            print(f"Loaded warm seed: sum_r={warm[:, 2].sum():.13f}")
 
-    strategies = ["random", "perturb_large", "kick", "shuffle"] if args.strategy == "mixed" else [args.strategy]
+    strategies = (
+        ["random", "perturb_large", "kick", "shuffle"]
+        if args.strategy == "mixed"
+        else [args.strategy]
+    )
     tasks = []
     for i in range(args.n_trials):
         s = strategies[i % len(strategies)]
@@ -161,21 +170,33 @@ def main():
                 best_strategy = strat
                 history.append({"trial": seed, "strategy": strat, "score": score})
                 elapsed = time.time() - t0
-                print(f"  [{strat:14s}] seed={seed:5d} NEW BEST {score:.16f}  ({elapsed:.1f}s, {n_done}/{args.n_trials})", flush=True)
+                print(
+                    f"  [{strat:14s}] seed={seed:5d} NEW BEST {score:.16f}  ({elapsed:.1f}s, {n_done}/{args.n_trials})",
+                    flush=True,
+                )
             elif n_done % 50 == 0:
                 elapsed = time.time() - t0
-                print(f"  ...{n_done}/{args.n_trials} done, best={best_score:.16f}, fail={n_failed}, {elapsed:.1f}s", flush=True)
+                print(
+                    f"  ...{n_done}/{args.n_trials} done, best={best_score:.16f}, fail={n_failed}, {elapsed:.1f}s",
+                    flush=True,
+                )
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "n_trials": args.n_trials,
-            "best_score": best_score,
-            "best_strategy": best_strategy,
-            "best_circles": best_circles,
-            "history": history,
-        }, f, indent=2)
-    print(f"\nFinal: best={best_score:.16f}  strategy={best_strategy}  ({time.time()-t0:.1f}s, fail={n_failed}/{args.n_trials})")
+        json.dump(
+            {
+                "n_trials": args.n_trials,
+                "best_score": best_score,
+                "best_strategy": best_strategy,
+                "best_circles": best_circles,
+                "history": history,
+            },
+            f,
+            indent=2,
+        )
+    print(
+        f"\nFinal: best={best_score:.16f}  strategy={best_strategy}  ({time.time() - t0:.1f}s, fail={n_failed}/{args.n_trials})"
+    )
     print(f"Output: {args.output}")
 
 

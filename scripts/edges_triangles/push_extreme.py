@@ -73,9 +73,9 @@ def turan_y_torch(x: torch.Tensor, k: torch.Tensor) -> torch.Tensor:
     return 1.0 - 3.0 * s2 + 2.0 * s3
 
 
-def score_torch(raw: torch.Tensor, bi_xs: torch.Tensor,
-                lo: torch.Tensor, hi: torch.Tensor,
-                k_vec: torch.Tensor) -> torch.Tensor:
+def score_torch(
+    raw: torch.Tensor, bi_xs: torch.Tensor, lo: torch.Tensor, hi: torch.Tensor, k_vec: torch.Tensor
+) -> torch.Tensor:
     xs = lo + (hi - lo) * torch.sigmoid(raw)
     sort_idx = torch.argsort(xs)
     xs_sorted = xs[sort_idx]
@@ -97,8 +97,7 @@ def score_torch(raw: torch.Tensor, bi_xs: torch.Tensor,
     area_a = y1 * hs
     area_b = -dys * dys / 6.0 + y1 * hs
     area_c = y0 * hs + 1.5 * hs * hs
-    area_per = torch.where(dys < 0, area_a,
-                           torch.where(dys <= 3.0 * hs, area_b, area_c))
+    area_per = torch.where(dys < 0, area_a, torch.where(dys <= 3.0 * hs, area_b, area_c))
     area = area_per.sum()
     max_gap = hs.max()
     return -(area + 10.0 * max_gap)
@@ -116,8 +115,9 @@ def inverse_sigmoid(xs, lo, hi):
     return np.log(u / (1 - u))
 
 
-def lbfgs_optimize(multi_xs: np.ndarray, bi_xs: np.ndarray,
-                   max_rounds: int = 60) -> tuple[np.ndarray, float]:
+def lbfgs_optimize(
+    multi_xs: np.ndarray, bi_xs: np.ndarray, max_rounds: int = 60
+) -> tuple[np.ndarray, float]:
     """L-BFGS with strict scallop bounds."""
     k_np = assign_scallops(multi_xs)
     lo_np, hi_np = scallop_bounds(k_np)
@@ -131,21 +131,27 @@ def lbfgs_optimize(multi_xs: np.ndarray, bi_xs: np.ndarray,
     raw = torch.tensor(raw_np, dtype=torch.float64, requires_grad=True)
 
     opt = torch.optim.LBFGS(
-        [raw], lr=1.0, max_iter=40,
-        tolerance_grad=1e-20, tolerance_change=1e-20,
-        history_size=100, line_search_fn="strong_wolfe",
+        [raw],
+        lr=1.0,
+        max_iter=40,
+        tolerance_grad=1e-20,
+        tolerance_change=1e-20,
+        history_size=100,
+        line_search_fn="strong_wolfe",
     )
 
     best_score = -float("inf")
     best_raw = raw.detach().clone()
 
     for r in range(max_rounds):
+
         def closure():
             opt.zero_grad()
             s = score_torch(raw, bi_t, lo_t, hi_t, k_t)
             loss = -s
             loss.backward()
             return loss
+
         loss = opt.step(closure)
         cur = -loss.item()
         if cur > best_score:
@@ -188,7 +194,7 @@ def main():
     bi_xs, multi_xs = load_xs(sol_path)
     init_score = compute_area(bi_xs, multi_xs)
     print(f"Initial: {init_score:.14f} ({len(multi_xs)} multipartite pts)")
-    print(f"Target:  -0.71170119000000 (SOTA + 1e-5)")
+    print("Target:  -0.71170119000000 (SOTA + 1e-5)")
     print(f"Gap:     {-0.71170119 - init_score:.2e}")
     print()
 
@@ -261,7 +267,9 @@ def main():
                 best_score = opt_true
                 best_multi = opt_multi.copy()
                 n_improved += 1
-                print(f"  {src_k}->{dst_k}: {opt_true:.14f} NEW BEST (+{opt_true-init_score:.3e})")
+                print(
+                    f"  {src_k}->{dst_k}: {opt_true:.14f} NEW BEST (+{opt_true - init_score:.3e})"
+                )
 
             if n_tried % 50 == 0:
                 elapsed = time.time() - t0
@@ -297,9 +305,11 @@ def main():
             if opt_true > best_score + 1e-15:
                 best_score = opt_true
                 best_multi = opt_multi.copy()
-                print(f"  {src_k}->{dst_k} (x2): {opt_true:.14f} NEW BEST (+{opt_true-init_score:.3e})")
+                print(
+                    f"  {src_k}->{dst_k} (x2): {opt_true:.14f} NEW BEST (+{opt_true - init_score:.3e})"
+                )
 
-    print(f"  Done: {n_tried2} tried, {time.time()-t0:.0f}s")
+    print(f"  Done: {n_tried2} tried, {time.time() - t0:.0f}s")
     print()
 
     # Phase 4: Random from-scratch with different allocations
@@ -309,7 +319,7 @@ def main():
 
     for seed in range(20):
         # Random allocation proportional to scallop width
-        widths = np.array([1.0/(k*(k+1)) for k in range(2, 20)])
+        widths = np.array([1.0 / (k * (k + 1)) for k in range(2, 20)])
         # Add noise to the proportions
         props = widths + rng.exponential(0.001, size=len(widths))
         props = props / props.sum()
@@ -336,11 +346,11 @@ def main():
         if opt_true > best_score + 1e-15:
             best_score = opt_true
             best_multi = opt_multi.copy()
-            print(f"  seed={seed}: {opt_true:.14f} NEW BEST (+{opt_true-init_score:.3e})")
+            print(f"  seed={seed}: {opt_true:.14f} NEW BEST (+{opt_true - init_score:.3e})")
         elif seed % 5 == 0:
             print(f"  seed={seed}: {opt_true:.14f} (best={best_score:.14f})")
 
-    print(f"  Done: {time.time()-t0:.0f}s")
+    print(f"  Done: {time.time() - t0:.0f}s")
     print()
 
     # Phase 5: Full-weight optimization with PyTorch (no Turán constraint)
@@ -352,8 +362,8 @@ def main():
     def score_from_weights(ww):
         ww_pos = torch.clamp(ww, min=0.0)
         ww_norm = ww_pos / ww_pos.sum(dim=1, keepdim=True)
-        s2 = (ww_norm ** 2).sum(dim=1)
-        s3 = (ww_norm ** 3).sum(dim=1)
+        s2 = (ww_norm**2).sum(dim=1)
+        s3 = (ww_norm**3).sum(dim=1)
         xs = 1.0 - s2
         ys = 1.0 - 3.0 * s2 + 2.0 * s3
         sort_idx = torch.argsort(xs)
@@ -370,23 +380,28 @@ def main():
         area_a = y1 * hs
         area_b = -dys * dys / 6.0 + y1 * hs
         area_c = y0 * hs + 1.5 * hs * hs
-        area_per = torch.where(dys < 0, area_a,
-                               torch.where(dys <= 3.0 * hs, area_b, area_c))
+        area_per = torch.where(dys < 0, area_a, torch.where(dys <= 3.0 * hs, area_b, area_c))
         return -(area_per.sum() + 10.0 * hs.max())
 
     opt_w = torch.optim.LBFGS(
-        [w_t], lr=0.001, max_iter=20,
-        tolerance_grad=1e-20, tolerance_change=1e-20,
-        history_size=50, line_search_fn="strong_wolfe",
+        [w_t],
+        lr=0.001,
+        max_iter=20,
+        tolerance_grad=1e-20,
+        tolerance_change=1e-20,
+        history_size=50,
+        line_search_fn="strong_wolfe",
     )
 
     best_w_score = -float("inf")
     for r in range(30):
+
         def closure():
             opt_w.zero_grad()
             s = score_from_weights(w_t)
             (-s).backward()
             return -s
+
         loss = opt_w.step(closure)
         cur = -loss.item()
         if cur > best_w_score:
@@ -407,7 +422,7 @@ def main():
     print(f"Initial:  {init_score:.14f}")
     print(f"Best:     {best_score:.14f}")
     print(f"Delta:    {best_score - init_score:+.3e}")
-    print(f"Target:   -0.71170119000000")
+    print("Target:   -0.71170119000000")
     print(f"To target: {-0.71170119 - best_score:.3e}")
     print()
 

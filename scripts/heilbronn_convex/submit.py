@@ -26,7 +26,6 @@ from check_submission import (  # noqa: E402
     API_URL,
     check_leaderboard,
     load_agent_name,
-    load_api_key,
     verify_api,
     wait_for_leaderboard,
 )

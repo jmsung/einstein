@@ -9,12 +9,13 @@ Strategy: solve SDP at small n (30-100), extract h, upsample to n=600, polish.
 """
 
 import json
+import sys
 import time
-import numpy as np
+
 import cvxpy as cp
+import numpy as np
 from scipy.interpolate import interp1d
 
-import sys
 sys.path.insert(0, "src")
 from einstein.erdos.evaluator import evaluate
 from einstein.erdos.fast import fast_evaluate
@@ -40,8 +41,7 @@ def solve_sdp(n: int, verbose: bool = True) -> tuple[float, np.ndarray]:
         # sum = n/2
         cp.sum(h) == n / 2,
         # Shor relaxation: [[X, h], [h^T, 1]] PSD
-        cp.bmat([[X, cp.reshape(h, (n, 1))],
-                 [cp.reshape(h, (1, n)), np.ones((1, 1))]]) >> 0,
+        cp.bmat([[X, cp.reshape(h, (n, 1))], [cp.reshape(h, (1, n)), np.ones((1, 1))]]) >> 0,
         # X[i,i] <= h[i] (since h[i] in [0,1] implies h[i]^2 <= h[i])
         cp.diag(X) <= h,
         # X >= 0 elementwise (since h >= 0)
@@ -73,17 +73,16 @@ def solve_sdp(n: int, verbose: bool = True) -> tuple[float, np.ndarray]:
     if verbose:
         print(f"  Variables: h({n}), X({n}x{n}), t")
         print(f"  Constraints: {len(constraints)}")
-        print(f"  Solving...")
+        print("  Solving...")
 
     try:
-        prob.solve(solver=cp.SCS, verbose=False, max_iters=50000,
-                   eps=1e-8, warm_start=True)
+        prob.solve(solver=cp.SCS, verbose=False, max_iters=50000, eps=1e-8, warm_start=True)
     except cp.SolverError:
         try:
             prob.solve(solver=cp.CLARABEL, verbose=False)
         except cp.SolverError:
             print(f"  FAILED: no solver could handle n={n}")
-            return float('inf'), np.ones(n) * 0.5
+            return float("inf"), np.ones(n) * 0.5
 
     if verbose:
         print(f"  Status: {prob.status}")
@@ -93,7 +92,7 @@ def solve_sdp(n: int, verbose: bool = True) -> tuple[float, np.ndarray]:
     # Extract h from SDP
     h_val = h.value
     if h_val is None:
-        return float('inf'), np.ones(n) * 0.5
+        return float("inf"), np.ones(n) * 0.5
 
     # Also try rank-1 rounding of X
     X_val = X.value
@@ -128,8 +127,9 @@ def solve_sdp(n: int, verbose: bool = True) -> tuple[float, np.ndarray]:
     return prob.value, best[1]
 
 
-def upsample_and_polish(h_small: np.ndarray, target_n: int = 600,
-                         polish_iters: int = 200000) -> tuple[float, np.ndarray]:
+def upsample_and_polish(
+    h_small: np.ndarray, target_n: int = 600, polish_iters: int = 200000
+) -> tuple[float, np.ndarray]:
     """Upsample a small-n solution to target_n and polish with mass transport."""
     n_small = len(h_small)
     print(f"\n  Upsampling n={n_small} -> n={target_n}")
@@ -137,7 +137,7 @@ def upsample_and_polish(h_small: np.ndarray, target_n: int = 600,
     # Interpolate
     x_small = np.linspace(0, 2, n_small, endpoint=False)
     x_target = np.linspace(0, 2, target_n, endpoint=False)
-    f = interp1d(x_small, h_small, kind='cubic', fill_value='extrapolate')
+    f = interp1d(x_small, h_small, kind="cubic", fill_value="extrapolate")
     h = f(x_target)
 
     # Project to feasibility
@@ -177,7 +177,9 @@ def upsample_and_polish(h_small: np.ndarray, target_n: int = 600,
             improved += 1
 
         if (it + 1) % 50000 == 0:
-            print(f"    iter {it+1}/{polish_iters}: score={best_score:.12f} ({improved} improvements)")
+            print(
+                f"    iter {it + 1}/{polish_iters}: score={best_score:.12f} ({improved} improvements)"
+            )
 
     print(f"  Final: {best_score:.12f} ({improved} improvements)")
     return best_score, best_h
@@ -187,10 +189,10 @@ def main():
     print("=" * 60)
     print("Erdős Minimum Overlap — SDP Relaxation + Upsample")
     print("=" * 60)
-    print(f"Target: beat 0.3808703105862199 by >= 1e-6")
-    print(f"Need:   <= 0.3808693105862199")
+    print("Target: beat 0.3808703105862199 by >= 1e-6")
+    print("Need:   <= 0.3808693105862199")
 
-    overall_best_score = float('inf')
+    overall_best_score = float("inf")
     overall_best_h = None
 
     # Phase 1: SDP at increasing n
@@ -198,9 +200,8 @@ def main():
         try:
             lb, h_small = solve_sdp(n, verbose=True)
             small_score = fast_evaluate(h_small)
-            if small_score < float('inf'):
-                score, h_up = upsample_and_polish(h_small, target_n=600,
-                                                   polish_iters=100000)
+            if small_score < float("inf"):
+                score, h_up = upsample_and_polish(h_small, target_n=600, polish_iters=100000)
                 if score < overall_best_score:
                     overall_best_score = score
                     overall_best_h = h_up
@@ -211,9 +212,9 @@ def main():
 
     # Phase 2: Try convex combinations of SDP solutions with SOTA
     print("\n\n=== Phase 2: Convex combinations with SOTA ===")
-    with open('/tmp/p1_sota.json') as f:
+    with open("/tmp/p1_sota.json") as f:
         sota_data = json.load(f)
-    h_sota = np.array(sota_data['values'])
+    h_sota = np.array(sota_data["values"])
     sota_score = fast_evaluate(h_sota)
     print(f"SOTA score: {sota_score:.12f}")
 
@@ -234,9 +235,7 @@ def main():
     # Phase 3: Polish the overall best
     if overall_best_h is not None and overall_best_score < 0.39:
         print(f"\n=== Phase 3: Extended polish of best ({overall_best_score:.12f}) ===")
-        score, h_polished = upsample_and_polish(
-            overall_best_h, target_n=600, polish_iters=500000
-        )
+        score, h_polished = upsample_and_polish(overall_best_h, target_n=600, polish_iters=500000)
         if score < overall_best_score:
             overall_best_score = score
             overall_best_h = h_polished
@@ -244,15 +243,15 @@ def main():
     # Verify with exact evaluator
     if overall_best_h is not None:
         exact = evaluate({"values": overall_best_h.tolist()})
-        print(f"\n=== FINAL RESULT ===")
+        print("\n=== FINAL RESULT ===")
         print(f"Best score (fast):  {overall_best_score:.16f}")
         print(f"Best score (exact): {exact:.16f}")
-        print(f"SOTA:               0.3808703105862199")
+        print("SOTA:               0.3808703105862199")
         print(f"Improvement:        {0.3808703105862199 - exact:.2e}")
-        print(f"Need:               1.00e-06")
+        print("Need:               1.00e-06")
 
         # Save
-        with open('/tmp/p1_sdp_best.json', 'w') as f:
+        with open("/tmp/p1_sdp_best.json", "w") as f:
             json.dump({"values": overall_best_h.tolist()}, f)
         print("Saved to /tmp/p1_sdp_best.json")
 

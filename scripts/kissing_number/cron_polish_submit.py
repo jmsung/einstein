@@ -44,14 +44,13 @@ import numpy as np
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR.parent.parent / "src"))
 sys.path.insert(0, str(SCRIPT_DIR.parent))
-from einstein.kissing_number.evaluator import overlap_loss_mpmath  # noqa: E402
 from check_submission import (  # noqa: E402
     API_URL,
     check_leaderboard,
-    load_agent_name,
     load_api_key,
-    verify_api,
 )
+
+from einstein.kissing_number.evaluator import overlap_loss_mpmath  # noqa: E402
 
 PROBLEM_ID = 6
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -130,6 +129,7 @@ def save_best_to_disk(v: np.ndarray, score: float, tag: str) -> None:
 
 def fetch_min_improvement() -> float:
     import urllib.request
+
     url = f"{API_URL}/problems"
     with urllib.request.urlopen(url, timeout=15) as resp:
         problems = json.loads(resp.read())
@@ -146,14 +146,24 @@ def run_polish_chain(warm_start: Path, budget_sec: int, log_path: Path) -> tuple
     # Run a single ulp2seq polish (the empirically most productive variant).
     # Multiple variants can be re-added later once we confirm the solo run works.
     cmd = [
-        "uv", "run", "python", str(SCRIPT_DIR / "polish_ulp_coord.py"),
-        "--warm-start", str(warm_start),
-        "--dps", "50",
-        "--budget", str(budget_sec),
-        "--max-ulps", "2",
-        "--max-sweeps", "8",
-        "--row-order", "seq",
-        "--seed", str(int(time.time()) % 100000),
+        "uv",
+        "run",
+        "python",
+        str(SCRIPT_DIR / "polish_ulp_coord.py"),
+        "--warm-start",
+        str(warm_start),
+        "--dps",
+        "50",
+        "--budget",
+        str(budget_sec),
+        "--max-ulps",
+        "2",
+        "--max-sweeps",
+        "8",
+        "--row-order",
+        "seq",
+        "--seed",
+        str(int(time.time()) % 100000),
     ]
     log(f"polish cmd: {' '.join(cmd)}")
     with open(log_path, "w") as f:
@@ -217,14 +227,17 @@ def submit_current_best(local_score: float, current_leader: float) -> tuple[bool
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--budget", type=int, default=1200,
-                        help="polish budget in seconds")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="polish and report, do not submit")
-    parser.add_argument("--min-margin", type=float, default=0.0,
-                        help="only submit if (leader - our_score) / leader >= this fraction")
-    parser.add_argument("--force-submit", action="store_true",
-                        help="skip leader check and submit whatever disk has")
+    parser.add_argument("--budget", type=int, default=1200, help="polish budget in seconds")
+    parser.add_argument("--dry-run", action="store_true", help="polish and report, do not submit")
+    parser.add_argument(
+        "--min-margin",
+        type=float,
+        default=0.0,
+        help="only submit if (leader - our_score) / leader >= this fraction",
+    )
+    parser.add_argument(
+        "--force-submit", action="store_true", help="skip leader check and submit whatever disk has"
+    )
     args = parser.parse_args()
 
     if not acquire_lock():
@@ -266,7 +279,9 @@ def main() -> int:
         elif new_score >= leader_score:
             reason = f"not better than leader ({new_score:.4e} >= {leader_score:.4e})"
         elif last_submitted is not None and new_score >= last_submitted:
-            reason = f"not better than our last submission ({new_score:.4e} >= {last_submitted:.4e})"
+            reason = (
+                f"not better than our last submission ({new_score:.4e} >= {last_submitted:.4e})"
+            )
         else:
             margin = (leader_score - new_score) / leader_score
             if margin < args.min_margin:

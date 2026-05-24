@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import json
 import sys
-import time
 from pathlib import Path
 
 import numpy as np
@@ -25,7 +24,6 @@ from scipy.optimize import minimize
 from scipy.spatial.distance import pdist
 
 sys.path.insert(0, "src")
-from einstein.p22_kissing_d12.evaluator import overlap_loss
 
 RESULTS_DIR = Path("results/p22_kissing_d12")
 CHRONOS_PATH = RESULTS_DIR / "sota_best_chronos_rank1_id2081.json"
@@ -100,7 +98,9 @@ def softplus_joint(x_flat: np.ndarray, beta: float) -> tuple[float, np.ndarray]:
     return loss, dloss_dx.flatten()
 
 
-def optimize_joint(x0: np.ndarray, betas: list[float], maxiter: int = 300) -> tuple[np.ndarray, float]:
+def optimize_joint(
+    x0: np.ndarray, betas: list[float], maxiter: int = 300
+) -> tuple[np.ndarray, float]:
     x = x0.flatten()
     for beta in betas:
         res = minimize(

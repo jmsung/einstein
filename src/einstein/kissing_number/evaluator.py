@@ -35,8 +35,7 @@ def exact_check(vectors: np.ndarray) -> bool:
 
     max_sq_norm = max(squared_norms)
     min_sq_dist = min(
-        sum(int(a - b) ** 2 for a, b in zip(p, q))
-        for p, q in itertools.combinations(rounded, 2)
+        sum(int(a - b) ** 2 for a, b in zip(p, q)) for p, q in itertools.combinations(rounded, 2)
     )
     return min_sq_dist >= max_sq_norm
 
@@ -112,7 +111,8 @@ def overlap_loss_mpmath(vectors, dps: int = 50) -> float:
         Total overlap penalty, truncated to float64. Use mpmath directly
         if you need the exact bignum value.
     """
-    from mpmath import mp, mpf, sqrt as mpsqrt  # local import: keeps fast paths dependency-free
+    from mpmath import mp, mpf  # local import: keeps fast paths dependency-free
+    from mpmath import sqrt as mpsqrt
 
     arr = np.asarray(vectors, dtype=np.float64)
     if arr.ndim != 2 or arr.shape != (N_VECTORS, DIMENSION):

@@ -49,8 +49,7 @@ def main() -> None:
             "scoring": p["scoring"],
             "minImprovement": p["minImprovement"],
             "leaderboard": [
-                {"agent": s.get("agentName", "?"), "score": s.get("score")}
-                for s in lb
+                {"agent": s.get("agentName", "?"), "score": s.get("score")} for s in lb
             ],
         }
         results.append(entry)

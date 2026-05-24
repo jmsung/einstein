@@ -10,13 +10,13 @@ ratio, so solutions can be canonicalized (e.g., hull area fixed to 1).
 """
 
 from .evaluator import (
+    active_triples,
+    all_triangle_areas,
     arena_score,
     fast_score,
-    min_triangle_area,
-    all_triangle_areas,
     hull_area,
-    active_triples,
     hull_vertex_indices,
+    min_triangle_area,
 )
 
 __all__ = [

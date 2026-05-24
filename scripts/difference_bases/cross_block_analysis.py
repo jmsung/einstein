@@ -12,6 +12,7 @@ Per the cross-pollination-not-compute filter: this is a 1-day diagnostic with
 either-way wisdom yield (the formula is tight → confirms framing; loose → new
 optimization target).
 """
+
 from __future__ import annotations
 
 import json
@@ -108,15 +109,17 @@ def coverage_density_per_shell(shell_diffs, lam, max_A):
         window_hi = k * lam + max_A
         diffs_in_window = sum(1 for d in diffs_k if window_lo <= d <= window_hi)
         window_width = window_hi - window_lo + 1
-        rows.append({
-            "shell_k": k,
-            "window_lo": window_lo,
-            "window_hi": window_hi,
-            "window_width": window_width,
-            "covered_in_window": diffs_in_window,
-            "density": diffs_in_window / window_width if window_width > 0 else 0,
-            "covered_total": len(diffs_k),
-        })
+        rows.append(
+            {
+                "shell_k": k,
+                "window_lo": window_lo,
+                "window_hi": window_hi,
+                "window_width": window_width,
+                "covered_in_window": diffs_in_window,
+                "density": diffs_in_window / window_width if window_width > 0 else 0,
+                "covered_total": len(diffs_k),
+            }
+        )
     return rows
 
 
@@ -193,7 +196,9 @@ def perturb_test(A_sota, R, lam, n_perturbations=20):
 
     print(f"\n  Baseline: c(A_sota) = {c_A_sota}")
     print(f"  Will test {n_perturbations} small perturbations (1-swap inside A)")
-    print(f"\n  {'#':<4}{'swap':<20}{'c(A)':<8}{'v_actual':<10}{'v_pred':<10}{'gap':<8}{'verdict':<12}")
+    print(
+        f"\n  {'#':<4}{'swap':<20}{'c(A)':<8}{'v_actual':<10}{'v_pred':<10}{'gap':<8}{'verdict':<12}"
+    )
 
     rng = np.random.default_rng(seed=42)
     falsified = []
@@ -236,7 +241,9 @@ def perturb_test(A_sota, R, lam, n_perturbations=20):
         v_pred = L * lam + c_A
         gap = v_actual - v_pred
         verdict = "FORMULA LOOSE" if gap > 0 else ("formula tight" if gap == 0 else "formula low?")
-        print(f"  {i+1:<4}-{x_old}+{x_new:<14}{c_A:<8}{v_actual:<10}{v_pred:<10}{gap:<8}{verdict:<12}")
+        print(
+            f"  {i + 1:<4}-{x_old}+{x_new:<14}{c_A:<8}{v_actual:<10}{v_pred:<10}{gap:<8}{verdict:<12}"
+        )
 
         if gap > 0:
             falsified.append((idx, x_old, x_new, c_A, v_actual, v_pred, gap))
@@ -252,7 +259,7 @@ def main():
     print("[1/5] Load SOTA")
     B = load_sota()
     v_sota, _ = compute_v_set(B)
-    print(f"  k={len(B)}, v={v_sota}, score={len(B)**2 / v_sota:.10f}")
+    print(f"  k={len(B)}, v={v_sota}, score={len(B) ** 2 / v_sota:.10f}")
 
     print("\n[2/5] Verify Kronecker decomposition B = A ⊕ 8011·{0,1,4,6}")
     A, lam, R = kronecker_decomposition_check(B)
@@ -275,9 +282,11 @@ def main():
     print()
     print("  shell  window range          width   covered  density  covered_total")
     for r in rows:
-        print(f"  {r['shell_k']:<6} [{r['window_lo']:>5}, {r['window_hi']:>5}]   "
-              f"{r['window_width']:<7} {r['covered_in_window']:<8} "
-              f"{r['density']:<8.3f} {r['covered_total']}")
+        print(
+            f"  {r['shell_k']:<6} [{r['window_lo']:>5}, {r['window_hi']:>5}]   "
+            f"{r['window_width']:<7} {r['covered_in_window']:<8} "
+            f"{r['density']:<8.3f} {r['covered_total']}"
+        )
 
     print("\n[4/5] Test formula tightness on SOTA")
     v_pred, L = test_formula_tightness(A, R, lam, c_A, v_sota)
@@ -286,18 +295,26 @@ def main():
     falsified, confirmed = perturb_test(A, R, lam, n_perturbations=15)
 
     print("\n=== Verdict ===")
-    print(f"  Formula tight on SOTA:        v = {v_sota}, predicted = {v_pred}, equal: {v_sota == v_pred}")
-    print(f"  Perturbation outcomes:        {len(falsified)} formula-loose, {len(confirmed)} formula-tight")
+    print(
+        f"  Formula tight on SOTA:        v = {v_sota}, predicted = {v_pred}, equal: {v_sota == v_pred}"
+    )
+    print(
+        f"  Perturbation outcomes:        {len(falsified)} formula-loose, {len(confirmed)} formula-tight"
+    )
     if falsified:
-        print(f"\n  REFUTED — formula is only a lower bound. Best falsifying perturbation:")
+        print("\n  REFUTED — formula is only a lower bound. Best falsifying perturbation:")
         best = max(falsified, key=lambda x: x[6])
-        print(f"    swap idx {best[0]}: {best[1]} -> {best[2]}, c(A')={best[3]}, "
-              f"v_actual={best[4]}, v_pred={best[5]}, gap={best[6]}")
-        print(f"\n  Implication: cross-block contribution can exceed the formula's prediction.")
-        print(f"  Direction: search for A' with c(A') ≤ c(A_sota) but better cross-block density.")
+        print(
+            f"    swap idx {best[0]}: {best[1]} -> {best[2]}, c(A')={best[3]}, "
+            f"v_actual={best[4]}, v_pred={best[5]}, gap={best[6]}"
+        )
+        print("\n  Implication: cross-block contribution can exceed the formula's prediction.")
+        print("  Direction: search for A' with c(A') ≤ c(A_sota) but better cross-block density.")
     else:
-        print(f"\n  CONFIRMED — formula is tight across all tested perturbations of A.")
-        print(f"  Implication: c(A) is the true bottleneck. To improve v at fixed (R, λ), must improve c(A).")
+        print("\n  CONFIRMED — formula is tight across all tested perturbations of A.")
+        print(
+            "  Implication: c(A) is the true bottleneck. To improve v at fixed (R, λ), must improve c(A)."
+        )
 
 
 if __name__ == "__main__":

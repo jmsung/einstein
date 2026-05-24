@@ -16,7 +16,6 @@ Usage:
 
 import json
 import os
-import time
 from pathlib import Path
 
 import numpy as np
@@ -61,7 +60,7 @@ def vector_contributions(vecs):
 
 
 def incremental_loss(vecs, idx, old_total, old_vec):
-    others = np.concatenate([vecs[:idx], vecs[idx + 1:]], axis=0)
+    others = np.concatenate([vecs[:idx], vecs[idx + 1 :]], axis=0)
     old_cos = np.clip(old_vec @ others.T, -1.0, 1.0)
     old_d = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - old_cos))
     old_p = np.maximum(0.0, 2.0 - old_d)
@@ -106,7 +105,7 @@ def targeted_perturbation(vecs, scale, n_iters, seed):
 
         if (it + 1) % 1_000_000 == 0:
             exact = overlap_loss(best_vecs)
-            print(f"    [{scale:.0e}] {it+1:>8,d} | loss={exact:.15f} | impr={improvements}")
+            print(f"    [{scale:.0e}] {it + 1:>8,d} | loss={exact:.15f} | impr={improvements}")
 
     return best_vecs, best_loss, improvements
 
@@ -130,7 +129,7 @@ def find_best_594th(vecs_593, n_trials=2_000_000, seed=42):
             best_vec = v.copy()
 
         if (trial + 1) % 500_000 == 0:
-            print(f"    {trial+1:,}: best_594th_loss={best_loss:.10f}")
+            print(f"    {trial + 1:,}: best_594th_loss={best_loss:.10f}")
 
     return best_vec, best_loss
 
@@ -158,8 +157,10 @@ def main():
     # Step 1: Find worst vector
     contribs = vector_contributions(vecs)
     worst_idx = int(np.argmax(contribs))
-    print(f"\nWorst vector: {worst_idx} (contribution={contribs[worst_idx]:.10f}, "
-          f"{contribs[worst_idx]/initial_594*100:.1f}% of total)")
+    print(
+        f"\nWorst vector: {worst_idx} (contribution={contribs[worst_idx]:.10f}, "
+        f"{contribs[worst_idx] / initial_594 * 100:.1f}% of total)"
+    )
 
     # Step 2: Remove worst vector
     removed_vec = vecs[worst_idx].copy()
@@ -169,7 +170,7 @@ def main():
     print(f"Loss reduction: {initial_594 - loss_593:.2e}")
 
     # Step 3: Optimize 593 toward 0 overlap
-    print(f"\n=== Optimizing 593 vectors (target: 0 overlap) ===")
+    print("\n=== Optimizing 593 vectors (target: 0 overlap) ===")
     best_593 = vecs_593.copy()
     best_593_loss = loss_593
 
@@ -188,7 +189,7 @@ def main():
         print("*** ZERO OVERLAP ACHIEVED for 593! ***")
 
     # Step 4: Find optimal 594th vector
-    print(f"\n=== Finding optimal 594th vector ===")
+    print("\n=== Finding optimal 594th vector ===")
     new_vec, new_vec_loss = find_best_594th(best_593, n_trials=2_000_000, seed=99)
     print(f"Best 594th vector overlap: {new_vec_loss:.10f}")
 
@@ -197,7 +198,7 @@ def main():
     loss_594 = overlap_loss(vecs_594)
     print(f"\nReassembled 594: {loss_594:.15f}")
 
-    print(f"\n=== Final optimization of 594 vectors ===")
+    print("\n=== Final optimization of 594 vectors ===")
     best_594 = vecs_594.copy()
     best_594_loss = loss_594
 
@@ -212,11 +213,11 @@ def main():
             best_594 = v.copy()
 
     final = overlap_loss(best_594)
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Original 594:  {initial_594:.15f}")
     print(f"Final 594:     {final:.15f}")
     print(f"Delta:         {initial_594 - final:.2e}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     if final < initial_594:
         save_solution(best_594, final)

@@ -152,8 +152,12 @@ def run_parallel_tempering_v2(
             # Vectorized incremental loss
             new_vecs = replicas[batch_idx, k_indices]  # (R, D)
             # Dot products: (R, D) @ (R, N, D).T → need bmm
-            old_dots = torch.bmm(old_vecs.unsqueeze(1), replicas.transpose(1, 2)).squeeze(1)  # (R, N)
-            new_dots = torch.bmm(new_vecs.unsqueeze(1), replicas.transpose(1, 2)).squeeze(1)  # (R, N)
+            old_dots = torch.bmm(old_vecs.unsqueeze(1), replicas.transpose(1, 2)).squeeze(
+                1
+            )  # (R, N)
+            new_dots = torch.bmm(new_vecs.unsqueeze(1), replicas.transpose(1, 2)).squeeze(
+                1
+            )  # (R, N)
 
             # Zero self-interaction
             old_dots[batch_idx, k_indices] = -1.0
@@ -232,7 +236,7 @@ def run_parallel_tempering_v2(
             perts_per_sec = total_perturbations / elapsed
 
             print(
-                f"  step {step+1:>8,d} | {elapsed:.0f}s | "
+                f"  step {step + 1:>8,d} | {elapsed:.0f}s | "
                 f"{perts_per_sec:.0f} perts/s | "
                 f"BEST={exact:.15f} (Δ={sota_loss - exact:.2e}) | "
                 f"accept={accept_rate:.2f}% | swap={swap_rate:.1f}%"

@@ -5,12 +5,12 @@ sign change detection. Works for scores as small as 1e-100+.
 
 Speed: same as poly_eval.py (~7s at k=50) since numpy.roots was <0.01s.
 """
+
 import mpmath
-import numpy as np
 
 from einstein.uncertainty.poly_eval import (
-    _laguerre_mp,
     _laguerre_deriv_mp,
+    _laguerre_mp,
     _poly_mul_mp,
 )
 

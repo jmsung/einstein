@@ -87,10 +87,15 @@ def main():
 
     rng = np.random.default_rng(args.seed)
     strategies = [
-        "near_capy", "near_capy", "near_capy",
-        "far_capy", "far_capy",
-        "near_ae", "near_ae",
-        "random_10p4", "random_10p4",
+        "near_capy",
+        "near_capy",
+        "near_capy",
+        "far_capy",
+        "far_capy",
+        "near_ae",
+        "near_ae",
+        "random_10p4",
+        "random_10p4",
         "symmetric",
     ]
 
@@ -118,9 +123,7 @@ def main():
             pop[key] = (score, polished.copy(), kind)
         if score > best_score:
             improvement = score - target
-            print(
-                f"[{trials:5d}][{kind:12s}] NEW BEST! {score:.20f}  delta={improvement:+.3e}"
-            )
+            print(f"[{trials:5d}][{kind:12s}] NEW BEST! {score:.20f}  delta={improvement:+.3e}")
             best_score = score
             best_pts = polished.copy()
         if trials % 100 == 0:
@@ -131,7 +134,7 @@ def main():
                 f"top5={[f'{s:.10f}' for s in top_scores]}"
             )
 
-    print(f"\nDone. Trials={trials}, elapsed={time.time()-start:.1f}s")
+    print(f"\nDone. Trials={trials}, elapsed={time.time() - start:.1f}s")
     print(f"By kind: {by_kind}")
 
     # Dump top-20 of population to file
@@ -141,7 +144,12 @@ def main():
         "best_score": best_score,
         "best_pts": best_pts.tolist(),
         "population_top20": [
-            {"score": s, "points": pts.tolist(), "kind": kind, "n_hull": len(hull_vertex_indices(pts))}
+            {
+                "score": s,
+                "points": pts.tolist(),
+                "kind": kind,
+                "n_hull": len(hull_vertex_indices(pts)),
+            }
             for s, pts, kind in sorted_pop
         ],
         "stats": {"trials": trials, "elapsed_s": time.time() - start, "by_kind": by_kind},
@@ -151,7 +159,7 @@ def main():
     print("\nTop 10 unique scores found:")
     for i, (s, pts, kind) in enumerate(sorted_pop[:10]):
         nh = len(hull_vertex_indices(pts))
-        print(f"  #{i+1:2d}  score={s:.16f}  hull={nh}+{14-nh}  kind={kind}")
+        print(f"  #{i + 1:2d}  score={s:.16f}  hull={nh}+{14 - nh}  kind={kind}")
 
 
 if __name__ == "__main__":

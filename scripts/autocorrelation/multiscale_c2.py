@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from einstein.autocorrelation.fast import fast_evaluate, diagnose
+from einstein.autocorrelation.fast import diagnose, fast_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
@@ -68,8 +68,9 @@ def compute_C_batch(h_batch, device):
     return numerator / (denominator + 1e-30)
 
 
-def adam_optimize_stage(n, batch_size, n_iters, lr, device, seed=42,
-                        init_f=None, noise_scale=0.0, respawn_every=0):
+def adam_optimize_stage(
+    n, batch_size, n_iters, lr, device, seed=42, init_f=None, noise_scale=0.0, respawn_every=0
+):
     """Single-stage Adam optimization."""
     torch.manual_seed(seed)
     dtype = torch.float32
@@ -163,7 +164,7 @@ def main():
     print("Strategy: optimize hard at small n, upsample, refine")
     print("=" * 60)
 
-    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
     print(f"Device: {device}")
 
     # ---------------------------------------------------------------
@@ -175,16 +176,28 @@ def main():
     # Exploration: large batch, noise
     print("  Exploration phase...")
     f1, s1 = adam_optimize_stage(
-        n1, batch_size=256, n_iters=15000, lr=3e-2, device=device,
-        noise_scale=1e-3, respawn_every=5000, seed=42
+        n1,
+        batch_size=256,
+        n_iters=15000,
+        lr=3e-2,
+        device=device,
+        noise_scale=1e-3,
+        respawn_every=5000,
+        seed=42,
     )
     print(f"  Exploration: C={s1:.8f}")
 
     # Exploitation: clean gradients, from best
     print("  Exploitation phase...")
     f1b, s1b = adam_optimize_stage(
-        n1, batch_size=64, n_iters=10000, lr=5e-3, device=device,
-        init_f=f1, respawn_every=3000, seed=123
+        n1,
+        batch_size=64,
+        n_iters=10000,
+        lr=5e-3,
+        device=device,
+        init_f=f1,
+        respawn_every=3000,
+        seed=123,
     )
     if s1b > s1:
         f1, s1 = f1b, s1b
@@ -197,7 +210,7 @@ def main():
     # Trim zeros
     nz = np.nonzero(f1 > 1e-8)[0]
     if len(nz) > 0:
-        f1 = f1[nz[0]:nz[-1]+1]
+        f1 = f1[nz[0] : nz[-1] + 1]
         s1 = fast_evaluate(f1)
         print(f"  Trimmed to {len(f1)} points, C={s1:.8f}")
 
@@ -207,14 +220,14 @@ def main():
     f_current = f1
     scale_configs = [
         # (scale_factor, batch_size, n_iters, lr)
-        (4, 32, 8000, 1e-2),   # ~3k points
-        (4, 16, 5000, 5e-3),   # ~12k points
-        (4, 8, 3000, 3e-3),    # ~48k points
+        (4, 32, 8000, 1e-2),  # ~3k points
+        (4, 16, 5000, 5e-3),  # ~12k points
+        (4, 8, 3000, 3e-3),  # ~48k points
     ]
 
     for i, (sf, bs, ni, lr) in enumerate(scale_configs):
         new_n = len(f_current) * sf
-        print(f"\n=== Scale {i+2}: n={new_n} (4x upsample) ===")
+        print(f"\n=== Scale {i + 2}: n={new_n} (4x upsample) ===")
 
         f_up = upscale_linear(f_current, new_n)
         score_up = fast_evaluate(f_up)
@@ -223,15 +236,27 @@ def main():
         # Refine the upscaled solution
         print("  Refining upscaled...")
         f_ref, s_ref = adam_optimize_stage(
-            new_n, batch_size=bs, n_iters=ni, lr=lr, device=device,
-            init_f=f_up, respawn_every=2000, seed=i*100
+            new_n,
+            batch_size=bs,
+            n_iters=ni,
+            lr=lr,
+            device=device,
+            init_f=f_up,
+            respawn_every=2000,
+            seed=i * 100,
         )
 
         # Also try from scratch at this scale (smaller batch)
         print("  Trying from scratch...")
         f_scratch, s_scratch = adam_optimize_stage(
-            new_n, batch_size=bs, n_iters=ni, lr=2e-2, device=device,
-            noise_scale=5e-4, respawn_every=2000, seed=i*100+50
+            new_n,
+            batch_size=bs,
+            n_iters=ni,
+            lr=2e-2,
+            device=device,
+            noise_scale=5e-4,
+            respawn_every=2000,
+            seed=i * 100 + 50,
         )
 
         # Pick the best
@@ -261,7 +286,7 @@ def main():
     print(f"FINAL: C={final_score:.10f}, n={len(f_current)}")
     print(f"  nnz={d['nnz']}, blocks={d['n_blocks']}")
     print(f"  flat_0.1%={d['flatness_0.1pct']}, flat_1%={d['flatness_1pct']}")
-    print(f"  Done.")
+    print("  Done.")
     print("=" * 60)
 
     save_result(f_current, final_score, "multiscale_final")

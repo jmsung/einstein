@@ -13,10 +13,8 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from scipy.signal import fftconvolve
 
 sys.path.insert(0, "src")
-from einstein.erdos.evaluator import evaluate as exact_evaluate
 from einstein.erdos.fast import fast_evaluate
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
@@ -61,8 +59,9 @@ def project_to_feasible(h: torch.Tensor) -> torch.Tensor:
     return h
 
 
-def approach_torch_multistart(n: int = 600, n_starts: int = 20, n_iters: int = 5000,
-                               lr: float = 1e-3):
+def approach_torch_multistart(
+    n: int = 600, n_starts: int = 20, n_iters: int = 5000, lr: float = 1e-3
+):
     """Multi-start Adam optimization from diverse initializations."""
     print("\n" + "=" * 60)
     print("TORCH APPROACH 1: Multi-start Adam + LogSumExp")
@@ -89,6 +88,7 @@ def approach_torch_multistart(n: int = 600, n_starts: int = 20, n_iters: int = 5
             h_np = (rng.random(n) > 0.5).astype(float)
             # Gaussian smooth
             from scipy.ndimage import gaussian_filter1d
+
             sigma = rng.uniform(2, 20)
             h_np = gaussian_filter1d(h_np, sigma)
         elif start_idx < 15:
@@ -194,8 +194,12 @@ def approach_spectral_direct(n: int = 600, n_iters: int = 10000, lr: float = 1e-
     best_h = None
 
     for trial in range(5):
-        mags = torch.tensor(mags_init + rng.normal(0, 0.1, K), dtype=torch.float64, requires_grad=True)
-        phases = torch.tensor(phases_init + rng.normal(0, 0.1, K), dtype=torch.float64, requires_grad=True)
+        mags = torch.tensor(
+            mags_init + rng.normal(0, 0.1, K), dtype=torch.float64, requires_grad=True
+        )
+        phases = torch.tensor(
+            phases_init + rng.normal(0, 0.1, K), dtype=torch.float64, requires_grad=True
+        )
 
         optimizer = torch.optim.Adam([mags, phases], lr=lr)
 
@@ -233,8 +237,10 @@ def approach_spectral_direct(n: int = 600, n_iters: int = 10000, lr: float = 1e-
                 with torch.no_grad():
                     h_np = h_clamped.detach().numpy()
                     s = fast_evaluate(h_np)
-                    print(f"    trial {trial}, iter {it+1}: C={s:.10f}, "
-                          f"penalty={float(penalty_lo + penalty_hi):.2e}")
+                    print(
+                        f"    trial {trial}, iter {it + 1}: C={s:.10f}, "
+                        f"penalty={float(penalty_lo + penalty_hi):.2e}"
+                    )
 
         # Final evaluation
         with torch.no_grad():
@@ -259,8 +265,7 @@ def approach_spectral_direct(n: int = 600, n_iters: int = 10000, lr: float = 1e-
     return best_h, best_overall
 
 
-def approach_large_perturbation_basin_hop(n: int = 600, n_hops: int = 50,
-                                          polish_iters: int = 3000):
+def approach_large_perturbation_basin_hop(n: int = 600, n_hops: int = 50, polish_iters: int = 3000):
     """Large perturbation + gradient polish to escape current basin."""
     print("\n" + "=" * 60)
     print("TORCH APPROACH 3: Large perturbation basin hopping")
@@ -285,9 +290,9 @@ def approach_large_perturbation_basin_hop(n: int = 600, n_hops: int = 50,
             # Shuffle a random segment
             seg_start = rng.integers(0, n - 100)
             seg_len = rng.integers(20, 100)
-            seg = h[seg_start:seg_start+seg_len].copy()
+            seg = h[seg_start : seg_start + seg_len].copy()
             rng.shuffle(seg)
-            h[seg_start:seg_start+seg_len] = seg
+            h[seg_start : seg_start + seg_len] = seg
 
         elif perturb_type == 1:
             # Add random Fourier component
@@ -301,7 +306,7 @@ def approach_large_perturbation_basin_hop(n: int = 600, n_hops: int = 50,
             # Flip random region
             seg_start = rng.integers(0, n - 50)
             seg_len = rng.integers(10, 50)
-            h[seg_start:seg_start+seg_len] = 1.0 - h[seg_start:seg_start+seg_len]
+            h[seg_start : seg_start + seg_len] = 1.0 - h[seg_start : seg_start + seg_len]
 
         elif perturb_type == 3:
             # Random Gaussian noise
@@ -312,7 +317,7 @@ def approach_large_perturbation_basin_hop(n: int = 600, n_hops: int = 50,
             s1 = rng.integers(0, n - 50)
             s2 = rng.integers(0, n - 50)
             L = rng.integers(10, 50)
-            h[s1:s1+L], h[s2:s2+L] = h[s2:s2+L].copy(), h[s1:s1+L].copy()
+            h[s1 : s1 + L], h[s2 : s2 + L] = h[s2 : s2 + L].copy(), h[s1 : s1 + L].copy()
 
         # Project
         h = np.clip(h, 0, 1)
@@ -346,8 +351,10 @@ def approach_large_perturbation_basin_hop(n: int = 600, n_hops: int = 50,
             best_local = final_score
 
         if hop % 10 == 0 or best_local < best_overall:
-            print(f"  Hop {hop}: type={perturb_type}, perturbed={perturbed_score:.8f}, "
-                  f"polished={best_local:.8f}")
+            print(
+                f"  Hop {hop}: type={perturb_type}, perturbed={perturbed_score:.8f}, "
+                f"polished={best_local:.8f}"
+            )
 
         if best_local < best_overall:
             best_overall = best_local
@@ -404,7 +411,9 @@ def main():
 
     # Save best
     all_results = [(h1, s1), (h2, s2), (h3, s3)]
-    best_idx = min(range(3), key=lambda i: all_results[i][1] if all_results[i][0] is not None else float("inf"))
+    best_idx = min(
+        range(3), key=lambda i: all_results[i][1] if all_results[i][0] is not None else float("inf")
+    )
     best_h, best_s = all_results[best_idx]
 
     if best_h is not None:

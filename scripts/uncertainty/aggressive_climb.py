@@ -10,17 +10,17 @@ This should push the score monotonically lower as k increases.
 Usage:
   uv run python -u scripts/uncertainty/aggressive_climb.py --start-k 23 --end-k 50 --fevals 1500
 """
+
 import argparse
 import json
-import glob
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, "src")
 
-import numpy as np
 import cma
+import numpy as np
 
 from einstein.uncertainty.poly_eval import poly_evaluate
 
@@ -48,11 +48,13 @@ def load_best_k(k):
 
 def insert_best_root(base_roots, dps=80):
     """Find the best position to insert one additional root."""
-    positions = np.concatenate([
-        np.linspace(0.5, 15, 30),
-        np.linspace(16, 80, 80),
-        np.linspace(85, 280, 50),
-    ])
+    positions = np.concatenate(
+        [
+            np.linspace(0.5, 15, 30),
+            np.linspace(16, 80, 80),
+            np.linspace(85, 280, 50),
+        ]
+    )
 
     best_score = float("inf")
     best_cand = None
@@ -105,7 +107,8 @@ def cma_optimize(roots, sigma, fevals, seed, dps=80):
 
     try:
         es = cma.CMAEvolutionStrategy(
-            gaps, sigma,
+            gaps,
+            sigma,
             {"maxfevals": fevals, "verbose": -9, "tolx": 1e-14, "seed": seed, "popsize": 14},
         )
         es.optimize(obj)
@@ -169,31 +172,29 @@ def main():
         # Step 1: Insert a root
         insert_roots, insert_score = insert_best_root(current_roots, dps=args.dps)
         if insert_roots is None:
-            log(f"  No valid insertion found. Stopping.")
+            log("  No valid insertion found. Stopping.")
             break
         log(f"  Insert: {insert_score:.14f}")
 
         # Step 2: CMA-ES optimize (use smaller sigma since base is already optimized)
         seed = int(rng.integers(1, 2**31))
         opt_sigma = min(args.sigma, 0.15)  # smaller sigma for incremental optimization
-        opt_roots, opt_score = cma_optimize(
-            insert_roots, opt_sigma, args.fevals, seed, args.dps
-        )
+        opt_roots, opt_score = cma_optimize(insert_roots, opt_sigma, args.fevals, seed, args.dps)
 
         # Validate
         if not all(0 < r <= 300 for r in opt_roots):
-            log(f"  CMA result invalid. Using insertion only.")
+            log("  CMA result invalid. Using insertion only.")
             opt_roots = insert_roots
             opt_score = insert_score
 
         # Verify with higher precision
         h = poly_evaluate(opt_roots, dps=120)
         if not np.isfinite(h):
-            log(f"  Verification failed. Using insertion.")
+            log("  Verification failed. Using insertion.")
             h = insert_score
             opt_roots = insert_roots
 
-        log(f"  CMA optimized: {h:.14f} (took {time.time()-t0:.0f}s)")
+        log(f"  CMA optimized: {h:.14f} (took {time.time() - t0:.0f}s)")
 
         # Save and update
         save_result(opt_roots, h, f"aggressive_climb_k{target_k}")

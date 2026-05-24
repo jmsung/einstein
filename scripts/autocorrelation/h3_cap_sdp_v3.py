@@ -32,6 +32,7 @@ import numpy as np
 
 try:
     import cvxpy as cp
+
     HAVE_CVXPY = True
 except ImportError:
     HAVE_CVXPY = False
@@ -54,12 +55,13 @@ def cross_term_constant_bound(T: int, M: int) -> tuple[np.ndarray, float]:
             L[m_idx, k] = sign / denom
 
     H = np.sum(np.abs(L), axis=1)  # H_m = sum_k |L_{m,k}|
-    cross_constant = (8.0 / np.pi**4) * np.sum(H ** 4)
+    cross_constant = (8.0 / np.pi**4) * np.sum(H**4)
     return L, cross_constant
 
 
-def solve_g_lambda_v3(lam: float, T: int = 16, G: int = 1024, M: int = 16,
-                      solver: str = "SCS", verbose: bool = False) -> tuple[float, dict]:
+def solve_g_lambda_v3(
+    lam: float, T: int = 16, G: int = 1024, M: int = 16, solver: str = "SCS", verbose: bool = False
+) -> tuple[float, dict]:
     """Solve $g_{up}(\\lambda)$ with diagonal + cross-term-constant-bound.
 
     M_up(f) = sum_k y_k + cross_constant
@@ -88,8 +90,7 @@ def solve_g_lambda_v3(lam: float, T: int = 16, G: int = 1024, M: int = 16,
 
     # SOC lift y_k >= hat_f[k]^2
     for k in range(T + 1):
-        constraints.append(cp.bmat([[y[k], hat_f[k]],
-                                     [hat_f[k], 1]]) >> 0)
+        constraints.append(cp.bmat([[y[k], hat_f[k]], [hat_f[k], 1]]) >> 0)
 
     # Sup-norm via dense grid
     x_grid = np.linspace(-1.0, 1.0, G)
@@ -112,12 +113,14 @@ def solve_g_lambda_v3(lam: float, T: int = 16, G: int = 1024, M: int = 16,
 
     info = {"status": prob.status, "elapsed": elapsed, "cross_constant": cross_constant}
     if prob.status in ("optimal", "optimal_inaccurate"):
-        info.update({
-            "M_up": float(M_up.value),
-            "C": float(C.value),
-            "S_implied": float(M_up.value) / max(float(C.value), 1e-12),
-            "g_lambda_value": float(prob.value),
-        })
+        info.update(
+            {
+                "M_up": float(M_up.value),
+                "C": float(C.value),
+                "S_implied": float(M_up.value) / max(float(C.value), 1e-12),
+                "g_lambda_value": float(prob.value),
+            }
+        )
     return prob.value if prob.value is not None else float("nan"), info
 
 
@@ -134,8 +137,8 @@ def main():
     for T, M in [(8, 8), (16, 16), (32, 32)]:
         L, cross_const = cross_term_constant_bound(T=T, M=M)
         print(f"T={T:3d}, M={M:3d}:  cross-term constant bound = {cross_const:.4f}")
-        print(f"           diagonal max bound = {T+1}")
-        print(f"           total M_up max ~= {(T+1) + cross_const:.4f}")
+        print(f"           diagonal max bound = {T + 1}")
+        print(f"           total M_up max ~= {(T + 1) + cross_const:.4f}")
     print()
 
     # Try the sweep at modest T to see the actual bound
@@ -143,9 +146,13 @@ def main():
     for lam in [1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0]:
         g, info = solve_g_lambda_v3(lam=lam, T=8, G=512, M=8, solver="SCS")
         if "C" in info:
-            print(f"  lam={lam:>6.2f}  g={g:>+10.4e}  C={info['C']:.4f}  M_up={info['M_up']:.4f}  M/C={info['S_implied']:.4f}  status={info['status']}")
+            print(
+                f"  lam={lam:>6.2f}  g={g:>+10.4e}  C={info['C']:.4f}  M_up={info['M_up']:.4f}  M/C={info['S_implied']:.4f}  status={info['status']}"
+            )
         else:
-            print(f"  lam={lam:>6.2f}  status={info['status']}  cross_const={info.get('cross_constant', 0):.4f}")
+            print(
+                f"  lam={lam:>6.2f}  status={info['status']}  cross_const={info.get('cross_constant', 0):.4f}"
+            )
 
     print()
     print("=" * 76)

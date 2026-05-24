@@ -5,6 +5,7 @@ Verifies that our local evaluator matches the arena's scoring function.
 
 import numpy as np
 import pytest
+
 from einstein.edges_triangles import (
     compute_densities,
     compute_score,
@@ -199,7 +200,7 @@ def _independent_score(weights: np.ndarray) -> float:
         if dy < 0:
             area += y1 * h
         elif dy <= 3 * h:
-            area += -dy**2 / 6 + y1 * h
+            area += -(dy**2) / 6 + y1 * h
         else:
             area += y0 * h + 1.5 * h**2
 

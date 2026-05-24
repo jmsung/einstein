@@ -25,7 +25,7 @@ import numpy as np
 import torch
 from scipy.spatial import ConvexHull
 
-from einstein.heilbronn_convex import arena_score, fast_score, active_triples, hull_vertex_indices
+from einstein.heilbronn_convex import active_triples, hull_vertex_indices
 from einstein.heilbronn_convex.optimizer import polish_slsqp
 
 RESULTS_DIR = Path("results/problem-16-heilbronn-convex")
@@ -34,9 +34,7 @@ ARENA_BEST = 0.02783558051755368259
 SUBMIT_THRESHOLD = 0.02783558045993943589 + 1e-9
 
 # Precompute triple indices
-TRIPLES = torch.tensor(
-    list(itertools.combinations(range(14), 3)), dtype=torch.long
-)
+TRIPLES = torch.tensor(list(itertools.combinations(range(14), 3)), dtype=torch.long)
 
 
 def triangle_areas_torch(pts):
@@ -119,9 +117,7 @@ def random_init_torch(rng, mode="10p4"):
     elif mode == "square":
         pts = rng.uniform(-1, 1, (14, 2))
     elif mode == "perturb_ref":
-        ref_data = json.loads(
-            (RESULTS_DIR / "reference_solution.json").read_text()
-        )
+        ref_data = json.loads((RESULTS_DIR / "reference_solution.json").read_text())
         pts = np.array(ref_data["points"], dtype=np.float64)
         scale = rng.choice([1e-3, 5e-3, 1e-2, 5e-2, 0.1, 0.3])
         pts = pts + rng.normal(0, scale, pts.shape)
@@ -249,27 +245,29 @@ def main():
             at = active_triples(best_pts, rel_tol=1e-9)
             hv = hull_vertex_indices(best_pts)
             delta = score - ARENA_BEST
-            print(f"\n*** NEW BEST! {score:.20f}  delta={delta:+.3e}  "
-                  f"hull={len(hv)}+{14-len(hv)}  active={len(at)}  "
-                  f"loss={loss_name} opt={opt_type} init={mode}")
+            print(
+                f"\n*** NEW BEST! {score:.20f}  delta={delta:+.3e}  "
+                f"hull={len(hv)}+{14 - len(hv)}  active={len(at)}  "
+                f"loss={loss_name} opt={opt_type} init={mode}"
+            )
             if score > SUBMIT_THRESHOLD:
                 print("*** ABOVE SUBMIT THRESHOLD! ***")
                 out = {"points": best_pts.tolist(), "score": score}
-                Path("/tmp/heilbronn_torch_candidate.json").write_text(
-                    json.dumps(out, indent=2)
-                )
+                Path("/tmp/heilbronn_torch_candidate.json").write_text(json.dumps(out, indent=2))
 
         if trial_count % 100 == 0:
             elapsed = time.time() - start
             n_basins = len(discovered)
-            print(f"[{trial_count:5d}] {elapsed:.0f}s  basins={n_basins}  "
-                  f"best={best_score:.16f}  loss={loss_name}  opt={opt_type}  init={mode}")
+            print(
+                f"[{trial_count:5d}] {elapsed:.0f}s  basins={n_basins}  "
+                f"best={best_score:.16f}  loss={loss_name}  opt={opt_type}  init={mode}"
+            )
 
     # Summary
     elapsed = time.time() - start
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"TORCH ATTACK SUMMARY after {elapsed:.1f}s, {trial_count} trials")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Best score: {best_score:.20f}")
     print(f"Arena #1:   {ARENA_BEST:.20f}")
     print(f"Threshold:  {SUBMIT_THRESHOLD:.20f}")
@@ -283,7 +281,7 @@ def main():
     for i, (sc, pts, cfg) in enumerate(sorted_basins):
         hv = hull_vertex_indices(pts)
         at = active_triples(pts, rel_tol=1e-9)
-        print(f"  #{i+1}: {sc:.16f}  hull={len(hv)}+{14-len(hv)}  active={len(at)}  {cfg}")
+        print(f"  #{i + 1}: {sc:.16f}  hull={len(hv)}+{14 - len(hv)}  active={len(at)}  {cfg}")
 
     out = {
         "best_score": best_score,
@@ -293,9 +291,13 @@ def main():
         "basins": len(discovered),
         "elapsed_s": elapsed,
         "top10": [
-            {"score": sc, "points": pts.tolist(), "config": cfg,
-             "n_hull": len(hull_vertex_indices(pts)),
-             "active": len(active_triples(pts, rel_tol=1e-9))}
+            {
+                "score": sc,
+                "points": pts.tolist(),
+                "config": cfg,
+                "n_hull": len(hull_vertex_indices(pts)),
+                "active": len(active_triples(pts, rel_tol=1e-9)),
+            }
             for sc, pts, cfg in sorted_basins
         ],
     }

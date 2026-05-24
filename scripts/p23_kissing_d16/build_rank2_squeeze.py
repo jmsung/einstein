@@ -33,8 +33,9 @@ def build_squeeze(delta: float, u_perp: np.ndarray, v0: np.ndarray) -> np.ndarra
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--deltas", type=float, nargs="+",
-                        default=[1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2])
+    parser.add_argument(
+        "--deltas", type=float, nargs="+", default=[1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2]
+    )
     parser.add_argument("--n-starts", type=int, default=400)
     parser.add_argument("--out", default="results/p23_kissing_d16/squeeze")
     args = parser.parse_args()
@@ -63,12 +64,18 @@ def main() -> None:
         with open(out_path, "w") as f:
             json.dump({"vectors": v.tolist()}, f)
         rows.append((delta, s_fast, s_mp50, t_mp, out_path))
-        print(f"  δ={delta:.0e}  fast={s_fast:.10f}  mp50={s_mp50:.10f}  ({t_mp:.1f}s)  -> {out_path}")
+        print(
+            f"  δ={delta:.0e}  fast={s_fast:.10f}  mp50={s_mp50:.10f}  ({t_mp:.1f}s)  -> {out_path}"
+        )
 
     print("\nSummary:")
     print(f"  {'delta':>10}  {'fast':>14}  {'mpmath50':>14}  {'rank':>8}")
     for delta, s_fast, s_mp50, _, _ in rows:
-        rank = "#1" if s_mp50 < 2.0 else ("#2" if s_mp50 < 2.873843 else "#3" if s_mp50 < 4.6862915 else "#4+")
+        rank = (
+            "#1"
+            if s_mp50 < 2.0
+            else ("#2" if s_mp50 < 2.873843 else "#3" if s_mp50 < 4.6862915 else "#4+")
+        )
         print(f"  {delta:>10.0e}  {s_fast:>14.10f}  {s_mp50:>14.10f}  {rank:>8}")
 
 

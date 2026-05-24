@@ -9,7 +9,6 @@ import numpy as np
 import pytest
 
 from einstein.circles_rectangle.evaluator import (
-    N_CIRCLES,
     PERIMETER_BOUND,
     evaluate,
     evaluate_verbose,

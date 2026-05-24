@@ -10,6 +10,7 @@ import time
 
 import numpy as np
 import pytest
+
 from einstein.prime import (
     check_constraint_at_x,
     compute_score_only,
@@ -176,9 +177,7 @@ class TestMobiusTruncation:
                     pf[k] = float(mu)
             scores.append(compute_score_only(pf))
         # Scores should generally increase with N (more terms)
-        assert scores[-1] > scores[0], (
-            f"Score should increase with N: {scores}"
-        )
+        assert scores[-1] > scores[0], f"Score should increase with N: {scores}"
 
     def test_mobius_constraint_at_integers(self):
         """For exact Möbius, sum mu(k)*floor(x/k) = 1 for all x >= 1 (Mertens)."""
@@ -194,9 +193,9 @@ class TestMobiusTruncation:
             val = check_constraint_at_x(pf, float(x))
             # For x < N, sum mu(k)*floor(x/k) should be exactly 1
             if x < N:
-                assert val == pytest.approx(1.0, abs=1e-10), (
-                    f"Möbius identity failed at x={x}: got {val}"
-                )
+                assert val == pytest.approx(
+                    1.0, abs=1e-10
+                ), f"Möbius identity failed at x={x}: got {val}"
 
 
 # ---------------------------------------------------------------------------
@@ -275,9 +274,7 @@ class TestArenaMatch:
         sol = {"partial_function": pf}
         ours = evaluate(sol, n_samples=100_000, seed=42)
         arena = _arena_verify(pf, n_samples=100_000, seed=42)
-        assert ours == pytest.approx(arena, rel=1e-12), (
-            f"Mismatch: ours={ours}, arena={arena}"
-        )
+        assert ours == pytest.approx(arena, rel=1e-12), f"Mismatch: ours={ours}, arena={arena}"
 
     def test_random_sparse_matches(self):
         """Random sparse partial function matches arena."""
@@ -287,9 +284,7 @@ class TestArenaMatch:
         sol = {"partial_function": pf}
         ours = evaluate(sol, n_samples=100_000, seed=42)
         arena = _arena_verify(pf, n_samples=100_000, seed=42)
-        assert ours == pytest.approx(arena, rel=1e-12), (
-            f"Mismatch: ours={ours}, arena={arena}"
-        )
+        assert ours == pytest.approx(arena, rel=1e-12), f"Mismatch: ours={ours}, arena={arena}"
 
     @pytest.mark.parametrize("seed", range(5))
     def test_random_functions_match(self, seed):
@@ -301,9 +296,7 @@ class TestArenaMatch:
         sol = {"partial_function": pf}
         ours = evaluate(sol, n_samples=100_000, seed=42)
         arena = _arena_verify(pf, n_samples=100_000, seed=42)
-        assert ours == pytest.approx(arena, rel=1e-12), (
-            f"seed={seed}: ours={ours}, arena={arena}"
-        )
+        assert ours == pytest.approx(arena, rel=1e-12), f"seed={seed}: ours={ours}, arena={arena}"
 
 
 # ---------------------------------------------------------------------------
@@ -340,8 +333,10 @@ class TestPerformance:
 
     def test_fast_eval_under_1s(self):
         """Fast evaluator (100k samples) with 100 keys should be < 1s."""
-        pf = {p: -1.0 for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
-                                  31, 37, 41, 43, 47, 53, 59, 61, 67, 71]}
+        pf = {
+            p: -1.0
+            for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
+        }
         t0 = time.perf_counter()
         evaluate_fast(pf, n_samples=100_000, seed=42)
         elapsed = time.perf_counter() - t0

@@ -7,7 +7,6 @@ extract additional gains where torch.optim.LBFGS stalled.
 Uses bounded sigmoid parameterization (each x_i inside its scallop).
 """
 
-import json
 import sys
 import time
 from pathlib import Path
@@ -17,10 +16,9 @@ import torch
 from scipy.optimize import minimize
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from push_d_torch_lbfgs import assign_scallops, load_xs_from_solution, turan_y_torch  # noqa: E402
+from push_d_torch_lbfgs import assign_scallops, load_xs_from_solution  # noqa: E402
 from push_g_bounded import (  # noqa: E402
     inverse_sigmoid_param,
     perturb_log_gaps,
@@ -34,7 +32,9 @@ RESULTS = Path("results/problem-13-edges-triangles")
 torch.set_default_dtype(torch.float64)
 
 
-def make_value_and_grad(bi_xs_np: np.ndarray, lo_np: np.ndarray, hi_np: np.ndarray, k_np: np.ndarray):
+def make_value_and_grad(
+    bi_xs_np: np.ndarray, lo_np: np.ndarray, hi_np: np.ndarray, k_np: np.ndarray
+):
     """Build a scipy-compatible (f, g) function using torch autograd."""
     bi_t = torch.tensor(bi_xs_np, dtype=torch.float64)
     lo_t = torch.tensor(lo_np, dtype=torch.float64)
@@ -51,7 +51,9 @@ def make_value_and_grad(bi_xs_np: np.ndarray, lo_np: np.ndarray, hi_np: np.ndarr
     return fg
 
 
-def scipy_polish(multi_xs: np.ndarray, bi_xs: np.ndarray, maxiter: int = 2000) -> tuple[np.ndarray, float]:
+def scipy_polish(
+    multi_xs: np.ndarray, bi_xs: np.ndarray, maxiter: int = 2000
+) -> tuple[np.ndarray, float]:
     """Polish using scipy L-BFGS-B with autograd gradient."""
     k_np = assign_scallops(multi_xs)
     lo_np, hi_np = scallop_bounds(k_np)
@@ -95,7 +97,7 @@ def main():
     try:
         pol, _ = scipy_polish(multi_xs, bi_xs, maxiter=3000)
         sc = true_score(bi_xs, pol)
-        print(f"  scipy polish: {sc:.14f}  delta={sc-init_score:+.3e}")
+        print(f"  scipy polish: {sc:.14f}  delta={sc - init_score:+.3e}")
         if sc > best_score + 1e-14:
             best_multi = pol.copy()
             best_score = sc
@@ -103,7 +105,7 @@ def main():
         print(f"  scipy polish failed: {e}")
 
     # Phase 2: BH with scipy polish as local minimizer
-    print(f"\n=== BH + scipy L-BFGS-B ===")
+    print("\n=== BH + scipy L-BFGS-B ===")
     t0 = time.time()
     n_improvements = 0
     for seed in range(20):
@@ -119,7 +121,7 @@ def main():
                     best_multi = pol.copy()
                     best_score = sc
                     n_improvements += 1
-                    print(f"  seed={seed:2d} noise={noise:.3f}: {sc:.14f} (+{sc-init_score:.3e})")
+                    print(f"  seed={seed:2d} noise={noise:.3f}: {sc:.14f} (+{sc - init_score:.3e})")
             except Exception:
                 pass
 

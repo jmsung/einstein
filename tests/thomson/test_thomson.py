@@ -134,9 +134,9 @@ def test_sota_arena_reproduces_score():
     """Our evaluator must match the arena score for the SOTA solution."""
     our_score = evaluate({"vectors": _sota_arena["vectors"]})
     arena_score = _sota_arena["score"]
-    assert abs(our_score - arena_score) < 1e-6, (
-        f"Our score {our_score} != arena score {arena_score}"
-    )
+    assert (
+        abs(our_score - arena_score) < 1e-6
+    ), f"Our score {our_score} != arena score {arena_score}"
 
 
 @_SKIP_WALES
@@ -153,9 +153,9 @@ def test_fast_matches_sota():
     vecs = np.array(_sota_arena["vectors"], dtype=np.float64)
     fast_score = coulomb_energy_fast(vecs)
     arena_score = _sota_arena["score"]
-    assert abs(fast_score - arena_score) < 1e-4, (
-        f"Fast score {fast_score} != arena score {arena_score}"
-    )
+    assert (
+        abs(fast_score - arena_score) < 1e-4
+    ), f"Fast score {fast_score} != arena score {arena_score}"
 
 
 @_SKIP_ARENA

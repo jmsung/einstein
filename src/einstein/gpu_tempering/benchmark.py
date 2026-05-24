@@ -21,7 +21,6 @@ Decision criteria:
 import argparse
 import json
 import time
-from pathlib import Path
 
 import numpy as np
 import torch
@@ -31,9 +30,12 @@ def _get_gpu_util():
     """Get GPU utilization % (returns -1 if not available)."""
     try:
         import subprocess
+
         r = subprocess.run(
             ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         return int(r.stdout.strip())
     except Exception:
@@ -65,7 +67,9 @@ def _run_vanilla_pytorch(vecs_t, temps, n_replicas, scale, duration_sec, device)
         deltas = loss_fn.batch_incremental_delta(replicas, ki, old_vecs)
 
         accept_prob = torch.exp((-deltas / temps).clamp(max=0))
-        accept_mask = (deltas < 0) | (torch.rand(R, device=device, dtype=torch.float64) < accept_prob)
+        accept_mask = (deltas < 0) | (
+            torch.rand(R, device=device, dtype=torch.float64) < accept_prob
+        )
         losses += torch.where(accept_mask, deltas, torch.zeros_like(deltas))
 
         reject_mask = ~accept_mask
@@ -101,7 +105,9 @@ def _run_compiled_pytorch(vecs_t, temps, n_replicas, scale, duration_sec, device
 
         noise = torch.randn(R, D, device=device, dtype=torch.float64) * scale
         replicas[batch_idx, ki] += noise
-        replicas[batch_idx, ki] /= replicas[batch_idx, ki].norm(dim=1, keepdim=True).clamp(min=1e-30)
+        replicas[batch_idx, ki] /= (
+            replicas[batch_idx, ki].norm(dim=1, keepdim=True).clamp(min=1e-30)
+        )
 
         new_vecs = replicas[batch_idx, ki]
         od = torch.bmm(old_vecs.unsqueeze(1), replicas.transpose(1, 2)).squeeze(1)
@@ -109,12 +115,18 @@ def _run_compiled_pytorch(vecs_t, temps, n_replicas, scale, duration_sec, device
         od[batch_idx, ki] = -1.0
         nd[batch_idx, ki] = -1.0
 
-        op = torch.clamp(2.0 - 2.0 * torch.sqrt(2.0 * torch.clamp(1.0 - od.clamp(-1, 1), min=0.0)), min=0.0).sum(1)
-        np_ = torch.clamp(2.0 - 2.0 * torch.sqrt(2.0 * torch.clamp(1.0 - nd.clamp(-1, 1), min=0.0)), min=0.0).sum(1)
+        op = torch.clamp(
+            2.0 - 2.0 * torch.sqrt(2.0 * torch.clamp(1.0 - od.clamp(-1, 1), min=0.0)), min=0.0
+        ).sum(1)
+        np_ = torch.clamp(
+            2.0 - 2.0 * torch.sqrt(2.0 * torch.clamp(1.0 - nd.clamp(-1, 1), min=0.0)), min=0.0
+        ).sum(1)
         deltas = np_ - op
 
         accept_prob = torch.exp((-deltas / temps).clamp(max=0))
-        accept_mask = (deltas < 0) | (torch.rand(R, device=device, dtype=torch.float64) < accept_prob)
+        accept_mask = (deltas < 0) | (
+            torch.rand(R, device=device, dtype=torch.float64) < accept_prob
+        )
         losses = losses + torch.where(accept_mask, deltas, torch.zeros_like(deltas))
 
         reject_mask = ~accept_mask
@@ -162,7 +174,7 @@ def _run_cpu_baseline(vecs_np, scale, duration_sec):
         vecs[idx] += rng.standard_normal(D) * scale
         vecs[idx] /= np.linalg.norm(vecs[idx])
 
-        others = np.concatenate([vecs[:idx], vecs[idx + 1:]], axis=0)
+        others = np.concatenate([vecs[:idx], vecs[idx + 1 :]], axis=0)
         old_cos = np.clip(old_vec @ others.T, -1.0, 1.0)
         old_d = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - old_cos))
         old_p = np.maximum(0.0, 2.0 - old_d)
@@ -227,7 +239,12 @@ def run_benchmark(
             vecs_t, temps, n_replicas, scale, duration_sec, device
         )
         l1_pps = l1_perts / l1_time
-        results["gpu_vanilla"] = {"perts": l1_perts, "time": l1_time, "pps": l1_pps, "gpu_util": l1_util}
+        results["gpu_vanilla"] = {
+            "perts": l1_perts,
+            "time": l1_time,
+            "pps": l1_pps,
+            "gpu_util": l1_util,
+        }
         print(f"    {l1_pps:.0f} perturbations/sec, GPU util: {l1_util}%\n")
 
         # Level 2: torch.compile
@@ -237,7 +254,12 @@ def run_benchmark(
                 vecs_t, temps, n_replicas, scale, duration_sec, device
             )
             l2_pps = l2_perts / l2_time
-            results["gpu_compiled"] = {"perts": l2_perts, "time": l2_time, "pps": l2_pps, "gpu_util": l2_util}
+            results["gpu_compiled"] = {
+                "perts": l2_perts,
+                "time": l2_time,
+                "pps": l2_pps,
+                "gpu_util": l2_util,
+            }
             print(f"    {l2_pps:.0f} perturbations/sec, GPU util: {l2_util}%\n")
         except Exception as e:
             print(f"    FAILED: {e}\n")
@@ -249,6 +271,7 @@ def run_benchmark(
         try:
             from einstein.gpu_tempering.fused_step import fused_sa_step
             from einstein.gpu_tempering.losses import HingeOverlapLoss
+
             loss_fn = HingeOverlapLoss()
 
             f_replicas = vecs_t.unsqueeze(0).expand(n_replicas, -1, -1).clone()
@@ -260,12 +283,19 @@ def run_benchmark(
             f_perts = 0
             f_t0 = time.time()
             while time.time() - f_t0 < duration_sec:
-                f_losses, na = fused_sa_step(f_replicas, f_losses, temps, f_probs, scale, K_bench, "hinge")
+                f_losses, na = fused_sa_step(
+                    f_replicas, f_losses, temps, f_probs, scale, K_bench, "hinge"
+                )
                 f_perts += n_replicas * K_bench
             f_elapsed = time.time() - f_t0
             f_pps = f_perts / f_elapsed
             f_util = _get_gpu_util()
-            results["gpu_fused"] = {"perts": f_perts, "time": f_elapsed, "pps": f_pps, "gpu_util": f_util}
+            results["gpu_fused"] = {
+                "perts": f_perts,
+                "time": f_elapsed,
+                "pps": f_pps,
+                "gpu_util": f_util,
+            }
             print(f"    {f_pps:.0f} perturbations/sec, GPU util: {f_util}%\n")
         except Exception as e:
             print(f"    FAILED: {e}\n")
@@ -274,30 +304,42 @@ def run_benchmark(
         # Level 3: Triton kernel
         print(f"  [GPU L3] Triton kernel (K=5, {n_replicas} replicas)...")
         try:
-            from einstein.gpu_tempering.triton_kernel import triton_sa_step, HAS_TRITON
+            from einstein.gpu_tempering.triton_kernel import HAS_TRITON, triton_sa_step
+
             if not HAS_TRITON:
                 print("    SKIPPED: Triton not installed\n")
                 results["gpu_triton"] = None
             else:
                 t_replicas = vecs_t.unsqueeze(0).expand(n_replicas, -1, -1).clone()
-                t_losses = torch.stack([loss_fn.full_loss(t_replicas[r]) for r in range(n_replicas)])
+                t_losses = torch.stack(
+                    [loss_fn.full_loss(t_replicas[r]) for r in range(n_replicas)]
+                )
                 t_probs = loss_fn.contributions(t_replicas[0])
                 t_probs = t_probs / t_probs.sum()
 
                 # Warmup
                 for _ in range(3):
-                    t_losses, _ = triton_sa_step(t_replicas, t_losses, temps, t_probs, scale, K_bench, "hinge")
+                    t_losses, _ = triton_sa_step(
+                        t_replicas, t_losses, temps, t_probs, scale, K_bench, "hinge"
+                    )
                 torch.cuda.synchronize()
 
                 t_perts = 0
                 t_t0 = time.time()
                 while time.time() - t_t0 < duration_sec:
-                    t_losses, na = triton_sa_step(t_replicas, t_losses, temps, t_probs, scale, K_bench, "hinge")
+                    t_losses, na = triton_sa_step(
+                        t_replicas, t_losses, temps, t_probs, scale, K_bench, "hinge"
+                    )
                     t_perts += n_replicas * K_bench
                 t_elapsed = time.time() - t_t0
                 t_pps = t_perts / t_elapsed
                 t_util = _get_gpu_util()
-                results["gpu_triton"] = {"perts": t_perts, "time": t_elapsed, "pps": t_pps, "gpu_util": t_util}
+                results["gpu_triton"] = {
+                    "perts": t_perts,
+                    "time": t_elapsed,
+                    "pps": t_pps,
+                    "gpu_util": t_util,
+                }
                 print(f"    {t_pps:.0f} perturbations/sec, GPU util: {t_util}%\n")
         except Exception as e:
             print(f"    FAILED: {e}\n")
@@ -317,7 +359,9 @@ def run_benchmark(
     if "gpu_vanilla" in results:
         g1 = results["gpu_vanilla"]
         speedup = g1["pps"] / cpu_pps
-        print(f"  GPU vanilla:  {g1['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {g1['gpu_util']}% util)")
+        print(
+            f"  GPU vanilla:  {g1['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {g1['gpu_util']}% util)"
+        )
         if g1["pps"] > best_pps * 3:  # need >3x to justify cloud cost
             recommendation = "gpu_vanilla"
             best_pps = g1["pps"]
@@ -326,7 +370,9 @@ def run_benchmark(
         g2 = results["gpu_compiled"]
         speedup = g2["pps"] / cpu_pps
         compile_boost = g2["pps"] / results["gpu_vanilla"]["pps"] if "gpu_vanilla" in results else 0
-        print(f"  GPU compiled: {g2['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {g2['gpu_util']}% util, {compile_boost:.1f}x vs vanilla)")
+        print(
+            f"  GPU compiled: {g2['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {g2['gpu_util']}% util, {compile_boost:.1f}x vs vanilla)"
+        )
         if g2["pps"] > best_pps:
             recommendation = "gpu_compiled"
             best_pps = g2["pps"]
@@ -334,7 +380,9 @@ def run_benchmark(
     if results.get("gpu_fused"):
         gf = results["gpu_fused"]
         speedup = gf["pps"] / cpu_pps
-        print(f"  GPU fused:    {gf['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {gf['gpu_util']}% util)")
+        print(
+            f"  GPU fused:    {gf['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {gf['gpu_util']}% util)"
+        )
         if gf["pps"] > best_pps:
             recommendation = "gpu_fused"
             best_pps = gf["pps"]
@@ -342,7 +390,9 @@ def run_benchmark(
     if results.get("gpu_triton"):
         gt = results["gpu_triton"]
         speedup = gt["pps"] / cpu_pps
-        print(f"  GPU Triton:   {gt['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {gt['gpu_util']}% util)")
+        print(
+            f"  GPU Triton:   {gt['pps']:>10,.0f} perts/sec ({speedup:.1f}x CPU, {gt['gpu_util']}% util)"
+        )
         if gt["pps"] > best_pps:
             recommendation = "gpu_triton"
             best_pps = gt["pps"]
@@ -379,7 +429,9 @@ def run_benchmark(
         print(f"  from einstein.gpu_tempering import {runner}")
         print(f"  result = {runner}(vectors, n_replicas=64, n_steps=200000, k_per_step=5)")
     elif "gpu" in recommendation:
-        print("  from einstein.gpu_tempering import ParallelTemperingSA, HingeOverlapLoss, SphereManifold")
+        print(
+            "  from einstein.gpu_tempering import ParallelTemperingSA, HingeOverlapLoss, SphereManifold"
+        )
         print("  sa = ParallelTemperingSA(HingeOverlapLoss(), SphereManifold(D), N)")
         print("  result = sa.run(vectors)")
     else:

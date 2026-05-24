@@ -40,14 +40,7 @@ def _arena_reference(data):
         return -float("inf")
 
     def tri_area(p1, p2, p3):
-        return (
-            abs(
-                p1[0] * (p2[1] - p3[1])
-                + p2[0] * (p3[1] - p1[1])
-                + p3[0] * (p1[1] - p2[1])
-            )
-            / 2
-        )
+        return abs(p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2
 
     try:
         h_area = ConvexHull(points).volume
@@ -156,9 +149,7 @@ def test_active_triples_finds_equioscillation(leaderboard):
             assert n_active == 20, f"capybara expected 20 active, got {n_active}"
         elif expected > 0.02783557 and expected < 0.02783558:
             # Tied group
-            assert 14 <= n_active <= 18, (
-                f"{name}: expected ~16 active, got {n_active}"
-            )
+            assert 14 <= n_active <= 18, f"{name}: expected ~16 active, got {n_active}"
 
 
 def test_all_triangle_areas_length():

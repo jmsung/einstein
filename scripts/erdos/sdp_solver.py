@@ -24,14 +24,14 @@ This gives us a LOWER BOUND on the achievable C.
 """
 
 import sys
+
 sys.path.insert(0, "src")
 
-import json
 import time
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 from scipy.signal import fftconvolve
-from scipy.optimize import linprog
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 
@@ -109,7 +109,7 @@ def sdp_lower_bound(n):
 
     try:
         prob.solve(solver=cp.SCS, max_iters=10000, verbose=False)
-        if prob.status in ['optimal', 'optimal_inaccurate']:
+        if prob.status in ["optimal", "optimal_inaccurate"]:
             min_autocorr = alpha.value
             C_lower = 1.0 - 2.0 * min_autocorr / n
             return C_lower, r.value
@@ -161,8 +161,7 @@ def sdp_with_lifting(n):
 
     # Schur complement: X >= h h^T
     # [[X, h], [h^T, 1]] >> 0
-    Y = cp.bmat([[X, cp.reshape(h, (n, 1))],
-                  [cp.reshape(h, (1, n)), np.ones((1, 1))]])
+    Y = cp.bmat([[X, cp.reshape(h, (n, 1))], [cp.reshape(h, (1, n)), np.ones((1, 1))]])
     constraints.append(Y >> 0)
 
     # h in [0, 1], sum = n/2
@@ -185,7 +184,7 @@ def sdp_with_lifting(n):
     for k in range(n):
         # Linear correlation at lag k
         # sum_{i=0}^{n-1-k} h[i](1 - h[i+k]) = sum h[i] - sum X[i,i+k]
-        h_sum_k = cp.sum(h[:n - k])  # sum of h[i] for i=0..n-1-k
+        h_sum_k = cp.sum(h[: n - k])  # sum of h[i] for i=0..n-1-k
         x_sum_k = cp.sum([X[i, i + k] for i in range(n - k)])
         overlap_k = (h_sum_k - x_sum_k) * 2.0 / n
         constraints.append(overlap_k <= t)
@@ -201,7 +200,7 @@ def sdp_with_lifting(n):
 
     try:
         prob.solve(solver=cp.SCS, max_iters=20000, verbose=True)
-        if prob.status in ['optimal', 'optimal_inaccurate']:
+        if prob.status in ["optimal", "optimal_inaccurate"]:
             return t.value, h.value, X.value
         else:
             print(f"  SDP status: {prob.status}")
@@ -245,8 +244,7 @@ def main():
 
             # Try optimization from SDP solution
             # Upsample to 600 and evaluate
-            h_600 = np.interp(np.linspace(0, 1, 600),
-                              np.linspace(0, 1, n), h_rounded)
+            h_600 = np.interp(np.linspace(0, 1, 600), np.linspace(0, 1, n), h_rounded)
             h_600 = normalize(h_600)
             score_600 = fast_eval(h_600)
             print(f"    Upsampled to n=600: {score_600:.10f}")
@@ -255,9 +253,9 @@ def main():
 
     # 3. Known lower bound comparison
     print("\n--- Lower bound comparison ---")
-    print(f"  White (2022): 0.379005")
-    print(f"  SOTA (upper): 0.380870")
-    print(f"  Gap:          0.001865")
+    print("  White (2022): 0.379005")
+    print("  SOTA (upper): 0.380870")
+    print("  Gap:          0.001865")
 
 
 if __name__ == "__main__":

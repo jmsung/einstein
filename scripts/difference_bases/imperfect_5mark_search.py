@@ -17,13 +17,10 @@ Concrete test: for each 5-mark Sidon ruler R (L = 8..12) and each atom strategy
 (Wichmann-72 + helper marks at various spans), compute v(B = A ⊕ λR).
 Look for any (R, A, λ) with v > 49109 (SOTA).
 """
+
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Iterable
-
-import numpy as np
-
 
 SOTA_V = 49109
 SOTA_SCORE = 2.6390274695066
@@ -47,8 +44,9 @@ def enumerate_5mark_sidon(max_span: int = 13):
             diffs = sorted({R[i] - R[j] for i in range(5) for j in range(i)})
             L = max(diffs)
             gaps = [k for k in range(1, L + 1) if k not in diffs]
-            rulers.append({"R": R, "L": L, "diffs": diffs, "gaps": gaps,
-                           "is_perfect": len(gaps) == 0})
+            rulers.append(
+                {"R": R, "L": L, "diffs": diffs, "gaps": gaps, "is_perfect": len(gaps) == 0}
+            )
     return rulers
 
 
@@ -62,9 +60,15 @@ def wichmann_72() -> list[int]:
     # Standard formula: a_i pattern with specific gap structure.
     # For our purposes, use a known computation.
     r, s = 17, 1
-    gaps = ([1] * r + [r + 1] * (s + 1) + [2 * r + 1] +
-            [4 * r + 3] * (r - 1) + [2 * r + 1] +
-            [r + 1] * s + [1] * r)
+    gaps = (
+        [1] * r
+        + [r + 1] * (s + 1)
+        + [2 * r + 1]
+        + [4 * r + 3] * (r - 1)
+        + [2 * r + 1]
+        + [r + 1] * s
+        + [1] * r
+    )
     marks = [0]
     for g in gaps:
         marks.append(marks[-1] + g)
@@ -119,7 +123,7 @@ def main():
         # Fallback: take any reasonable 72-mark sparse-ruler-like atom.
         # Use SOTA's atom truncated to first 72 marks (suboptimal but functional).
         print(f"  WARN: Wichmann construction gave {len(A_wichmann)} marks, expected 72")
-        print(f"  Using fallback: simple set [0..71] (trivial ruler)")
+        print("  Using fallback: simple set [0..71] (trivial ruler)")
         A_wichmann = list(range(72))
 
     c_W = compute_c(A_wichmann)
@@ -128,7 +132,9 @@ def main():
     print()
 
     print("Test 1: Each 5-mark Sidon R with Wichmann-72 atom and varying lambda")
-    print(f"{'R':<22} {'L':<3} {'gaps':<10} {'lam':<6} {'v':<6} {'k':<5} {'score':<10} {'beats':<5}")
+    print(
+        f"{'R':<22} {'L':<3} {'gaps':<10} {'lam':<6} {'v':<6} {'k':<5} {'score':<10} {'beats':<5}"
+    )
 
     best_score = SOTA_SCORE
     best_config = None
@@ -138,13 +144,15 @@ def main():
         L = info["L"]
         for lam in [1500, 2500, 3500, 4500]:
             v, k_total = kronecker_v(A_wichmann, R, lam)
-            score = k_total ** 2 / v if v > 0 else float("inf")
+            score = k_total**2 / v if v > 0 else float("inf")
             beats = "YES" if score < SOTA_SCORE else "no"
             if score < best_score:
                 best_score = score
                 best_config = (R, lam, v, score)
             if v > 1000:  # only print substantive
-                print(f"{str(R):<22} {L:<3} {str(info['gaps']):<10} {lam:<6} {v:<6} {k_total:<5} {score:<10.4f} {beats:<5}")
+                print(
+                    f"{str(R):<22} {L:<3} {str(info['gaps']):<10} {lam:<6} {v:<6} {k_total:<5} {score:<10.4f} {beats:<5}"
+                )
 
     print()
     print("Test 2: SOTA-atom-truncated-to-72 with various 5-mark R + lambda")
@@ -152,6 +160,7 @@ def main():
 
     # Load SOTA atom
     import json
+
     SOTA_PATH = "/Users/jongmin/projects/einstein/mb/problems/19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json"
     sota_data = json.loads(open(SOTA_PATH).read())
     LAM_SOTA = 8011
@@ -163,24 +172,30 @@ def main():
     max_S72 = max(A_sota_72)
     print(f"  SOTA-truncated-72 atom: c(A)={c_S72}, max(A)={max_S72}, |A|={len(A_sota_72)}")
 
-    print(f"{'R':<22} {'L':<3} {'gaps':<10} {'lam':<6} {'v':<6} {'k':<5} {'score':<10} {'beats':<5}")
+    print(
+        f"{'R':<22} {'L':<3} {'gaps':<10} {'lam':<6} {'v':<6} {'k':<5} {'score':<10} {'beats':<5}"
+    )
     for info in rulers[:8]:
         R = info["R"]
         L = info["L"]
         for lam in [3000, 4500, 6000, 8011]:
             v, k_total = kronecker_v(A_sota_72, R, lam)
-            score = k_total ** 2 / v if v > 0 else float("inf")
+            score = k_total**2 / v if v > 0 else float("inf")
             beats = "YES" if score < SOTA_SCORE else "no"
             if score < best_score:
                 best_score = score
                 best_config = (R, lam, v, score)
             if v > 1000:
-                print(f"{str(R):<22} {L:<3} {str(info['gaps']):<10} {lam:<6} {v:<6} {k_total:<5} {score:<10.4f} {beats:<5}")
+                print(
+                    f"{str(R):<22} {L:<3} {str(info['gaps']):<10} {lam:<6} {v:<6} {k_total:<5} {score:<10.4f} {beats:<5}"
+                )
 
     print()
     print(f"Best score across all tests: {best_score:.6f}")
     if best_config:
-        print(f"  Config: R={best_config[0]}, lambda={best_config[1]}, v={best_config[2]}, score={best_config[3]:.6f}")
+        print(
+            f"  Config: R={best_config[0]}, lambda={best_config[1]}, v={best_config[2]}, score={best_config[3]:.6f}"
+        )
     if best_score < SOTA_SCORE:
         print("  *** BETTER THAN SOTA — needs triple-verify and refinement ***")
     else:
@@ -189,11 +204,13 @@ def main():
         print("Structural reason (from cycle-2 bridging framework):")
         print("- |R|=5 forces |A|=72 (vs |R|=4 giving |A|=90)")
         print("- Smaller |A| means smaller max(A) and smaller c(A) at fixed Wichmann ratio")
-        print("- Imperfect R has missing shells; bridging requires max(A) >= lambda for skip-bridge")
+        print(
+            "- Imperfect R has missing shells; bridging requires max(A) >= lambda for skip-bridge"
+        )
         print("- Combined: lambda is bounded by atom span, and atom-span is bounded by k=72.")
         print("- The Pareto-optimal (|R|, |A|, c_A, lambda, max(A)) tuple at k=360 is:")
-        print(f"    (4, 90, 1043, 8011, 6967)  =  SOTA")
-        print(f"  giving v = 6 * 8011 + 1043 = 49109, score = 2.639.")
+        print("    (4, 90, 1043, 8011, 6967)  =  SOTA")
+        print("  giving v = 6 * 8011 + 1043 = 49109, score = 2.639.")
         print("- 5-mark imperfect attempts shift the trade-off WORSE because:")
         print("  - L_R increases (4-mark gives L=6; 5-mark imperfect gives L=8-12)")
         print("  - But max(A) decreases (atom 72 < 90); shrinks lambda budget")

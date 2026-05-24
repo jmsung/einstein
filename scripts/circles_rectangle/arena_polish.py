@@ -160,11 +160,15 @@ def main():
     circles_init[:, 1] -= ymin
     w0 = float((circles_init[:, 0] + circles_init[:, 2]).max())
     h0 = float((circles_init[:, 1] + circles_init[:, 2]).max())
-    print(f"Initial w={w0:.16f} h={h0:.16f} perim={2*(w0+h0):.16f}")
+    print(f"Initial w={w0:.16f} h={h0:.16f} perim={2 * (w0 + h0):.16f}")
 
     # Polish with arena-safe tolerances
     circles, w, h, info = arena_polish(
-        circles_init, w0, h0, maxiter=3000, ftol=1e-18,
+        circles_init,
+        w0,
+        h0,
+        maxiter=3000,
+        ftol=1e-18,
     )
     score = info["score"]
     sol = {"circles": circles.tolist()}

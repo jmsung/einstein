@@ -45,3 +45,16 @@ This replaces the prior ad-hoc `cp` pattern and prevents the class of bug where 
 ## #41: Shared submission tooling pays compound interest {#lesson-41}
 
 Building one `check_submission.py` module (verify_api, wait_for_leaderboard, launch_monitor) and reusing it across all problem submit scripts eliminates per-problem bugs. Every new problem now gets pre-flight URL/auth checks, triple-verification, and blocking leaderboard polling for free. Invest in shared submission infrastructure once — it amortizes across every future submission.
+
+## #93: CI gates must land before agent-co-authored scale, not after {#lesson-93}
+
+Branch `js/chore/ci-precommit` (2026-05-24): added GitHub Actions test workflow + pre-commit (ruff lint+format + 5 hygiene hooks) + `[tool.ruff]` config. The trigger was the audit observation that the repo had shifted to agent-co-authored ~1k LOC per branch with **no** PR-time CI, no linter config, no pre-commit — `feat/autonomous-loop` had already shipped despite this. Without structural gates, agent edits silently regress tests and accumulate lint debt that compounds across branches.
+
+**Concrete pitfalls discovered during the rollout** (each one would have bitten the next agent branch):
+
+1. **Pytest collection conflict from missing `__init__.py` in test subdirs.** `tests/first_autocorrelation/` and `tests/third_autocorrelation/` had duplicate test-file basenames (`test_*.py`) with the parent `tests/` package — pytest silently shrank the suite from 493→487 tests (6 hidden) and emitted a collection error. The fix is one empty `__init__.py` per subdir. **Rule**: any new `tests/<subdir>/` must include `__init__.py` from the first commit. CI now catches this because pytest exits non-zero on collection errors.
+2. **Pre-existing F821 (missing-import) bugs in scripts** — `scripts/uncertainty/exact_hillclimb.py`, `scripts/uncertainty/k_climb_optimizer.py`, `scripts/kissing_number/polish_mpmath.py` referenced `TARGET` / `time` without import. These shipped under the no-linter regime and would have been caught by E/F/I on day 1. Per-file-ignored for landing the gate; tracked for follow-up fix.
+3. **B (bugbear) + UP (pyupgrade) carry ~275 non-auto-fixable issues** on the existing tree — must be cleaned in a follow-up branch, not bundled with the gate-introduction. **B023 closure bugs are real, not noise**; demoting them to ignored would forfeit the find. Land E/F/I first, B+UP second.
+4. **Pre-commit `--all-files` needs two converging runs** when both `end-of-file-fixer` and `ruff-format` are enabled — the first run's EOF fix touches pyproject.toml, which triggers ruff-format on the second run. Document this in onboarding to prevent "I ran pre-commit, why is it dirty?" confusion.
+
+**General rule**: introduce CI + lint + format gates as **early as possible** when agent-co-authoring starts, with the minimum rule set (E/F/I) that catches real bugs without forcing a big-bang cleanup. The cost of landing this branch is a fraction of the cost of debugging silent regressions across the next 10 agent branches. Bundling pyright/mypy or dependabot in the same branch dilutes the signal; ship one quality dimension per chore branch (`js/chore/typecheck`, `js/chore/dependabot` separately).

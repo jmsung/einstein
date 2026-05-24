@@ -3,11 +3,7 @@
 from __future__ import annotations
 
 import json
-import os
-import shutil
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -15,7 +11,6 @@ import pytest
 # Import the module under test
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from promote_to_mb import derive_problem, dest_filename, promote
-
 
 # ---------- dest_filename ----------
 

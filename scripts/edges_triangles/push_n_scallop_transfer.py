@@ -10,8 +10,6 @@ from source to target, redistribute both scallops uniformly, run bounded polish,
 evaluate. Try 1-point, 2-point, 3-point transfers.
 """
 
-import json
-import shutil
 import sys
 import time
 from pathlib import Path
@@ -19,7 +17,6 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import assign_scallops, load_xs_from_solution  # noqa: E402
@@ -51,8 +48,11 @@ def get_scallop_counts(multi_xs: np.ndarray) -> dict:
 
 
 def transfer_and_polish(
-    multi_xs: np.ndarray, bi_xs: np.ndarray,
-    src_k: int, dst_k: int, n_transfer: int,
+    multi_xs: np.ndarray,
+    bi_xs: np.ndarray,
+    src_k: int,
+    dst_k: int,
+    n_transfer: int,
 ) -> tuple[np.ndarray, float] | None:
     """Move n_transfer points from scallop src_k to scallop dst_k, polish."""
     counts = get_scallop_counts(multi_xs)
@@ -117,7 +117,9 @@ def main():
                     continue
                 pol, sc = res
                 if sc > best_score + 1e-13:
-                    print(f"  src={src} dst={dst} n={n_transfer}: {sc:.14f} (+{sc-init_score:.3e}) NEW BEST")
+                    print(
+                        f"  src={src} dst={dst} n={n_transfer}: {sc:.14f} (+{sc - init_score:.3e}) NEW BEST"
+                    )
                     best_multi = pol.copy()
                     best_score = sc
                     n_improvements += 1

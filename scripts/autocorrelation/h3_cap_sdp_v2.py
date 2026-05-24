@@ -41,13 +41,15 @@ import numpy as np
 
 try:
     import cvxpy as cp
+
     HAVE_CVXPY = True
 except ImportError:
     HAVE_CVXPY = False
 
 
-def solve_g_lambda_v2(lam: float, T: int = 16, G: int = 1024,
-                       solver: str = "SCS", verbose: bool = False) -> tuple[float, dict]:
+def solve_g_lambda_v2(
+    lam: float, T: int = 16, G: int = 1024, solver: str = "SCS", verbose: bool = False
+) -> tuple[float, dict]:
     """Solve $g_{up}(\\lambda) = \\sup_f (M^{up}(f) - \\lambda C^{lo}(f))$.
 
     Relaxations:
@@ -76,8 +78,7 @@ def solve_g_lambda_v2(lam: float, T: int = 16, G: int = 1024,
 
     # SOC lift: $y_k \\geq \\hat{f}_k^2$
     for k in range(T + 1):
-        constraints.append(cp.bmat([[y[k], hat_f[k]],
-                                     [hat_f[k], 1]]) >> 0)
+        constraints.append(cp.bmat([[y[k], hat_f[k]], [hat_f[k], 1]]) >> 0)
 
     # Sup-norm via dense grid: $C \\geq \\sum_k y_k \\cos(\\pi k x_i)$
     # (using $y_k \\geq \\hat{f}_k^2$ as a proxy for the actual $(F*F)$ Fourier coeffs)
@@ -106,25 +107,34 @@ def solve_g_lambda_v2(lam: float, T: int = 16, G: int = 1024,
         "elapsed": elapsed,
     }
     if prob.status in ("optimal", "optimal_inaccurate"):
-        info.update({
-            "M_up": float(M_up.value),
-            "C": float(C.value),
-            "S_implied": float(M_up.value) / max(float(C.value), 1e-12),
-            "g_lambda_value": float(prob.value),
-        })
+        info.update(
+            {
+                "M_up": float(M_up.value),
+                "C": float(C.value),
+                "S_implied": float(M_up.value) / max(float(C.value), 1e-12),
+                "g_lambda_value": float(prob.value),
+            }
+        )
     return prob.value if prob.value is not None else float("nan"), info
 
 
-def upper_bound_sweep(T: int = 16, G: int = 1024, solver: str = "SCS",
-                       lam_lo: float = 0.96, lam_hi: float = 1.0,
-                       steps: int = 9):
+def upper_bound_sweep(
+    T: int = 16,
+    G: int = 1024,
+    solver: str = "SCS",
+    lam_lo: float = 0.96,
+    lam_hi: float = 1.0,
+    steps: int = 9,
+):
     """Solve at a sweep of lambda values and report g(lambda) at each.
 
     The smallest lambda with $g(\\lambda) \\leq 0$ is an upper bound on $S^*$.
     """
     print(f"Lambda sweep: T={T}, G={G}, range [{lam_lo}, {lam_hi}], {steps} steps")
-    print(f"{'lambda':>10s}  {'g(lam)':>15s}  {'C':>10s}  {'M_up':>10s}  {'M_up/C':>10s}  {'status':>10s}  elapsed")
-    print('-' * 90)
+    print(
+        f"{'lambda':>10s}  {'g(lam)':>15s}  {'C':>10s}  {'M_up':>10s}  {'M_up/C':>10s}  {'status':>10s}  elapsed"
+    )
+    print("-" * 90)
 
     lambdas = np.linspace(lam_lo, lam_hi, steps)
     results = []
@@ -137,7 +147,7 @@ def upper_bound_sweep(T: int = 16, G: int = 1024, solver: str = "SCS",
             line += f"{'-':>10s}  {'-':>10s}  {'-':>10s}  "
         line += f"{info['status']:>10s}  {info.get('elapsed', 0):.1f}s"
         print(line)
-        results.append({"lambda": float(lam), "g": float(g) if g != float('nan') else None, **info})
+        results.append({"lambda": float(lam), "g": float(g) if g != float("nan") else None, **info})
 
     # Find smallest lambda with g <= 0
     upper_bound = None
@@ -171,15 +181,13 @@ def main():
     print()
 
     print("--- Sweep at T=8, G=512 ---")
-    ub, hist = upper_bound_sweep(T=8, G=512, solver="SCS",
-                                  lam_lo=0.5, lam_hi=1.5, steps=11)
+    ub, hist = upper_bound_sweep(T=8, G=512, solver="SCS", lam_lo=0.5, lam_hi=1.5, steps=11)
     print()
     print(f"Smallest lambda with g <= 0:  {ub}")
     print()
 
     print("--- Refined sweep at T=16, G=2048 ---")
-    ub2, hist2 = upper_bound_sweep(T=16, G=2048, solver="SCS",
-                                    lam_lo=0.5, lam_hi=1.5, steps=11)
+    ub2, hist2 = upper_bound_sweep(T=16, G=2048, solver="SCS", lam_lo=0.5, lam_hi=1.5, steps=11)
     print()
     print(f"Smallest lambda with g <= 0:  {ub2}")
     print()
@@ -188,15 +196,15 @@ def main():
     print("Summary:")
     print(f"  T=8 UB:  {ub}")
     print(f"  T=16 UB: {ub2}")
-    print(f"  Empirical lower bound:  0.96272 (arena leaders)")
-    print(f"  Trivial Cauchy-Schwarz: 1.0")
+    print("  Empirical lower bound:  0.96272 (arena leaders)")
+    print("  Trivial Cauchy-Schwarz: 1.0")
     if ub2 is not None and ub2 < 1.0:
         gap_to_empirical = ub2 - 0.96272
         print(f"  Gap from UB to empirical: {gap_to_empirical:+.6f}")
         if gap_to_empirical < 0:
             print("  WARNING: UB below empirical — relaxation invalid or numerical issue")
         else:
-            print(f"  This is a valid (loose) rigorous upper bound on S*.")
+            print("  This is a valid (loose) rigorous upper bound on S*.")
     print("=" * 76)
 
 

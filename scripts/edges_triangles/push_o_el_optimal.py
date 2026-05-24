@@ -5,7 +5,6 @@ f(x) = t'/2 - t'²/6 (Euler-Lagrange optimal density), then polish with
 bounded L-BFGS.
 """
 
-import json
 import sys
 import time
 from pathlib import Path
@@ -15,11 +14,16 @@ from scipy.integrate import quad
 from scipy.interpolate import interp1d
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_densities, compute_score, turan_row  # noqa: E402
+from einstein.edges_triangles.evaluator import compute_densities, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
-from push_g_bounded import lbfgs_polish_bounded, perturb_log_gaps, save_solution, true_score  # noqa: E402
+from push_g_bounded import (  # noqa: E402
+    lbfgs_polish_bounded,
+    perturb_log_gaps,
+    save_solution,
+    true_score,
+)
 
 RESULTS = Path("results/problem-13-edges-triangles")
 
@@ -51,8 +55,8 @@ def compute_el_positions(m: int = 490, x_lo: float = 0.5, x_hi: float = 0.95) ->
     # Sample on a fine grid within each scallop (since kinks exist at x=1-1/k)
     grid = []
     for k in range(2, 20):
-        lo_k = max(1 - 1/k, x_lo) + 1e-9
-        hi_k = min(1 - 1/(k+1), x_hi) - 1e-9
+        lo_k = max(1 - 1 / k, x_lo) + 1e-9
+        hi_k = min(1 - 1 / (k + 1), x_hi) - 1e-9
         if lo_k >= hi_k:
             continue
         grid.extend(np.linspace(lo_k, hi_k, 2000))
@@ -67,7 +71,7 @@ def compute_el_positions(m: int = 490, x_lo: float = 0.5, x_hi: float = 0.95) ->
     print(f"  Total ∫ sqrt(f) dx = {total:.8f}")
 
     # Inverse CDF at quantiles (m+1)/(m+2), avoiding the boundaries
-    quantiles = np.linspace(0.5/m, 1 - 0.5/m, m)
+    quantiles = np.linspace(0.5 / m, 1 - 0.5 / m, m)
     targets = quantiles * total
     # Interpolate: x such that cum(x) = target
     inv_cdf = interp1d(cum, grid, kind="linear", bounds_error=False, fill_value=(grid[0], grid[-1]))
@@ -79,8 +83,8 @@ def compute_theoretical_excess(m: int = 490) -> float:
     """Asymptotic E-L excess = (∫ sqrt(f))² / m."""
     total = 0
     for k in range(2, 20):
-        lo = 1 - 1/k + 1e-10
-        hi = 1 - 1/(k+1) - 1e-10
+        lo = 1 - 1 / k + 1e-10
+        hi = 1 - 1 / (k + 1) - 1e-10
         integral, _ = quad(sqrt_f, lo, hi, limit=500)
         total += integral
     return total * total / m
@@ -103,13 +107,13 @@ def main():
     print(f"E-L positions: {len(el_multi)} pts in [{el_multi.min():.6f}, {el_multi.max():.6f}]")
 
     el_raw_score = true_score(bi_xs, el_multi)
-    print(f"E-L raw score: {el_raw_score:.14f}  delta={el_raw_score-init_score:+.3e}")
+    print(f"E-L raw score: {el_raw_score:.14f}  delta={el_raw_score - init_score:+.3e}")
 
     # Polish
     print("\n=== Bounded L-BFGS polish from E-L positions ===")
     pol, _ = lbfgs_polish_bounded(el_multi, bi_xs, max_rounds=100)
     pol_score = true_score(bi_xs, pol)
-    print(f"Polished: {pol_score:.14f}  delta={pol_score-init_score:+.3e}")
+    print(f"Polished: {pol_score:.14f}  delta={pol_score - init_score:+.3e}")
 
     best_multi = pol if pol_score > init_score + 1e-13 else multi_xs.copy()
     best_score = max(init_score, pol_score)
@@ -131,11 +135,11 @@ def main():
                     best_multi = new_pol.copy()
                     best_score = sc
                     n_improvements += 1
-                    print(f"  seed={seed} noise={noise}: {sc:.14f} (+{sc-init_score:.3e})")
+                    print(f"  seed={seed} noise={noise}: {sc:.14f} (+{sc - init_score:.3e})")
             except Exception:
                 pass
 
-    print(f"\nFinal: {best_score:.14f}  gain from init={best_score-init_score:+.3e}")
+    print(f"\nFinal: {best_score:.14f}  gain from init={best_score - init_score:+.3e}")
 
     if best_score > init_score + 1e-13:
         save_solution(bi_xs, best_multi, "push-o-final")

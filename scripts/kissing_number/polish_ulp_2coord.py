@@ -25,7 +25,8 @@ import time
 from pathlib import Path
 
 import numpy as np
-from mpmath import mp, mpf, sqrt as mpsqrt
+from mpmath import mp, mpf
+from mpmath import sqrt as mpsqrt
 
 from einstein.kissing_number.evaluator import overlap_loss_mpmath
 
@@ -142,16 +143,20 @@ def main() -> None:
     parser.add_argument("--budget", type=int, default=1800)
     parser.add_argument("--max-ulps", type=int, default=2)
     parser.add_argument("--max-sweeps", type=int, default=3)
-    parser.add_argument("--row-order", type=str, default="gap",
-                        choices=["gap", "seq"])
-    parser.add_argument("--top-rows", type=int, default=200,
-                        help="Process only top-N rows by gap contribution each sweep")
+    parser.add_argument("--row-order", type=str, default="gap", choices=["gap", "seq"])
+    parser.add_argument(
+        "--top-rows",
+        type=int,
+        default=200,
+        help="Process only top-N rows by gap contribution each sweep",
+    )
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
     print("=" * 78)
-    print(f"2-COORD ULP POLISHER  dps={args.dps}  max_ulps={args.max_ulps}  "
-          f"top_rows={args.top_rows}")
+    print(
+        f"2-COORD ULP POLISHER  dps={args.dps}  max_ulps={args.max_ulps}  top_rows={args.top_rows}"
+    )
     print("=" * 78)
 
     mp.dps = args.dps
@@ -243,10 +248,10 @@ def main() -> None:
 
             if time.time() - last_print > 20:
                 print(
-                    f"  row {ridx+1:4d}/{len(rows_to_process)}  (i={i:3d})  "
+                    f"  row {ridx + 1:4d}/{len(rows_to_process)}  (i={i:3d})  "
                     f"score={float(best_score):.10e}  "
                     f"accepts={sweep_accepts}  tries={total_tries}  "
-                    f"elapsed={time.time()-t_start:.0f}s",
+                    f"elapsed={time.time() - t_start:.0f}s",
                     flush=True,
                 )
                 last_print = time.time()
@@ -264,7 +269,7 @@ def main() -> None:
             out = {
                 "vectors": v_out.tolist(),
                 "score": verify_score,
-                "source": f"polish_ulp_2coord:sweep{sweep+1}",
+                "source": f"polish_ulp_2coord:sweep{sweep + 1}",
             }
             path = RESULTS / "solution_best_mpmath.json"
             try:

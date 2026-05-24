@@ -93,9 +93,9 @@ def project_constraints(h):
         h.clamp_(0, 1)
 
 
-def adam_optimize(n, batch_size=64, n_iters=10000, lr=1e-2,
-                  device="cpu", seed=42, time_limit=120,
-                  warm_start=None):
+def adam_optimize(
+    n, batch_size=64, n_iters=10000, lr=1e-2, device="cpu", seed=42, time_limit=120, warm_start=None
+):
     """Batched Adam optimization for Erdos overlap.
 
     Args:
@@ -161,8 +161,10 @@ def adam_optimize(n, batch_size=64, n_iters=10000, lr=1e-2,
                 if c_val < best_score and c_val > 0:
                     best_score = c_val
                     best_h = h[best_idx].detach().cpu().numpy().copy()
-                print(f"    iter {t+1}: best C={best_score:.10f}, "
-                      f"batch mean={C_vals.mean().item():.8f}")
+                print(
+                    f"    iter {t + 1}: best C={best_score:.10f}, "
+                    f"batch mean={C_vals.mean().item():.8f}"
+                )
 
     # Final extraction
     with torch.no_grad():
@@ -215,7 +217,7 @@ def hillclimb(h, n_iters=5000, step_size=0.01, time_limit=60):
             h[idx] = old_val  # revert
 
         if (t + 1) % 1000 == 0:
-            print(f"    iter {t+1}: C={best_score:.10f}, improved={improved}")
+            print(f"    iter {t + 1}: C={best_score:.10f}, improved={improved}")
 
     print(f"  Hillclimb done: C={best_score:.10f}, improved={improved}")
     return best_h, best_score
@@ -257,8 +259,13 @@ def main():
     n = args.n_start
     print(f"\n=== Stage 1: Adam at n={n} ===")
     h, score = adam_optimize(
-        n, batch_size=64, n_iters=10000, lr=1e-2,
-        device=device, seed=42, time_limit=args.time_limit * 0.3,
+        n,
+        batch_size=64,
+        n_iters=10000,
+        lr=1e-2,
+        device=device,
+        seed=42,
+        time_limit=args.time_limit * 0.3,
         warm_start=warm_start,
     )
     save_result(h, score, f"adam_n{n}")
@@ -280,8 +287,12 @@ def main():
 
         # Refine upscaled with Adam
         h_refined, score_refined = adam_optimize(
-            new_n, batch_size=16, n_iters=5000, lr=5e-3,
-            device=device, seed=0,
+            new_n,
+            batch_size=16,
+            n_iters=5000,
+            lr=5e-3,
+            device=device,
+            seed=0,
             time_limit=min(remaining * 0.4, 90),
             warm_start=h_up,
         )
@@ -296,13 +307,12 @@ def main():
     # Stage 3: Hill-climb polishing
     remaining = args.time_limit - (time.time() - t_total)
     if remaining > 10:
-        print(f"\n=== Stage 3: Hill-climb polishing ===")
-        h, score = hillclimb(h, n_iters=50000, step_size=0.005,
-                             time_limit=remaining - 5)
+        print("\n=== Stage 3: Hill-climb polishing ===")
+        h, score = hillclimb(h, n_iters=50000, step_size=0.005, time_limit=remaining - 5)
         save_result(h, score, "hillclimb_final")
 
     # Final verification with exact evaluator
-    print(f"\n=== Final Verification ===")
+    print("\n=== Final Verification ===")
     exact_score = exact_evaluate({"values": h.tolist()})
     fast_score = fast_evaluate(h)
     print(f"  Fast:  C={fast_score:.12f}")

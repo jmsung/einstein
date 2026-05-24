@@ -23,7 +23,6 @@ import numpy as np
 from scipy.spatial.distance import pdist
 
 sys.path.insert(0, "src")
-from einstein.p22_kissing_d12.evaluator import overlap_loss
 
 N = 841
 D = 12
@@ -133,7 +132,7 @@ def main():
 
     base = load_chronos()
     s0 = score(base)
-    print(f"CHRONOS base score: {s0!r}  (fix_core={args.mode=='filler'})", flush=True)
+    print(f"CHRONOS base score: {s0!r}  (fix_core={args.mode == 'filler'})", flush=True)
 
     pert_scales = [float(x) for x in args.pert_scales.split(",")]
     rng = np.random.default_rng(20260425)
@@ -143,7 +142,7 @@ def main():
 
     t0 = time.time()
     # First: starting exactly at CHRONOS (no perturbation)
-    print(f"--- baseline restart: no perturbation ---", flush=True)
+    print("--- baseline restart: no perturbation ---", flush=True)
     U_opt, s_opt, _ = rsgd(
         base.copy(),
         args.steps,
@@ -175,7 +174,10 @@ def main():
             momentum=0.9,
             fix_core=(args.mode == "filler"),
         )
-        print(f"  restart {r:02d}  scale={scale:.0e}  → score={s_opt:.15f}  (Δ={s_opt - s0:+.3e})", flush=True)
+        print(
+            f"  restart {r:02d}  scale={scale:.0e}  → score={s_opt:.15f}  (Δ={s_opt - s0:+.3e})",
+            flush=True,
+        )
         if s_opt < best_s:
             best_s = s_opt
             best_U = U_opt

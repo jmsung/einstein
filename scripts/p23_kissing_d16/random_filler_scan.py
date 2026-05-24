@@ -53,7 +53,10 @@ def main() -> None:
             elapsed = time.time() - t0
             rate = (b + m) / max(1e-9, elapsed)
             best = top_scores[0] if top_scores else None
-            print(f"[{b+m:>10}/{n}] best={best:.6f}  rate={rate:.0f}/s  elapsed={elapsed:.0f}s", flush=True)
+            print(
+                f"[{b + m:>10}/{n}] best={best:.6f}  rate={rate:.0f}/s  elapsed={elapsed:.0f}s",
+                flush=True,
+            )
 
     print("\nTop-K scores:", top_scores)
     print(f"Best random non-duplicate basin score: {top_scores[0]:.6f}")

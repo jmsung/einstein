@@ -22,7 +22,7 @@ import numpy as np
 
 N_CIRCLES = 21
 PERIMETER_BOUND = 4.0  # equivalent to w + h <= 2
-OVERLAP_TOL = 1e-9     # max accepted overlap (float64 noise)
+OVERLAP_TOL = 1e-9  # max accepted overlap (float64 noise)
 PERIMETER_TOL = 1e-12  # numerical slack on perimeter
 
 
@@ -64,9 +64,7 @@ def evaluate(data: dict, tol: float = OVERLAP_TOL) -> float:
     width, height = minimum_circumscribing_rectangle(circles)
     perimeter = 2.0 * (width + height)
     if perimeter > PERIMETER_BOUND + PERIMETER_TOL:
-        raise AssertionError(
-            f"Rectangle perimeter {perimeter} > {PERIMETER_BOUND}"
-        )
+        raise AssertionError(f"Rectangle perimeter {perimeter} > {PERIMETER_BOUND}")
     return float(np.sum(circles[:, 2]))
 
 
@@ -82,10 +80,7 @@ def evaluate_verbose(data: dict, eps: float = 1e-9) -> dict:
     worst_overlap = 0.0
     for i in range(n):
         for j in range(i + 1, n):
-            d = np.sqrt(
-                (circles[i, 0] - circles[j, 0]) ** 2
-                + (circles[i, 1] - circles[j, 1]) ** 2
-            )
+            d = np.sqrt((circles[i, 0] - circles[j, 0]) ** 2 + (circles[i, 1] - circles[j, 1]) ** 2)
             gap = d - circles[i, 2] - circles[j, 2]
             if gap < worst_overlap:
                 worst_overlap = float(gap)
@@ -111,7 +106,10 @@ def evaluate_verbose(data: dict, eps: float = 1e-9) -> dict:
         "n_inter_contacts": len(cc_pairs),
         "worst_overlap": worst_overlap,
         "wall_contacts": {
-            "left": left, "right": right, "bottom": bottom, "top": top,
+            "left": left,
+            "right": right,
+            "bottom": bottom,
+            "top": top,
         },
         "contact_pairs": cc_pairs,
     }

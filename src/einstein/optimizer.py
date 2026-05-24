@@ -13,16 +13,16 @@ Problem-specific strategies can be registered via add_strategy().
 from __future__ import annotations
 
 import time
-from collections import defaultdict
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 from scipy.optimize import minimize
 
 from einstein.knowledge import get_strategy_priors
 
-
 # ── Built-in strategies (work on any continuous problem) ─────────────────────
+
 
 def _strategy_hillclimb(
     solution: list[float],
@@ -74,8 +74,9 @@ def _strategy_nelder_mead(
     def obj(x):
         return sign * score_fn(list(x))
 
-    res = minimize(obj, trial, method="Nelder-Mead",
-                   options={"maxiter": 2000, "xatol": 1e-12, "fatol": 1e-16})
+    res = minimize(
+        obj, trial, method="Nelder-Mead", options={"maxiter": 2000, "xatol": 1e-12, "fatol": 1e-16}
+    )
     return list(res.x), score_fn(list(res.x))
 
 
@@ -94,8 +95,7 @@ def _strategy_lbfgsb(
     def obj(x):
         return sign * score_fn(list(x))
 
-    res = minimize(obj, trial, method="L-BFGS-B",
-                   options={"maxiter": 300, "ftol": 1e-16})
+    res = minimize(obj, trial, method="L-BFGS-B", options={"maxiter": 300, "ftol": 1e-16})
     return list(res.x), score_fn(list(res.x))
 
 
@@ -125,6 +125,7 @@ BUILTIN_STRATEGIES: dict[str, Callable] = {
 
 
 # ── Optimizer ────────────────────────────────────────────────────────────────
+
 
 class Optimizer:
     """Generic RALPH-style adaptive optimizer.
@@ -214,7 +215,10 @@ class Optimizer:
             try:
                 t0 = time.time()
                 candidate, score = fn(
-                    list(solution), self.score_fn, rng, self._is_better,
+                    list(solution),
+                    self.score_fn,
+                    rng,
+                    self._is_better,
                 )
                 dt = time.time() - t0
 
@@ -236,20 +240,24 @@ class Optimizer:
                     iter_best_score = score
                     iter_best_solution = candidate
 
-                results.append({
-                    "name": name,
-                    "score": score,
-                    "time": dt,
-                    "improved": improved and verified,
-                })
+                results.append(
+                    {
+                        "name": name,
+                        "score": score,
+                        "time": dt,
+                        "improved": improved and verified,
+                    }
+                )
             except Exception as e:
-                results.append({
-                    "name": name,
-                    "score": None,
-                    "time": 0.0,
-                    "improved": False,
-                    "error": str(e),
-                })
+                results.append(
+                    {
+                        "name": name,
+                        "score": None,
+                        "time": 0.0,
+                        "improved": False,
+                        "error": str(e),
+                    }
+                )
 
         # Update global best
         if self._is_better(iter_best_score, self.best_score):

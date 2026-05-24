@@ -30,10 +30,10 @@ import scipy.sparse as sp
 
 from einstein.first_autocorrelation.evaluator import verify_and_compute
 
-
 # ----------------------------------------------------------------------------
 # Warmstart helpers
 # ----------------------------------------------------------------------------
+
 
 def load_warmstart(path: Path) -> np.ndarray:
     with open(path) as fh:
@@ -77,6 +77,7 @@ def block_repeat(f: np.ndarray, n_target: int) -> np.ndarray:
 # Toeplitz assembly
 # ----------------------------------------------------------------------------
 
+
 def build_toeplitz_sparse(f: np.ndarray, threshold: float = 0.0) -> sp.csr_matrix:
     """Build sparse T with T[k, j] = f[k-j] for k in [0, 2n-2], j in [0, n-1].
 
@@ -107,6 +108,7 @@ def build_toeplitz_sparse(f: np.ndarray, threshold: float = 0.0) -> sp.csr_matri
 # ----------------------------------------------------------------------------
 # KM LP step — dense (sparse Toeplitz with all 2n-1 constraints)
 # ----------------------------------------------------------------------------
+
 
 def km_lp_step(f: np.ndarray, solver: str, threshold: float, verbose: bool):
     """Solve one KM LP. Returns (b_star, info_dict)."""
@@ -147,6 +149,7 @@ def km_lp_step(f: np.ndarray, solver: str, threshold: float, verbose: bool):
 # ----------------------------------------------------------------------------
 # KM LP step — cutting plane (active set only)
 # ----------------------------------------------------------------------------
+
 
 def fft_conv(f: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Compute f★b (full convolution) via rfft. Returns length 2n-1 array."""
@@ -225,8 +228,7 @@ def km_lp_step_cutting_plane(
     k_topk = list(np.argsort(-auto_ff)[:init_top_k])
     active_k = sorted(set(k_near) | set(k_topk))
     print(
-        f"  initial active set: |S|={len(active_k)}  "
-        f"(|near-M|={len(k_near)}  top_k={init_top_k})",
+        f"  initial active set: |S|={len(active_k)}  (|near-M|={len(k_near)}  top_k={init_top_k})",
         flush=True,
     )
 
@@ -244,8 +246,8 @@ def km_lp_step_cutting_plane(
         t_build_total += time.time() - t0
         if verbose:
             print(
-                f"  round {rnd+1} build: A {A.shape}, nnz={A.nnz}, "
-                f"built in {time.time()-t0:.2f}s",
+                f"  round {rnd + 1} build: A {A.shape}, nnz={A.nnz}, "
+                f"built in {time.time() - t0:.2f}s",
                 flush=True,
             )
 
@@ -268,7 +270,7 @@ def km_lp_step_cutting_plane(
         cand = np.where(viol > 1e-12 * M)[0]
         new_k = [int(k) for k in cand if int(k) not in active_set]
         print(
-            f"  round {rnd+1}: |S|={len(active_k)}  s*={b_val.sum():.6f}  "
+            f"  round {rnd + 1}: |S|={len(active_k)}  s*={b_val.sum():.6f}  "
             f"status={status}  n_violated={len(new_k)}"
             + (f"  max_viol={viol[new_k].max():.3e}" if len(new_k) > 0 else "  — DONE"),
             flush=True,
@@ -301,6 +303,7 @@ def km_lp_step_cutting_plane(
 # Line search along f + ε·b
 # ----------------------------------------------------------------------------
 
+
 def line_search(f: np.ndarray, b: np.ndarray, verbose: bool = False):
     """Grid-search ε ∈ geometric for the minimum C(f + ε·b).
 
@@ -311,11 +314,13 @@ def line_search(f: np.ndarray, b: np.ndarray, verbose: bool = False):
     best_f = f / f.sum()
     best_C = base_C
 
-    eps_grid = np.concatenate([
-        [0.0],
-        np.geomspace(1e-8, 1e-1, 32),
-        np.geomspace(1e-1, 1e2, 16),
-    ])
+    eps_grid = np.concatenate(
+        [
+            [0.0],
+            np.geomspace(1e-8, 1e-1, 32),
+            np.geomspace(1e-1, 1e2, 16),
+        ]
+    )
 
     for eps in eps_grid:
         f_new = f + eps * b
@@ -340,6 +345,7 @@ def line_search(f: np.ndarray, b: np.ndarray, verbose: bool = False):
 # Main iteration loop
 # ----------------------------------------------------------------------------
 
+
 def km_iterate(
     f0: np.ndarray,
     max_iters: int,
@@ -363,13 +369,17 @@ def km_iterate(
             b_star, info = km_lp_step(f, solver=solver, threshold=threshold, verbose=verbose_lp)
         elif mode == "cutting-plane":
             b_star, info = km_lp_step_cutting_plane(
-                f, solver=solver, verbose=verbose_lp,
-                max_rounds=cp_max_rounds, max_new_cuts=cp_max_new_cuts,
+                f,
+                solver=solver,
+                verbose=verbose_lp,
+                max_rounds=cp_max_rounds,
+                max_new_cuts=cp_max_new_cuts,
             )
         else:
             raise ValueError(f"unknown mode: {mode}")
         size_str = (
-            f"nnz={info['T_nnz']}" if "T_nnz" in info
+            f"nnz={info['T_nnz']}"
+            if "T_nnz" in info
             else f"|S|={info.get('|S|', '?')} rounds={info.get('rounds', '?')} cuts={info.get('cuts_added', '?')}"
         )
         print(
@@ -384,11 +394,19 @@ def km_iterate(
             break
         # line-search along f + eps*b
         eps, f_new, C_new = line_search(f, b_star, verbose=False)
-        print(f"  line-search: best_eps={eps:.3e}  C_new={C_new:.16f}  delta={best_C - C_new:+.3e}", flush=True)
-        history.append({
-            "iter": it, "C": C_new, "s": float(f_new.sum()),
-            "eps": eps, "s_star": info["s_star"],
-        })
+        print(
+            f"  line-search: best_eps={eps:.3e}  C_new={C_new:.16f}  delta={best_C - C_new:+.3e}",
+            flush=True,
+        )
+        history.append(
+            {
+                "iter": it,
+                "C": C_new,
+                "s": float(f_new.sum()),
+                "eps": eps,
+                "s_star": info["s_star"],
+            }
+        )
         if C_new < best_C - 1e-15:
             best_C = C_new
             best_f = f_new.copy()
@@ -403,6 +421,7 @@ def km_iterate(
 # ----------------------------------------------------------------------------
 # Triple-verify
 # ----------------------------------------------------------------------------
+
 
 def triple_verify(f: np.ndarray) -> dict:
     """Cross-check C on the SAME f via three independent methods at 1 ulp.
@@ -446,18 +465,31 @@ def triple_verify(f: np.ndarray) -> dict:
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--warmstart", type=Path, required=True)
-    p.add_argument("--n", type=int, default=None,
-                   help="Target n (downsample/upsample warmstart if needed)")
-    p.add_argument("--downsample", choices=["avg", "sum"], default="sum",
-                   help="Block downsample method (sum preserves L¹, better for spikes)")
+    p.add_argument(
+        "--n", type=int, default=None, help="Target n (downsample/upsample warmstart if needed)"
+    )
+    p.add_argument(
+        "--downsample",
+        choices=["avg", "sum"],
+        default="sum",
+        help="Block downsample method (sum preserves L¹, better for spikes)",
+    )
     p.add_argument("--max-iters", type=int, default=20)
-    p.add_argument("--solver", default="CLARABEL",
-                   choices=["CLARABEL", "HIGHS", "SCS", "OSQP", "SCIPY"])
-    p.add_argument("--mode", default="dense",
-                   choices=["dense", "cutting-plane"],
-                   help="dense: full sparse Toeplitz LP. cutting-plane: lazy constraint generation.")
-    p.add_argument("--threshold", type=float, default=0.0,
-                   help="Drop |f[d]| ≤ threshold from Toeplitz (dense mode)")
+    p.add_argument(
+        "--solver", default="CLARABEL", choices=["CLARABEL", "HIGHS", "SCS", "OSQP", "SCIPY"]
+    )
+    p.add_argument(
+        "--mode",
+        default="dense",
+        choices=["dense", "cutting-plane"],
+        help="dense: full sparse Toeplitz LP. cutting-plane: lazy constraint generation.",
+    )
+    p.add_argument(
+        "--threshold",
+        type=float,
+        default=0.0,
+        help="Drop |f[d]| ≤ threshold from Toeplitz (dense mode)",
+    )
     p.add_argument("--cp-max-rounds", type=int, default=50)
     p.add_argument("--cp-max-new-cuts", type=int, default=500)
     p.add_argument("--verbose-lp", action="store_true")
@@ -488,14 +520,17 @@ def main():
     print(f"Starting C at n={len(f0)}: {base_C:.16f}")
 
     best_f, best_C, history = km_iterate(
-        f0, max_iters=args.max_iters, solver=args.solver,
-        threshold=args.threshold, verbose_lp=args.verbose_lp,
+        f0,
+        max_iters=args.max_iters,
+        solver=args.solver,
+        threshold=args.threshold,
+        verbose_lp=args.verbose_lp,
         mode=args.mode,
         cp_max_rounds=args.cp_max_rounds,
         cp_max_new_cuts=args.cp_max_new_cuts,
     )
 
-    print(f"\n=== FINAL ===")
+    print("\n=== FINAL ===")
     print(f"Best C = {best_C:.16f}")
 
     # Triple-verify final
@@ -507,14 +542,17 @@ def main():
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         with open(args.out, "w") as fh:
-            json.dump({
-                "values": best_f.tolist(),
-                "score": best_C,
-                "n": len(best_f),
-                "warmstart": str(args.warmstart),
-                "history": history,
-                "triple_verify": tv,
-            }, fh)
+            json.dump(
+                {
+                    "values": best_f.tolist(),
+                    "score": best_C,
+                    "n": len(best_f),
+                    "warmstart": str(args.warmstart),
+                    "history": history,
+                    "triple_verify": tv,
+                },
+                fh,
+            )
         print(f"\nSaved: {args.out}")
 
 

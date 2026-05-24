@@ -11,9 +11,7 @@ Strategies:
 from __future__ import annotations
 
 import argparse
-import itertools
 import json
-import math
 import sys
 import time
 from pathlib import Path
@@ -21,12 +19,13 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-from einstein.heilbronn_triangles import arena_score, active_triples  # noqa: E402
+from einstein.heilbronn_triangles import arena_score  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from multistart_search import (  # noqa: E402
-    N, SQRT3, CENTROID, slsqp_polish, project_into_triangle,
-    init_random_uniform,
+    SQRT3,
+    N,
+    slsqp_polish,
 )
 
 CHRONOS_PATH = Path("results/problem-15-heilbronn-triangles/rank01_CHRONOS_0.0365298898800302.json")
@@ -159,11 +158,13 @@ def main():
                 best_pts = pts
                 marker = " ★"
             if trial % 10 == 0 or marker:
-                print(f"[{time.time() - t0:6.1f}s] t{trial:4d} {hop_name:15s} "
-                      f"s={s:.17g}  Δ={s-ae_score:+.3e}{marker}",
-                      flush=True)
+                print(
+                    f"[{time.time() - t0:6.1f}s] t{trial:4d} {hop_name:15s} "
+                    f"s={s:.17g}  Δ={s - ae_score:+.3e}{marker}",
+                    flush=True,
+                )
 
-    print(f"\n=== Basin hopping summary ===")
+    print("\n=== Basin hopping summary ===")
     print(f"Start: {ae_score}")
     print(f"Best:  {best_score!r}  (Δ={best_score - ae_score:+.3e})")
     print("\nPer-hop bests:")

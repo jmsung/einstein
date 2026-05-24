@@ -20,7 +20,6 @@ import numpy as np
 from scipy.spatial.distance import pdist
 
 sys.path.insert(0, "src")
-from einstein.p22_kissing_d12.evaluator import overlap_loss
 
 N = 841
 D = 12
@@ -69,7 +68,9 @@ def filler_loss_grad(core: np.ndarray, v: np.ndarray) -> tuple[float, np.ndarray
     return loss, grad_v
 
 
-def rgd_filler(core: np.ndarray, v0: np.ndarray, n_steps: int, lr: float, decay: float = 0.999) -> tuple[np.ndarray, float]:
+def rgd_filler(
+    core: np.ndarray, v0: np.ndarray, n_steps: int, lr: float, decay: float = 0.999
+) -> tuple[np.ndarray, float]:
     v = v0 / np.linalg.norm(v0)
     best_v = v.copy()
     best_loss = score_of_filler(core, v)
@@ -147,11 +148,11 @@ def main():
             print(f"  seed {idx:04d} [{src}] → {s_opt:.15f}", flush=True)
 
     elapsed = time.time() - t0
-    print(f"\nTotal: {elapsed:.1f}s  ({elapsed/len(seeds):.2f}s/start)", flush=True)
+    print(f"\nTotal: {elapsed:.1f}s  ({elapsed / len(seeds):.2f}s/start)", flush=True)
 
     # Basin stats
     bs = np.array(basin_scores)
-    print(f"Basin score distribution:")
+    print("Basin score distribution:")
     print(f"  min:  {bs.min():.6f}")
     print(f"  10%:  {np.percentile(bs, 10):.6f}")
     print(f"  50%:  {np.percentile(bs, 50):.6f}")

@@ -9,6 +9,7 @@ import time
 
 import numpy as np
 import pytest
+
 from einstein.erdos.evaluator import _normalize_sum_constraint, compute_upper_bound, evaluate
 
 
@@ -206,9 +207,9 @@ class TestArenaMatch:
         h = rng.uniform(0.1, 0.9, n).tolist()
         ours = evaluate({"values": h})
         arena = _arena_verify(h)
-        assert ours == pytest.approx(arena, rel=1e-12), (
-            f"seed={seed}, n={n}: ours={ours}, arena={arena}"
-        )
+        assert ours == pytest.approx(
+            arena, rel=1e-12
+        ), f"seed={seed}, n={n}: ours={ours}, arena={arena}"
 
     def test_constant_half_match(self):
         """Constant h=0.5 matches arena."""

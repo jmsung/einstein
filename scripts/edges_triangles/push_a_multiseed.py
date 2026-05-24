@@ -5,7 +5,6 @@ trajectory; deepest result is kept.
 """
 
 import json
-import shutil
 import sys
 from pathlib import Path
 
@@ -13,7 +12,6 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 from optimize import (  # noqa: E402
     _score_from_arrays,
     basin_hopping_optimize,
@@ -22,6 +20,8 @@ from optimize import (  # noqa: E402
     redistribute,
     sa_perturb,
 )
+
+from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 
 def load_to_xy(path: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -58,7 +58,9 @@ def main():
         for _ in range(2):
             xs, ys = redistribute(xs, ys)
             xs, ys = golden_section_sweep(xs, ys, n_sweeps=50)
-        xs, ys = coordinate_descent(xs, ys, n_iters=15, step_fracs=[0.0001, 0.00003, 0.00001, 0.000003, 0.000001])
+        xs, ys = coordinate_descent(
+            xs, ys, n_iters=15, step_fracs=[0.0001, 0.00003, 0.00001, 0.000003, 0.000001]
+        )
 
         score = _score_from_arrays(xs, ys)
         results.append((s, score))

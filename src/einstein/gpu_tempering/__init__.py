@@ -33,10 +33,10 @@ Supported manifolds:
 """
 
 from einstein.gpu_tempering.core import ParallelTemperingSA
-from einstein.gpu_tempering.losses import HingeOverlapLoss, CoulombLoss
-from einstein.gpu_tempering.manifolds import SphereManifold, FlatManifold
 from einstein.gpu_tempering.fused_step import fused_sa_step, run_fused_tempering
-from einstein.gpu_tempering.triton_kernel import triton_sa_step, run_triton_tempering
+from einstein.gpu_tempering.losses import CoulombLoss, HingeOverlapLoss
+from einstein.gpu_tempering.manifolds import FlatManifold, SphereManifold
+from einstein.gpu_tempering.triton_kernel import run_triton_tempering, triton_sa_step
 
 __all__ = [
     "ParallelTemperingSA",

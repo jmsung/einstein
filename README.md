@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-05-23 08:28 UTC*
+*Last updated: 2026-05-24 09:02 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -63,8 +63,10 @@ The math wisdom is the goal, not the arena rank. The wiki is the publication cha
 Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uv sync                                # install dependencies
-uv run python -m pytest tests/ -v      # run the test suite
+uv sync                                # install dependencies (incl. dev: pytest, ruff, pre-commit)
+uv run pre-commit install              # enable lint + formatting on every commit
+uv run python -m pytest tests/ -v      # run the test suite (also runs on CI via GitHub Actions)
+uv run ruff check .                    # lint manually
 uv run python scripts/<problem>/...    # run a per-problem entry point
 ```
 
@@ -86,4 +88,4 @@ Compute is routed per workload — local M5 Max for sequential / float32 / multi
 
 MIT
 
-*Last updated: 2026-05-22*
+*Last updated: 2026-05-24*
