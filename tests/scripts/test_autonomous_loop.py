@@ -304,3 +304,50 @@ def test_run_one_problem_no_active_problems_returns_none(tmp_path: Path) -> None
         problems_dir=pdir, cycle_log=log, dry_run=True, cycle_runner=None,
     )
     assert result is None
+
+
+# ---------------- A3 integration: dispatch result → auto_submit ----------------
+
+
+def test_inner_attempt_routes_dispatch_result_to_auto_submit() -> None:
+    """When dispatch returns ok=True with a score+payload, inner_attempt must
+    invoke auto_submit. Triple-verify is unwired (passed=False) so the gate
+    chain rejects, but the call still happens — the wiring is the test target."""
+    from types import SimpleNamespace
+
+    problem = al.Problem(
+        problem_id=14, slug="circle-packing-square", tier="B",
+        status="rank-2-frozen", score_current=2.635, path=Path("/x"),
+    )
+    # Fake dispatcher: returns a successful dispatch result with score + payload
+    fake_dispatch_result = SimpleNamespace(
+        ok=True, optimizer="newton_max", score=2.636,
+        payload={"vectors": [[1, 0]]}, runtime_seconds=12.3,
+        error=None,
+    )
+    dispatcher = lambda problem_id, strategy: fake_dispatch_result
+    # Fake auto_submitter: returns rejected (triple-verify failed)
+    submit_calls: list = []
+
+    def fake_submit(problem_id, payload, score, *, triple_verify, **kw):
+        submit_calls.append({
+            "problem_id": problem_id, "score": score,
+            "tv_passed": triple_verify.get("passed"),
+        })
+        return SimpleNamespace(submitted=False, rejected_at_gate="triple-verify-failed")
+
+    result = al.inner_attempt(
+        problem, dry_run=False,
+        dispatcher=dispatcher, auto_submitter=fake_submit,
+    )
+
+    # auto_submit was called with the dispatch's score+payload
+    assert len(submit_calls) == 1
+    assert submit_calls[0]["problem_id"] == 14
+    assert submit_calls[0]["score"] == 2.636
+    assert submit_calls[0]["tv_passed"] is False  # not wired yet
+    # The cycle-log row notes capture the rejection
+    assert "auto-submit-rejected@triple-verify-failed" in result["notes"]
+    # Outcome remains the dispatch outcome (improved-local since 2.636 < 2.635
+    # is FALSE; here it's no-change). Important: outcome is NOT "improved-and-submitted".
+    assert result["outcome"] != "improved-and-submitted"

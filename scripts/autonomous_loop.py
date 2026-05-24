@@ -243,7 +243,8 @@ def next_cycle_id(cycle_log: Path) -> int:
 
 def inner_attempt(problem: Problem, dry_run: bool = False,
                   skill_library: Path = DEFAULT_SKILL_LIBRARY,
-                  dispatcher: Callable[..., object] | None = None) -> dict:
+                  dispatcher: Callable[..., object] | None = None,
+                  auto_submitter: Callable[..., object] | None = None) -> dict:
     """Reflection chain for one cycle attempt.
 
     Order of operations:
@@ -323,6 +324,34 @@ def inner_attempt(problem: Problem, dry_run: bool = False,
                 outcome = "improved-local"
             else:
                 outcome = "no-change"
+
+            # A3: hand the candidate to auto_submit's gate chain. Triple-verify
+            # is NOT yet implemented (separate per-problem wiring); pass passed=False
+            # so the gate chain refuses to submit until verify lands. The audit
+            # row records the rejection — every cycle's submit-decision is logged.
+            if (result.score is not None
+                    and getattr(result, "payload", None) is not None
+                    and not dry_run):
+                if auto_submitter is None:
+                    try:
+                        from einstein.auto_submit import try_submit as _real_submit
+                        auto_submitter = _real_submit
+                    except ImportError:
+                        auto_submitter = None
+                if auto_submitter is not None:
+                    sub_result = auto_submitter(
+                        problem.problem_id,
+                        result.payload,
+                        result.score,
+                        triple_verify={"passed": False,
+                                       "note": "triple-verify not yet wired"},
+                    )
+                    if getattr(sub_result, "submitted", False):
+                        outcome = "improved-and-submitted"
+                        notes_parts.append("auto-submit: SUBMITTED")
+                    else:
+                        gate = getattr(sub_result, "rejected_at_gate", "?")
+                        notes_parts.append(f"auto-submit-rejected@{gate}")
         else:
             log.warning("  dispatch failed: %s", result.error)
             notes_parts.append(f"dispatch-failed: {result.error}")
