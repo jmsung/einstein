@@ -30,10 +30,10 @@ from einstein.circles_rectangle.evaluator import evaluate, evaluate_verbose
 from einstein.circles_rectangle.polish import polish
 
 RESULTS_DIR = Path("results/problem-17-circles-rectangle")
-SOTA = 2.3658323759185156      # capybara #1
-SECOND = 2.3658321334168       # AlphaEvolve #2
-MIN_IMPROVEMENT = 1e-7         # arena per-problem
-SAFETY = 5e-9                  # extra margin against rounding
+SOTA = 2.3658323759185156  # capybara #1
+SECOND = 2.3658321334168  # AlphaEvolve #2
+MIN_IMPROVEMENT = 1e-7  # arena per-problem
+SAFETY = 5e-9  # extra margin against rounding
 
 
 def build():
@@ -85,15 +85,17 @@ def build():
     v = evaluate_verbose(sol, eps=1e-9)
     print(f"3. verbose: perim={v['perimeter']:.16f} (slack={v['slack']:.4e})")
     print(f"   worst_overlap={v['worst_overlap']:.4e}, contacts={v['n_inter_contacts']}")
-    print(f"   walls L/R/B/T={len(v['wall_contacts']['left'])}/"
-          f"{len(v['wall_contacts']['right'])}/"
-          f"{len(v['wall_contacts']['bottom'])}/"
-          f"{len(v['wall_contacts']['top'])}")
+    print(
+        f"   walls L/R/B/T={len(v['wall_contacts']['left'])}/"
+        f"{len(v['wall_contacts']['right'])}/"
+        f"{len(v['wall_contacts']['bottom'])}/"
+        f"{len(v['wall_contacts']['top'])}"
+    )
 
     # Sanity: window check
-    assert window_lo < final_score < window_hi, (
-        f"Score {final_score} outside safe window [{window_lo}, {window_hi}]"
-    )
+    assert (
+        window_lo < final_score < window_hi
+    ), f"Score {final_score} outside safe window [{window_lo}, {window_hi}]"
     assert v["worst_overlap"] >= 0, f"Has overlap {v['worst_overlap']}"
     assert v["perimeter"] <= 4.0, f"Perimeter {v['perimeter']} > 4"
     print("\nAll sanity checks PASSED.")

@@ -11,7 +11,6 @@ Two-phase approach:
 import json
 import math
 import os
-import sys
 import time
 
 import numpy as np
@@ -80,10 +79,7 @@ def solve_cutting_plane(
 
     # Initial constraints: n=1..min(max_key, max_n) + every 100th up to max_n
     N = max_key
-    active_ns = sorted(
-        set(range(1, min(N + 1, max_n + 1)))
-        | set(range(1, max_n + 1, 100))
-    )
+    active_ns = sorted(set(range(1, min(N + 1, max_n + 1))) | set(range(1, max_n + 1, 100)))
 
     best_f = None
     best_score = -float("inf")
@@ -158,9 +154,7 @@ def solve_cutting_plane(
     return best_f, best_score
 
 
-def select_best_keys(
-    keys: list[int], f_vals: np.ndarray, max_keys: int = 1999
-) -> list[int]:
+def select_best_keys(keys: list[int], f_vals: np.ndarray, max_keys: int = 1999) -> list[int]:
     """Select the top max_keys keys by contribution to the objective."""
     contributions = []
     for j, k in enumerate(keys):
@@ -188,6 +182,7 @@ def build_solution(keys: list[int], f_vals: np.ndarray) -> dict[int, float]:
 def evaluate_mc(pf: dict[int, float], n_samples: int = 10_000_000, seed: int = 42) -> float:
     """Evaluate solution using Monte Carlo (matches arena verifier)."""
     from einstein.prime.evaluator import evaluate
+
     sol = {"partial_function": {str(k): v for k, v in pf.items()}}
     return evaluate(sol, n_samples=n_samples, seed=seed)
 
@@ -213,7 +208,7 @@ def main():
 
     log(f"Current #1: {current_best_score:.15f}")
     log(f"Target:     {target_score:.15f}")
-    log(f"Improvement needed: >= 1e-05")
+    log("Improvement needed: >= 1e-05")
     log()
 
     best_pf = None
@@ -222,9 +217,9 @@ def main():
     for N in [4000, 5000, 6000]:
         all_keys = get_squarefree(N)
         n_keys = len(all_keys)
-        log(f"\n{'='*70}")
+        log(f"\n{'=' * 70}")
         log(f"Phase 1: N={N}, total squarefree keys = {n_keys}")
-        log(f"{'='*70}")
+        log(f"{'=' * 70}")
 
         if n_keys <= 1999:
             log(f"  Only {n_keys} keys — same as v1, skipping")
@@ -232,9 +227,7 @@ def main():
 
         # Phase 1: Solve LP with ALL keys
         log(f"  Solving LP with all {n_keys} keys...")
-        f_vals, score = solve_cutting_plane(
-            all_keys, margin=1e-7, time_limit=600
-        )
+        f_vals, score = solve_cutting_plane(all_keys, margin=1e-7, time_limit=600)
 
         if f_vals is None:
             log("  Phase 1 failed — no feasible solution")
@@ -247,15 +240,13 @@ def main():
         # Phase 2: Select best 1999 keys and re-solve
         selected_keys = select_best_keys(all_keys, f_vals, max_keys=1999)
         new_keys = [k for k in selected_keys if k > 3287]
-        log(f"\n  Phase 2: Re-solving with top 1999 keys")
+        log("\n  Phase 2: Re-solving with top 1999 keys")
         log(f"  Key range: [{min(selected_keys)}, {max(selected_keys)}]")
         log(f"  Keys > 3287 (new in v2): {len(new_keys)}")
         if new_keys:
             log(f"  New keys sample: {new_keys[:10]}...")
 
-        f_vals2, score2 = solve_cutting_plane(
-            selected_keys, margin=1e-7, time_limit=600
-        )
+        f_vals2, score2 = solve_cutting_plane(selected_keys, margin=1e-7, time_limit=600)
 
         if f_vals2 is None:
             log("  Phase 2 failed")
@@ -296,17 +287,19 @@ def main():
 
                 if mc_full > 0:
                     mc_cross = evaluate_mc(pf, n_samples=10_000_000, seed=123)
-                    log(f"  MC(10M, seed=123): {mc_cross:.10f} {'PASS' if mc_cross > 0 else 'FAIL'}")
+                    log(
+                        f"  MC(10M, seed=123): {mc_cross:.10f} {'PASS' if mc_cross > 0 else 'FAIL'}"
+                    )
 
                     if mc_cross > 0:
                         with open("results/problem-7-prime/best_v2.json", "w") as f:
                             json.dump(sol, f)
-                        log(f"\n  *** SOLUTION VALIDATED — ready for submission ***")
+                        log("\n  *** SOLUTION VALIDATED — ready for submission ***")
                         log(f"  Score: {mc_full:.15f}")
                         log(f"  Keys: {len(pf)}")
 
     # Summary
-    log(f"\n{'='*70}")
+    log(f"\n{'=' * 70}")
     if best_pf:
         improvement = best_score - current_best_score
         log(f"Best v2 score: {best_score:.15f}")

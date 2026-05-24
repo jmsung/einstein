@@ -15,14 +15,11 @@ from pathlib import Path
 
 import numpy as np
 from scipy.interpolate import interp1d
-from scipy.signal import fftconvolve
 
 sys.path.insert(0, "src")
 from einstein.erdos.fast import fast_evaluate
 
-SOLUTION_PATH = Path(
-    ".mb/knowledge/problem-1-erdos-overlap/solutions/solution-best.json"
-)
+SOLUTION_PATH = Path(".mb/knowledge/problem-1-erdos-overlap/solutions/solution-best.json")
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -282,7 +279,7 @@ def main():
             print(f"\nNot enough time for n={target_n}, skipping")
             break
 
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"Resolution n={target_n} (time budget: {time_budget:.0f}s)")
         print("=" * 70)
 
@@ -335,9 +332,11 @@ def main():
         }
 
         # Save if this is an improvement
-        save_solution(best_h, best_score, f"opt")
-        print(f"\n  Final for n={target_n}: {best_score:.16f} "
-              f"(delta from SOTA: {best_score - SOTA_SCORE:+.2e})")
+        save_solution(best_h, best_score, "opt")
+        print(
+            f"\n  Final for n={target_n}: {best_score:.16f} "
+            f"(delta from SOTA: {best_score - SOTA_SCORE:+.2e})"
+        )
 
     # Summary
     print("\n" + "=" * 70)
@@ -346,17 +345,15 @@ def main():
     print(f"{'n':>6} | {'Interpolated':>20} | {'Optimized':>20} | {'Delta from SOTA':>16}")
     print("-" * 70)
     for n, r in sorted(results.items()):
-        interp_str = f"{r['interp']:.16f}" if r['interp'] != float('inf') else "inf"
-        best_str = f"{r['best']:.16f}" if r['best'] != float('inf') else "inf"
+        interp_str = f"{r['interp']:.16f}" if r["interp"] != float("inf") else "inf"
+        best_str = f"{r['best']:.16f}" if r["best"] != float("inf") else "inf"
         delta_str = f"{r.get('delta_from_sota', float('inf')):+.2e}"
         print(f"{n:>6} | {interp_str:>20} | {best_str:>20} | {delta_str:>16}")
 
     print(f"\nSOTA reference: {SOTA_SCORE:.16f}")
     beat_threshold = SOTA_SCORE - 1e-6
     any_beat = any(
-        r["best"] < beat_threshold
-        for r in results.values()
-        if r["best"] != float("inf")
+        r["best"] < beat_threshold for r in results.values() if r["best"] != float("inf")
     )
     if any_beat:
         print("*** FOUND SOLUTION THAT BEATS SOTA! ***")

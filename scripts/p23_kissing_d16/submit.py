@@ -27,7 +27,6 @@ from einstein.p23_kissing_d16.evaluator import (  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from check_submission import (  # noqa: E402
     API_URL,
-    check_leaderboard,
     load_agent_name,
     verify_api,
     wait_for_leaderboard,
@@ -87,8 +86,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("path", help="Path to candidate JSON {vectors: [[...]]}")
     parser.add_argument("--submit", action="store_true", help="Actually submit")
-    parser.add_argument("--skip-mpmath100", action="store_true",
-                        help="Skip mpmath100 triple-check (fast path only)")
+    parser.add_argument(
+        "--skip-mpmath100", action="store_true", help="Skip mpmath100 triple-check (fast path only)"
+    )
     args = parser.parse_args()
 
     path = Path(args.path)
@@ -107,14 +107,22 @@ def main() -> None:
         sys.exit(1)
 
     print("\nTriple verification (arena parity = mpmath):")
-    t0 = time.time(); s_fast = overlap_loss_fast(V); t_fast = time.time() - t0
+    t0 = time.time()
+    s_fast = overlap_loss_fast(V)
+    t_fast = time.time() - t0
     print(f"  fast (dot products):   {s_fast:.15e}  ({t_fast:.1f}s)  [sanity]")
-    t0 = time.time(); s_full = overlap_loss(V); t_full = time.time() - t0
+    t0 = time.time()
+    s_full = overlap_loss(V)
+    t_full = time.time() - t0
     print(f"  full O(n^2) f64:       {s_full:.15e}  ({t_full:.1f}s)  [sanity]")
-    t0 = time.time(); s_mp50 = overlap_loss_mpmath(V, dps=50); t_50 = time.time() - t0
+    t0 = time.time()
+    s_mp50 = overlap_loss_mpmath(V, dps=50)
+    t_50 = time.time() - t0
     print(f"  mpmath dps=50:         {s_mp50:.15e}  ({t_50:.1f}s)  [arena parity]")
     if not args.skip_mpmath100:
-        t0 = time.time(); s_mp100 = overlap_loss_mpmath(V, dps=100); t_100 = time.time() - t0
+        t0 = time.time()
+        s_mp100 = overlap_loss_mpmath(V, dps=100)
+        t_100 = time.time() - t0
         print(f"  mpmath dps=100:        {s_mp100:.15e}  ({t_100:.1f}s)  [triple-check]")
         stable = abs(s_mp50 - s_mp100) < 1e-20
         print(f"  mpmath stable:         {stable}")
@@ -127,7 +135,7 @@ def main() -> None:
     lb = fetch_leaderboard_top()
     for i, s in enumerate(lb[:5]):
         marker = " <-- best to beat" if i == 0 else ""
-        print(f"  rank {i+1}: {s.get('agentName','?'):<25} score={s.get('score')}{marker}")
+        print(f"  rank {i + 1}: {s.get('agentName', '?'):<25} score={s.get('score')}{marker}")
 
     min_imp = fetch_min_improvement()
     print(f"\nminImprovement: {min_imp}")
@@ -138,7 +146,7 @@ def main() -> None:
     if s_mp50 < sota_score - min_imp:
         print(f"  -> would be RANK #1 (beats {sota_score} by {sota_score - s_mp50:.6e})")
     elif s_mp50 == sota_score:
-        print(f"  -> EXACT TIE with rank #1 (server may reject as copy-paste)")
+        print("  -> EXACT TIE with rank #1 (server may reject as copy-paste)")
     elif s_mp50 < second_score:
         print(f"  -> would be RANK #2 (between {sota_score} and {second_score})")
     else:

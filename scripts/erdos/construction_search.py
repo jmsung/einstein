@@ -13,16 +13,15 @@ Constructions to try:
 """
 
 import sys
+
 sys.path.insert(0, "src")
 
 import json
 import time
-import numpy as np
 from pathlib import Path
-from scipy.signal import fftconvolve
 
-from einstein.erdos.fast import fast_evaluate
-from einstein.erdos.evaluator import evaluate as exact_evaluate
+import numpy as np
+from scipy.signal import fftconvolve
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 SOTA_SCORE = 0.3808703105862199
@@ -163,8 +162,7 @@ def construction_legendre(n=600, seed=0):
     return best_h, best_score
 
 
-def construction_smooth_binary(n=600, n_trials=200, kernel_size=10,
-                                time_limit=120, seed=0):
+def construction_smooth_binary(n=600, n_trials=200, kernel_size=10, time_limit=120, seed=0):
     """Start from binary (0/1) solutions, smooth with Gaussian kernel.
 
     The smoothing may give better continuous solutions.
@@ -185,7 +183,7 @@ def construction_smooth_binary(n=600, n_trials=200, kernel_size=10,
 
         # Try different smoothing levels
         for sigma in [1, 2, 3, 5, 8, 10, 15, 20, 30, 50]:
-            h_smooth = gaussian_filter1d(h_bin, sigma, mode='wrap')
+            h_smooth = gaussian_filter1d(h_bin, sigma, mode="wrap")
             h_smooth = normalize(h_smooth)
             score = fast_eval(h_smooth)
             if score < best_score:
@@ -193,7 +191,7 @@ def construction_smooth_binary(n=600, n_trials=200, kernel_size=10,
                 best_h = h_smooth.copy()
 
         if (trial + 1) % 50 == 0:
-            print(f"  trial {trial+1}: best={best_score:.10f}")
+            print(f"  trial {trial + 1}: best={best_score:.10f}")
 
     return best_h, best_score
 
@@ -219,12 +217,12 @@ def construction_haar_wavelet(n=600, n_trials=2000, seed=0):
         n_wavelets = rng.integers(5, max_j * 3)
         for _ in range(n_wavelets):
             j = rng.integers(1, max_j + 1)  # scale
-            block_size = n // (2 ** j)
+            block_size = n // (2**j)
             if block_size < 1:
                 continue
             pos = rng.integers(0, n - block_size + 1)
             amp = rng.uniform(-0.3, 0.3)
-            h[pos:pos + block_size] += amp
+            h[pos : pos + block_size] += amp
 
         h = normalize(h)
         score = fast_eval(h)
@@ -233,7 +231,7 @@ def construction_haar_wavelet(n=600, n_trials=2000, seed=0):
             best_h = h.copy()
 
         if (trial + 1) % 500 == 0:
-            print(f"  trial {trial+1}: best={best_score:.10f}")
+            print(f"  trial {trial + 1}: best={best_score:.10f}")
 
     return best_h, best_score
 
@@ -278,7 +276,7 @@ def massive_random_search(n=600, n_trials=50000, time_limit=300, seed=0):
             heights = rng.random(n_pieces)
             h = np.zeros(n)
             for i in range(n_pieces):
-                h[breaks[i]:breaks[i + 1]] = heights[i]
+                h[breaks[i] : breaks[i + 1]] = heights[i]
         else:
             # Sigmoid of polynomial
             x = np.linspace(-3, 3, n)
@@ -301,11 +299,11 @@ def massive_random_search(n=600, n_trials=50000, time_limit=300, seed=0):
 
         if (trial + 1) % 10000 == 0:
             elapsed = time.time() - t0
-            print(f"  trial {trial+1}: best={best_score:.10f} ({elapsed:.0f}s)")
+            print(f"  trial {trial + 1}: best={best_score:.10f} ({elapsed:.0f}s)")
 
-    print(f"\nTop 10 random scores:")
+    print("\nTop 10 random scores:")
     for i, (s, _) in enumerate(pool):
-        print(f"  #{i+1}: {s:.10f}")
+        print(f"  #{i + 1}: {s:.10f}")
 
     return best_h, best_score
 
@@ -321,7 +319,7 @@ def main():
     print("\n--- Trig Sigmoid Construction ---")
     t0 = time.time()
     h, s = construction_trig_sigmoid(600, n_terms=50, n_trials=10000, seed=42)
-    print(f"  Result: {s:.10f} ({time.time()-t0:.0f}s)")
+    print(f"  Result: {s:.10f} ({time.time() - t0:.0f}s)")
     results["trig_sigmoid"] = (h, s)
 
     # 2. Legendre
@@ -334,21 +332,21 @@ def main():
     print("\n--- Smooth Binary Construction ---")
     t0 = time.time()
     h, s = construction_smooth_binary(600, n_trials=500, time_limit=120, seed=42)
-    print(f"  Result: {s:.10f} ({time.time()-t0:.0f}s)")
+    print(f"  Result: {s:.10f} ({time.time() - t0:.0f}s)")
     results["smooth_binary"] = (h, s)
 
     # 4. Haar wavelet
     print("\n--- Haar Wavelet Construction ---")
     t0 = time.time()
     h, s = construction_haar_wavelet(600, n_trials=5000, seed=42)
-    print(f"  Result: {s:.10f} ({time.time()-t0:.0f}s)")
+    print(f"  Result: {s:.10f} ({time.time() - t0:.0f}s)")
     results["haar"] = (h, s)
 
     # 5. Massive random search
     print("\n--- Massive Random Search ---")
     t0 = time.time()
     h, s = massive_random_search(600, n_trials=100000, time_limit=300, seed=42)
-    print(f"  Result: {s:.10f} ({time.time()-t0:.0f}s)")
+    print(f"  Result: {s:.10f} ({time.time() - t0:.0f}s)")
     results["random_search"] = (h, s)
 
     # Summary
@@ -365,7 +363,8 @@ def main():
 
     result = {
         "problem": "erdos-minimum-overlap",
-        "n_points": len(best_h), "score": float(best_score),
+        "n_points": len(best_h),
+        "score": float(best_score),
         "values": [round(float(v), 14) for v in best_h],
         "tag": f"construction_{best_name}",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -374,7 +373,7 @@ def main():
     with open(fname, "w") as f:
         json.dump(result, f)
     print(f"\nSaved: {fname}")
-    print(f"Total time: {time.time()-t_global:.0f}s")
+    print(f"Total time: {time.time() - t_global:.0f}s")
 
 
 if __name__ == "__main__":

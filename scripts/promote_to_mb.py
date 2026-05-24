@@ -75,7 +75,9 @@ def promote(
 
     # Safety: refuse non-JSON without --force
     if source.suffix.lower() != ".json" and not force:
-        raise ValueError(f"Refusing to promote non-JSON file: {source.name}. Use --force to override.")
+        raise ValueError(
+            f"Refusing to promote non-JSON file: {source.name}. Use --force to override."
+        )
 
     # Safety: check for suspicious path chars in tag
     if ".." in tag or "/" in tag or "\x00" in tag:
@@ -92,7 +94,9 @@ def promote(
 
     # Experiment log entry
     log_file = mb_root / "docs" / problem / "experiment-log.md"
-    log_line = f"- {time.strftime('%Y-%m-%d')} promoted {tag} @ {score} from {source.name} → {fname}"
+    log_line = (
+        f"- {time.strftime('%Y-%m-%d')} promoted {tag} @ {score} from {source.name} → {fname}"
+    )
 
     if dry_run:
         print(f"[DRY RUN] Would copy: {source} → {dest}")
@@ -124,15 +128,23 @@ def main() -> None:
         description="Promote a curated solution file to the workbench memory bank.",
     )
     parser.add_argument("source", type=Path, help="Path to the solution file to promote")
-    parser.add_argument("--tag", required=True, help="Human-meaningful label (e.g., milestone-id1315)")
-    parser.add_argument("--score", required=True, type=float, help="Score associated with this solution")
+    parser.add_argument(
+        "--tag", required=True, help="Human-meaningful label (e.g., milestone-id1315)"
+    )
+    parser.add_argument(
+        "--score", required=True, type=float, help="Score associated with this solution"
+    )
     parser.add_argument(
         "--problem",
         default=None,
         help="Target problem directory in MB (default: derived from source path)",
     )
-    parser.add_argument("--force", action="store_true", help="Allow overwriting existing destination")
-    parser.add_argument("--dry-run", action="store_true", help="Print planned action, don't touch filesystem")
+    parser.add_argument(
+        "--force", action="store_true", help="Allow overwriting existing destination"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Print planned action, don't touch filesystem"
+    )
     args = parser.parse_args()
 
     if not args.source.exists():

@@ -10,11 +10,11 @@ The solution space is: h in [0,1]^n, sum(h) = n/2.
 """
 
 import json
-import time
+import sys
+
 import numpy as np
 from scipy.signal import fftconvolve
 
-import sys
 sys.path.insert(0, "src")
 from einstein.erdos.evaluator import evaluate
 from einstein.erdos.fast import fast_evaluate
@@ -28,8 +28,9 @@ def compute_correlations(h: np.ndarray) -> np.ndarray:
     return corr * 2.0 / n
 
 
-def compute_subgradient(h: np.ndarray, active_lags: list[int],
-                         weights: np.ndarray | None = None) -> np.ndarray:
+def compute_subgradient(
+    h: np.ndarray, active_lags: list[int], weights: np.ndarray | None = None
+) -> np.ndarray:
     """Compute subgradient of max_k C(k) with respect to h.
 
     For a single active lag s:
@@ -66,7 +67,7 @@ def compute_subgradient(h: np.ndarray, active_lags: list[int],
             jps = j + shift
             jms = j - shift
             if 0 <= jps < n:
-                g += (1.0 - h[jps])
+                g += 1.0 - h[jps]
             if 0 <= jms < n:
                 g -= h[jms]
             grad[j] += w * g * dx
@@ -103,9 +104,13 @@ def get_active_lags(corr: np.ndarray, tol: float = 1e-8) -> list[int]:
     return active
 
 
-def subgradient_descent(h0: np.ndarray, max_iters: int = 100000,
-                         step_schedule: str = "diminishing",
-                         step0: float = 1e-4, verbose: bool = True) -> tuple[float, np.ndarray]:
+def subgradient_descent(
+    h0: np.ndarray,
+    max_iters: int = 100000,
+    step_schedule: str = "diminishing",
+    step0: float = 1e-4,
+    verbose: bool = True,
+) -> tuple[float, np.ndarray]:
     """Run subgradient descent on max_k C(k)."""
     h = h0.copy()
     n = len(h)
@@ -158,16 +163,19 @@ def subgradient_descent(h0: np.ndarray, max_iters: int = 100000,
         h = h_new
 
         if verbose and (it + 1) % 10000 == 0:
-            print(f"    iter {it+1}: current={current_score:.12f} best={best_score:.12f} "
-                  f"active={len(active)} improved={improved} step={step:.2e}")
+            print(
+                f"    iter {it + 1}: current={current_score:.12f} best={best_score:.12f} "
+                f"active={len(active)} improved={improved} step={step:.2e}"
+            )
 
     if verbose:
         print(f"  Final: {best_score:.12f} ({improved} improvements)")
     return best_score, best_h
 
 
-def bundle_method(h0: np.ndarray, max_iters: int = 50000,
-                   verbose: bool = True) -> tuple[float, np.ndarray]:
+def bundle_method(
+    h0: np.ndarray, max_iters: int = 50000, verbose: bool = True
+) -> tuple[float, np.ndarray]:
     """Bundle method: maintain a set of cutting planes and solve a QP at each step."""
     h = h0.copy()
     n = len(h)
@@ -217,16 +225,19 @@ def bundle_method(h0: np.ndarray, max_iters: int = 50000,
             improved += 1
 
         if verbose and (it + 1) % 10000 == 0:
-            print(f"    iter {it+1}: current={new_score:.12f} best={best_score:.12f} "
-                  f"improved={improved}")
+            print(
+                f"    iter {it + 1}: current={new_score:.12f} best={best_score:.12f} "
+                f"improved={improved}"
+            )
 
     if verbose:
         print(f"  Bundle final: {best_score:.12f} ({improved} improvements)")
     return best_score, best_h
 
 
-def coordinated_multi_lag_transport(h0: np.ndarray, max_iters: int = 500000,
-                                     verbose: bool = True) -> tuple[float, np.ndarray]:
+def coordinated_multi_lag_transport(
+    h0: np.ndarray, max_iters: int = 500000, verbose: bool = True
+) -> tuple[float, np.ndarray]:
     """Mass transport that targets ALL active lags simultaneously.
 
     Key idea: instead of random perturbations, choose perturbations that
@@ -281,7 +292,7 @@ def coordinated_multi_lag_transport(h0: np.ndarray, max_iters: int = 500000,
             improved += 1
 
         if verbose and (it + 1) % 100000 == 0:
-            print(f"    iter {it+1}: best={best_score:.14f} improved={improved}")
+            print(f"    iter {it + 1}: best={best_score:.14f} improved={improved}")
 
     if verbose:
         print(f"  Multi-lag final: {best_score:.14f} ({improved} improvements)")
@@ -293,28 +304,28 @@ def main():
     print("Erdős Minimum Overlap — Subgradient/Bundle Methods")
     print("=" * 60)
 
-    with open('/tmp/p1_sota.json') as f:
+    with open("/tmp/p1_sota.json") as f:
         sota_data = json.load(f)
-    h_sota = np.array(sota_data['values'])
+    h_sota = np.array(sota_data["values"])
     sota_score = fast_evaluate(h_sota)
     print(f"SOTA score: {sota_score:.16f}")
-    print(f"Target:     <= 0.3808693105862199 (need 1e-6 improvement)")
+    print("Target:     <= 0.3808693105862199 (need 1e-6 improvement)")
 
     overall_best = sota_score
     overall_best_h = h_sota.copy()
 
     # Method 1: Subgradient descent from SOTA
     print("\n=== Method 1: Subgradient descent (diminishing step) ===")
-    score1, h1 = subgradient_descent(h_sota, max_iters=50000,
-                                      step_schedule="diminishing", step0=1e-5)
+    score1, h1 = subgradient_descent(
+        h_sota, max_iters=50000, step_schedule="diminishing", step0=1e-5
+    )
     if score1 < overall_best:
         overall_best = score1
         overall_best_h = h1
 
     # Method 2: Subgradient with Polyak step
     print("\n=== Method 2: Subgradient (Polyak step) ===")
-    score2, h2 = subgradient_descent(h_sota, max_iters=50000,
-                                      step_schedule="polyak", step0=1e-4)
+    score2, h2 = subgradient_descent(h_sota, max_iters=50000, step_schedule="polyak", step0=1e-4)
     if score2 < overall_best:
         overall_best = score2
         overall_best_h = h2
@@ -339,9 +350,9 @@ def main():
     for trial in range(5):
         noise = rng.standard_normal(len(h_sota)) * 0.01
         h_start = project_to_feasible(h_sota + noise)
-        score, h = subgradient_descent(h_start, max_iters=20000,
-                                        step_schedule="diminishing", step0=1e-4,
-                                        verbose=False)
+        score, h = subgradient_descent(
+            h_start, max_iters=20000, step_schedule="diminishing", step0=1e-4, verbose=False
+        )
         print(f"  Trial {trial}: {score:.12f}")
         if score < overall_best:
             overall_best = score
@@ -349,13 +360,13 @@ def main():
 
     # Verify
     exact = evaluate({"values": overall_best_h.tolist()})
-    print(f"\n=== FINAL RESULT ===")
+    print("\n=== FINAL RESULT ===")
     print(f"Best (fast):  {overall_best:.16f}")
     print(f"Best (exact): {exact:.16f}")
-    print(f"SOTA:         0.3808703105862199")
+    print("SOTA:         0.3808703105862199")
     print(f"Improvement:  {0.3808703105862199 - exact:.2e}")
 
-    with open('/tmp/p1_subgrad_best.json', 'w') as f:
+    with open("/tmp/p1_subgrad_best.json", "w") as f:
         json.dump({"values": overall_best_h.tolist()}, f)
     print("Saved to /tmp/p1_subgrad_best.json")
 

@@ -42,8 +42,12 @@ def optimize(n: int, warmstart: Path, betas, iters: int, lr: float, seed: int):
 
     for beta in betas:
         opt = torch.optim.LBFGS(
-            [f], lr=lr, max_iter=iters, tolerance_grad=1e-14,
-            tolerance_change=1e-16, history_size=100,
+            [f],
+            lr=lr,
+            max_iter=iters,
+            tolerance_grad=1e-14,
+            tolerance_change=1e-16,
+            history_size=100,
             line_search_fn="strong_wolfe",
         )
 
@@ -56,8 +60,7 @@ def optimize(n: int, warmstart: Path, betas, iters: int, lr: float, seed: int):
         t0 = time.time()
         opt.step(closure)
         c_exact = exact_score(f)
-        print(f"  beta={beta:.0e}  C={c_exact:.13f}  ({time.time()-t0:.1f}s)",
-              flush=True)
+        print(f"  beta={beta:.0e}  C={c_exact:.13f}  ({time.time() - t0:.1f}s)", flush=True)
         if c_exact < best_c:
             best_c = c_exact
             best_v = f.detach().cpu().numpy().copy()
@@ -68,10 +71,10 @@ def optimize(n: int, warmstart: Path, betas, iters: int, lr: float, seed: int):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--n", type=int, required=True, help="Discretization size")
-    p.add_argument("--warmstart", type=Path, required=True,
-                   help="JSON solution file with 'values' field")
-    p.add_argument("--beta", type=str, required=True,
-                   help="Comma-separated beta cascade values")
+    p.add_argument(
+        "--warmstart", type=Path, required=True, help="JSON solution file with 'values' field"
+    )
+    p.add_argument("--beta", type=str, required=True, help="Comma-separated beta cascade values")
     p.add_argument("--iters", type=int, default=1000)
     p.add_argument("--lr", type=float, default=1.0)
     p.add_argument("--seed", type=int, default=0)
@@ -79,16 +82,14 @@ def main():
     args = p.parse_args()
 
     betas = [float(b) for b in args.beta.split(",")]
-    best_v, best_c = optimize(args.n, args.warmstart, betas,
-                              args.iters, args.lr, args.seed)
+    best_v, best_c = optimize(args.n, args.warmstart, betas, args.iters, args.lr, args.seed)
 
     print(f"\nFinal C = {best_c:.13f}  (n={args.n})")
 
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         with open(args.out, "w") as fh:
-            json.dump({"values": best_v.tolist(), "score": best_c, "n": args.n},
-                      fh)
+            json.dump({"values": best_v.tolist(), "score": best_c, "n": args.n}, fh)
         print(f"Saved: {args.out}")
 
 

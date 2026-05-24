@@ -7,18 +7,15 @@ re-runs the bounded polish, testing each cusp k in 3..19 in both directions
 plus bulk variants.
 """
 
-import json
 import sys
-import time
 from pathlib import Path
 
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from push_d_torch_lbfgs import assign_scallops, load_xs_from_solution  # noqa: E402
+from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
 from push_g_bounded import lbfgs_polish_bounded, save_solution, true_score  # noqa: E402
 
 RESULTS = Path("results/problem-13-edges-triangles")
@@ -92,7 +89,7 @@ def main():
             bulk = force_cross_cusp(bulk, k, "down")
         pol, _ = lbfgs_polish_bounded(bulk, bi_xs, max_rounds=150)
         sc = true_score(bi_xs, pol)
-        print(f"  bulk down: {sc:.14f} delta={sc-init_score:+.3e}")
+        print(f"  bulk down: {sc:.14f} delta={sc - init_score:+.3e}")
         if sc > best_score + 1e-13:
             best_multi = pol.copy()
             best_score = sc
@@ -106,7 +103,7 @@ def main():
             bulk = force_cross_cusp(bulk, k, "up")
         pol, _ = lbfgs_polish_bounded(bulk, bi_xs, max_rounds=150)
         sc = true_score(bi_xs, pol)
-        print(f"  bulk up: {sc:.14f} delta={sc-init_score:+.3e}")
+        print(f"  bulk up: {sc:.14f} delta={sc - init_score:+.3e}")
         if sc > best_score + 1e-13:
             best_multi = pol.copy()
             best_score = sc

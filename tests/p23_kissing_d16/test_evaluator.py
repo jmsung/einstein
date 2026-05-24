@@ -18,7 +18,10 @@ from einstein.p23_kissing_d16.evaluator import (
     overlap_loss_mpmath,
 )
 
-SOTA_PATH = Path.home() / "projects/einstein/mb/knowledge/problem-23-kissing-d16/solutions/chronos_id2082_score2.0.json"
+SOTA_PATH = (
+    Path.home()
+    / "projects/einstein/mb/knowledge/problem-23-kissing-d16/solutions/chronos_id2082_score2.0.json"
+)
 
 
 def load_sota() -> np.ndarray:
@@ -58,7 +61,11 @@ def test_evaluate_validates_shape() -> None:
 
 
 def test_zero_vector_rejected() -> None:
-    v = np.eye(DIMENSION)[:N_VECTORS] if N_VECTORS <= DIMENSION else np.zeros((N_VECTORS, DIMENSION))
+    v = (
+        np.eye(DIMENSION)[:N_VECTORS]
+        if N_VECTORS <= DIMENSION
+        else np.zeros((N_VECTORS, DIMENSION))
+    )
     v = np.zeros((N_VECTORS, DIMENSION))
     with pytest.raises(ValueError):
         overlap_loss_fast(v)

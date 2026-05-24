@@ -24,7 +24,7 @@ def evaluate(data: dict) -> float:
         raise ValueError("Expected exactly 16 points in 2 dimensions, shape (16, 2)")
     n = vectors.shape[0]
     diff = vectors[:, None, :] - vectors[None, :, :]
-    dist_matrix = np.sqrt(np.sum(diff ** 2, axis=-1))
+    dist_matrix = np.sqrt(np.sum(diff**2, axis=-1))
     mask = np.triu(np.ones((n, n), dtype=bool), k=1)
     pairwise = dist_matrix[mask]
     min_d = np.min(pairwise)
@@ -43,7 +43,7 @@ def evaluate_verbose(data: dict) -> dict:
     vectors = np.array(data["vectors"], dtype=np.float64)
     n = vectors.shape[0]
     diff = vectors[:, None, :] - vectors[None, :, :]
-    D = np.sqrt(np.sum(diff ** 2, axis=-1))
+    D = np.sqrt(np.sum(diff**2, axis=-1))
     iu = np.triu_indices(n, k=1)
     pair = D[iu]
     mind = pair.min()

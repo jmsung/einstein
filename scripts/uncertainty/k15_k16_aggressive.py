@@ -5,6 +5,7 @@ Strategy:
   Phase B: k=16 climb from best k=15
   Phase C: Per-root hillclimb with hybrid verification on best candidate
 """
+
 import argparse
 import json
 import os
@@ -18,6 +19,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 sys.path.insert(0, "src")
 
 import multiprocessing as mp
+
 import numpy as np
 
 from einstein.uncertainty.fast import fast_evaluate
@@ -58,22 +60,26 @@ def make_obj(dps=30):
             return 100.0
         penalty = float(np.sum(np.maximum(0.05 - gaps, 0)))
         return s + 10.0 * penalty
+
     return obj
 
 
 def cma_optimize(gaps, sigma, fevals, seed, popsize=14, tolx=1e-14):
     """Run CMA-ES optimization in gap space."""
     import cma
+
     obj = make_obj(dps=30)
     try:
         es = cma.CMAEvolutionStrategy(
-            gaps, sigma,
-            {"maxfevals": fevals, "verbose": -9, "tolx": tolx,
-             "seed": seed, "popsize": popsize},
+            gaps,
+            sigma,
+            {"maxfevals": fevals, "verbose": -9, "tolx": tolx, "seed": seed, "popsize": popsize},
         )
         es.optimize(obj)
-        return float(es.result.fbest), list(es.result.xbest) if es.result.xbest is not None else gaps
-    except Exception as e:
+        return float(es.result.fbest), list(
+            es.result.xbest
+        ) if es.result.xbest is not None else gaps
+    except Exception:
         return float("inf"), gaps
 
 
@@ -186,7 +192,10 @@ def hillclimb_hybrid(roots, tag, rounds=50):
                     if trial[i] <= 0 or trial[i] > 300:
                         continue
                     trial_sorted = sorted(trial)
-                    if any(trial_sorted[j+1] - trial_sorted[j] < 0.05 for j in range(len(trial_sorted)-1)):
+                    if any(
+                        trial_sorted[j + 1] - trial_sorted[j] < 0.05
+                        for j in range(len(trial_sorted) - 1)
+                    ):
                         continue
 
                     # Fast screen
@@ -206,8 +215,10 @@ def hillclimb_hybrid(roots, tag, rounds=50):
                         best_roots = list(trial)
                         improved_count += 1
                         improved_this_round = True
-                        log(f"  Round {rd} root[{i}] {'+' if direction>0 else '-'}{step}: "
-                            f"{best_score:.16f} (Δ={delta:.2e})")
+                        log(
+                            f"  Round {rd} root[{i}] {'+' if direction > 0 else '-'}{step}: "
+                            f"{best_score:.16f} (Δ={delta:.2e})"
+                        )
                         break  # move to next root
                 if improved_this_round:
                     break
@@ -236,13 +247,13 @@ def make_k15_starts(k14_roots, fine_grid=True):
     if fine_grid:
         for pos in range(100, 150):
             cand = sorted(list(k14_roots) + [float(pos)])
-            if all(cand[j+1] - cand[j] >= 0.5 for j in range(len(cand)-1)):
+            if all(cand[j + 1] - cand[j] >= 0.5 for j in range(len(cand) - 1)):
                 starts.append((cand, f"JS_fine{pos}"))
 
     # Broad grid
     for pos in range(2, 295, 3):
         cand = sorted(list(k14_roots) + [float(pos)])
-        if all(cand[j+1] - cand[j] >= 0.5 for j in range(len(cand)-1)):
+        if all(cand[j + 1] - cand[j] >= 0.5 for j in range(len(cand) - 1)):
             tag = f"JS_broad{pos}"
             if not any(t == tag for _, t in starts):
                 starts.append((cand, tag))
@@ -251,7 +262,7 @@ def make_k15_starts(k14_roots, fine_grid=True):
     for pos_f in np.linspace(32, 55, 30):
         pos = round(float(pos_f), 1)
         cand = sorted(list(k14_roots) + [pos])
-        if all(cand[j+1] - cand[j] >= 0.5 for j in range(len(cand)-1)):
+        if all(cand[j + 1] - cand[j] >= 0.5 for j in range(len(cand) - 1)):
             starts.append((cand, f"JS_mid{pos}"))
 
     return starts
@@ -262,7 +273,7 @@ def make_k16_starts(k15_roots):
     starts = []
     for pos in range(2, 295, 2):
         cand = sorted(list(k15_roots) + [float(pos)])
-        if all(cand[j+1] - cand[j] >= 0.5 for j in range(len(cand)-1)):
+        if all(cand[j + 1] - cand[j] >= 0.5 for j in range(len(cand) - 1)):
             starts.append((cand, f"k16_pos{pos}"))
     return starts
 
@@ -274,7 +285,7 @@ def make_cold_k15_starts(n_starts=30):
     for i in range(n_starts):
         while True:
             roots = sorted(rng.uniform(1, 280, 15))
-            if all(roots[j+1] - roots[j] >= 0.05 for j in range(len(roots)-1)):
+            if all(roots[j + 1] - roots[j] >= 0.05 for j in range(len(roots) - 1)):
                 starts.append((list(roots), f"cold{i}"))
                 break
     return starts
@@ -328,10 +339,7 @@ def main():
         starts.extend(cold_starts)
         log(f"Generated {len(starts)} k=15 starting configurations")
 
-        work = [
-            (s[0], s[1], args.fevals, args.sigma, int(rng.integers(1, 2**31)))
-            for s in starts
-        ]
+        work = [(s[0], s[1], args.fevals, args.sigma, int(rng.integers(1, 2**31))) for s in starts]
 
         t0 = time.time()
         results = []
@@ -343,11 +351,13 @@ def main():
                     marker = " *** NEW BEST ***"
                 if score < TARGET:
                     marker = " *** CROSSES GATE ***"
-                log(f"  [{i+1}/{len(work)}] {tag}: {score:.14f}{marker}"
-                    f"{' ('+err+')' if err else ''}")
+                log(
+                    f"  [{i + 1}/{len(work)}] {tag}: {score:.14f}{marker}"
+                    f"{' (' + err + ')' if err else ''}"
+                )
                 results.append((score, gaps, tag))
 
-        log(f"\nPhase A pool: {time.time()-t0:.0f}s")
+        log(f"\nPhase A pool: {time.time() - t0:.0f}s")
         results.sort(key=lambda x: x[0])
 
         # Verify top candidates
@@ -358,7 +368,7 @@ def main():
             roots = gaps_to_roots(gaps)
             if any(r <= 0 or r > 300 for r in roots):
                 continue
-            if any(roots[j+1] - roots[j] < 0.05 for j in range(len(roots)-1)):
+            if any(roots[j + 1] - roots[j] < 0.05 for j in range(len(roots) - 1)):
                 continue
             h = verify_and_save(roots, s, f"k15_{tag}", 15)
             if h is not None and h < overall_best_score:
@@ -378,8 +388,7 @@ def main():
         log(f"Generated {len(k16_starts)} k=16 starting configurations")
 
         work = [
-            (s[0], s[1], args.fevals, args.sigma, int(rng.integers(1, 2**31)))
-            for s in k16_starts
+            (s[0], s[1], args.fevals, args.sigma, int(rng.integers(1, 2**31))) for s in k16_starts
         ]
 
         t0 = time.time()
@@ -392,11 +401,13 @@ def main():
                     marker = " *** NEW BEST ***"
                 if score < TARGET:
                     marker = " *** CROSSES GATE ***"
-                log(f"  [{i+1}/{len(work)}] {tag}: {score:.14f}{marker}"
-                    f"{' ('+err+')' if err else ''}")
+                log(
+                    f"  [{i + 1}/{len(work)}] {tag}: {score:.14f}{marker}"
+                    f"{' (' + err + ')' if err else ''}"
+                )
                 results.append((score, gaps, tag))
 
-        log(f"\nPhase B pool: {time.time()-t0:.0f}s")
+        log(f"\nPhase B pool: {time.time() - t0:.0f}s")
         results.sort(key=lambda x: x[0])
 
         # Verify top candidates
@@ -407,7 +418,7 @@ def main():
             roots = gaps_to_roots(gaps)
             if any(r <= 0 or r > 300 for r in roots):
                 continue
-            if any(roots[j+1] - roots[j] < 0.05 for j in range(len(roots)-1)):
+            if any(roots[j + 1] - roots[j] < 0.05 for j in range(len(roots) - 1)):
                 continue
             h = verify_and_save(roots, s, f"k16_{tag}", 16)
             if h is not None and h < overall_best_score:

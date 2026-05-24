@@ -25,7 +25,7 @@ from pathlib import Path
 
 import numpy as np
 from scipy.optimize import minimize
-from scipy.spatial.distance import pdist, cdist
+from scipy.spatial.distance import pdist
 
 sys.path.insert(0, "src")
 from einstein.p22_kissing_d12.evaluator import overlap_loss
@@ -157,6 +157,7 @@ def optimize_filler_softplus(
     v = v0.copy()
     v /= np.linalg.norm(v)
     for beta in betas:
+
         def f_and_g(v_flat):
             loss, grad = softplus_hinge(v_flat, core, beta)
             return loss, grad

@@ -84,7 +84,8 @@ def inverse_sigmoid_param(xs: np.ndarray, lo: np.ndarray, hi: np.ndarray) -> np.
 
 
 def lbfgs_polish_bounded(
-    multi_xs: np.ndarray, bi_xs: np.ndarray,
+    multi_xs: np.ndarray,
+    bi_xs: np.ndarray,
     max_rounds: int = 40,
 ) -> tuple[np.ndarray, float]:
     """L-BFGS with strict scallop bounds."""
@@ -101,9 +102,13 @@ def lbfgs_polish_bounded(
     raw = torch.tensor(raw_np, dtype=torch.float64, requires_grad=True)
 
     opt = torch.optim.LBFGS(
-        [raw], lr=1.0, max_iter=30,
-        tolerance_grad=1e-18, tolerance_change=1e-18,
-        history_size=80, line_search_fn="strong_wolfe",
+        [raw],
+        lr=1.0,
+        max_iter=30,
+        tolerance_grad=1e-18,
+        tolerance_change=1e-18,
+        history_size=80,
+        line_search_fn="strong_wolfe",
     )
 
     def closure():
@@ -155,8 +160,11 @@ def save_solution(bi_xs: np.ndarray, multi_xs: np.ndarray, tag: str) -> Path:
 
 
 def perturb_log_gaps(
-    multi_xs: np.ndarray, x_lo: float, x_hi: float,
-    noise_scale: float, rng: np.random.Generator,
+    multi_xs: np.ndarray,
+    x_lo: float,
+    x_hi: float,
+    noise_scale: float,
+    rng: np.random.Generator,
 ) -> np.ndarray:
     gaps = np.empty(len(multi_xs) + 1)
     gaps[0] = multi_xs[0] - x_lo
@@ -180,7 +188,9 @@ def main():
     print("\n=== Initial bounded L-BFGS polish ===")
     polished, torch_score = lbfgs_polish_bounded(multi_xs, bi_xs, max_rounds=50)
     polished_true = true_score(bi_xs, polished)
-    print(f"torch={torch_score:.14f}  true={polished_true:.14f}  delta={polished_true-init_score:+.2e}")
+    print(
+        f"torch={torch_score:.14f}  true={polished_true:.14f}  delta={polished_true - init_score:+.2e}"
+    )
 
     best_multi = polished if polished_true > init_score else multi_xs.copy()
     best_score = max(init_score, polished_true)
@@ -207,7 +217,9 @@ def main():
                 best_multi = pol.copy()
                 best_score = sc
                 n_improvements += 1
-                print(f"  seed={seed:2d} noise={noise:.3f}: {sc:.14f} NEW BEST (+{sc-init_score:.3e})")
+                print(
+                    f"  seed={seed:2d} noise={noise:.3f}: {sc:.14f} NEW BEST (+{sc - init_score:.3e})"
+                )
                 base = pol.copy()
                 save_solution(bi_xs, best_multi, f"push-g-intermediate-seed{seed}")
 

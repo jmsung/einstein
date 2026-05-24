@@ -87,8 +87,9 @@ def load_sota(path: str = None) -> np.ndarray:
 
 
 # ─── Approach 1: Coordinate Descent with Exact Line Search ──────
-def coord_descent_minimax(h: np.ndarray, max_iters: int = 50,
-                          verbose: bool = True) -> tuple[np.ndarray, float]:
+def coord_descent_minimax(
+    h: np.ndarray, max_iters: int = 50, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """Coordinate descent with exact 1D minimax line search.
 
     For each coordinate h_j, the overlap at each shift d is affine in h_j.
@@ -126,7 +127,7 @@ def coord_descent_minimax(h: np.ndarray, max_iters: int = 50,
                 d = d_idx - (n - 1)  # actual shift
                 # i=j term: h_j * (1-h_{j+d}) if j+d in [0,n)
                 if 0 <= j + d < n:
-                    grad_j[d_idx] += (1.0 - h[j + d])
+                    grad_j[d_idx] += 1.0 - h[j + d]
                 # i=j-d term: h_{j-d} * (1-h_j) -> derivative w.r.t. h_j = -h_{j-d}
                 if 0 <= j - d < n:
                     grad_j[d_idx] -= h[j - d]
@@ -179,7 +180,7 @@ def coord_descent_minimax(h: np.ndarray, max_iters: int = 50,
                     h = project(h)
 
         if verbose:
-            print(f"    Iter {iteration+1}: score={best_score:.13f}, improved={improved_count}")
+            print(f"    Iter {iteration + 1}: score={best_score:.13f}, improved={improved_count}")
         if improved_count == 0:
             break
 
@@ -187,9 +188,9 @@ def coord_descent_minimax(h: np.ndarray, max_iters: int = 50,
 
 
 # ─── Approach 2: P-norm smoothing with increasing p ──────────────
-def pnorm_optimize(h: np.ndarray, max_iters: int = 5000,
-                   lr: float = 1e-5, p_schedule=None,
-                   verbose: bool = True) -> tuple[np.ndarray, float]:
+def pnorm_optimize(
+    h: np.ndarray, max_iters: int = 5000, lr: float = 1e-5, p_schedule=None, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """Optimize using p-norm approximation to max, with increasing p.
 
     max(x) ≈ (Σ x_i^p)^(1/p) for large p.
@@ -227,8 +228,7 @@ def pnorm_optimize(h: np.ndarray, max_iters: int = 5000,
             # Compute correlation via conv1d
             one_minus_h = 1.0 - h_val
             # Use manual correlation
-            h_pad = torch.nn.functional.pad(h_val.unsqueeze(0).unsqueeze(0),
-                                            (n - 1, n - 1))
+            h_pad = torch.nn.functional.pad(h_val.unsqueeze(0).unsqueeze(0), (n - 1, n - 1))
             kernel = one_minus_h.flip(0).unsqueeze(0).unsqueeze(0)
             corr = torch.nn.functional.conv1d(h_pad, kernel).squeeze()
 
@@ -249,8 +249,10 @@ def pnorm_optimize(h: np.ndarray, max_iters: int = 5000,
                         best_score = s
                         best_h = h_np.copy()
                     if verbose:
-                        print(f"    Stage {stage} iter {i+1}: p={p}, loss={loss.item():.10f}, "
-                              f"score={s:.13f}, best={best_score:.13f}")
+                        print(
+                            f"    Stage {stage} iter {i + 1}: p={p}, loss={loss.item():.10f}, "
+                            f"score={s:.13f}, best={best_score:.13f}"
+                        )
 
         # Extract and evaluate
         with torch.no_grad():
@@ -265,9 +267,13 @@ def pnorm_optimize(h: np.ndarray, max_iters: int = 5000,
 
 
 # ─── Approach 3: Multi-resolution warm-start ─────────────────────
-def multi_resolution_search(n_low: int = 300, n_high: int = 600,
-                            n_starts: int = 20, iters_per_start: int = 10000,
-                            verbose: bool = True) -> tuple[np.ndarray, float]:
+def multi_resolution_search(
+    n_low: int = 300,
+    n_high: int = 600,
+    n_starts: int = 20,
+    iters_per_start: int = 10000,
+    verbose: bool = True,
+) -> tuple[np.ndarray, float]:
     """Solve at lower resolution, then upsample and polish.
 
     At n=300, the problem has half the variables, making global search easier.
@@ -302,8 +308,7 @@ def multi_resolution_search(n_low: int = 300, n_high: int = 600,
             target = n_low / 2.0
             h_val = h_val * (target / torch.sum(h_val))
             one_minus_h = 1.0 - h_val
-            h_pad = torch.nn.functional.pad(h_val.unsqueeze(0).unsqueeze(0),
-                                            (n_low - 1, n_low - 1))
+            h_pad = torch.nn.functional.pad(h_val.unsqueeze(0).unsqueeze(0), (n_low - 1, n_low - 1))
             kernel = one_minus_h.flip(0).unsqueeze(0).unsqueeze(0)
             corr = torch.nn.functional.conv1d(h_pad, kernel).squeeze()
             # LogSumExp smooth max
@@ -339,10 +344,13 @@ def multi_resolution_search(n_low: int = 300, n_high: int = 600,
 
 
 # ─── Approach 4: Aggressive perturbation + reconvergence ─────────
-def perturb_and_reconverge(h_sota: np.ndarray, n_perturbations: int = 50,
-                           perturbation_scale: float = 0.05,
-                           reconverge_iters: int = 20000,
-                           verbose: bool = True) -> tuple[np.ndarray, float]:
+def perturb_and_reconverge(
+    h_sota: np.ndarray,
+    n_perturbations: int = 50,
+    perturbation_scale: float = 0.05,
+    reconverge_iters: int = 20000,
+    verbose: bool = True,
+) -> tuple[np.ndarray, float]:
     """Large random perturbation of SOTA + reconvergence.
 
     Previous work used small perturbations (1e-7). Here we try larger ones
@@ -380,8 +388,7 @@ def perturb_and_reconverge(h_sota: np.ndarray, n_perturbations: int = 50,
             target = n / 2.0
             h_val = h_val * (target / torch.sum(h_val))
             one_minus_h = 1.0 - h_val
-            h_pad = torch.nn.functional.pad(h_val.unsqueeze(0).unsqueeze(0),
-                                            (n - 1, n - 1))
+            h_pad = torch.nn.functional.pad(h_val.unsqueeze(0).unsqueeze(0), (n - 1, n - 1))
             kernel = one_minus_h.flip(0).unsqueeze(0).unsqueeze(0)
             corr = torch.nn.functional.conv1d(h_pad, kernel).squeeze()
             beta = 100.0 + i * 0.01  # slowly increase sharpness
@@ -399,7 +406,9 @@ def perturb_and_reconverge(h_sota: np.ndarray, n_perturbations: int = 50,
             best_score = s
             best_h = h_np.copy()
             if verbose:
-                print(f"    Trial {trial}: score={s:.13f} ** NEW BEST (gap to SOTA: {SOTA_SCORE - s:.2e})")
+                print(
+                    f"    Trial {trial}: score={s:.13f} ** NEW BEST (gap to SOTA: {SOTA_SCORE - s:.2e})"
+                )
         elif verbose and trial < 5:
             print(f"    Trial {trial}: score={s:.13f}")
 
@@ -407,9 +416,9 @@ def perturb_and_reconverge(h_sota: np.ndarray, n_perturbations: int = 50,
 
 
 # ─── Approach 5: Alternating block optimization ──────────────────
-def alternating_block_opt(h: np.ndarray, block_size: int = 50,
-                          max_iters: int = 10,
-                          verbose: bool = True) -> tuple[np.ndarray, float]:
+def alternating_block_opt(
+    h: np.ndarray, block_size: int = 50, max_iters: int = 10, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """Optimize blocks of variables while holding others fixed.
 
     Each block subproblem is a smaller optimization problem.
@@ -448,8 +457,7 @@ def alternating_block_opt(h: np.ndarray, block_size: int = 50,
                 target = n / 2.0
                 h_full = h_full * (target / torch.sum(h_full))
                 one_minus_h = 1.0 - h_full
-                h_pad = torch.nn.functional.pad(h_full.unsqueeze(0).unsqueeze(0),
-                                                (n - 1, n - 1))
+                h_pad = torch.nn.functional.pad(h_full.unsqueeze(0).unsqueeze(0), (n - 1, n - 1))
                 kernel = one_minus_h.flip(0).unsqueeze(0).unsqueeze(0)
                 corr = torch.nn.functional.conv1d(h_pad, kernel).squeeze()
                 beta = 200.0
@@ -468,7 +476,7 @@ def alternating_block_opt(h: np.ndarray, block_size: int = 50,
                     improved = True
 
         if verbose:
-            print(f"    Iter {iteration+1}: score={best_score:.13f}, improved={improved}")
+            print(f"    Iter {iteration + 1}: score={best_score:.13f}, improved={improved}")
         if not improved:
             break
 
@@ -476,9 +484,9 @@ def alternating_block_opt(h: np.ndarray, block_size: int = 50,
 
 
 # ─── Approach 6: Differential Evolution at n=300 (global) ───────
-def de_global_search(n: int = 300, pop_size: int = 100,
-                     max_iters: int = 500,
-                     verbose: bool = True) -> tuple[np.ndarray, float]:
+def de_global_search(
+    n: int = 300, pop_size: int = 100, max_iters: int = 500, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """Differential evolution at reduced resolution for global basin search."""
     from scipy.optimize import differential_evolution
 
@@ -494,11 +502,21 @@ def de_global_search(n: int = 300, pop_size: int = 100,
 
     # Use Latin hypercube initialization
     result = differential_evolution(
-        objective, bounds, maxiter=max_iters, popsize=pop_size,
-        mutation=(0.5, 1.5), recombination=0.9, seed=42,
-        tol=1e-12, atol=1e-12, polish=True,
-        callback=lambda xk, convergence: print(f"    DE: f={objective(xk):.10f}, conv={convergence:.6f}") if verbose else None,
-        updating='deferred', workers=1
+        objective,
+        bounds,
+        maxiter=max_iters,
+        popsize=pop_size,
+        mutation=(0.5, 1.5),
+        recombination=0.9,
+        seed=42,
+        tol=1e-12,
+        atol=1e-12,
+        polish=True,
+        callback=lambda xk, convergence: (
+            print(f"    DE: f={objective(xk):.10f}, conv={convergence:.6f}") if verbose else None
+        ),
+        updating="deferred",
+        workers=1,
     )
 
     h_best = project(result.x)
@@ -556,9 +574,9 @@ def run_all(time_budget_sec: int = 7200):
 
     # ── Approach 1: Coordinate descent from SOTA ──
     if remaining() > 300:
-        print(f"\n{'─'*60}")
+        print(f"\n{'─' * 60}")
         print("APPROACH 1: Coordinate Descent (exact line search)")
-        print(f"{'─'*60}")
+        print(f"{'─' * 60}")
         try:
             h1, s1 = coord_descent_minimax(h_sota.copy(), max_iters=3)
             log_result("coord_descent", h1, s1)
@@ -567,12 +585,13 @@ def run_all(time_budget_sec: int = 7200):
 
     # ── Approach 2: Multi-resolution search ──
     if remaining() > 600:
-        print(f"\n{'─'*60}")
+        print(f"\n{'─' * 60}")
         print("APPROACH 2: Multi-resolution (n=300 → n=600)")
-        print(f"{'─'*60}")
+        print(f"{'─' * 60}")
         try:
-            h2, s2 = multi_resolution_search(n_low=300, n_high=600,
-                                              n_starts=30, iters_per_start=15000)
+            h2, s2 = multi_resolution_search(
+                n_low=300, n_high=600, n_starts=30, iters_per_start=15000
+            )
             log_result("multi_res", h2, s2)
 
             # Polish best with mass transport
@@ -586,40 +605,44 @@ def run_all(time_budget_sec: int = 7200):
 
     # ── Approach 3: Large perturbation + reconverge ──
     if remaining() > 600:
-        print(f"\n{'─'*60}")
+        print(f"\n{'─' * 60}")
         print("APPROACH 3: Large perturbation + reconvergence")
-        print(f"{'─'*60}")
+        print(f"{'─' * 60}")
         try:
             for scale in [0.02, 0.05, 0.1, 0.2]:
                 if remaining() < 300:
                     break
                 h3, s3 = perturb_and_reconverge(
-                    h_sota.copy(), n_perturbations=20,
-                    perturbation_scale=scale, reconverge_iters=20000)
+                    h_sota.copy(),
+                    n_perturbations=20,
+                    perturbation_scale=scale,
+                    reconverge_iters=20000,
+                )
                 log_result(f"perturb_scale={scale}", h3, s3)
         except Exception as e:
             print(f"  FAILED: {e}")
 
     # ── Approach 4: P-norm smoothing ──
     if remaining() > 300:
-        print(f"\n{'─'*60}")
+        print(f"\n{'─' * 60}")
         print("APPROACH 4: P-norm smoothing (cold start)")
-        print(f"{'─'*60}")
+        print(f"{'─' * 60}")
         try:
             rng = np.random.default_rng(99)
             h_init = rng.random(600)
             h_init = project(h_init)
-            h4, s4 = pnorm_optimize(h_init, max_iters=5000,
-                                     p_schedule=[(3000, 4), (3000, 20), (2000, 100), (2000, 500)])
+            h4, s4 = pnorm_optimize(
+                h_init, max_iters=5000, p_schedule=[(3000, 4), (3000, 20), (2000, 100), (2000, 500)]
+            )
             log_result("pnorm_cold", h4, s4)
         except Exception as e:
             print(f"  FAILED: {e}")
 
     # ── Approach 5: Block optimization from SOTA ──
     if remaining() > 300:
-        print(f"\n{'─'*60}")
+        print(f"\n{'─' * 60}")
         print("APPROACH 5: Alternating block optimization from SOTA")
-        print(f"{'─'*60}")
+        print(f"{'─' * 60}")
         try:
             h5, s5 = alternating_block_opt(h_sota.copy(), block_size=30, max_iters=5)
             log_result("block_opt", h5, s5)
@@ -627,13 +650,13 @@ def run_all(time_budget_sec: int = 7200):
             print(f"  FAILED: {e}")
 
     # ── Summary ──
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("SUMMARY")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     results.sort(key=lambda x: x["score"])
     for i, r in enumerate(results):
         gap = SOTA_SCORE - r["score"]
-        print(f"  {i+1}. {r['name']}: {r['score']:.13f} (gap={gap:.2e})")
+        print(f"  {i + 1}. {r['name']}: {r['score']:.13f} (gap={gap:.2e})")
 
     best = results[0] if results else None
     if best and best["score"] < SOTA_SCORE - MIN_IMPROVEMENT:
@@ -646,8 +669,7 @@ def run_all(time_budget_sec: int = 7200):
     return results
 
 
-def mass_transport_polish(h: np.ndarray, n_iters: int = 500000,
-                          seed: int = 0) -> np.ndarray:
+def mass_transport_polish(h: np.ndarray, n_iters: int = 500000, seed: int = 0) -> np.ndarray:
     """Quick mass transport polishing (same as warm-start optimizer)."""
     rng = np.random.default_rng(seed)
     h = h.copy()

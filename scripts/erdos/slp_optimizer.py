@@ -29,6 +29,7 @@ EPS = 1e-10
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def project_to_feasible(h: np.ndarray) -> np.ndarray:
     """Project h to [EPS, 1-EPS]^n with sum = n/2."""
     h = np.clip(h, EPS, 1.0 - EPS)
@@ -67,8 +68,8 @@ def score(h: np.ndarray) -> float:
 # SLP core
 # ---------------------------------------------------------------------------
 
-def slp_step(h0: np.ndarray, trust_radius: float,
-             n_active_lags: int = 100) -> np.ndarray | None:
+
+def slp_step(h0: np.ndarray, trust_radius: float, n_active_lags: int = 100) -> np.ndarray | None:
     """One SLP step: linearize around h0, solve LP in delta-space."""
     n = len(h0)
     dx = 2.0 / n
@@ -96,11 +97,11 @@ def slp_step(h0: np.ndarray, trust_radius: float,
         if k >= 0:
             grad[jr] += 1.0 - h0[jr + k]
             np.add.at(grad, jr + k, -h0[jr])
-            const = np.dot(h0[:m], h0[k:k + m])
+            const = np.dot(h0[:m], h0[k : k + m])
         else:
             grad[jr + ak] += 1.0 - h0[jr]
             np.add.at(grad, jr, -h0[jr + ak])
-            const = np.dot(h0[ak:ak + m], h0[:m])
+            const = np.dot(h0[ak : ak + m], h0[:m])
 
         lin_at_h0 = np.dot(grad, h0) + const
 
@@ -126,9 +127,16 @@ def slp_step(h0: np.ndarray, trust_radius: float,
     bounds.append((None, None))
 
     try:
-        result = linprog(c_obj, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
-                         bounds=bounds, method='highs',
-                         options={'presolve': True, 'time_limit': 30.0})
+        result = linprog(
+            c_obj,
+            A_ub=A_ub,
+            b_ub=b_ub,
+            A_eq=A_eq,
+            b_eq=b_eq,
+            bounds=bounds,
+            method="highs",
+            options={"presolve": True, "time_limit": 30.0},
+        )
         if result.success:
             return h0 + result.x[:n]
         return None
@@ -140,13 +148,17 @@ def slp_step(h0: np.ndarray, trust_radius: float,
 # SLP main loop
 # ---------------------------------------------------------------------------
 
-def slp_optimize(h_init: np.ndarray, max_iters: int = 500,
-                 trust_radius_init: float = 0.05,
-                 trust_radius_min: float = 1e-8,
-                 trust_radius_max: float = 0.2,
-                 n_active_lags: int = 200,
-                 time_limit: float = 120.0,
-                 label: str = "SLP") -> tuple[np.ndarray, float]:
+
+def slp_optimize(
+    h_init: np.ndarray,
+    max_iters: int = 500,
+    trust_radius_init: float = 0.05,
+    trust_radius_min: float = 1e-8,
+    trust_radius_max: float = 0.2,
+    n_active_lags: int = 200,
+    time_limit: float = 120.0,
+    label: str = "SLP",
+) -> tuple[np.ndarray, float]:
     """Run the SLP loop with adaptive trust region, line search, and time limit."""
     n = len(h_init)
     h = project_to_feasible(h_init.copy())
@@ -164,7 +176,7 @@ def slp_optimize(h_init: np.ndarray, max_iters: int = 500,
 
     for it in range(max_iters):
         if time.time() - t0 > time_limit:
-            print(f"  iter {it+1}: time limit reached.")
+            print(f"  iter {it + 1}: time limit reached.")
             break
 
         h_lp = slp_step(h, trust_radius=tr, n_active_lags=n_active_lags)
@@ -172,7 +184,7 @@ def slp_optimize(h_init: np.ndarray, max_iters: int = 500,
         if h_lp is None:
             tr *= 0.5
             if tr < trust_radius_min:
-                print(f"  iter {it+1}: trust radius below minimum. Stopping.")
+                print(f"  iter {it + 1}: trust radius below minimum. Stopping.")
                 break
             continue
 
@@ -201,14 +213,16 @@ def slp_optimize(h_init: np.ndarray, max_iters: int = 500,
 
             if total_improvements <= 3 or improvement > 1e-6 or (it + 1) % 50 == 0:
                 elapsed = time.time() - t0
-                print(f"  iter {it+1:4d}: C={best_score:.13f}  "
-                      f"impr={improvement:.2e}  a={best_alpha:.3f}  "
-                      f"tr={tr:.5f}  t={elapsed:.1f}s")
+                print(
+                    f"  iter {it + 1:4d}: C={best_score:.13f}  "
+                    f"impr={improvement:.2e}  a={best_alpha:.3f}  "
+                    f"tr={tr:.5f}  t={elapsed:.1f}s"
+                )
         else:
             no_improve_count += 1
             tr *= 0.6
             if tr < trust_radius_min:
-                print(f"  iter {it+1}: trust radius below minimum. Stopping.")
+                print(f"  iter {it + 1}: trust radius below minimum. Stopping.")
                 break
             if no_improve_count >= 10:
                 n_active_lags = min(n_active_lags + 50, 2 * n - 2)
@@ -217,18 +231,22 @@ def slp_optimize(h_init: np.ndarray, max_iters: int = 500,
 
         if (it + 1) % 100 == 0:
             elapsed = time.time() - t0
-            print(f"  iter {it+1:4d}: C={best_score:.13f}  "
-                  f"tr={tr:.2e}  lags={n_active_lags}  t={elapsed:.1f}s")
+            print(
+                f"  iter {it + 1:4d}: C={best_score:.13f}  "
+                f"tr={tr:.2e}  lags={n_active_lags}  t={elapsed:.1f}s"
+            )
 
     elapsed = time.time() - t0
-    print(f"  {label} DONE: C={best_score:.13f} in {elapsed:.1f}s "
-          f"({total_improvements} improvements)")
+    print(
+        f"  {label} DONE: C={best_score:.13f} in {elapsed:.1f}s ({total_improvements} improvements)"
+    )
     return h_best, best_score
 
 
 # ---------------------------------------------------------------------------
 # Starting points
 # ---------------------------------------------------------------------------
+
 
 def make_fourier_start(n: int, seed: int = 42) -> np.ndarray:
     """Construct a starting point from low-frequency Fourier components."""
@@ -242,8 +260,9 @@ def make_fourier_start(n: int, seed: int = 42) -> np.ndarray:
     return project_to_feasible(h)
 
 
-def make_perturbed_start(h_base: np.ndarray, noise_scale: float = 0.05,
-                         seed: int = 123) -> np.ndarray:
+def make_perturbed_start(
+    h_base: np.ndarray, noise_scale: float = 0.05, seed: int = 123
+) -> np.ndarray:
     """Perturb a base solution with Gaussian noise and re-project."""
     rng = np.random.default_rng(seed)
     return project_to_feasible(h_base.copy() + rng.standard_normal(len(h_base)) * noise_scale)
@@ -252,6 +271,7 @@ def make_perturbed_start(h_base: np.ndarray, noise_scale: float = 0.05,
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     print("=" * 70)

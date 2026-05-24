@@ -31,6 +31,7 @@ import numpy as np
 
 try:
     import cvxpy as cp
+
     HAVE_CVXPY = True
 except ImportError:
     HAVE_CVXPY = False
@@ -98,8 +99,14 @@ def whitelike_cross_term_matrix(T: int, M: int) -> np.ndarray:
 # -----------------------------------------------------------------------------
 
 
-def solve_g_lambda(lam: float, T: int = 16, G: int = 1024, M_cross: int = 16,
-                   solver: str = "SCS", verbose: bool = False) -> tuple[float, dict]:
+def solve_g_lambda(
+    lam: float,
+    T: int = 16,
+    G: int = 1024,
+    M_cross: int = 16,
+    solver: str = "SCS",
+    verbose: bool = False,
+) -> tuple[float, dict]:
     """Solve the parametric SDP at fixed Dinkelbach parameter lam.
 
     Variables:
@@ -149,19 +156,15 @@ def solve_g_lambda(lam: float, T: int = 16, G: int = 1024, M_cross: int = 16,
 
     # SOC lifts: y_k >= hat_f[k]^2, z_k >= y_k^2
     for k in range(T + 1):
-        constraints.append(cp.bmat([[y[k], hat_f[k]],
-                                     [hat_f[k], 1]]) >> 0)
-        constraints.append(cp.bmat([[z[k], y[k]],
-                                     [y[k], 1]]) >> 0)
+        constraints.append(cp.bmat([[y[k], hat_f[k]], [hat_f[k], 1]]) >> 0)
+        constraints.append(cp.bmat([[z[k], y[k]], [y[k], 1]]) >> 0)
 
     # Cross-term variables u, w, v
     L = whitelike_cross_term_matrix(T, M_cross)
     constraints.append(u == L @ hat_f)
     for m in range(2 * M_cross + 1):
-        constraints.append(cp.bmat([[w[m], u[m]],
-                                     [u[m], 1]]) >> 0)
-        constraints.append(cp.bmat([[v[m], w[m]],
-                                     [w[m], 1]]) >> 0)
+        constraints.append(cp.bmat([[w[m], u[m]], [u[m], 1]]) >> 0)
+        constraints.append(cp.bmat([[v[m], w[m]], [w[m], 1]]) >> 0)
 
     # Sup-norm via dense grid: C >= sum_k y[k] * cos(pi k x_i)
     K = cos_kernel_matrix(T, G)  # (G, T+1)
@@ -198,10 +201,16 @@ def solve_g_lambda(lam: float, T: int = 16, G: int = 1024, M_cross: int = 16,
 # -----------------------------------------------------------------------------
 
 
-def upper_bound_via_dinkelbach(T: int = 16, G: int = 1024, M_cross: int = 16,
-                                lam_lo: float = 0.96, lam_hi: float = 1.0,
-                                tol: float = 1e-3, solver: str = "SCS",
-                                verbose: bool = False) -> dict:
+def upper_bound_via_dinkelbach(
+    T: int = 16,
+    G: int = 1024,
+    M_cross: int = 16,
+    lam_lo: float = 0.96,
+    lam_hi: float = 1.0,
+    tol: float = 1e-3,
+    solver: str = "SCS",
+    verbose: bool = False,
+) -> dict:
     """Bisect the Dinkelbach parameter lam:
        g(lam) = sup_f (M_relaxed(f) - lam * C(f))
        g(lam) > 0 implies S* > lam (lam is too low)
@@ -215,8 +224,12 @@ def upper_bound_via_dinkelbach(T: int = 16, G: int = 1024, M_cross: int = 16,
     # First check the endpoints
     g_lo, info_lo = solve_g_lambda(lam_lo, T, G, M_cross, solver, verbose=False)
     g_hi, info_hi = solve_g_lambda(lam_hi, T, G, M_cross, solver, verbose=False)
-    print(f"  g({lam_lo:.4f}) = {g_lo:.6e} (status={info_lo['status']}, elapsed={info_lo.get('elapsed', 0):.1f}s)")
-    print(f"  g({lam_hi:.4f}) = {g_hi:.6e} (status={info_hi['status']}, elapsed={info_hi.get('elapsed', 0):.1f}s)")
+    print(
+        f"  g({lam_lo:.4f}) = {g_lo:.6e} (status={info_lo['status']}, elapsed={info_lo.get('elapsed', 0):.1f}s)"
+    )
+    print(
+        f"  g({lam_hi:.4f}) = {g_hi:.6e} (status={info_hi['status']}, elapsed={info_hi.get('elapsed', 0):.1f}s)"
+    )
 
     if g_lo <= 0:
         print(f"  Even lam_lo={lam_lo} yields g <= 0 — UB is at or below {lam_lo}")
@@ -232,7 +245,9 @@ def upper_bound_via_dinkelbach(T: int = 16, G: int = 1024, M_cross: int = 16,
         lam_mid = 0.5 * (lam_lo + lam_hi)
         g_mid, info_mid = solve_g_lambda(lam_mid, T, G, M_cross, solver, verbose=False)
         history.append((lam_mid, g_mid))
-        print(f"  g({lam_mid:.6f}) = {g_mid:.6e} (status={info_mid['status']}, elapsed={info_mid.get('elapsed', 0):.1f}s)")
+        print(
+            f"  g({lam_mid:.6f}) = {g_mid:.6e} (status={info_mid['status']}, elapsed={info_mid.get('elapsed', 0):.1f}s)"
+        )
         if g_mid > 0:
             lam_lo = lam_mid
         else:
@@ -277,15 +292,14 @@ def main():
     # Now run the bisection sweep
     print("--- Dinkelbach bisection at T=8, G=512, M_cross=8 (small for speed) ---")
     result = upper_bound_via_dinkelbach(
-        T=8, G=512, M_cross=8,
-        lam_lo=0.96, lam_hi=1.0, tol=1e-3, solver="SCS"
+        T=8, G=512, M_cross=8, lam_lo=0.96, lam_hi=1.0, tol=1e-3, solver="SCS"
     )
     print()
-    print(f"=== Result: numerical upper bound on S* ===")
+    print("=== Result: numerical upper bound on S* ===")
     print(f"  S* <= {result['upper_bound']:.6f}")
-    print(f"  Empirical lower bound: 0.96272 (arena leaders)")
-    print(f"  Trivial upper bound (Cauchy-Schwarz): 1.0")
-    print(f"  Best closed-form S(f): 0.722 (cos^2(pi x) bump)")
+    print("  Empirical lower bound: 0.96272 (arena leaders)")
+    print("  Trivial upper bound (Cauchy-Schwarz): 1.0")
+    print("  Best closed-form S(f): 0.722 (cos^2(pi x) bump)")
     print()
     print("Interpretation:")
     if result["upper_bound"] < 0.97:

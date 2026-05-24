@@ -17,7 +17,6 @@ import pytest
 from einstein.council import Persona, dispatch, load_personas
 from einstein.council.personas import COUNCIL_PATH
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -191,9 +190,7 @@ class TestDispatch:
         assert "Viazovska" in names
         assert "Turán" not in names
 
-    def test_dispatch_no_specialist_for_unrelated_category(
-        self, fake_council_md: Path
-    ):
+    def test_dispatch_no_specialist_for_unrelated_category(self, fake_council_md: Path):
         result = dispatch("autocorrelation", path=fake_council_md)
         names = [p.name for p in result]
         assert "Viazovska" not in names

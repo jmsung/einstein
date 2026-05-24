@@ -20,9 +20,7 @@ RESULTS = "results/problem-3-autocorrelation"
 os.makedirs(RESULTS, exist_ok=True)
 
 f_orig = np.load(
-    os.path.expanduser(
-        "~/projects/einstein/cb/results/problem-3-autocorrelation/best_1600k.npy"
-    )
+    os.path.expanduser("~/projects/einstein/cb/results/problem-3-autocorrelation/best_1600k.npy")
 )
 SCORE_ORIG = fast_evaluate(f_orig)
 TARGET = 0.9627433187626762
@@ -144,11 +142,11 @@ for beta in [1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12]:
                 best_f = f.copy()
                 print(
                     f"  beta={beta:.0e} outer={outer}: {score:.16f} "
-                    f"(+{score-SCORE_ORIG:.2e}) [{time.time()-t0:.1f}s]"
+                    f"(+{score - SCORE_ORIG:.2e}) [{time.time() - t0:.1f}s]"
                 )
         if res.nit <= 2:
             break
-    print(f"  beta={beta:.0e}: {lam:.16f} nit={res.nit} [{time.time()-t0:.1f}s]")
+    print(f"  beta={beta:.0e}: {lam:.16f} nit={res.nit} [{time.time() - t0:.1f}s]")
 
 # ── Method 2: Adam with progressive beta cascade ──
 print("\n=== Method 2: Adam (extended cascade) ===")
@@ -187,7 +185,7 @@ for beta, n_iters, lr in [
     if score > best_score:
         best_score = score
         best_f = f.copy()
-    print(f"  beta={beta:.0e} lr={lr}: {score:.16f} [{time.time()-t0:.1f}s]")
+    print(f"  beta={beta:.0e} lr={lr}: {score:.16f} [{time.time() - t0:.1f}s]")
 
 # ── Method 3: Perturbation escape ──
 print("\n=== Method 3: Perturbation escape ===")
@@ -226,12 +224,12 @@ for trial in range(20):
         best_f = (w * w).copy()
         print(f"  trial {trial} (noise={noise_scale:.3f}): {score:.16f} ***NEW BEST***")
     elif trial % 5 == 0:
-        print(f"  trial {trial} (noise={noise_scale:.3f}): {score:.16f} [{time.time()-t0:.1f}s]")
+        print(f"  trial {trial} (noise={noise_scale:.3f}): {score:.16f} [{time.time() - t0:.1f}s]")
 
 # ── Summary ──
 total = time.time() - t0
-print(f"\n{'='*60}")
-print(f"PHASE 1 COMPLETE")
+print(f"\n{'=' * 60}")
+print("PHASE 1 COMPLETE")
 print(f"Original: {SCORE_ORIG:.16f}")
 print(f"Best:     {best_score:.16f}")
 print(f"Improvement: {best_score - SCORE_ORIG:+.2e}")

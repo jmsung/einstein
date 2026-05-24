@@ -33,8 +33,7 @@ def fetch_all_leaderboards(limit=10):
             snapshot[pid] = {
                 "title": p["title"],
                 "entries": [
-                    {"agent": s["agentName"], "score": s["score"], "id": s["id"]}
-                    for s in lb
+                    {"agent": s["agentName"], "score": s["score"], "id": s["id"]} for s in lb
                 ],
             }
         except Exception as e:
@@ -52,19 +51,29 @@ def diff_snapshots(old, new):
         title = new[pid]["title"]
         for agent, entry in new_entries.items():
             if agent not in old_entries:
-                changes.append({
-                    "type": "new_entry", "problem": pid, "title": title,
-                    "agent": agent, "score": entry["score"], "id": entry["id"],
-                })
+                changes.append(
+                    {
+                        "type": "new_entry",
+                        "problem": pid,
+                        "title": title,
+                        "agent": agent,
+                        "score": entry["score"],
+                        "id": entry["id"],
+                    }
+                )
             elif entry["score"] != old_entries[agent]["score"]:
-                changes.append({
-                    "type": "score_change", "problem": pid, "title": title,
-                    "agent": agent,
-                    "old_score": old_entries[agent]["score"],
-                    "new_score": entry["score"],
-                    "old_id": old_entries[agent]["id"],
-                    "new_id": entry["id"],
-                })
+                changes.append(
+                    {
+                        "type": "score_change",
+                        "problem": pid,
+                        "title": title,
+                        "agent": agent,
+                        "old_score": old_entries[agent]["score"],
+                        "new_score": entry["score"],
+                        "old_id": old_entries[agent]["id"],
+                        "new_id": entry["id"],
+                    }
+                )
     return changes
 
 
@@ -82,20 +91,24 @@ def print_snapshot_summary(snapshot):
 
 def print_changes(changes):
     ts = time.strftime("%Y-%m-%d %H:%M:%S")
-    print(f"\n{'='*60}", flush=True)
+    print(f"\n{'=' * 60}", flush=True)
     print(f"[{ts}] CHANGES DETECTED: {len(changes)}", flush=True)
-    print(f"{'='*60}", flush=True)
+    print(f"{'=' * 60}", flush=True)
     for c in changes:
         if c["type"] == "new_entry":
-            print(f"  NEW  P{c['problem']} {c['title']}: "
-                  f"{c['agent']} entered at {c['score']:.10f} (id={c['id']})",
-                  flush=True)
+            print(
+                f"  NEW  P{c['problem']} {c['title']}: "
+                f"{c['agent']} entered at {c['score']:.10f} (id={c['id']})",
+                flush=True,
+            )
         elif c["type"] == "score_change":
-            print(f"  UPD  P{c['problem']} {c['title']}: "
-                  f"{c['agent']} {c['old_score']:.10f} → {c['new_score']:.10f} "
-                  f"(id {c['old_id']}→{c['new_id']})",
-                  flush=True)
-    print(f"{'='*60}\n", flush=True)
+            print(
+                f"  UPD  P{c['problem']} {c['title']}: "
+                f"{c['agent']} {c['old_score']:.10f} → {c['new_score']:.10f} "
+                f"(id {c['old_id']}→{c['new_id']})",
+                flush=True,
+            )
+    print(f"{'=' * 60}\n", flush=True)
 
 
 def main():
@@ -114,12 +127,15 @@ def main():
     if args.once:
         return
 
-    print(f"\nPolling every {args.interval // 60} min for up to "
-          f"{args.max_checks} checks", flush=True)
+    print(
+        f"\nPolling every {args.interval // 60} min for up to {args.max_checks} checks", flush=True
+    )
 
     for check in range(1, args.max_checks + 1):
-        print(f"\n... waiting {args.interval // 60} min "
-              f"(check {check}/{args.max_checks}) ...", flush=True)
+        print(
+            f"\n... waiting {args.interval // 60} min (check {check}/{args.max_checks}) ...",
+            flush=True,
+        )
         time.sleep(args.interval)
 
         try:

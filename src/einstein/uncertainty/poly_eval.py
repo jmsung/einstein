@@ -4,6 +4,7 @@ Uses mpmath for exact coefficient solving + monomial conversion, then
 numpy.roots for companion-matrix root-finding. ~0.3s per evaluation,
 correct for all k values (unlike the grid-based fast evaluator).
 """
+
 import mpmath
 import numpy as np
 

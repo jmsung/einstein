@@ -7,6 +7,7 @@ import time
 
 import numpy as np
 import pytest
+
 from einstein.erdos import evaluate as exact_evaluate
 from einstein.erdos.fast import fast_evaluate
 
@@ -22,9 +23,9 @@ class TestFastMatchesArena:
         h = rng.uniform(0.1, 0.9, n)
         fast = fast_evaluate(h)
         exact = exact_evaluate({"values": h.tolist()})
-        assert fast == pytest.approx(exact, rel=1e-10), (
-            f"seed={seed}, n={n}: fast={fast}, exact={exact}"
-        )
+        assert fast == pytest.approx(
+            exact, rel=1e-10
+        ), f"seed={seed}, n={n}: fast={fast}, exact={exact}"
 
     def test_constant_half(self):
         """Constant h=0.5 → C=0.5."""

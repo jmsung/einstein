@@ -21,8 +21,11 @@ import numpy as np
 from scipy.spatial import ConvexHull
 
 from einstein.heilbronn_convex import (
-    arena_score, fast_score, all_triangle_areas, active_triples,
-    hull_vertex_indices, min_triangle_area
+    active_triples,
+    all_triangle_areas,
+    arena_score,
+    fast_score,
+    hull_vertex_indices,
 )
 from einstein.heilbronn_convex.evaluator import _TRIPLES
 from einstein.heilbronn_convex.optimizer import polish_slsqp
@@ -55,16 +58,16 @@ def compute_jacobian(pts, active_idx):
         pi, pj, pk = pts[i], pts[j], pts[k]
 
         # area = |pi[0]*(pj[1]-pk[1]) + pj[0]*(pk[1]-pi[1]) + pk[0]*(pi[1]-pj[1])| / 2
-        cross = pi[0]*(pj[1]-pk[1]) + pj[0]*(pk[1]-pi[1]) + pk[0]*(pi[1]-pj[1])
+        cross = pi[0] * (pj[1] - pk[1]) + pj[0] * (pk[1] - pi[1]) + pk[0] * (pi[1] - pj[1])
         sign = 1.0 if cross >= 0 else -1.0
 
         # d(area)/d(pi[0]) = sign * (pj[1] - pk[1]) / 2
-        J[row, 2*i]     = sign * (pj[1] - pk[1]) / 2
-        J[row, 2*i + 1] = sign * (pk[0] - pj[0]) / 2
-        J[row, 2*j]     = sign * (pk[1] - pi[1]) / 2
-        J[row, 2*j + 1] = sign * (pi[0] - pk[0]) / 2
-        J[row, 2*k]     = sign * (pi[1] - pj[1]) / 2
-        J[row, 2*k + 1] = sign * (pj[0] - pi[0]) / 2
+        J[row, 2 * i] = sign * (pj[1] - pk[1]) / 2
+        J[row, 2 * i + 1] = sign * (pk[0] - pj[0]) / 2
+        J[row, 2 * j] = sign * (pk[1] - pi[1]) / 2
+        J[row, 2 * j + 1] = sign * (pi[0] - pk[0]) / 2
+        J[row, 2 * k] = sign * (pi[1] - pj[1]) / 2
+        J[row, 2 * k + 1] = sign * (pj[0] - pi[0]) / 2
 
     return J
 
@@ -87,8 +90,7 @@ def null_space_escape(pts, rng, step_sizes, n_trials=1000):
     rank = np.sum(S > 1e-10)
     null_vecs = Vt[rank:]  # Null space basis
 
-    print(f"  Active: {len(active_idx)}, Jacobian rank: {rank}, "
-          f"Null dim: {len(null_vecs)}")
+    print(f"  Active: {len(active_idx)}, Jacobian rank: {rank}, Null dim: {len(null_vecs)}")
 
     if len(null_vecs) == 0:
         return pts, fast_score(pts)
@@ -138,16 +140,16 @@ def active_set_surgery(pts, rng, n_trials=500):
 
         # Find direction that increases this triple's area
         pi, pj, pk = pts[i], pts[j], pts[k]
-        cross = pi[0]*(pj[1]-pk[1]) + pj[0]*(pk[1]-pi[1]) + pk[0]*(pi[1]-pj[1])
+        cross = pi[0] * (pj[1] - pk[1]) + pj[0] * (pk[1] - pi[1]) + pk[0] * (pi[1] - pj[1])
         sign = 1.0 if cross >= 0 else -1.0
 
         # Gradient of area w.r.t. the chosen vertex
         if vertex == i:
-            grad = sign * np.array([pj[1]-pk[1], pk[0]-pj[0]]) / 2
+            grad = sign * np.array([pj[1] - pk[1], pk[0] - pj[0]]) / 2
         elif vertex == j:
-            grad = sign * np.array([pk[1]-pi[1], pi[0]-pk[0]]) / 2
+            grad = sign * np.array([pk[1] - pi[1], pi[0] - pk[0]]) / 2
         else:
-            grad = sign * np.array([pi[1]-pj[1], pj[0]-pi[0]]) / 2
+            grad = sign * np.array([pi[1] - pj[1], pj[0] - pi[0]]) / 2
 
         # Move in gradient direction with various scales
         for scale in [1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2]:
@@ -162,8 +164,10 @@ def active_set_surgery(pts, rng, n_trials=500):
                 best_score = score
                 best_pts = polished.copy()
                 at = active_triples(best_pts, rel_tol=1e-9)
-                print(f"    Surgery improvement! score={score:.16f} "
-                      f"scale={scale:.0e} active={len(at)}")
+                print(
+                    f"    Surgery improvement! score={score:.16f} "
+                    f"scale={scale:.0e} active={len(at)}"
+                )
 
     return best_pts, best_score
 
@@ -246,8 +250,8 @@ def deformation_search(pts, rng, n_trials=500):
             new_pts = pts.copy()
             for i in range(14):
                 x, y = centered[i]
-                new_pts[i, 0] = pts[i, 0] + eps[0]*x**2 + eps[1]*y**2 + eps[2]*x*y
-                new_pts[i, 1] = pts[i, 1] + eps[3]*x**2 + eps[4]*y**2 + eps[5]*x*y
+                new_pts[i, 0] = pts[i, 0] + eps[0] * x**2 + eps[1] * y**2 + eps[2] * x * y
+                new_pts[i, 1] = pts[i, 1] + eps[3] * x**2 + eps[4] * y**2 + eps[5] * x * y
         elif r < 0.75:
             # Radial scaling (expand/contract by distance from center)
             new_pts = pts.copy()
@@ -311,21 +315,19 @@ def main():
         sc = arena_score(pts)
         at = active_triples(pts, rel_tol=1e-9)
         hv = hull_vertex_indices(pts)
-        print(f"\n{name}: score={sc:.16f}  hull={len(hv)}+{14-len(hv)}  active={len(at)}")
+        print(f"\n{name}: score={sc:.16f}  hull={len(hv)}+{14 - len(hv)}  active={len(at)}")
 
     # Phase 1: Null space escape with LARGE steps
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Phase 1: Null space escape (large steps)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     step_sizes = [1e-6, 1e-5, 1e-4, 1e-3, 5e-3, 1e-2, 5e-2, 0.1, 0.3, 0.5, 1.0]
     for name, pts in starting_configs:
         if pts is None or time.time() - start > args.time * 0.3:
             break
         print(f"\n  From {name}:")
-        escaped, esc_score = null_space_escape(
-            pts, rng, step_sizes, n_trials=500
-        )
+        escaped, esc_score = null_space_escape(pts, rng, step_sizes, n_trials=500)
         results.append({"phase": f"nullspace-{name}", "score": esc_score})
         if esc_score > best_score:
             best_score = esc_score
@@ -333,9 +335,9 @@ def main():
             print(f"  → Best from null-space: {esc_score:.16f}")
 
     # Phase 2: Active set surgery
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Phase 2: Active set surgery")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     for name, pts in starting_configs:
         if pts is None or time.time() - start > args.time * 0.55:
@@ -348,9 +350,9 @@ def main():
             best_pts = surgered.copy()
 
     # Phase 3: Deformation search
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Phase 3: Continuous deformation search")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     for name, pts in starting_configs:
         if pts is None or time.time() - start > args.time * 0.8:
@@ -365,9 +367,9 @@ def main():
     # Phase 4: Combinatorial interior search from reference hull
     remaining = args.time - (time.time() - start)
     if remaining > 30 and pts_ref is not None:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Phase 4: Combinatorial interior search ({remaining:.0f}s)")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         n_trials = max(100, int(remaining * 5))
         combo_pts, combo_score = combinatorial_interior_search(
             pts_ref, rng, n_trials=min(n_trials, 5000)
@@ -380,9 +382,9 @@ def main():
 
     # Summary
     elapsed = time.time() - start
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"KKT ATTACK SUMMARY after {elapsed:.1f}s")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Best score: {best_score:.20f}")
     print(f"Arena #1:   {ARENA_BEST:.20f}")
     print(f"Threshold:  {SUBMIT_THRESHOLD:.20f}")

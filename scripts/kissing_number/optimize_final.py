@@ -43,7 +43,7 @@ def overlap_loss_fast(unit_vecs):
 
 
 def incremental_loss(vecs, idx, old_total, old_vec):
-    others = np.concatenate([vecs[:idx], vecs[idx+1:]], axis=0)
+    others = np.concatenate([vecs[:idx], vecs[idx + 1 :]], axis=0)
     old_cos = np.clip(old_vec @ others.T, -1.0, 1.0)
     old_d = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - old_cos))
     old_p = np.maximum(0.0, 2.0 - old_d)
@@ -100,7 +100,9 @@ def run(vecs, scale, n_iters, seed):
             elapsed = time.time() - t0
             rate = improvements / (it + 1) * 100
             exact = overlap_loss_exact(best_vecs)
-            print(f"  [{scale:.0e}] {it+1:>10,d} | exact {exact:.15f} | impr {improvements:>6d} ({rate:.3f}%) | {elapsed:.0f}s")
+            print(
+                f"  [{scale:.0e}] {it + 1:>10,d} | exact {exact:.15f} | impr {improvements:>6d} ({rate:.3f}%) | {elapsed:.0f}s"
+            )
 
     return best_vecs, best_loss, improvements
 
@@ -133,7 +135,7 @@ def main():
     ]
 
     for i, (scale, iters, seed) in enumerate(configs):
-        print(f"\n--- Round {i+1}/{len(configs)}: {scale:.0e}, {iters:,} ---")
+        print(f"\n--- Round {i + 1}/{len(configs)}: {scale:.0e}, {iters:,} ---")
         new_vecs, _, n_impr = run(best_vecs.copy(), scale, iters, seed)
         exact = overlap_loss_exact(new_vecs)
         print(f"  Exact: {exact:.15f} ({n_impr} improvements)")
@@ -143,11 +145,11 @@ def main():
             save_solution(best_vecs, best_score)
 
     final = overlap_loss_exact(best_vecs)
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Final:   {final:.15f}")
     print(f"Start:   {initial:.15f}")
     print(f"Delta from start: {initial - final:.2e}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 """Cycle through different n values, using fractional upsample/downsample as
 basin-breaking noise. Run smooth cascade at each n, keep global best.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,15 +24,21 @@ def cascade(v_np, betas, iters):
     v = torch.tensor(v_np.copy(), dtype=torch.float64, requires_grad=True)
     for beta in betas:
         opt = torch.optim.LBFGS(
-            [v], lr=1.0, max_iter=iters, tolerance_grad=1e-14,
-            tolerance_change=1e-18, history_size=100,
+            [v],
+            lr=1.0,
+            max_iter=iters,
+            tolerance_grad=1e-14,
+            tolerance_change=1e-18,
+            history_size=100,
             line_search_fn="strong_wolfe",
         )
+
         def closure():
             opt.zero_grad()
             loss = surrogate_v(v, beta, fft=True)
             loss.backward()
             return loss
+
         opt.step(closure)
     f = np.exp(v.detach().cpu().numpy()).astype(np.float64)
     return f, exact_score_f(f)
@@ -40,8 +47,9 @@ def cascade(v_np, betas, iters):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--warmstart", type=Path, required=True)
-    p.add_argument("--n-cycle", type=str, required=True,
-                   help="Comma-separated n values to cycle through")
+    p.add_argument(
+        "--n-cycle", type=str, required=True, help="Comma-separated n values to cycle through"
+    )
     p.add_argument("--cycles", type=int, default=5)
     p.add_argument("--iters", type=int, default=1200)
     p.add_argument("--beta", type=str, default="1e8,1e9,1e10,1e11,1e12")
@@ -80,10 +88,9 @@ def main():
             # Always advance current to the new cascaded result so the next
             # n value starts from the latest basin.
             f_current = f_new
-            print(f"  cycle={cyc} n={n_target:>6}  C={c_new:.18f}{tag}",
-                  flush=True)
+            print(f"  cycle={cyc} n={n_target:>6}  C={c_new:.18f}{tag}", flush=True)
 
-    print(f"\nBest C = {best_c:.18f}  at n={best_n}  ({time.time()-t0:.1f}s)")
+    print(f"\nBest C = {best_c:.18f}  at n={best_n}  ({time.time() - t0:.1f}s)")
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as fh:
         json.dump({"values": best_f.tolist(), "score": best_c, "n": best_n}, fh)

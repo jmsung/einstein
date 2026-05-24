@@ -123,7 +123,7 @@ def packet_ascent_cycle(
             n_improved += 1
             if verbose and gain > 1e-10:
                 print(
-                    f"    block {i:4d} [{s:6d}:{e:6d}] w={e-s:3d}: "
+                    f"    block {i:4d} [{s:6d}:{e:6d}] w={e - s:3d}: "
                     f"alpha={best_alpha:.6f}, dC={gain:+.2e}"
                 )
             C_current = best_C
@@ -136,7 +136,7 @@ def packet_ascent_cycle(
             rate = (i + 1) / elapsed
             eta = (len(blocks) - i - 1) / rate
             print(
-                f"    ... {i+1}/{len(blocks)} blocks, C={C_current:.13f}, "
+                f"    ... {i + 1}/{len(blocks)} blocks, C={C_current:.13f}, "
                 f"{rate:.0f} blocks/s, ETA {eta:.0f}s"
             )
 
@@ -164,7 +164,7 @@ def try_support_modifications(
             C_trial = score(f_trial)
             if C_trial > C_best:
                 if verbose:
-                    print(f"    extend_left block {i} [{s}:{e}]: dC={C_trial-C_best:+.2e}")
+                    print(f"    extend_left block {i} [{s}:{e}]: dC={C_trial - C_best:+.2e}")
                 C_best = C_trial
                 f_best = f_trial
                 n_improved += 1
@@ -176,7 +176,7 @@ def try_support_modifications(
             C_trial = score(f_trial)
             if C_trial > C_best:
                 if verbose:
-                    print(f"    extend_right block {i} [{s}:{e}]: dC={C_trial-C_best:+.2e}")
+                    print(f"    extend_right block {i} [{s}:{e}]: dC={C_trial - C_best:+.2e}")
                 C_best = C_trial
                 f_best = f_trial
                 n_improved += 1
@@ -188,7 +188,7 @@ def try_support_modifications(
             C_trial = score(f_trial)
             if C_trial > C_best:
                 if verbose:
-                    print(f"    contract_left block {i} [{s}:{e}]: dC={C_trial-C_best:+.2e}")
+                    print(f"    contract_left block {i} [{s}:{e}]: dC={C_trial - C_best:+.2e}")
                 C_best = C_trial
                 f_best = f_trial
                 n_improved += 1
@@ -200,7 +200,7 @@ def try_support_modifications(
             C_trial = score(f_trial)
             if C_trial > C_best:
                 if verbose:
-                    print(f"    contract_right block {i} [{s}:{e}]: dC={C_trial-C_best:+.2e}")
+                    print(f"    contract_right block {i} [{s}:{e}]: dC={C_trial - C_best:+.2e}")
                 C_best = C_trial
                 f_best = f_trial
                 n_improved += 1
@@ -227,8 +227,14 @@ def try_pairwise_rescale(
         return f_best, C_best, 0
 
     scale_pairs = [
-        (0.9, 1.1), (1.1, 0.9), (0.95, 1.05), (1.05, 0.95),
-        (0.8, 1.2), (1.2, 0.8), (0.5, 1.5), (1.5, 0.5),
+        (0.9, 1.1),
+        (1.1, 0.9),
+        (0.95, 1.05),
+        (1.05, 0.95),
+        (0.8, 1.2),
+        (1.2, 0.8),
+        (0.5, 1.5),
+        (1.5, 0.5),
     ]
 
     for trial in range(n_pairs):
@@ -244,10 +250,7 @@ def try_pairwise_rescale(
             if C_trial > C_best:
                 n_improved += 1
                 if verbose:
-                    print(
-                        f"    pair ({i},{j}) a=({a1:.2f},{a2:.2f}): "
-                        f"dC={C_trial - C_best:+.2e}"
-                    )
+                    print(f"    pair ({i},{j}) a=({a1:.2f},{a2:.2f}): dC={C_trial - C_best:+.2e}")
                 C_best = C_trial
                 f_best = f_trial
 
@@ -261,6 +264,7 @@ def verify_score(f: np.ndarray) -> float:
     """Verify using the full Simpson's rule formula (arena-compatible)."""
     sys.path.insert(0, str(ROOT / "src"))
     from einstein.autocorrelation.fast import fast_evaluate
+
     return fast_evaluate(f)
 
 
@@ -301,9 +305,9 @@ def main():
     # ------------------------------------------------------------------
     # Phase 1: Packet ascent with standard multipliers
     # ------------------------------------------------------------------
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Phase 1: Packet-coordinate ascent (standard multipliers)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     standard_alphas = np.array([0.5, 0.9, 0.95, 0.99, 1.01, 1.05, 1.1, 1.5, 2.0])
 
@@ -312,9 +316,7 @@ def main():
         print(f"\n  Cycle {cycle} ({len(blocks)} blocks)...")
         t0 = time.time()
 
-        f_new, C_new, n_impr = packet_ascent_cycle(
-            f_best, blocks, standard_alphas, verbose=True
-        )
+        f_new, C_new, n_impr = packet_ascent_cycle(f_best, blocks, standard_alphas, verbose=True)
         dt = time.time() - t0
         print(
             f"  Cycle {cycle}: C={C_new:.13f} "
@@ -332,21 +334,43 @@ def main():
     # ------------------------------------------------------------------
     # Phase 2: Extended multiplier search
     # ------------------------------------------------------------------
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Phase 2: Extended multiplier search")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
-    extended_alphas = np.array([
-        0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,
-        0.9, 0.95, 0.99, 0.995, 0.999,
-        1.001, 1.005, 1.01, 1.05, 1.1,
-        1.2, 1.3, 1.5, 1.7, 2.0, 3.0, 5.0,
-    ])
+    extended_alphas = np.array(
+        [
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            0.95,
+            0.99,
+            0.995,
+            0.999,
+            1.001,
+            1.005,
+            1.01,
+            1.05,
+            1.1,
+            1.2,
+            1.3,
+            1.5,
+            1.7,
+            2.0,
+            3.0,
+            5.0,
+        ]
+    )
 
     blocks = find_blocks(f_best, threshold=1e-10)
-    f_new, C_new, n_impr = packet_ascent_cycle(
-        f_best, blocks, extended_alphas, verbose=True
-    )
+    f_new, C_new, n_impr = packet_ascent_cycle(f_best, blocks, extended_alphas, verbose=True)
     print(f"  Extended: C={C_new:.13f} (dC={C_new - C_best:+.2e}), {n_impr} improved")
     if C_new > C_best:
         C_best = C_new
@@ -355,9 +379,9 @@ def main():
     # ------------------------------------------------------------------
     # Phase 3: Pairwise rescaling
     # ------------------------------------------------------------------
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Phase 3: Pairwise block rescaling (500 random pairs)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     blocks = find_blocks(f_best, threshold=1e-10)
     t0 = time.time()
@@ -371,16 +395,18 @@ def main():
     # ------------------------------------------------------------------
     # Phase 4: Support modifications
     # ------------------------------------------------------------------
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Phase 4: Support modifications (extend/contract)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     for round_i in range(2):
         blocks = find_blocks(f_best, threshold=1e-10)
         t0 = time.time()
         f_new, C_new, n_impr = try_support_modifications(f_best, blocks, verbose=True)
         dt = time.time() - t0
-        print(f"  Round {round_i}: C={C_new:.13f} (dC={C_new - C_best:+.2e}), {n_impr} improved [{dt:.0f}s]")
+        print(
+            f"  Round {round_i}: C={C_new:.13f} (dC={C_new - C_best:+.2e}), {n_impr} improved [{dt:.0f}s]"
+        )
         if C_new > C_best:
             C_best = C_new
             f_best = f_new
@@ -393,13 +419,13 @@ def main():
     C_final_verified = verify_score(f_best)
     improvement = C_best - C_initial
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("RESULTS")
     print(f"  Initial C (closed-form): {C_initial:.13f}")
     print(f"  Final C (closed-form):   {C_best:.13f}")
     print(f"  Final C (arena verify):  {C_final_verified:.13f}")
     print(f"  Improvement:             {improvement:+.2e}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     # Save
     out_tag = f"c2_n{n}_{C_best:.8f}_packet_ascent"

@@ -17,10 +17,7 @@ import modal
 
 app = modal.App("circles-rectangle-basin-search")
 
-image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install("numpy==1.26.4", "scipy==1.13.1")
-)
+image = modal.Image.debian_slim(python_version="3.11").pip_install("numpy==1.26.4", "scipy==1.13.1")
 
 N = 21
 KNOWN_BASIN_EXACT = 2.365832375910832741572  # exact from KKT solve
@@ -62,53 +59,60 @@ def run_batch(batch_id: int, n_trials: int, warmstart_circles: list | None = Non
         w = float(np.max(c[:, 0] + c[:, 2]))
 
         x0 = np.empty(3 * n + 1)
-        x0[:3*n] = c.flatten()
-        x0[3*n] = w
+        x0[: 3 * n] = c.flatten()
+        x0[3 * n] = w
 
         def obj(x):
-            return -float(np.sum(x[2:3*n:3]))
+            return -float(np.sum(x[2 : 3 * n : 3]))
 
         def obj_jac(x):
             g = np.zeros_like(x)
-            g[2:3*n:3] = -1.0
+            g[2 : 3 * n : 3] = -1.0
             return g
 
         def cons(x):
-            cc = x[:3*n].reshape(n, 3)
-            ww = x[3*n]
+            cc = x[: 3 * n].reshape(n, 3)
+            ww = x[3 * n]
             hh = 2.0 - ww
-            walls = np.concatenate([
-                cc[:, 0] - cc[:, 2],
-                ww - cc[:, 0] - cc[:, 2],
-                cc[:, 1] - cc[:, 2],
-                hh - cc[:, 1] - cc[:, 2],
-            ])
-            pairs = np.empty(n*(n-1)//2)
+            walls = np.concatenate(
+                [
+                    cc[:, 0] - cc[:, 2],
+                    ww - cc[:, 0] - cc[:, 2],
+                    cc[:, 1] - cc[:, 2],
+                    hh - cc[:, 1] - cc[:, 2],
+                ]
+            )
+            pairs = np.empty(n * (n - 1) // 2)
             k = 0
             for i in range(n):
-                for j in range(i+1, n):
-                    d = np.sqrt((cc[i,0]-cc[j,0])**2 + (cc[i,1]-cc[j,1])**2)
-                    pairs[k] = d - cc[i,2] - cc[j,2]
+                for j in range(i + 1, n):
+                    d = np.sqrt((cc[i, 0] - cc[j, 0]) ** 2 + (cc[i, 1] - cc[j, 1]) ** 2)
+                    pairs[k] = d - cc[i, 2] - cc[j, 2]
                     k += 1
             return np.concatenate([walls, pairs])
 
         try:
             res = minimize(
-                obj, x0, jac=obj_jac,
+                obj,
+                x0,
+                jac=obj_jac,
                 constraints=[{"type": "ineq", "fun": cons}],
-                bounds=[(0, 2)] * (3*n) + [(0.01, 1.99)],
+                bounds=[(0, 2)] * (3 * n) + [(0.01, 1.99)],
                 method="SLSQP",
                 options={"ftol": 1e-16, "maxiter": maxiter},
             )
-            polished = res.x[:3*n].reshape(n, 3)
-            w_out = res.x[3*n]
+            polished = res.x[: 3 * n].reshape(n, 3)
+            w_out = res.x[3 * n]
             score = float(np.sum(polished[:, 2]))
 
             # Verify strictly disjoint
             for i in range(n):
-                for j in range(i+1, n):
-                    d = np.sqrt((polished[i,0]-polished[j,0])**2 + (polished[i,1]-polished[j,1])**2)
-                    if d < polished[i,2] + polished[j,2] - 1e-9:
+                for j in range(i + 1, n):
+                    d = np.sqrt(
+                        (polished[i, 0] - polished[j, 0]) ** 2
+                        + (polished[i, 1] - polished[j, 1]) ** 2
+                    )
+                    if d < polished[i, 2] + polished[j, 2] - 1e-9:
                         return None
             return polished, w_out, score
         except Exception:
@@ -202,7 +206,7 @@ def run_batch(batch_id: int, n_trials: int, warmstart_circles: list | None = Non
             circles = ws.copy()
             sigma = 0.005 + 0.05 * trial_rng.random()
             circles[:, :2] += trial_rng.normal(0, sigma, (N, 2))
-            circles[:, 2] *= (1 + trial_rng.normal(0, sigma/5, N))
+            circles[:, 2] *= 1 + trial_rng.normal(0, sigma / 5, N)
             circles[:, 2] = np.maximum(circles[:, 2], 0.01)
         elif init_type == 1:
             # Hex grid
@@ -222,7 +226,7 @@ def run_batch(batch_id: int, n_trials: int, warmstart_circles: list | None = Non
                 if placed >= N:
                     break
                 r = trial_rng.uniform(0.04, 0.16)
-                cx = trial_rng.uniform(r, w_val/2)
+                cx = trial_rng.uniform(r, w_val / 2)
                 cy = trial_rng.uniform(r, h_val - r)
                 ok_l = ok_r = True
                 for k in range(placed):
@@ -256,16 +260,20 @@ def run_batch(batch_id: int, n_trials: int, warmstart_circles: list | None = Non
                 ws = np.array(warmstart_circles[0], dtype=np.float64)
                 circles = ws.copy()
                 # Scale to different aspect ratio
-                old_w = float(np.max(circles[:, 0] + circles[:, 2]) - np.min(circles[:, 0] - circles[:, 2]))
-                old_h = float(np.max(circles[:, 1] + circles[:, 2]) - np.min(circles[:, 1] - circles[:, 2]))
+                old_w = float(
+                    np.max(circles[:, 0] + circles[:, 2]) - np.min(circles[:, 0] - circles[:, 2])
+                )
+                old_h = float(
+                    np.max(circles[:, 1] + circles[:, 2]) - np.min(circles[:, 1] - circles[:, 2])
+                )
                 circles[:, 0] -= np.min(circles[:, 0] - circles[:, 2])
                 circles[:, 1] -= np.min(circles[:, 1] - circles[:, 2])
                 circles[:, 0] *= w_val / old_w
                 circles[:, 1] *= h_val / old_h
-                circles[:, 2] *= min(w_val/old_w, h_val/old_h)
+                circles[:, 2] *= min(w_val / old_w, h_val / old_h)
                 # Add noise
                 circles[:, :2] += trial_rng.normal(0, 0.02, (N, 2))
-                circles[:, 2] *= (1 + trial_rng.normal(0, 0.01, N))
+                circles[:, 2] *= 1 + trial_rng.normal(0, 0.01, N)
                 circles[:, 2] = np.maximum(circles[:, 2], 0.01)
         else:
             # Standard greedy
@@ -287,16 +295,20 @@ def run_batch(batch_id: int, n_trials: int, warmstart_circles: list | None = Non
             s = float(np.sum(c[:, 2]))
             pen = 0.0
             for i in range(N):
-                for j in range(i+1, N):
-                    d = np.hypot(c[i,0]-c[j,0], c[i,1]-c[j,1])
-                    gap = d - c[i,2] - c[j,2]
+                for j in range(i + 1, N):
+                    d = np.hypot(c[i, 0] - c[j, 0], c[i, 1] - c[j, 1])
+                    gap = d - c[i, 2] - c[j, 2]
                     if gap < 0:
                         pen += gap**2 * 1e6
                 cx, cy, r = c[i]
-                if cx - r < 0: pen += (cx-r)**2 * 1e6
-                if cx + r > ww: pen += (cx+r-ww)**2 * 1e6
-                if cy - r < 0: pen += (cy-r)**2 * 1e6
-                if cy + r > hh: pen += (cy+r-hh)**2 * 1e6
+                if cx - r < 0:
+                    pen += (cx - r) ** 2 * 1e6
+                if cx + r > ww:
+                    pen += (cx + r - ww) ** 2 * 1e6
+                if cy - r < 0:
+                    pen += (cy - r) ** 2 * 1e6
+                if cy + r > hh:
+                    pen += (cy + r - hh) ** 2 * 1e6
             return s - pen
 
         curr_val = penalty(curr, curr_w)
@@ -318,7 +330,7 @@ def run_batch(batch_id: int, n_trials: int, warmstart_circles: list | None = Non
             elif move == 2:
                 idx = trial_rng.integers(0, N)
                 scale = max(0.005 * (t / t_start), 1e-8)
-                trial_c[idx, 2] *= (1 + trial_rng.normal(0, scale))
+                trial_c[idx, 2] *= 1 + trial_rng.normal(0, scale)
                 trial_c[idx, 2] = max(trial_c[idx, 2], 0.001)
             elif move == 3:
                 i, j = trial_rng.choice(N, 2, replace=False)
@@ -349,14 +361,16 @@ def run_batch(batch_id: int, n_trials: int, warmstart_circles: list | None = Non
         is_novel = abs(score - KNOWN_BASIN_EXACT) > 1e-6 and score > 2.0
         is_better = score > KNOWN_BASIN_EXACT + 1e-10
 
-        results.append({
-            "trial": trial,
-            "status": "ok",
-            "score": score,
-            "sa_score": best_sa_val,
-            "novel": is_novel,
-            "better": is_better,
-        })
+        results.append(
+            {
+                "trial": trial,
+                "status": "ok",
+                "score": score,
+                "sa_score": best_sa_val,
+                "novel": is_novel,
+                "better": is_better,
+            }
+        )
 
         if score > best_score:
             best_score = score
@@ -427,9 +441,11 @@ def main():
             global_best_circles = res["best_circles"]
 
         elapsed = time.time() - t0
-        print(f"  Batch {i+1:2d}/{n_batches}: best={res['best_score']:.13f}  "
-              f"ok={res['n_ok']}  novel={res['n_novel']}  better={res['n_better']}  "
-              f"[{elapsed:.0f}s]")
+        print(
+            f"  Batch {i + 1:2d}/{n_batches}: best={res['best_score']:.13f}  "
+            f"ok={res['n_ok']}  novel={res['n_novel']}  better={res['n_better']}  "
+            f"[{elapsed:.0f}s]"
+        )
 
     print()
     print("=" * 60)
@@ -444,8 +460,9 @@ def main():
 
     if all_scores:
         import numpy as np
+
         scores = np.array(all_scores)
-        print(f"\nScore distribution:")
+        print("\nScore distribution:")
         print(f"  min:    {scores.min():.13f}")
         print(f"  median: {np.median(scores):.13f}")
         print(f"  max:    {scores.max():.13f}")
@@ -460,7 +477,7 @@ def main():
                 basins.append(s)
         print(f"  Distinct basins (>1e-6 apart): {len(basins)}")
         for k, b in enumerate(basins[:10]):
-            print(f"    basin {k+1}: {b:.13f}  Δknown={b-KNOWN_BASIN_EXACT:+.4e}")
+            print(f"    basin {k + 1}: {b:.13f}  Δknown={b - KNOWN_BASIN_EXACT:+.4e}")
 
     if global_best_circles is not None:
         out = results_dir / "gpu-basin-search-best.json"

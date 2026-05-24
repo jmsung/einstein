@@ -3,6 +3,7 @@
 Use the softmax-weighted gradient across the top-K active peaks to step
 in the direction that reduces all near-active conv values simultaneously.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,6 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from einstein.first_autocorrelation.evaluator import verify_and_compute
 from einstein.first_autocorrelation.optimizer import (
     exact_score_f,
     surrogate_v,
@@ -25,22 +25,29 @@ def cascade(v_np, betas, iters):
     v = torch.tensor(v_np.copy(), dtype=torch.float64, requires_grad=True)
     for beta in betas:
         opt = torch.optim.LBFGS(
-            [v], lr=1.0, max_iter=iters, tolerance_grad=1e-15,
-            tolerance_change=1e-20, history_size=200,
+            [v],
+            lr=1.0,
+            max_iter=iters,
+            tolerance_grad=1e-15,
+            tolerance_change=1e-20,
+            history_size=200,
             line_search_fn="strong_wolfe",
         )
+
         def closure():
             opt.zero_grad()
             loss = surrogate_v(v, beta, fft=True)
             loss.backward()
             return loss
+
         opt.step(closure)
     f = np.exp(v.detach().cpu().numpy()).astype(np.float64)
     return f, exact_score_f(f)
 
 
-def multi_peak_polish(f: np.ndarray, iters: int, topk: int = 200,
-                     lr0: float = 1e-4) -> tuple[np.ndarray, float]:
+def multi_peak_polish(
+    f: np.ndarray, iters: int, topk: int = 200, lr0: float = 1e-4
+) -> tuple[np.ndarray, float]:
     """Simultaneous subgradient on top-K peaks of f★f."""
     f = f.astype(np.float64).copy()
     n = len(f)
@@ -79,7 +86,7 @@ def multi_peak_polish(f: np.ndarray, iters: int, topk: int = 200,
             lo = max(0, ti - (n - 1))
             hi = min(n - 1, ti)
             j_idx = ti - np.arange(lo, hi + 1)
-            mirror_sum[lo:hi+1] += wi * f[j_idx]
+            mirror_sum[lo : hi + 1] += wi * f[j_idx]
             c_sum += wi * ratios[ti]
         grad = (2.0 * mirror_sum) / (s * s * dx) - (2.0 * c_sum) / s
 
@@ -114,8 +121,9 @@ def multi_peak_polish(f: np.ndarray, iters: int, topk: int = 200,
                 break
 
         if it % 20 == 0:
-            print(f"    polish iter={it:>4} C={best_c:.18f} lr={lr:.2e} "
-                  f"gnorm={gnorm:.2e}", flush=True)
+            print(
+                f"    polish iter={it:>4} C={best_c:.18f} lr={lr:.2e} gnorm={gnorm:.2e}", flush=True
+            )
 
     return best_f, best_c
 
@@ -133,6 +141,7 @@ def main():
     f = np.array(data["values"], dtype=np.float64)
     if len(f) != args.n:
         from einstein.first_autocorrelation.optimizer import upsample
+
         f = upsample(f, args.n)
     c = exact_score_f(f)
     print(f"Initial: n={args.n} C={c:.18f}")
@@ -150,7 +159,7 @@ def main():
         if c_cas < best_c:
             best_c = c_cas
             best_f = f.copy()
-            print(f"  * NEW BEST")
+            print("  * NEW BEST")
 
         print(f"--- round {r}: multi-peak polish ---")
         f, c_pol = multi_peak_polish(f, iters=100, topk=200, lr0=1e-5)
@@ -158,13 +167,12 @@ def main():
         if c_pol < best_c:
             best_c = c_pol
             best_f = f.copy()
-            print(f"  * NEW BEST")
+            print("  * NEW BEST")
 
-    print(f"\nBest C = {best_c:.18f}  ({time.time()-t0:.1f}s)")
+    print(f"\nBest C = {best_c:.18f}  ({time.time() - t0:.1f}s)")
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as fh:
-        json.dump({"values": best_f.tolist(), "score": best_c, "n": args.n},
-                  fh)
+        json.dump({"values": best_f.tolist(), "score": best_c, "n": args.n}, fh)
     print(f"Saved: {args.out}")
 
 

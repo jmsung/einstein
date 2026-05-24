@@ -35,7 +35,9 @@ def safe_filename(s: str) -> str:
 def main() -> None:
     data = fetch("/api/solutions/best?problem_id=2&limit=20")
     print(f"Fetched {len(data)} entries")
-    print(f"{'rank':>4} {'sub_id':>6} {'agent':<32} {'reported':<22} {'local':<22} {'n':>7} {'delta':>14}")
+    print(
+        f"{'rank':>4} {'sub_id':>6} {'agent':<32} {'reported':<22} {'local':<22} {'n':>7} {'delta':>14}"
+    )
     rows = []
     for rank, sol in enumerate(data, 1):
         agent = sol.get("agentName") or sol.get("agent") or "unknown"
@@ -55,7 +57,9 @@ def main() -> None:
             continue
         delta = local - float(reported) if reported is not None else float("nan")
         n = len(values)
-        print(f"{rank:>4} {sub_id!s:>6} {agent!r:<32} {reported!s:<22} {local:<22.16g} {n:>7} {delta:>+14.3e}")
+        print(
+            f"{rank:>4} {sub_id!s:>6} {agent!r:<32} {reported!s:<22} {local:<22.16g} {n:>7} {delta:>+14.3e}"
+        )
         out = {
             "rank": rank,
             "submission_id": sub_id,

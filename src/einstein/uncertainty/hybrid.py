@@ -8,6 +8,7 @@ Performance: ~9s per eval (vs ~85s for full sympy real_roots).
 Accuracy: matches exact verifier to ~1e-14.
 Key advantage: catches ALL far sign changes — no grid sampling.
 """
+
 import sys
 
 if hasattr(sys, "set_int_max_str_digits"):

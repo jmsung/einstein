@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from einstein.autocorrelation.fast import fast_evaluate, diagnose
+from einstein.autocorrelation.fast import diagnose, fast_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
@@ -55,7 +55,7 @@ def coeffs_to_f(coeffs, basis):
     return np.maximum(np.dot(coeffs, basis), 0)
 
 
-def optimize_chebyshev(n_points, n_coeffs, n_iters=5000, device='cpu', seed=42):
+def optimize_chebyshev(n_points, n_coeffs, n_iters=5000, device="cpu", seed=42):
     """Optimize in the Chebyshev basis via Adam."""
     basis, x = build_basis(n_points, n_coeffs)
     basis_t = torch.tensor(basis, dtype=torch.float32, device=device)
@@ -105,7 +105,7 @@ def optimize_chebyshev(n_points, n_coeffs, n_iters=5000, device='cpu', seed=42):
     return best_f, verified, c.detach().cpu().numpy()
 
 
-def optimize_free_basis(n_points, n_basis, n_iters=5000, device='cpu', seed=42):
+def optimize_free_basis(n_points, n_basis, n_iters=5000, device="cpu", seed=42):
     """Optimize with learned Gaussian-bump basis (position + width + height)."""
     torch.manual_seed(seed)
 
@@ -137,7 +137,7 @@ def optimize_free_basis(n_points, n_basis, n_iters=5000, device='cpu', seed=42):
         h = torch.clamp(heights, min=0)
         f = torch.zeros(n_points, device=device, dtype=torch.float32)
         for i in range(n_basis):
-            f = f + h[i] * torch.exp(-0.5 * ((x - centers[i]) / w[i])**2)
+            f = f + h[i] * torch.exp(-0.5 * ((x - centers[i]) / w[i]) ** 2)
         f = torch.clamp(f, min=0).unsqueeze(0)
 
         F = torch.fft.rfft(f, n=nfft, dim=1)
@@ -172,7 +172,7 @@ def main():
     print("Chebyshev / Low-Dim Basis Optimizer")
     print("=" * 60)
 
-    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
     print(f"Device: {device}")
     results = []
 
@@ -233,7 +233,7 @@ def main():
                     best_s = cv
                     best_f = h[0].detach().cpu().numpy().copy()
                     best_f = np.maximum(best_f, 0)
-                print(f"    iter {t+1}: C={best_s:.8f}")
+                print(f"    iter {t + 1}: C={best_s:.8f}")
 
         verified = fast_evaluate(best_f)
         print(f"  Arcsine+Adam n={n}: C={verified:.8f}")
@@ -241,7 +241,7 @@ def main():
 
     # Ranking
     results.sort(key=lambda x: x[1], reverse=True)
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Top 10:")
     for name, score, _ in results[:10]:
         print(f"  {score:.8f}  {name}")

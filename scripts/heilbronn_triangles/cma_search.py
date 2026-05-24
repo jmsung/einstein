@@ -8,7 +8,6 @@ so this tests whether there's a qualitatively different basin we're missing.
 from __future__ import annotations
 
 import argparse
-import itertools
 import json
 import math
 import sys
@@ -19,13 +18,17 @@ import cma
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-from einstein.heilbronn_triangles import arena_score  # noqa: E402
 
 # Import helpers from the multistart_search module
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from multistart_search import (  # noqa: E402
-    N, SQRT3, TRIPLES, CENTROID,
-    slsqp_polish, project_into_triangle, init_random_uniform,
+    CENTROID,
+    SQRT3,
+    TRIPLES,
+    N,
+    init_random_uniform,
+    project_into_triangle,
+    slsqp_polish,
 )
 
 
@@ -44,7 +47,9 @@ def soft_score(x, beta=5000.0):
     i = TRIPLES[:, 0]
     j = TRIPLES[:, 1]
     k = TRIPLES[:, 2]
-    p1 = pts[i]; p2 = pts[j]; p3 = pts[k]
+    p1 = pts[i]
+    p2 = pts[j]
+    p3 = pts[k]
     cross = (
         p1[:, 0] * (p2[:, 1] - p3[:, 1])
         + p2[:, 0] * (p3[:, 1] - p1[:, 1])
@@ -61,9 +66,9 @@ def soft_score(x, beta=5000.0):
 
 def cma_run(x0, sigma0, maxiter=200, beta=5000):
     es = cma.CMAEvolutionStrategy(
-        x0, sigma0,
-        {"maxiter": maxiter, "verbose": -9, "popsize": 30, "tolx": 1e-10,
-         "tolfun": 1e-12},
+        x0,
+        sigma0,
+        {"maxiter": maxiter, "verbose": -9, "popsize": 30, "tolx": 1e-10, "tolfun": 1e-12},
     )
     while not es.stop():
         X = es.ask()
@@ -92,7 +97,9 @@ def main():
         if strat == 0:
             x0 = init_random_uniform(seed + trial)
         elif strat == 1:
-            chr_path = Path("results/problem-15-heilbronn-triangles/rank01_CHRONOS_0.0365298898800302.json")
+            chr_path = Path(
+                "results/problem-15-heilbronn-triangles/rank01_CHRONOS_0.0365298898800302.json"
+            )
             pts = np.array(json.loads(chr_path.read_text())["data"]["points"])
             x0 = pts.flatten() + 0.15 * np.random.default_rng(seed + trial).standard_normal(22)
         elif strat == 2:
@@ -102,21 +109,19 @@ def main():
             r1 = 0.2
             for k in range(3):
                 a = k * 2 * math.pi / 3 + rng.uniform(0, 0.1)
-                pts.append([CENTROID[0] + r1 * math.cos(a),
-                            CENTROID[1] + r1 * math.sin(a)])
+                pts.append([CENTROID[0] + r1 * math.cos(a), CENTROID[1] + r1 * math.sin(a)])
             r2 = 0.4
             for k in range(3):
                 a = k * 2 * math.pi / 3 + rng.uniform(0, 0.1) + math.pi / 3
-                pts.append([CENTROID[0] + r2 * math.cos(a),
-                            CENTROID[1] + r2 * math.sin(a)])
+                pts.append([CENTROID[0] + r2 * math.cos(a), CENTROID[1] + r2 * math.sin(a)])
             for k in range(3):
                 a = k * 2 * math.pi / 3 + rng.uniform(0, 0.1)
                 r = 0.3
-                pts.append([CENTROID[0] + r * math.cos(a),
-                            CENTROID[1] + r * math.sin(a)])
+                pts.append([CENTROID[0] + r * math.cos(a), CENTROID[1] + r * math.sin(a)])
             # Extra point to get 11
-            pts.append([CENTROID[0] + 0.02 * rng.uniform(-1, 1),
-                        CENTROID[1] + 0.02 * rng.uniform(-1, 1)])
+            pts.append(
+                [CENTROID[0] + 0.02 * rng.uniform(-1, 1), CENTROID[1] + 0.02 * rng.uniform(-1, 1)]
+            )
             x0 = np.array(pts).flatten()
         else:
             # Large random perturbation
@@ -141,8 +146,10 @@ def main():
             best_score = s
             best_pts = pts
             marker = " ★"
-        print(f"[{time.time()-t0:6.1f}s] cma-t{trial:3d} strat={strat} s={s:.17g}{marker}",
-              flush=True)
+        print(
+            f"[{time.time() - t0:6.1f}s] cma-t{trial:3d} strat={strat} s={s:.17g}{marker}",
+            flush=True,
+        )
 
     print(f"\nCMA-ES best: {best_score!r}")
     print(f"Delta to CHRONOS: {best_score - 0.036529889880030156:.3e}")

@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-from einstein.heilbronn_convex import arena_score, fast_score, active_triples, hull_vertex_indices
+from einstein.heilbronn_convex import active_triples, arena_score, hull_vertex_indices
 from einstein.heilbronn_convex.optimizer import polish_slsqp, random_convex_init
 
 RESULTS = Path("results/problem-16-heilbronn-convex")
@@ -35,6 +35,7 @@ def load_reference():
 def fetch_our_best():
     """Fetch our best submitted score from the arena API."""
     import urllib.request
+
     try:
         req = urllib.request.Request(
             "https://einsteinarena.com/api/solutions/best?problem_id=16&limit=20"
@@ -51,6 +52,7 @@ def fetch_our_best():
 def fetch_min_improvement():
     """Fetch per-problem minImprovement from API."""
     import urllib.request
+
     try:
         req = urllib.request.Request("https://einsteinarena.com/api/problems")
         resp = urllib.request.urlopen(req, timeout=10)
@@ -129,8 +131,10 @@ def main():
             at = active_triples(polished, rel_tol=1e-9)
             hv = hull_vertex_indices(polished)
             delta = score - ref_score
-            print(f"  [{trials:5d}] NEW BEST! {score:.20f}  "
-                  f"delta={delta:+.3e}  hull={len(hv)}+{14-len(hv)}  active={len(at)}")
+            print(
+                f"  [{trials:5d}] NEW BEST! {score:.20f}  "
+                f"delta={delta:+.3e}  hull={len(hv)}+{14 - len(hv)}  active={len(at)}"
+            )
 
             # Save immediately
             RESULTS.mkdir(parents=True, exist_ok=True)

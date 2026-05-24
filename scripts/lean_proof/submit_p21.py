@@ -14,7 +14,13 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from check_submission import API_URL, load_api_key, load_agent_name, check_leaderboard, print_leaderboard
+from check_submission import (
+    API_URL,
+    check_leaderboard,
+    load_agent_name,
+    load_api_key,
+    print_leaderboard,
+)
 
 PROBLEM_ID = 21
 

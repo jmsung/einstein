@@ -88,7 +88,7 @@ def dinkelbach_obj_and_grad(w, lam, beta, n):
     dphi_dc = dnumer_dc - lam * ddenom_dc
 
     dphi_df = 2.0 * fftconvolve(dphi_dc, f[::-1], mode="full")
-    dphi_df = dphi_df[n - 1: 2 * n - 1]
+    dphi_df = dphi_df[n - 1 : 2 * n - 1]
     dobj_dw = -(-dphi_df * 2.0 * w)  # minimize -phi
     # Actually: obj = -phi, so dobj/dw = -dphi_df * 2w
     dobj_dw = dphi_df * (-2.0 * w)
@@ -119,9 +119,16 @@ def optimize_lbfgs(n, f_init, beta_schedule, outer_iters, maxiter_lbfgs, time_li
 
             result = minimize(
                 lambda ww: dinkelbach_obj_and_grad(ww, lam, beta, n),
-                w, method="L-BFGS-B", jac=True,
-                options={"maxiter": maxiter_lbfgs, "maxfun": maxiter_lbfgs * 3,
-                         "ftol": 1e-15, "gtol": 1e-10, "maxls": 40},
+                w,
+                method="L-BFGS-B",
+                jac=True,
+                options={
+                    "maxiter": maxiter_lbfgs,
+                    "maxfun": maxiter_lbfgs * 3,
+                    "ftol": 1e-15,
+                    "gtol": 1e-10,
+                    "maxls": 40,
+                },
             )
             w = result.x
             f_current = w * w
@@ -212,7 +219,7 @@ def main():
     print(f"  Phase 1 best: C={best_score:.8f}")
 
     # Phase 2: Deep optimization
-    print(f"\n--- Phase 2: Deep optimization ---")
+    print("\n--- Phase 2: Deep optimization ---")
     beta_deep = (5000, 20000, 100000, 500000, 2000000)
     stale = 0
 
@@ -236,17 +243,17 @@ def main():
             best_f = f.copy()
             stale = 0
             nnz = np.count_nonzero(f > 1e-10)
-            print(f"  R{rnd+1}: C={score:.8f} nnz={nnz} *** NEW BEST")
+            print(f"  R{rnd + 1}: C={score:.8f} nnz={nnz} *** NEW BEST")
         else:
             stale += 1
             if rnd % 10 == 0:
-                print(f"  R{rnd+1}: C={score:.8f} (best={best_score:.8f})")
+                print(f"  R{rnd + 1}: C={score:.8f} (best={best_score:.8f})")
 
     print(f"\n  Phase 2 best: C={best_score:.8f}")
     save_result(best_f, best_score, "dinkelbach_n2000")
 
     # Phase 3: Ultra-high beta refinement
-    print(f"\n--- Phase 3: Ultra-high beta ---")
+    print("\n--- Phase 3: Ultra-high beta ---")
     beta_ultra = (500000, 5000000, 50000000)
     for rnd in range(20):
         if time.time() - t_start > 275:
@@ -261,12 +268,12 @@ def main():
         if score > best_score + 1e-7:
             best_score = score
             best_f = f.copy()
-            print(f"  R{rnd+1}: C={score:.8f} *** NEW BEST")
+            print(f"  R{rnd + 1}: C={score:.8f} *** NEW BEST")
 
     # Final verification
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Final Verification")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     arena_score = evaluate({"values": best_f.tolist()})
     print(f"  Fast:  C={fast_evaluate(best_f):.10f}")

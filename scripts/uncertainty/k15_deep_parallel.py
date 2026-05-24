@@ -7,6 +7,7 @@ Each worker takes a starting position and runs:
 
 Saves verified improvements to results/ and results/polish-trail/.
 """
+
 import argparse
 import json
 import os
@@ -20,6 +21,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 sys.path.insert(0, "src")
 
 import multiprocessing as mp
+
 import numpy as np
 
 from einstein.uncertainty.fast import fast_evaluate
@@ -195,14 +197,16 @@ def main():
     log(f"Refining {len(starts)} promising starts")
 
     rng = np.random.default_rng(2026)
-    work = [(s[0], s[1], args.p1_fevals, args.p2_fevals, int(rng.integers(1, 2**31))) for s in starts]
+    work = [
+        (s[0], s[1], args.p1_fevals, args.p2_fevals, int(rng.integers(1, 2**31))) for s in starts
+    ]
 
     t0 = time.time()
     results = []
     with mp.Pool(args.workers) as pool:
         for i, res in enumerate(pool.imap_unordered(deep_refine, work)):
             score, gaps, tag, err = res
-            log(f"  [{i + 1}/{len(work)}] {tag}: {score:.14f} {('('+err+')') if err else ''}")
+            log(f"  [{i + 1}/{len(work)}] {tag}: {score:.14f} {('(' + err + ')') if err else ''}")
             results.append((score, gaps, tag))
     log(f"\nPool finished in {time.time() - t0:.0f}s")
 

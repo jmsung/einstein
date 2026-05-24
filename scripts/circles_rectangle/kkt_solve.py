@@ -39,13 +39,14 @@ def solve_kkt():
     n_vars = 3 * n + 1
 
     # Convert initial guess to mpmath
-    x0 = [mpmath.mpf(str(x0_np[i // 3, i % 3])) if i < 3 * n
-           else mpmath.mpf(str(w_init))
-           for i in range(n_vars)]
+    x0 = [
+        mpmath.mpf(str(x0_np[i // 3, i % 3])) if i < 3 * n else mpmath.mpf(str(w_init))
+        for i in range(n_vars)
+    ]
 
     def get_circle(x, i):
         """Return (cx, cy, r) for circle i."""
-        return x[3*i], x[3*i+1], x[3*i+2]
+        return x[3 * i], x[3 * i + 1], x[3 * i + 2]
 
     def equations(x):
         """64 constraint equations that must equal zero at the solution."""
@@ -60,29 +61,29 @@ def solve_kkt():
             dx = cx_i - cx_j
             dy = cy_i - cy_j
             # Use squared form to avoid sqrt: d^2 - (r_i+r_j)^2 = 0
-            eqs.append(dx*dx + dy*dy - (r_i + r_j)**2)
+            eqs.append(dx * dx + dy * dy - (r_i + r_j) ** 2)
 
         # Wall constraints
         for idx, wall_type in active_walls:
             cx, cy, r = get_circle(x, idx)
-            if wall_type == 'L':    # cx - r = 0
+            if wall_type == "L":  # cx - r = 0
                 eqs.append(cx - r)
-            elif wall_type == 'R':  # w - cx - r = 0
+            elif wall_type == "R":  # w - cx - r = 0
                 eqs.append(w - cx - r)
-            elif wall_type == 'B':  # cy - r = 0
+            elif wall_type == "B":  # cy - r = 0
                 eqs.append(cy - r)
-            elif wall_type == 'T':  # h - cy - r = 0
+            elif wall_type == "T":  # h - cy - r = 0
                 eqs.append(h - cy - r)
 
         return eqs
 
     print(f"Solving {len(active_pairs)} pair + {len(active_walls)} wall = {n_vars} equations")
     print(f"Precision: {mpmath.mp.dps} decimal digits")
-    print(f"Initial score (SLSQP float64): {sum(float(x0[3*i+2]) for i in range(n)):.18f}")
+    print(f"Initial score (SLSQP float64): {sum(float(x0[3 * i + 2]) for i in range(n)):.18f}")
     print()
 
     # Newton iteration
-    from mpmath import matrix, lu_solve, norm
+    from mpmath import lu_solve, matrix, norm
 
     x = matrix(x0)
     max_iter = 100
@@ -95,17 +96,19 @@ def solve_kkt():
         residual = float(norm(F_mat, 2))
 
         # Score
-        score_mp = sum(x_list[3*i+2] for i in range(n))
+        score_mp = sum(x_list[3 * i + 2] for i in range(n))
 
         if iteration % 5 == 0 or residual < 1e-60:
-            print(f"  iter {iteration:3d}: residual={residual:.4e}  score={mpmath.nstr(score_mp, 25)}")
+            print(
+                f"  iter {iteration:3d}: residual={residual:.4e}  score={mpmath.nstr(score_mp, 25)}"
+            )
 
-        if residual < mpmath.mpf(10)**(-70):
+        if residual < mpmath.mpf(10) ** (-70):
             print(f"\n  Converged at iter {iteration}!")
             break
 
         # Compute Jacobian numerically
-        eps = mpmath.mpf(10)**(-60)
+        eps = mpmath.mpf(10) ** (-60)
         J = mpmath.matrix(n_vars, n_vars)
         for j in range(n_vars):
             x_plus = [x[i] for i in range(n_vars)]
@@ -132,11 +135,11 @@ def solve_kkt():
 
     # Extract solution
     x_final = [x[i] for i in range(n_vars)]
-    w_final = x_final[3*n]
+    w_final = x_final[3 * n]
     h_final = mpmath.mpf(2) - w_final
 
     # Compute score in high precision
-    score_hp = sum(x_final[3*i+2] for i in range(n))
+    score_hp = sum(x_final[3 * i + 2] for i in range(n))
     print(f"\nHigh-precision score: {mpmath.nstr(score_hp, 40)}")
     print(f"Width:               {mpmath.nstr(w_final, 40)}")
     print(f"Height:              {mpmath.nstr(h_final, 40)}")
@@ -144,9 +147,9 @@ def solve_kkt():
     # Round to float64
     circles_f64 = np.zeros((n, 3))
     for i in range(n):
-        circles_f64[i, 0] = float(x_final[3*i])
-        circles_f64[i, 1] = float(x_final[3*i+1])
-        circles_f64[i, 2] = float(x_final[3*i+2])
+        circles_f64[i, 0] = float(x_final[3 * i])
+        circles_f64[i, 1] = float(x_final[3 * i + 1])
+        circles_f64[i, 2] = float(x_final[3 * i + 2])
 
     score_f64 = float(np.sum(circles_f64[:, 2]))
     w_f64 = float(w_final)
@@ -157,17 +160,21 @@ def solve_kkt():
     print(f"Δ vs arena #1:       {score_f64 - ARENA_BEST:+.4e}")
 
     # Verify strict disjointness in float64
-    worst_gap = float('inf')
+    worst_gap = float("inf")
     for i in range(n):
-        for j in range(i+1, n):
-            d = np.sqrt((circles_f64[i,0]-circles_f64[j,0])**2 +
-                       (circles_f64[i,1]-circles_f64[j,1])**2)
-            gap = d - circles_f64[i,2] - circles_f64[j,2]
+        for j in range(i + 1, n):
+            d = np.sqrt(
+                (circles_f64[i, 0] - circles_f64[j, 0]) ** 2
+                + (circles_f64[i, 1] - circles_f64[j, 1]) ** 2
+            )
+            gap = d - circles_f64[i, 2] - circles_f64[j, 2]
             worst_gap = min(worst_gap, gap)
 
     h_f64 = 2.0 - w_f64
     perim = 2 * (w_f64 + h_f64)
-    print(f"\nFloat64 worst gap:   {worst_gap:.4e}  ({'DISJOINT' if worst_gap >= 0 else 'OVERLAP'})")
+    print(
+        f"\nFloat64 worst gap:   {worst_gap:.4e}  ({'DISJOINT' if worst_gap >= 0 else 'OVERLAP'})"
+    )
     print(f"Float64 perimeter:   {perim:.18f}")
 
     if score_f64 > ARENA_BEST and worst_gap >= 0:
@@ -183,12 +190,14 @@ def solve_kkt():
         circles_safe = circles_f64.copy()
         circles_safe[:, 2] = np.nextafter(circles_safe[:, 2], 0)  # round down by 1 ULP
         score_safe = float(np.sum(circles_safe[:, 2]))
-        worst_safe = float('inf')
+        worst_safe = float("inf")
         for i in range(n):
-            for j in range(i+1, n):
-                d = np.sqrt((circles_safe[i,0]-circles_safe[j,0])**2 +
-                           (circles_safe[i,1]-circles_safe[j,1])**2)
-                gap = d - circles_safe[i,2] - circles_safe[j,2]
+            for j in range(i + 1, n):
+                d = np.sqrt(
+                    (circles_safe[i, 0] - circles_safe[j, 0]) ** 2
+                    + (circles_safe[i, 1] - circles_safe[j, 1]) ** 2
+                )
+                gap = d - circles_safe[i, 2] - circles_safe[j, 2]
                 worst_safe = min(worst_safe, gap)
         print(f"After 1-ULP radius shrink: score={score_safe:.18f}  gap={worst_safe:.4e}")
         if score_safe > ARENA_BEST and worst_safe >= 0:

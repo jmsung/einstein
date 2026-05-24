@@ -67,8 +67,10 @@ def verify_api(api_key=None):
 
     key = api_key or load_api_key()
     if not key:
-        print("ERROR: No API key found (set EINSTEIN_ARENA_API_KEY or "
-              "~/.config/einsteinarena/credentials.json)")
+        print(
+            "ERROR: No API key found (set EINSTEIN_ARENA_API_KEY or "
+            "~/.config/einsteinarena/credentials.json)"
+        )
         sys.exit(1)
     print(f"  API key: ...{key[-8:]}")
 
@@ -86,12 +88,10 @@ def print_leaderboard(lb, agent_name="JSAgent"):
     """Print leaderboard, marking our agent."""
     for i, sol in enumerate(lb):
         marker = " <<<" if sol["agentName"] == agent_name else ""
-        print(f"  #{i+1} {sol['agentName']:<20} {sol['score']:.13f}{marker}",
-              flush=True)
+        print(f"  #{i + 1} {sol['agentName']:<20} {sol['score']:.13f}{marker}", flush=True)
 
 
-def wait_for_leaderboard(problem_id, agent_name="JSAgent",
-                         interval=300, max_checks=12):
+def wait_for_leaderboard(problem_id, agent_name="JSAgent", interval=300, max_checks=12):
     """Poll leaderboard until agent's score CHANGES. Blocking, streams output.
 
     Records the agent's initial score, then polls until it changes.
@@ -128,8 +128,9 @@ def wait_for_leaderboard(problem_id, agent_name="JSAgent",
 
     for check in range(1, max_checks + 1):
         if check > 1:
-            print(f"\n... waiting {interval // 60} min (check {check}/{max_checks}) ...",
-                  flush=True)
+            print(
+                f"\n... waiting {interval // 60} min (check {check}/{max_checks}) ...", flush=True
+            )
             time.sleep(interval)
 
         try:
@@ -145,17 +146,24 @@ def wait_for_leaderboard(problem_id, agent_name="JSAgent",
         for entry in lb:
             if entry["agentName"] == agent_name:
                 if initial_score is None:
-                    print(f"\n=== {agent_name} appeared on leaderboard! "
-                          f"Score: {entry['score']:.13f} ===", flush=True)
+                    print(
+                        f"\n=== {agent_name} appeared on leaderboard! "
+                        f"Score: {entry['score']:.13f} ===",
+                        flush=True,
+                    )
                     return entry
                 if entry["score"] != initial_score:
-                    print(f"\n=== Score updated! {initial_score:.13f} → "
-                          f"{entry['score']:.13f} ===", flush=True)
+                    print(
+                        f"\n=== Score updated! {initial_score:.13f} → {entry['score']:.13f} ===",
+                        flush=True,
+                    )
                     return entry
                 break
 
     print(f"\nTimed out after {max_checks} checks. No score change detected.")
-    print(f"Check manually: uv run python scripts/check_submission.py --problem {problem_id} --once")
+    print(
+        f"Check manually: uv run python scripts/check_submission.py --problem {problem_id} --once"
+    )
     return None
 
 
@@ -178,8 +186,9 @@ def main():
         print(f"\n{agent_name}: {'FOUND' if found else 'not on board'}")
         return
 
-    wait_for_leaderboard(args.problem, agent_name,
-                         interval=args.interval, max_checks=args.max_checks)
+    wait_for_leaderboard(
+        args.problem, agent_name, interval=args.interval, max_checks=args.max_checks
+    )
 
 
 if __name__ == "__main__":

@@ -17,7 +17,9 @@ RESULTS_DIR = "results/problem-6-kissing-number"
 
 _SOTA_FILE = (
     pathlib.Path(__file__).parent.parent.parent
-    / "results" / "problem-6-kissing-number" / "sota_vectors.json"
+    / "results"
+    / "problem-6-kissing-number"
+    / "sota_vectors.json"
 )
 _sota_data = json.loads(_SOTA_FILE.read_text()) if _SOTA_FILE.exists() else None
 
@@ -66,8 +68,9 @@ def test_identical_vectors_high_penalty():
 
 def test_two_opposite_vectors_no_penalty():
     """Two antipodal vectors have distance 4, no penalty."""
-    vecs = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=float)
+    vecs = np.array(
+        [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=float
+    )
     loss = overlap_loss(vecs)
     assert loss == 0.0
 
@@ -137,9 +140,7 @@ def test_sota_reproduces_score():
     score = _sota_data["score"]
     our_score = evaluate({"vectors": vecs.tolist()})
     # Match to 8 decimal places (arena uses float64)
-    assert abs(our_score - score) < 1e-8, (
-        f"Our score {our_score} != arena score {score}"
-    )
+    assert abs(our_score - score) < 1e-8, f"Our score {our_score} != arena score {score}"
 
 
 @_SKIP_SOTA
@@ -148,9 +149,7 @@ def test_sota_fast_matches():
     vecs = np.array(_sota_data["vectors"], dtype=np.float64)
     score = _sota_data["score"]
     fast_score = overlap_loss_fast(vecs)
-    assert abs(fast_score - score) < 1e-6, (
-        f"Fast score {fast_score} != arena score {score}"
-    )
+    assert abs(fast_score - score) < 1e-6, f"Fast score {fast_score} != arena score {score}"
 
 
 @_SKIP_SOTA

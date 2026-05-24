@@ -126,7 +126,7 @@ def main() -> None:
     lb = check_leaderboard(PROBLEM_ID, limit=5)
     for i, sol in enumerate(lb):
         marker = " <-- us" if sol["agentName"] == agent_name else ""
-        print(f"  #{i+1} {sol['agentName']:<26} {sol['score']:.15e}{marker}")
+        print(f"  #{i + 1} {sol['agentName']:<26} {sol['score']:.15e}{marker}")
 
     our_prev = next((s["score"] for s in lb if s["agentName"] == agent_name), None)
     rank3 = lb[2]["score"] if len(lb) >= 3 else None

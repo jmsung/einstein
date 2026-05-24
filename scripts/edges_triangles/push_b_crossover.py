@@ -13,7 +13,6 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from einstein.edges_triangles.evaluator import compute_score, compute_densities, turan_row  # noqa: E402
 from optimize import (  # noqa: E402
     _score_from_arrays,
     _segment_area,
@@ -22,6 +21,12 @@ from optimize import (  # noqa: E402
     golden_section_sweep,
     redistribute,
     sa_perturb,
+)
+
+from einstein.edges_triangles.evaluator import (  # noqa: E402
+    compute_densities,
+    compute_score,
+    turan_row,
 )
 
 
@@ -58,19 +63,21 @@ def main():
 
     # Also fetch additional ranks from the leaderboard
     import urllib.request
+
     sys.path.insert(0, "scripts")
     from check_submission import API_URL, load_api_key
+
     api_key = load_api_key()
     req = urllib.request.Request(
-        f'{API_URL}/solutions/best?problem_id=13&limit=5',
-        headers={'Authorization': f'Bearer {api_key}'},
+        f"{API_URL}/solutions/best?problem_id=13&limit=5",
+        headers={"Authorization": f"Bearer {api_key}"},
     )
     with urllib.request.urlopen(req) as resp:
         sols = json.loads(resp.read())
 
     # rank3 warm-start
     rank3 = sols[2]
-    w3 = np.array(rank3['data']['weights'], dtype=np.float64)
+    w3 = np.array(rank3["data"]["weights"], dtype=np.float64)
     w3 = np.maximum(w3, 0)
     w3 /= w3.sum(axis=1, keepdims=True)
     xs3 = np.sort(1 - np.sum(w3**2, axis=1))
@@ -80,7 +87,7 @@ def main():
 
     # rank4 warm-start
     rank4 = sols[3]
-    w4 = np.array(rank4['data']['weights'], dtype=np.float64)
+    w4 = np.array(rank4["data"]["weights"], dtype=np.float64)
     w4 = np.maximum(w4, 0)
     w4 /= w4.sum(axis=1, keepdims=True)
     xs4 = np.sort(1 - np.sum(w4**2, axis=1))
@@ -103,13 +110,13 @@ def main():
 
     initial_super = _score_from_arrays(xs, ys)
     print(f"Super-set initial score: {initial_super:.14f}")
-    print(f"  ({len(xs)-2} data points — too many, need to prune to 500)")
+    print(f"  ({len(xs) - 2} data points — too many, need to prune to 500)")
 
     # Greedy prune: remove the point whose removal increases area least
     print("\nGreedy pruning to 500 points...")
     while len(xs) - 2 > 500:
         best_idx = -1
-        best_delta = float('inf')
+        best_delta = float("inf")
         # Skip bipartite points (xs[i] <= 0.5)
         for i in range(1, len(xs) - 1):
             if xs[i] <= 0.5:
@@ -127,7 +134,7 @@ def main():
         xs = np.delete(xs, best_idx)
         ys = np.delete(ys, best_idx)
         if (len(xs) - 2) % 50 == 0:
-            print(f"  {len(xs)-2} pts: {_score_from_arrays(xs, ys):.14f}")
+            print(f"  {len(xs) - 2} pts: {_score_from_arrays(xs, ys):.14f}")
 
     after_prune = _score_from_arrays(xs, ys)
     print(f"After pruning: {after_prune:.14f}")
@@ -135,7 +142,9 @@ def main():
     # Polish
     print("\nPolishing pruned configuration...")
     xs, ys = coordinate_descent(xs, ys, n_iters=20)
-    xs, ys = coordinate_descent(xs, ys, n_iters=50, step_fracs=[0.001, 0.0003, 0.0001, 0.00003, 0.00001])
+    xs, ys = coordinate_descent(
+        xs, ys, n_iters=50, step_fracs=[0.001, 0.0003, 0.0001, 0.00003, 0.00001]
+    )
     xs, ys = golden_section_sweep(xs, ys, n_sweeps=100)
     for _ in range(2):
         xs, ys = redistribute(xs, ys)
@@ -143,11 +152,15 @@ def main():
     xs, ys = basin_hopping_optimize(xs, ys, n_iter=50, temp=1e-8, seed=999)
     xs, ys = golden_section_sweep(xs, ys, n_sweeps=80)
     for mega in range(3):
-        xs, ys = sa_perturb(xs, ys, n_rounds=15, n_perturbations=80, seed=mega * 11 + 5, block_size=5)
+        xs, ys = sa_perturb(
+            xs, ys, n_rounds=15, n_perturbations=80, seed=mega * 11 + 5, block_size=5
+        )
         for _ in range(2):
             xs, ys = redistribute(xs, ys)
             xs, ys = golden_section_sweep(xs, ys, n_sweeps=50)
-        xs, ys = coordinate_descent(xs, ys, n_iters=15, step_fracs=[0.0001, 0.00003, 0.00001, 0.000003, 0.000001])
+        xs, ys = coordinate_descent(
+            xs, ys, n_iters=15, step_fracs=[0.0001, 0.00003, 0.00001, 0.000003, 0.000001]
+        )
 
     final = _score_from_arrays(xs, ys)
     print(f"\nFINAL crossover: {final:.14f}")

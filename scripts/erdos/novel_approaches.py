@@ -10,16 +10,17 @@ These are approaches NOT tried in prior work (34+ experiments):
 """
 
 import sys
+
 sys.path.insert(0, "src")
 
 import json
 import time
-import numpy as np
 from pathlib import Path
-from scipy.signal import fftconvolve
-from scipy.optimize import minimize, differential_evolution, linprog
 
-from einstein.erdos.fast import fast_evaluate
+import numpy as np
+from scipy.optimize import minimize
+from scipy.signal import fftconvolve
+
 from einstein.erdos.evaluator import evaluate as exact_evaluate
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
@@ -57,8 +58,7 @@ def normalize(h):
 # ============================================================
 # 1. Variable-width piecewise constant
 # ============================================================
-def piecewise_variable_width(n_pieces=50, n_eval=600, n_iters=5000,
-                              time_limit=120, seed=0):
+def piecewise_variable_width(n_pieces=50, n_eval=600, n_iters=5000, time_limit=120, seed=0):
     """Optimize a piecewise constant function with variable piece widths.
 
     Parameters: heights h_i and widths w_i (i=1..n_pieces).
@@ -67,6 +67,7 @@ def piecewise_variable_width(n_pieces=50, n_eval=600, n_iters=5000,
     Integral constraint: sum(h_i * w_i) = 1.
     """
     import torch
+
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     dtype = torch.float32
     torch.manual_seed(seed)
@@ -142,7 +143,7 @@ def piecewise_variable_width(n_pieces=50, n_eval=600, n_iters=5000,
                     best_h_vec = h_vec.detach().cpu().numpy().astype(np.float64)
                     best_h_vec = normalize(best_h_vec)
                     best_score = fast_eval(best_h_vec)
-                print(f"  iter {it+1}: C={best_score:.13f}")
+                print(f"  iter {it + 1}: C={best_score:.13f}")
 
     return best_h_vec, best_score
 
@@ -251,7 +252,7 @@ def binary_search_high_n(n=2000, n_trials=100, time_limit=120, seed=0):
                 h[i], h[j] = 0.0, 1.0
 
         if (trial + 1) % 10 == 0:
-            print(f"  trial {trial+1}: best={best_score:.13f}")
+            print(f"  trial {trial + 1}: best={best_score:.13f}")
 
     return best_h, best_score
 
@@ -290,10 +291,11 @@ def lbfgsb_smooth_max(h_init, beta=1000, time_limit=120):
         return smooth_max
 
     result = minimize(
-        objective, h_init,
-        method='L-BFGS-B',
+        objective,
+        h_init,
+        method="L-BFGS-B",
         bounds=[(0, 1)] * n,
-        options={'maxiter': 5000, 'ftol': 1e-15, 'gtol': 1e-12},
+        options={"maxiter": 5000, "ftol": 1e-15, "gtol": 1e-12},
     )
 
     h_best = normalize(result.x)
@@ -304,10 +306,10 @@ def lbfgsb_smooth_max(h_init, beta=1000, time_limit=120):
 # ============================================================
 # 5. Multi-resolution interpolation trick
 # ============================================================
-def multi_resolution_combine(h_600, n_values=[300, 400, 500, 700, 800],
-                              time_limit=120, seed=0):
+def multi_resolution_combine(h_600, n_values=[300, 400, 500, 700, 800], time_limit=120, seed=0):
     """Optimize at multiple resolutions, upsample all to n=600, average the best."""
     import torch
+
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     dtype = torch.float32
 
@@ -384,8 +386,7 @@ def multi_resolution_combine(h_600, n_values=[300, 400, 500, 700, 800],
 # ============================================================
 # 6. Gradient-free coordinate descent with restart
 # ============================================================
-def coordinate_descent_restart(h_init, n_restarts=10, n_iters=100000,
-                                time_limit=300, seed=0):
+def coordinate_descent_restart(h_init, n_restarts=10, n_iters=100000, time_limit=300, seed=0):
     """Coordinate descent with periodic random restarts from best."""
     rng = np.random.default_rng(seed)
     global_best_score = fast_eval(h_init)
@@ -466,8 +467,9 @@ def main():
     print("\n--- Variable-width piecewise constant ---")
     for n_pieces in [20, 50, 100]:
         t0 = time.time()
-        h, s = piecewise_variable_width(n_pieces=n_pieces, n_eval=600,
-                                         n_iters=3000, time_limit=60, seed=42)
+        h, s = piecewise_variable_width(
+            n_pieces=n_pieces, n_eval=600, n_iters=3000, time_limit=60, seed=42
+        )
         if h is not None:
             elapsed = time.time() - t0
             print(f"  {n_pieces} pieces: {s:.13f} ({elapsed:.0f}s)")
@@ -477,7 +479,7 @@ def main():
     print("\n--- Spectral construction ---")
     t0 = time.time()
     h, s = spectral_construction(n=600, seed=42)
-    print(f"  Spectral: {s:.13f} ({time.time()-t0:.0f}s)")
+    print(f"  Spectral: {s:.13f} ({time.time() - t0:.0f}s)")
     results["spectral"] = (h, s)
 
     # 3. Binary search
@@ -485,7 +487,7 @@ def main():
     for n in [600, 1000, 2000]:
         t0 = time.time()
         h, s = binary_search_high_n(n=n, n_trials=20, time_limit=60, seed=42)
-        print(f"  Binary n={n}: {s:.13f} ({time.time()-t0:.0f}s)")
+        print(f"  Binary n={n}: {s:.13f} ({time.time() - t0:.0f}s)")
         results[f"binary_n{n}"] = (h, s)
 
     # 4. L-BFGS-B smooth max
@@ -493,22 +495,21 @@ def main():
     for beta in [100, 1000, 10000]:
         t0 = time.time()
         h, s = lbfgsb_smooth_max(h_sota.copy(), beta=beta, time_limit=60)
-        print(f"  beta={beta}: {s:.13f} ({time.time()-t0:.0f}s)")
+        print(f"  beta={beta}: {s:.13f} ({time.time() - t0:.0f}s)")
         results[f"lbfgsb_beta{beta}"] = (h, s)
 
     # 5. Multi-resolution combine
     print("\n--- Multi-resolution combination ---")
     t0 = time.time()
     h, s = multi_resolution_combine(h_sota, time_limit=120, seed=42)
-    print(f"  Multi-res: {s:.13f} ({time.time()-t0:.0f}s)")
+    print(f"  Multi-res: {s:.13f} ({time.time() - t0:.0f}s)")
     results["multi_res"] = (h, s)
 
     # 6. Coordinate descent with restarts
     print("\n--- Coordinate descent with restarts ---")
     t0 = time.time()
-    h, s = coordinate_descent_restart(h_sota, n_restarts=5, n_iters=50000,
-                                       time_limit=180, seed=42)
-    print(f"  Coord descent: {s:.13f} ({time.time()-t0:.0f}s)")
+    h, s = coordinate_descent_restart(h_sota, n_restarts=5, n_iters=50000, time_limit=180, seed=42)
+    print(f"  Coord descent: {s:.13f} ({time.time() - t0:.0f}s)")
     results["coord_descent"] = (h, s)
 
     # Summary
@@ -529,7 +530,8 @@ def main():
         print(f"Exact verification: {exact:.16f}")
         result = {
             "problem": "erdos-minimum-overlap",
-            "n_points": len(best_h), "score": float(exact),
+            "n_points": len(best_h),
+            "score": float(exact),
             "values": [round(float(v), 14) for v in best_h],
             "tag": f"novel_{best_name}",
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),

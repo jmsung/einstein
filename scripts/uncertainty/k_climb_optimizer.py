@@ -11,19 +11,24 @@ Gap reparameterization: optimize gaps g_i = z_{i+1} - z_i instead of
 root positions directly. This eliminates the ordering constraint and
 minimum separation constraint, converting to simple box constraints.
 """
+
 import sys
+
 sys.path.insert(0, "src")
 
 import json
 import time
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 from scipy.optimize import minimize
+
 from einstein.uncertainty.fast import fast_evaluate
 from einstein.uncertainty.hybrid import hybrid_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
+
 
 def _load_best():
     """Load best verified roots from results/ (gitignored)."""
@@ -48,10 +53,11 @@ def log(msg):
 
 # ── Gap reparameterization ──────────────────────────────────────────────────
 
+
 def roots_to_gaps(roots):
     """Convert sorted root positions to gaps: [z0, z1-z0, z2-z1, ...]."""
     roots = sorted(roots)
-    return [roots[0]] + [roots[i] - roots[i-1] for i in range(1, len(roots))]
+    return [roots[0]] + [roots[i] - roots[i - 1] for i in range(1, len(roots))]
 
 
 def gaps_to_roots(gaps):
@@ -72,6 +78,7 @@ def obj_gaps(gaps, dps=30):
 
 # ── k+1 root insertion candidates ──────────────────────────────────────────
 
+
 def generate_k14_candidates(base_roots):
     """Generate starting points for k=14 by inserting a root into k=13."""
     candidates = []
@@ -83,7 +90,7 @@ def generate_k14_candidates(base_roots):
         # Ensure minimum spacing
         valid = True
         for i in range(len(roots) - 1):
-            if roots[i+1] - roots[i] < 0.5:
+            if roots[i + 1] - roots[i] < 0.5:
                 valid = False
                 break
         if valid:
@@ -93,7 +100,7 @@ def generate_k14_candidates(base_roots):
     gap_positions = [60, 65, 70, 75, 80]
     for pos in gap_positions:
         roots = sorted(base_roots + [pos])
-        valid = all(roots[i+1] - roots[i] >= 0.5 for i in range(len(roots)-1))
+        valid = all(roots[i + 1] - roots[i] >= 0.5 for i in range(len(roots) - 1))
         if valid:
             candidates.append((roots, f"gap_{pos}"))
 
@@ -101,7 +108,7 @@ def generate_k14_candidates(base_roots):
     near_positions = [1.5, 2.0, 2.5, 7.5, 8.0, 9.0]
     for pos in near_positions:
         roots = sorted(base_roots + [pos])
-        valid = all(roots[i+1] - roots[i] >= 0.5 for i in range(len(roots)-1))
+        valid = all(roots[i + 1] - roots[i] >= 0.5 for i in range(len(roots) - 1))
         if valid and roots[0] > 0:
             candidates.append((roots, f"near_{pos}"))
 
@@ -109,7 +116,7 @@ def generate_k14_candidates(base_roots):
     mid_positions = [25, 28, 33, 45, 55]
     for pos in mid_positions:
         roots = sorted(base_roots + [pos])
-        valid = all(roots[i+1] - roots[i] >= 0.5 for i in range(len(roots)-1))
+        valid = all(roots[i + 1] - roots[i] >= 0.5 for i in range(len(roots) - 1))
         if valid:
             candidates.append((roots, f"mid_{pos}"))
 
@@ -118,6 +125,7 @@ def generate_k14_candidates(base_roots):
 
 # ── Optimization ────────────────────────────────────────────────────────────
 
+
 def optimize_from_start(roots, tag, max_nm_iter=3000, max_hc_rounds=100):
     """Optimize roots using NM in gap space + hillclimb, with hybrid verification."""
     k = len(roots)
@@ -125,9 +133,12 @@ def optimize_from_start(roots, tag, max_nm_iter=3000, max_hc_rounds=100):
 
     # Phase 1: Nelder-Mead in gap space
     gaps = roots_to_gaps(roots)
-    res = minimize(obj_gaps, gaps, method="Nelder-Mead",
-                  options={"maxiter": max_nm_iter, "xatol": 1e-14, "fatol": 1e-16,
-                           "adaptive": True})
+    res = minimize(
+        obj_gaps,
+        gaps,
+        method="Nelder-Mead",
+        options={"maxiter": max_nm_iter, "xatol": 1e-14, "fatol": 1e-16, "adaptive": True},
+    )
     nm_roots = gaps_to_roots(sorted(res.x) if res.x[0] > 0 else list(res.x))
     nm_score = res.fun
     log(f"    NM: {nm_score:.14f}")
@@ -140,14 +151,14 @@ def optimize_from_start(roots, tag, max_nm_iter=3000, max_hc_rounds=100):
         improved = False
         for i in range(k):
             for d in [1, -1]:
-                for s in [step, step*0.5, step*0.1, step*2, step*5]:
+                for s in [step, step * 0.5, step * 0.1, step * 2, step * 5]:
                     trial = list(roots)
                     trial[i] += d * s
                     if trial[i] <= 0 or trial[i] > 300:
                         continue
-                    if i > 0 and trial[i] <= trial[i-1] + 0.01:
+                    if i > 0 and trial[i] <= trial[i - 1] + 0.01:
                         continue
-                    if i < k-1 and trial[i] >= trial[i+1] - 0.01:
+                    if i < k - 1 and trial[i] >= trial[i + 1] - 0.01:
                         continue
                     score = fast_evaluate(trial)
                     if score < best - 1e-16:
@@ -205,20 +216,20 @@ def verify_and_save(roots, fast_score, tag):
 
 
 def main():
-    log("="*70)
+    log("=" * 70)
     log("K-CLIMBING OPTIMIZER")
     log(f"Starting: k=13, S={fast_evaluate(BEST_K13):.16f}")
     log(f"Target: {TARGET}")
-    log("="*70)
+    log("=" * 70)
 
     best_score = fast_evaluate(BEST_K13)
     best_roots = list(BEST_K13)
     best_k = 13
 
     # Try k=14
-    log(f"\n{'='*50}")
+    log(f"\n{'=' * 50}")
     log("Phase 1: k=14 — insert 14th root into k=13 best")
-    log(f"{'='*50}")
+    log(f"{'=' * 50}")
 
     candidates = generate_k14_candidates(BEST_K13)
     log(f"Generated {len(candidates)} starting configurations")
@@ -248,19 +259,19 @@ def main():
                     best_k = 14
                     log(f"    *** NEW BEST: k=14, S={verified:.14f} ***")
                 if verified < TARGET:
-                    log(f"    !!! BEAT TARGET !!!")
+                    log("    !!! BEAT TARGET !!!")
 
     k14_results.sort(key=lambda x: x[0])
     log(f"\nBest k=14 (fast): {k14_results[0][0]:.14f} ({k14_results[0][2]})")
 
     # If k=14 improved, try k=15
     if best_k == 14:
-        log(f"\n{'='*50}")
+        log(f"\n{'=' * 50}")
         log("Phase 2: k=15 — insert 15th root into k=14 best")
-        log(f"{'='*50}")
+        log(f"{'=' * 50}")
         # Similar logic...
 
-    log(f"\n{'='*70}")
+    log(f"\n{'=' * 70}")
     log(f"FINAL: k={best_k}, S={best_score:.16f}")
     if best_score < TARGET:
         log("SUCCESS!")

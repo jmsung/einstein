@@ -4,12 +4,15 @@ Usage:
   uv run python scripts/uncertainty/submit.py                # dry run (default)
   uv run python scripts/uncertainty/submit.py --submit       # actual submission
 """
+
 import sys
+
 sys.path.insert(0, "src")
 
 import argparse
 import json
 from pathlib import Path
+
 from einstein.uncertainty.fast import fast_evaluate
 
 PROBLEM_ID = 9
@@ -43,6 +46,7 @@ def load_api_key():
 def submit_solution(roots, api_key, problem_id=PROBLEM_ID):
     """Submit to arena API. Returns response dict."""
     import requests
+
     url = "https://einsteinarena.com/api/solutions"
     payload = {
         "problem_id": problem_id,
@@ -62,12 +66,12 @@ def main():
     roots, score = load_best_verified()
     fast = fast_evaluate(roots)
 
-    print("="*60)
+    print("=" * 60)
     print(f"Best verified: S={score:.10f} (k={len(roots)})")
     print(f"Fast check:    S={fast:.10f}")
     print(f"Match: {'PASS' if abs(fast - score) < 1e-8 else 'FAIL'}")
     print(f"Roots valid: {all(0 < r <= 300 for r in roots)}")
-    print("="*60)
+    print("=" * 60)
 
     if not args.submit:
         print("DRY RUN — add --submit to actually submit")

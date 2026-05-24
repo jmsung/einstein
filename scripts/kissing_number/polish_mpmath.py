@@ -22,8 +22,8 @@ import json
 import os
 from pathlib import Path
 
-import numpy as np
 import mpmath as mp
+import numpy as np
 
 from einstein.kissing_number.evaluator import overlap_loss
 
@@ -150,13 +150,13 @@ def main() -> None:
             v = v_new
             ai_new, aj_new, ap_new = active_pairs(v)
             print(
-                f"  round {r+1}: improved → {new_score:.15e}  active={len(ai_new)} (was {len(ai)})",
+                f"  round {r + 1}: improved → {new_score:.15e}  active={len(ai_new)} (was {len(ai)})",
                 flush=True,
             )
-            save_best(best_v, best_score, tag=f"r{r+1}")
+            save_best(best_v, best_score, tag=f"r{r + 1}")
         elif (r + 1) % 20 == 0:
             print(
-                f"  round {r+1}: no improvement (best={best_score:.15e}, active={len(ai)})",
+                f"  round {r + 1}: no improvement (best={best_score:.15e}, active={len(ai)})",
                 flush=True,
             )
 

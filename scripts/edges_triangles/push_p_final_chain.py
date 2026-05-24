@@ -5,7 +5,6 @@ shuffle and adjacent-pair-swap perturbations and periodic boundary snap.
 Time-bounded 15 min.
 """
 
-import json
 import sys
 import time
 from pathlib import Path
@@ -13,11 +12,15 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
-from push_g_bounded import lbfgs_polish_bounded, perturb_log_gaps, save_solution, true_score  # noqa: E402
+from push_g_bounded import (  # noqa: E402
+    lbfgs_polish_bounded,
+    perturb_log_gaps,
+    save_solution,
+    true_score,
+)
 from push_h_aggressive import (  # noqa: E402
     perturb_adjacent_pair_swap_or_replace,
     perturb_block_shuffle,
@@ -54,7 +57,7 @@ def main():
                     best = pol.copy()
                     best_score = sc
                     improvements += 1
-                    print(f"  s={seed:3d} lg n={noise:.3f}: {sc:.14f} (+{sc-init_score:.3e})")
+                    print(f"  s={seed:3d} lg n={noise:.3f}: {sc:.14f} (+{sc - init_score:.3e})")
             except Exception:
                 pass
 
@@ -67,7 +70,7 @@ def main():
                     best = pol.copy()
                     best_score = sc
                     improvements += 1
-                    print(f"  s={seed:3d} bs w={w:3d}:  {sc:.14f} (+{sc-init_score:.3e})")
+                    print(f"  s={seed:3d} bs w={w:3d}:  {sc:.14f} (+{sc - init_score:.3e})")
             except Exception:
                 pass
 
@@ -80,7 +83,7 @@ def main():
                     best = pol.copy()
                     best_score = sc
                     improvements += 1
-                    print(f"  s={seed:3d} ps n={n:2d}:   {sc:.14f} (+{sc-init_score:.3e})")
+                    print(f"  s={seed:3d} ps n={n:2d}:   {sc:.14f} (+{sc - init_score:.3e})")
             except Exception:
                 pass
 
@@ -94,14 +97,14 @@ def main():
                     best = pol.copy()
                     best_score = sc
                     improvements += 1
-                    print(f"  s={seed:3d} snap: {sc:.14f} (+{sc-init_score:.3e})")
+                    print(f"  s={seed:3d} snap: {sc:.14f} (+{sc - init_score:.3e})")
             except Exception:
                 pass
 
-    print(f"\n=== DONE ===")
-    print(f"Seeds processed: {seed+1}")
+    print("\n=== DONE ===")
+    print(f"Seeds processed: {seed + 1}")
     print(f"Improvements: {improvements}")
-    print(f"Elapsed: {time.time()-t0:.0f}s")
+    print(f"Elapsed: {time.time() - t0:.0f}s")
     print(f"Initial: {init_score:.14f}")
     print(f"Final  : {best_score:.14f}")
     print(f"Gain   : {best_score - init_score:+.3e}")

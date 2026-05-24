@@ -172,7 +172,7 @@ def riemannian_gd(
                 best_loss = loss
                 best_vecs = vecs.copy()
                 if verbose:
-                    print(f"  RGD iter {it+1}: {loss:.14f} (improved)")
+                    print(f"  RGD iter {it + 1}: {loss:.14f} (improved)")
             lr *= decay
 
     return best_vecs, best_loss
@@ -224,7 +224,7 @@ def micro_perturbation(
             elapsed = time.time() - t0
             rate = improvements / (it + 1) * 100
             print(
-                f"  iter {it+1:>7d} | loss {best_loss:.14f} | "
+                f"  iter {it + 1:>7d} | loss {best_loss:.14f} | "
                 f"improvements {improvements} ({rate:.2f}%) | {elapsed:.0f}s"
             )
 
@@ -236,7 +236,7 @@ def _incremental_loss(vecs: np.ndarray, idx: int, old_total: float, old_vec: np.
 
     Only recalculates pairs involving idx (O(n) instead of O(n²)).
     """
-    others = np.concatenate([vecs[:idx], vecs[idx+1:]], axis=0)
+    others = np.concatenate([vecs[:idx], vecs[idx + 1 :]], axis=0)
 
     old_cos_vals = np.clip(old_vec @ others.T, -1.0, 1.0)
     old_dists = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - old_cos_vals))
@@ -308,7 +308,7 @@ def targeted_perturbation(
             elapsed = time.time() - t0
             rate = improvements / (it + 1) * 100
             print(
-                f"  iter {it+1:>7d} | loss {best_loss:.14f} | "
+                f"  iter {it + 1:>7d} | loss {best_loss:.14f} | "
                 f"improvements {improvements} ({rate:.2f}%) | {elapsed:.0f}s"
             )
 
@@ -333,8 +333,11 @@ def multi_scale_perturbation(
         if verbose:
             print(f"\n--- Scale {scale:.0e} ---")
         vecs, loss = targeted_perturbation(
-            best_vecs.copy(), scale=scale, n_iters=iters_per_scale,
-            seed=seed, verbose=verbose,
+            best_vecs.copy(),
+            scale=scale,
+            n_iters=iters_per_scale,
+            seed=seed,
+            verbose=verbose,
         )
         if loss < best_loss:
             best_loss = loss
@@ -369,6 +372,7 @@ def main():
 
     # Verify with exact evaluator
     from einstein.kissing_number.evaluator import overlap_loss as eval_loss
+
     exact_score = eval_loss(vecs)
     print(f"Exact eval: {exact_score:.14f}")
 
@@ -379,19 +383,17 @@ def main():
         print(f"GD improved: {initial_loss:.14f} -> {loss_gd:.14f}")
         best_vecs, best_loss = vecs_gd, loss_gd
     else:
-        print(f"GD no improvement (basin is flat at this scale)")
+        print("GD no improvement (basin is flat at this scale)")
         best_vecs, best_loss = vecs.copy(), initial_loss
 
     # Phase 2: Multi-scale micro-perturbation
     print("\n=== Phase 2: Multi-Scale Micro-Perturbation ===")
-    vecs_mp, loss_mp = multi_scale_perturbation(
-        best_vecs, iters_per_scale=500_000, verbose=True
-    )
+    vecs_mp, loss_mp = multi_scale_perturbation(best_vecs, iters_per_scale=500_000, verbose=True)
     if loss_mp < best_loss:
         print(f"\nImproved: {best_loss:.14f} -> {loss_mp:.14f}")
         best_vecs, best_loss = vecs_mp, loss_mp
     else:
-        print(f"\nNo improvement from perturbation")
+        print("\nNo improvement from perturbation")
 
     # Phase 3: Another round of gradient descent + perturbation
     print("\n=== Phase 3: Polish ===")

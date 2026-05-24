@@ -6,6 +6,7 @@ Uses CMA-ES for the initial exploration (optional), then L-BFGS-B for refinement
 Usage:
   uv run python -u scripts/uncertainty/fast_climb.py --start-k 25 --end-k 60
 """
+
 import argparse
 import json
 import sys
@@ -52,11 +53,13 @@ def gaps_to_roots(gaps):
 
 def insert_best_root(base_roots, dps=80):
     """Find the best position to insert one additional root."""
-    positions = np.concatenate([
-        np.linspace(0.5, 15, 30),
-        np.linspace(16, 80, 80),
-        np.linspace(85, 280, 50),
-    ])
+    positions = np.concatenate(
+        [
+            np.linspace(0.5, 15, 30),
+            np.linspace(16, 80, 80),
+            np.linspace(85, 280, 50),
+        ]
+    )
     best_score = float("inf")
     best_cand = None
     for pos in positions:
@@ -94,8 +97,13 @@ def lbfgsb_optimize(roots, maxfun=500, dps=80):
             best[0] = result
         return result
 
-    result = minimize(obj, gaps, method="L-BFGS-B", bounds=bounds,
-                      options={"maxfun": maxfun, "maxiter": 200, "ftol": 1e-15, "gtol": 1e-12})
+    result = minimize(
+        obj,
+        gaps,
+        method="L-BFGS-B",
+        bounds=bounds,
+        options={"maxfun": maxfun, "maxiter": 200, "ftol": 1e-15, "gtol": 1e-12},
+    )
     final_roots = gaps_to_roots(result.x)
     return final_roots, float(result.fun), count[0]
 
@@ -145,15 +153,13 @@ def main():
         # Step 1: Insert a root
         insert_roots, insert_score = insert_best_root(current_roots, dps=args.dps)
         if insert_roots is None:
-            log(f"  No valid insertion found. Stopping.")
+            log("  No valid insertion found. Stopping.")
             break
         log(f"  Insert: {insert_score:.14f}")
 
         # Step 2: L-BFGS-B polish
-        opt_roots, opt_score, nfev = lbfgsb_optimize(
-            insert_roots, maxfun=args.maxfun, dps=args.dps
-        )
-        log(f"  L-BFGS-B: {opt_score:.14f} ({nfev} evals, {time.time()-t0:.0f}s)")
+        opt_roots, opt_score, nfev = lbfgsb_optimize(insert_roots, maxfun=args.maxfun, dps=args.dps)
+        log(f"  L-BFGS-B: {opt_score:.14f} ({nfev} evals, {time.time() - t0:.0f}s)")
 
         # Validate
         if not all(0 < r <= 300 for r in opt_roots):

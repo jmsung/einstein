@@ -73,7 +73,7 @@ def xs_to_score(xs_inner):
         if dy < 0:
             area += ys[i + 1] * h
         elif dy <= 3 * h:
-            area += -dy**2 / 6 + ys[i + 1] * h
+            area += -(dy**2) / 6 + ys[i + 1] * h
         else:
             area += ys[i] * h + 1.5 * h**2
     return -(area + 10 * max_gap)
@@ -90,6 +90,7 @@ def xs_to_weights(xs_inner):
 
 
 # ---------- Torch-based L-BFGS optimizer ----------
+
 
 def razborov_y_torch(x):
     """Compute Razborov minimum triangle density for edge density x (torch)."""
@@ -156,7 +157,7 @@ def score_torch(xs_inner_sorted):
         if dy.item() < 0:
             area = area + y1 * h
         elif dy.item() <= 3 * h.item():
-            area = area + (-dy**2 / 6 + y1 * h)
+            area = area + (-(dy**2) / 6 + y1 * h)
         else:
             area = area + (y0 * h + 1.5 * h**2)
 
@@ -172,10 +173,10 @@ def optimize_lbfgs_torch(xs_inner, n_iters=200, lr=1e-4):
     best_score = -1e10
     best_xs = xs_sorted.copy()
 
-    optimizer = torch.optim.LBFGS([raw], lr=lr, max_iter=20,
-                                   line_search_fn="strong_wolfe")
+    optimizer = torch.optim.LBFGS([raw], lr=lr, max_iter=20, line_search_fn="strong_wolfe")
 
     for iteration in range(n_iters):
+
         def closure():
             optimizer.zero_grad()
             # Sort and clamp
@@ -205,6 +206,7 @@ def optimize_lbfgs_torch(xs_inner, n_iters=200, lr=1e-4):
 
 # ---------- Multi-resolution cascade ----------
 
+
 def upsample(xs_inner, factor=2):
     """Insert midpoints between every pair of consecutive x-positions."""
     xs = np.sort(xs_inner)
@@ -226,7 +228,7 @@ def prune_greedy(xs_inner, target_n):
         best_score = -1e10
         best_idx = -1
         for i in range(len(xs)):
-            trial = xs[:i] + xs[i + 1:]
+            trial = xs[:i] + xs[i + 1 :]
             s = xs_to_score(np.array(trial))
             if s > best_score:
                 best_score = s
@@ -274,12 +276,13 @@ def prune_fast(xs_inner, target_n):
                 if dy < 0:
                     return y1 * h
                 elif dy <= 3 * h:
-                    return -dy**2 / 6 + y1 * h
+                    return -(dy**2) / 6 + y1 * h
                 else:
                     return y0 * h + 1.5 * h**2
 
-            a_current = seg_area(ys_full[i - 1], ys_full[i], h1) + \
-                        seg_area(ys_full[i], ys_full[i + 1], h2)
+            a_current = seg_area(ys_full[i - 1], ys_full[i], h1) + seg_area(
+                ys_full[i], ys_full[i + 1], h2
+            )
             a_merged = seg_area(ys_full[i - 1], ys_full[i + 1], h_merged)
 
             loss = a_merged - a_current  # how much area increases by removing
@@ -301,6 +304,7 @@ def prune_fast(xs_inner, target_n):
 
 # ---------- Scipy L-BFGS-B with scallop bounds ----------
 
+
 def optimize_scipy_lbfgsb(xs_inner, max_iter=500):
     """L-BFGS-B optimization with box bounds per scallop."""
     xs_sorted = np.sort(xs_inner)
@@ -312,16 +316,18 @@ def optimize_scipy_lbfgsb(xs_inner, max_iter=500):
     bounds = [(1e-6, 0.95 - 1e-6)] * len(xs_sorted)
 
     result = minimize(
-        neg_score, xs_sorted, method="L-BFGS-B",
+        neg_score,
+        xs_sorted,
+        method="L-BFGS-B",
         bounds=bounds,
-        options={"maxiter": max_iter, "ftol": 1e-18, "gtol": 1e-14,
-                 "maxfun": 50000},
+        options={"maxiter": max_iter, "ftol": 1e-18, "gtol": 1e-14, "maxfun": 50000},
     )
     print(f"  L-BFGS-B: {-result.fun:.16f} ({result.nit} iters, {result.message})")
     return np.sort(result.x), -result.fun
 
 
 # ---------- Random restart + local optimization ----------
+
 
 def random_restart(xs_inner, n_restarts=50, noise_scale=1e-5):
     """Random perturbations + local optimization."""
@@ -339,7 +345,9 @@ def random_restart(xs_inner, n_restarts=50, noise_scale=1e-5):
         if score > best_score:
             best_score = score
             best_xs = xs_opt.copy()
-            print(f"  restart {restart}: NEW BEST {score:.16f} (Δ={score - xs_to_score(xs_inner):.2e})")
+            print(
+                f"  restart {restart}: NEW BEST {score:.16f} (Δ={score - xs_to_score(xs_inner):.2e})"
+            )
         elif restart % 10 == 0:
             print(f"  restart {restart}: {score:.16f}")
 
@@ -347,6 +355,7 @@ def random_restart(xs_inner, n_restarts=50, noise_scale=1e-5):
 
 
 # ---------- Point swap optimization ----------
+
 
 def optimize_swap(xs_inner, n_candidates=5000, n_rounds=10):
     """Try swapping each point with a candidate from a fine grid."""
@@ -383,6 +392,7 @@ def optimize_swap(xs_inner, n_candidates=5000, n_rounds=10):
 
 
 # ---------- Main ----------
+
 
 def main():
     print("Loading best solution...")
@@ -431,7 +441,7 @@ def main():
         print(f"  optimized upsampled score: {score_up_opt:.16f}")
 
         # Prune back to 500
-        print(f"  pruning to 500...")
+        print("  pruning to 500...")
         xs_pruned = prune_fast(xs_up_opt, target_n=500)
         score_pruned = xs_to_score(xs_pruned)
         print(f"  pruned score: {score_pruned:.16f}")
@@ -454,7 +464,7 @@ def main():
         print(f"  >>> SWAP IMPROVED: {best_score:.16f}")
 
     # Save result
-    print(f"\n=== FINAL RESULT ===")
+    print("\n=== FINAL RESULT ===")
     print(f"Baseline: {baseline_score:.16f}")
     print(f"Best:     {best_score:.16f}")
     print(f"Δ:        {best_score - baseline_score:.2e}")

@@ -12,7 +12,6 @@ Strategies:
 """
 
 import json
-import time
 from pathlib import Path
 
 import numpy as np
@@ -53,7 +52,7 @@ def normalize(pts: np.ndarray) -> np.ndarray:
 def coulomb_energy(pts: np.ndarray) -> float:
     """Compute Coulomb energy (vectorized)."""
     diff = pts[:, None, :] - pts[None, :, :]
-    dist_sq = np.sum(diff ** 2, axis=-1)
+    dist_sq = np.sum(diff**2, axis=-1)
     n = len(pts)
     idx_i, idx_j = np.triu_indices(n, k=1)
     dists = np.sqrt(dist_sq[idx_i, idx_j])
@@ -67,7 +66,7 @@ def coulomb_gradient(pts: np.ndarray) -> np.ndarray:
     dE/dp_i = -sum_{j!=i} (p_i - p_j) / ||p_i - p_j||^3
     """
     diff = pts[:, None, :] - pts[None, :, :]  # (n, n, 3)
-    dist_sq = np.sum(diff ** 2, axis=-1, keepdims=True)  # (n, n, 1)
+    dist_sq = np.sum(diff**2, axis=-1, keepdims=True)  # (n, n, 1)
     dist_sq = np.maximum(dist_sq, 1e-24)
     dist = np.sqrt(dist_sq)  # (n, n, 1)
     # grad_i = -sum_{j!=i} (p_i - p_j) / dist^3
@@ -84,8 +83,9 @@ def project_tangent(grad: np.ndarray, pts: np.ndarray) -> np.ndarray:
     return grad - dots * pts
 
 
-def riemannian_gd(pts: np.ndarray, lr: float = 1e-7, n_steps: int = 1000,
-                  verbose: bool = True) -> tuple[np.ndarray, float]:
+def riemannian_gd(
+    pts: np.ndarray, lr: float = 1e-7, n_steps: int = 1000, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """Riemannian gradient descent on the sphere manifold."""
     best_pts = pts.copy()
     best_energy = coulomb_energy(pts)
@@ -108,12 +108,14 @@ def riemannian_gd(pts: np.ndarray, lr: float = 1e-7, n_steps: int = 1000,
     return best_pts, best_energy
 
 
-def lbfgs_optimize(pts: np.ndarray, maxiter: int = 5000,
-                   verbose: bool = True) -> tuple[np.ndarray, float]:
+def lbfgs_optimize(
+    pts: np.ndarray, maxiter: int = 5000, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """L-BFGS optimization with spherical projection.
 
     Uses spherical coordinates (theta, phi) internally.
     """
+
     def cart_to_sph(pts):
         """Convert Cartesian to spherical (theta, phi)."""
         x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
@@ -173,8 +175,11 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 5000,
             print(f"  L-BFGS iter {callback_data['count']}: E = {callback_data['best']:.15f}")
 
     result = scipy_minimize(
-        energy_and_grad, x0, method='L-BFGS-B', jac=True,
-        options={'maxiter': maxiter, 'ftol': 1e-16, 'gtol': 1e-14},
+        energy_and_grad,
+        x0,
+        method="L-BFGS-B",
+        jac=True,
+        options={"maxiter": maxiter, "ftol": 1e-16, "gtol": 1e-14},
         callback=callback,
     )
 
@@ -187,22 +192,22 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 5000,
     return final_pts, final_energy
 
 
-def incremental_energy_change(pts: np.ndarray, idx: int,
-                               new_pt: np.ndarray,
-                               total_energy: float) -> float:
+def incremental_energy_change(
+    pts: np.ndarray, idx: int, new_pt: np.ndarray, total_energy: float
+) -> float:
     """Compute energy change when replacing pts[idx] with new_pt. O(n)."""
     old_pt = pts[idx]
 
     # Remove old contributions
     diffs_old = pts - old_pt  # (n, 3)
-    dists_old = np.sqrt(np.sum(diffs_old ** 2, axis=1))
+    dists_old = np.sqrt(np.sum(diffs_old**2, axis=1))
     dists_old[idx] = 1e30  # skip self
     dists_old = np.maximum(dists_old, 1e-12)
     old_contrib = np.sum(1.0 / dists_old)
 
     # Add new contributions
     diffs_new = pts - new_pt
-    dists_new = np.sqrt(np.sum(diffs_new ** 2, axis=1))
+    dists_new = np.sqrt(np.sum(diffs_new**2, axis=1))
     dists_new[idx] = 1e30
     dists_new = np.maximum(dists_new, 1e-12)
     new_contrib = np.sum(1.0 / dists_new)
@@ -210,9 +215,14 @@ def incremental_energy_change(pts: np.ndarray, idx: int,
     return total_energy - old_contrib + new_contrib
 
 
-def micro_perturbation(pts: np.ndarray, energy: float, scale: float,
-                       n_trials: int = 100000, rng=None,
-                       verbose: bool = True) -> tuple[np.ndarray, float]:
+def micro_perturbation(
+    pts: np.ndarray,
+    energy: float,
+    scale: float,
+    n_trials: int = 100000,
+    rng=None,
+    verbose: bool = True,
+) -> tuple[np.ndarray, float]:
     """Random single-point micro-perturbation with greedy acceptance."""
     if rng is None:
         rng = np.random.default_rng()
@@ -242,17 +252,26 @@ def micro_perturbation(pts: np.ndarray, energy: float, scale: float,
             improvements += 1
 
             if verbose and improvements % 10 == 0:
-                print(f"  Perturbation scale={scale:.0e}: {improvements} improvements, E = {best_energy:.15f}")
+                print(
+                    f"  Perturbation scale={scale:.0e}: {improvements} improvements, E = {best_energy:.15f}"
+                )
 
     if verbose:
-        print(f"  Scale {scale:.0e}: {improvements}/{n_trials} improvements, final E = {best_energy:.15f}")
+        print(
+            f"  Scale {scale:.0e}: {improvements}/{n_trials} improvements, final E = {best_energy:.15f}"
+        )
 
     return best_pts, best_energy
 
 
-def targeted_perturbation(pts: np.ndarray, energy: float, scale: float,
-                          n_trials: int = 50000, rng=None,
-                          verbose: bool = True) -> tuple[np.ndarray, float]:
+def targeted_perturbation(
+    pts: np.ndarray,
+    energy: float,
+    scale: float,
+    n_trials: int = 50000,
+    rng=None,
+    verbose: bool = True,
+) -> tuple[np.ndarray, float]:
     """Perturbation with contribution-weighted point sampling."""
     if rng is None:
         rng = np.random.default_rng()
@@ -266,7 +285,7 @@ def targeted_perturbation(pts: np.ndarray, energy: float, scale: float,
     contributions = np.zeros(n)
     for i in range(n):
         diffs = pts - pts[i]
-        dists = np.sqrt(np.sum(diffs ** 2, axis=1))
+        dists = np.sqrt(np.sum(diffs**2, axis=1))
         dists[i] = 1e30
         dists = np.maximum(dists, 1e-12)
         contributions[i] = np.sum(1.0 / dists)
@@ -295,21 +314,29 @@ def targeted_perturbation(pts: np.ndarray, energy: float, scale: float,
             if improvements % 50 == 0:
                 for i in range(n):
                     diffs = pts - pts[i]
-                    dists = np.sqrt(np.sum(diffs ** 2, axis=1))
+                    dists = np.sqrt(np.sum(diffs**2, axis=1))
                     dists[i] = 1e30
                     dists = np.maximum(dists, 1e-12)
                     contributions[i] = np.sum(1.0 / dists)
                 probs = contributions / contributions.sum()
 
     if verbose:
-        print(f"  Targeted {scale:.0e}: {improvements}/{n_trials} improvements, E = {best_energy:.15f}")
+        print(
+            f"  Targeted {scale:.0e}: {improvements}/{n_trials} improvements, E = {best_energy:.15f}"
+        )
 
     return best_pts, best_energy
 
 
-def basin_hopping(pts: np.ndarray, energy: float, n_hops: int = 500,
-                  perturb_scale: float = 0.3, temperature: float = 0.1,
-                  rng=None, verbose: bool = True) -> tuple[np.ndarray, float]:
+def basin_hopping(
+    pts: np.ndarray,
+    energy: float,
+    n_hops: int = 500,
+    perturb_scale: float = 0.3,
+    temperature: float = 0.1,
+    rng=None,
+    verbose: bool = True,
+) -> tuple[np.ndarray, float]:
     """Basin-hopping: random perturbation + local minimization."""
     if rng is None:
         rng = np.random.default_rng()
@@ -347,7 +374,9 @@ def basin_hopping(pts: np.ndarray, energy: float, n_hops: int = 500,
                     print(f"  Basin hop {hop}: NEW BEST E = {best_energy:.15f}")
 
         if verbose and hop % 50 == 0:
-            print(f"  Basin hop {hop}/{n_hops}: best E = {best_energy:.15f}, current E = {current_energy:.15f}")
+            print(
+                f"  Basin hop {hop}/{n_hops}: best E = {best_energy:.15f}, current E = {current_energy:.15f}"
+            )
 
     return best_pts, best_energy
 
@@ -359,14 +388,13 @@ def fibonacci_sphere(n: int) -> np.ndarray:
     for i in range(n):
         theta = np.arccos(1 - 2 * (i + 0.5) / n)
         phi = 2 * np.pi * i / golden_ratio
-        pts[i] = [np.sin(theta) * np.cos(phi),
-                  np.sin(theta) * np.sin(phi),
-                  np.cos(theta)]
+        pts[i] = [np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)]
     return pts
 
 
-def multi_point_swap(pts: np.ndarray, energy: float, n_trials: int = 10000,
-                     rng=None, verbose: bool = True) -> tuple[np.ndarray, float]:
+def multi_point_swap(
+    pts: np.ndarray, energy: float, n_trials: int = 10000, rng=None, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """Try swapping pairs of points with perturbation."""
     if rng is None:
         rng = np.random.default_rng()
@@ -392,9 +420,7 @@ def multi_point_swap(pts: np.ndarray, energy: float, n_trials: int = 10000,
         sin_a = np.sin(angle)
         for idx in indices:
             p = trial_pts[idx]
-            rotated = (p * cos_a +
-                       np.cross(axis, p) * sin_a +
-                       axis * np.dot(axis, p) * (1 - cos_a))
+            rotated = p * cos_a + np.cross(axis, p) * sin_a + axis * np.dot(axis, p) * (1 - cos_a)
             trial_pts[idx] = rotated / np.linalg.norm(rotated)
 
         new_energy = coulomb_energy(trial_pts)
@@ -465,9 +491,9 @@ def run_optimization():
     print("\n[4] Phase 3: Multi-scale micro-perturbation...")
     rng = np.random.default_rng(42)
     for scale in [1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10]:
-        pts_mp, e_mp = micro_perturbation(best_pts.copy(), best_energy,
-                                           scale=scale, n_trials=200000,
-                                           rng=rng, verbose=False)
+        pts_mp, e_mp = micro_perturbation(
+            best_pts.copy(), best_energy, scale=scale, n_trials=200000, rng=rng, verbose=False
+        )
         if e_mp < best_energy:
             best_energy = e_mp
             best_pts = pts_mp
@@ -479,9 +505,9 @@ def run_optimization():
     # Phase 4: Targeted perturbation
     print("\n[5] Phase 4: Targeted perturbation...")
     for scale in [1e-5, 1e-6, 1e-7, 1e-8]:
-        pts_tp, e_tp = targeted_perturbation(best_pts.copy(), best_energy,
-                                              scale=scale, n_trials=100000,
-                                              rng=rng, verbose=False)
+        pts_tp, e_tp = targeted_perturbation(
+            best_pts.copy(), best_energy, scale=scale, n_trials=100000, rng=rng, verbose=False
+        )
         if e_tp < best_energy:
             best_energy = e_tp
             best_pts = pts_tp
@@ -492,8 +518,7 @@ def run_optimization():
 
     # Phase 5: Multi-point correlated moves
     print("\n[6] Phase 5: Multi-point correlated moves...")
-    pts_mp, e_mp = multi_point_swap(best_pts.copy(), best_energy,
-                                     n_trials=50000, rng=rng)
+    pts_mp, e_mp = multi_point_swap(best_pts.copy(), best_energy, n_trials=50000, rng=rng)
     if e_mp < best_energy:
         best_energy = e_mp
         best_pts = pts_mp
@@ -502,9 +527,15 @@ def run_optimization():
     # Phase 6: Basin-hopping (try to find new basin)
     print("\n[7] Phase 6: Basin-hopping from SOTA...")
     for perturb in [0.1, 0.3, 0.5]:
-        pts_bh, e_bh = basin_hopping(best_pts.copy(), best_energy,
-                                      n_hops=100, perturb_scale=perturb,
-                                      temperature=0.01, rng=rng, verbose=False)
+        pts_bh, e_bh = basin_hopping(
+            best_pts.copy(),
+            best_energy,
+            n_hops=100,
+            perturb_scale=perturb,
+            temperature=0.01,
+            rng=rng,
+            verbose=False,
+        )
         if e_bh < best_energy:
             best_energy = e_bh
             best_pts = pts_bh

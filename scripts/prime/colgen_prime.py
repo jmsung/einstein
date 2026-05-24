@@ -14,7 +14,7 @@ import time
 
 import numpy as np
 from scipy.optimize import linprog
-from scipy.sparse import csr_matrix, vstack
+from scipy.sparse import csr_matrix
 
 
 def log(msg=""):
@@ -64,8 +64,12 @@ def check_violations(keys: list[int], f_vals: np.ndarray, max_n: int) -> list[tu
 
 
 def solve_lp_cutting_plane(
-    keys: list[int], *, margin: float = 1e-7, max_rounds: int = 40,
-    constraint_mult: int = 10, time_limit: int = 300,
+    keys: list[int],
+    *,
+    margin: float = 1e-7,
+    max_rounds: int = 40,
+    constraint_mult: int = 10,
+    time_limit: int = 300,
 ) -> tuple[np.ndarray | None, float, list[int]]:
     """Solve LP with cutting planes. Returns (f_vals, score, active_ns)."""
     n_vars = len(keys)
@@ -77,8 +81,7 @@ def solve_lp_cutting_plane(
 
     # Start with constraints at n=1..max_key/2 + every 50th
     active_ns = sorted(
-        set(range(1, min(max_key // 2 + 1, max_n + 1)))
-        | set(range(1, max_n + 1, 50))
+        set(range(1, min(max_key // 2 + 1, max_n + 1))) | set(range(1, max_n + 1, 50))
     )
 
     for rnd in range(max_rounds):
@@ -87,7 +90,11 @@ def solve_lp_cutting_plane(
         b = np.full(len(active_ns), 1.0 - margin)
 
         result = linprog(
-            c_obj, A_ub=A, b_ub=b, bounds=bounds, method="highs",
+            c_obj,
+            A_ub=A,
+            b_ub=b,
+            bounds=bounds,
+            method="highs",
             options={"time_limit": time_limit, "primal_feasibility_tolerance": 1e-9},
         )
         t_solve = time.time() - t0
@@ -103,16 +110,18 @@ def solve_lp_cutting_plane(
         n_viol = len(violations)
         worst_G = violations[0][1] if violations else 0.0
 
-        log(f"  Round {rnd}: score={score:.10f}, cons={len(active_ns)}, "
-            f"viol={n_viol}, worst_G={worst_G:.8f}, {t_solve:.0f}s")
+        log(
+            f"  Round {rnd}: score={score:.10f}, cons={len(active_ns)}, "
+            f"viol={n_viol}, worst_G={worst_G:.8f}, {t_solve:.0f}s"
+        )
 
         if n_viol == 0:
-            log(f"  *** FEASIBLE ***")
+            log("  *** FEASIBLE ***")
             return f_vec, score, active_ns
 
         new_ns = [n for n, _ in violations[:5000] if n not in set(active_ns)]
         if not new_ns:
-            log(f"  No new cutting planes — converged")
+            log("  No new cutting planes — converged")
             return f_vec, score, active_ns
 
         active_ns = sorted(set(active_ns) | set(new_ns))
@@ -121,8 +130,11 @@ def solve_lp_cutting_plane(
 
 
 def compute_reduced_costs(
-    candidate_keys: list[int], active_ns: list[int],
-    dual_approx: np.ndarray, c_obj_base: np.ndarray, keys_base: list[int],
+    candidate_keys: list[int],
+    active_ns: list[int],
+    dual_approx: np.ndarray,
+    c_obj_base: np.ndarray,
+    keys_base: list[int],
 ) -> list[tuple[float, int]]:
     """Compute reduced costs for candidate keys using dual approximation."""
     reduced_costs = []
@@ -162,6 +174,7 @@ def compute_score_only(pf: dict[int, float]) -> float:
 
 def evaluate_mc(pf: dict[int, float], n_samples: int = 10_000_000, seed: int = 42) -> float:
     from einstein.prime.evaluator import evaluate
+
     sol = {"partial_function": {str(k): v for k, v in pf.items()}}
     return evaluate(sol, n_samples=n_samples, seed=seed)
 
@@ -182,9 +195,7 @@ def main():
     base_keys = get_squarefree(3287)
     assert len(base_keys) == 1999, f"Expected 1999 keys, got {len(base_keys)}"
 
-    f_base, score_base, active_ns = solve_lp_cutting_plane(
-        base_keys, margin=1e-7, time_limit=300
-    )
+    f_base, score_base, active_ns = solve_lp_cutting_plane(base_keys, margin=1e-7, time_limit=300)
 
     if f_base is None:
         log("Base LP failed!")
@@ -236,9 +247,9 @@ def main():
 
         # Check constraint impact at binding points
         binding_ns = [active_ns[i] for i in range(len(active_ns)) if binding_mask[i]]
-        max_constraint_impact = max(
-            abs((n // k_new) - n / k_new) for n in binding_ns[:200]
-        ) if binding_ns else 0
+        max_constraint_impact = (
+            max(abs((n // k_new) - n / k_new) for n in binding_ns[:200]) if binding_ns else 0
+        )
 
         # Score: high obj_potential, low constraint_impact = good candidate
         if max_constraint_impact > 0:
@@ -288,9 +299,7 @@ def main():
         new_max = max(merged)
         log(f"\n  Adding {n_add} candidates, total keys={len(merged)}, max_key={new_max}")
 
-        f_new, score_new, _ = solve_lp_cutting_plane(
-            merged, margin=1e-7, time_limit=300
-        )
+        f_new, score_new, _ = solve_lp_cutting_plane(merged, margin=1e-7, time_limit=300)
 
         if f_new is None:
             log(f"  LP failed with {n_add} candidates")
@@ -314,7 +323,7 @@ def main():
                 json.dump(sol, f)
 
             if improvement >= 1e-5:
-                log(f"\n  *** TARGET MET! Running MC validation... ***")
+                log("\n  *** TARGET MET! Running MC validation... ***")
                 mc = evaluate_mc(pf_new, n_samples=100_000, seed=42)
                 log(f"  MC(100k): {mc:.10f} {'PASS' if mc > 0 else 'FAIL'}")
 
@@ -325,11 +334,11 @@ def main():
                     if mc_full > 0:
                         with open("results/problem-7-prime/colgen_best.json", "w") as f:
                             json.dump(sol, f)
-                        log(f"  *** VALIDATED — ready for submission ***")
+                        log("  *** VALIDATED — ready for submission ***")
                         return
 
     # Summary
-    log(f"\n{'='*70}")
+    log(f"\n{'=' * 70}")
     if best_pf:
         improvement = best_score - current_best
         log(f"Best colgen score: {best_score:.15f}")

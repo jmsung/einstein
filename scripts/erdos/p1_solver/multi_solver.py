@@ -11,13 +11,14 @@ Strategies:
 Target: beat 0.3808703105862199 by >= 1e-6
 """
 
-import sys
 import json
+import sys
 import time
-import numpy as np
 from pathlib import Path
-from scipy.signal import fftconvolve
+
+import numpy as np
 from scipy.optimize import linprog, minimize
+from scipy.signal import fftconvolve
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 from einstein.erdos.evaluator import compute_upper_bound
@@ -29,6 +30,7 @@ RESULTS_DIR = Path("/tmp/p1_results")
 RESULTS_DIR.mkdir(exist_ok=True)
 
 # ─── Helpers ────────────────────────────────────────────────────────────
+
 
 def score(h):
     """Fast score via FFT."""
@@ -106,12 +108,37 @@ def correlation_vector(h):
 
 # ─── Approach 1: Resolution Sweep ──────────────────────────────────────
 
+
 def resolution_sweep(sota_h, n_values=None, polish_iters=500000):
     """Try different resolutions with warm-start from SOTA."""
     if n_values is None:
-        n_values = [50, 51, 95, 100, 150, 200, 250, 300, 400, 480, 500,
-                    550, 600, 650, 700, 720, 750, 800, 900, 1000, 1200,
-                    1500, 2000, 2400, 3000]
+        n_values = [
+            50,
+            51,
+            95,
+            100,
+            150,
+            200,
+            250,
+            300,
+            400,
+            480,
+            500,
+            550,
+            600,
+            650,
+            700,
+            720,
+            750,
+            800,
+            900,
+            1000,
+            1200,
+            1500,
+            2000,
+            2400,
+            3000,
+        ]
 
     print("\n=== Approach 1: Resolution Sweep ===")
     best_score = float("inf")
@@ -169,6 +196,7 @@ def quick_polish(h, n_iters=200000, seed=42):
 
 
 # ─── Approach 2: Simulated Annealing ──────────────────────────────────
+
 
 def simulated_annealing(h_init, time_limit=600, seed=42):
     """Aggressive simulated annealing with multi-scale moves."""
@@ -231,14 +259,17 @@ def simulated_annealing(h_init, time_limit=600, seed=42):
         n_iters += 1
         if n_iters % 500000 == 0:
             elapsed = time.time() - t0
-            print(f"    iter {n_iters}: best={best_score:.16f} curr={current_score:.16f} "
-                  f"T={T:.2e} acc={n_accepted}/{n_iters} imp={n_improved} [{elapsed:.0f}s]")
+            print(
+                f"    iter {n_iters}: best={best_score:.16f} curr={current_score:.16f} "
+                f"T={T:.2e} acc={n_accepted}/{n_iters} imp={n_improved} [{elapsed:.0f}s]"
+            )
 
     print(f"  SA done: best={best_score:.16f}, iters={n_iters}, improved={n_improved}")
     return best_h, best_score
 
 
 # ─── Approach 3: SLP with Full Jacobian ────────────────────────────────
+
 
 def slp_full(h_init, max_rounds=50, time_limit=600):
     """SLP with all near-maximal lags and analytical Jacobian."""
@@ -297,8 +328,16 @@ def slp_full(h_init, max_rounds=50, time_limit=600):
             b_eq = np.array([0.0])
 
             try:
-                result = linprog(c_obj, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
-                               bounds=bounds, method='highs', options={'time_limit': 30})
+                result = linprog(
+                    c_obj,
+                    A_ub=A_ub,
+                    b_ub=b_ub,
+                    A_eq=A_eq,
+                    b_eq=b_eq,
+                    bounds=bounds,
+                    method="highs",
+                    options={"time_limit": 30},
+                )
 
                 if result.success:
                     d = result.x[:n]
@@ -310,7 +349,9 @@ def slp_full(h_init, max_rounds=50, time_limit=600):
                         best_score = new_score
                         best_h = h_new.copy()
                         h = h_new
-                        print(f"    round {round_idx}, delta={delta}: score={best_score:.16f} (imp={imp:.2e})")
+                        print(
+                            f"    round {round_idx}, delta={delta}: score={best_score:.16f} (imp={imp:.2e})"
+                        )
                         break
             except Exception:
                 continue
@@ -323,6 +364,7 @@ def slp_full(h_init, max_rounds=50, time_limit=600):
 
 
 # ─── Approach 4: Population-Based Search ───────────────────────────────
+
 
 def population_search(h_init, pop_size=50, time_limit=600, seed=42):
     """Population-based search with crossover and mutation."""
@@ -383,13 +425,16 @@ def population_search(h_init, pop_size=50, time_limit=600, seed=42):
 
         if gen % 50000 == 0:
             elapsed = time.time() - t0
-            print(f"    gen {gen}: best={best_score:.16f} mean={np.mean(scores):.12f} [{elapsed:.0f}s]")
+            print(
+                f"    gen {gen}: best={best_score:.16f} mean={np.mean(scores):.12f} [{elapsed:.0f}s]"
+            )
 
     print(f"  Pop search done: best={best_score:.16f}")
     return best_h, best_score
 
 
 # ─── Approach 5: Haugland-style Constructions ──────────────────────────
+
 
 def haugland_constructions(n=600):
     """Systematic piecewise linear constructions inspired by Haugland (2016).
@@ -433,8 +478,12 @@ def haugland_constructions(n=600):
                 hh = project(hh)
                 return score(hh)
 
-            result = minimize(obj, heights, method='Nelder-Mead',
-                            options={'maxiter': 3000, 'xatol': 1e-12, 'fatol': 1e-14})
+            result = minimize(
+                obj,
+                heights,
+                method="Nelder-Mead",
+                options={"maxiter": 3000, "xatol": 1e-12, "fatol": 1e-14},
+            )
 
             s = result.fun
             if s < best_score:
@@ -452,6 +501,7 @@ def haugland_constructions(n=600):
 
 
 # ─── Approach 6: Coordinate descent on near-max lags ───────────────────
+
 
 def targeted_coordinate_descent(h_init, time_limit=600, seed=42):
     """Target perturbations that reduce the max lag specifically."""
@@ -534,6 +584,7 @@ def targeted_coordinate_descent(h_init, time_limit=600, seed=42):
 
 # ─── Approach 7: Symmetrized construction ──────────────────────────────
 
+
 def symmetrized_search(h_init, time_limit=300, seed=42):
     """Enforce approximate symmetry h(x) ≈ h(2-x) and optimize."""
     print("\n=== Approach 7: Symmetrized Search ===")
@@ -595,6 +646,7 @@ def symmetrized_search(h_init, time_limit=300, seed=42):
 
 # ─── Approach 8: Different n values with deep polish ───────────────────
 
+
 def deep_resolution_search(sota_h, n_values=None, polish_time=120):
     """Try key n values with much deeper polishing."""
     if n_values is None:
@@ -615,7 +667,9 @@ def deep_resolution_search(sota_h, n_values=None, polish_time=120):
 
         gap = s_sa - SOTA_SCORE
         marker = " ***" if s_sa < SOTA_SCORE else ""
-        print(f"  n={n:5d}: start={s0:.12f} SA={s_sa:.12f} (gap={gap:+.2e}){marker} [{time.time()-t0:.0f}s]")
+        print(
+            f"  n={n:5d}: start={s0:.12f} SA={s_sa:.12f} (gap={gap:+.2e}){marker} [{time.time() - t0:.0f}s]"
+        )
 
         if s_sa < best_score:
             best_score = s_sa
@@ -665,6 +719,7 @@ def mini_sa(h, time_limit=60, seed=42):
 
 
 # ─── Main ──────────────────────────────────────────────────────────────
+
 
 def main():
     print("=" * 70)
@@ -731,7 +786,7 @@ def main():
         print(f"\n*** SUBMISSION CANDIDATE: {s_verified:.16f} ***")
         save_solution(best_h, "CANDIDATE", s_verified)
     else:
-        print(f"\nNo solution beats SOTA by >= 1e-6")
+        print("\nNo solution beats SOTA by >= 1e-6")
 
     return best_h, s_verified
 

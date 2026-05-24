@@ -6,6 +6,7 @@ Multiple approaches to squeeze tiny improvements from OrganonAgent's solution:
 3. Random perturbation lottery (structured noise patterns)
 4. Equioscillation-aware optimization
 """
+
 from __future__ import annotations
 
 import json
@@ -64,8 +65,9 @@ def compute_gradient(f: np.ndarray, topk: int = 2000) -> tuple[np.ndarray, float
     return grad, C, ratios
 
 
-def approach_gradient_descent(f0: np.ndarray, max_iters: int = 5000,
-                              lr0: float = 1e-6) -> tuple[np.ndarray, float]:
+def approach_gradient_descent(
+    f0: np.ndarray, max_iters: int = 5000, lr0: float = 1e-6
+) -> tuple[np.ndarray, float]:
     """Exact gradient descent with Armijo line search."""
     print("\n=== Approach: Exact Gradient Descent ===")
     f = f0.astype(np.float64).copy()
@@ -102,8 +104,10 @@ def approach_gradient_descent(f0: np.ndarray, max_iters: int = 5000,
                     best_c = c_try
                     best_f = f.copy()
                     if it % 50 == 0 or delta > 1e-10:
-                        print(f"  iter={it}: C={best_c:.18f} delta={delta:.3e} lr={lr:.2e}",
-                              flush=True)
+                        print(
+                            f"  iter={it}: C={best_c:.18f} delta={delta:.3e} lr={lr:.2e}",
+                            flush=True,
+                        )
                 lr = min(lr * 1.5, lr0 * 100)
                 accepted = True
                 no_improve = 0
@@ -121,8 +125,9 @@ def approach_gradient_descent(f0: np.ndarray, max_iters: int = 5000,
     return best_f, best_c
 
 
-def approach_block_coord_descent(f0: np.ndarray, block_size: int = 300,
-                                  rounds: int = 3) -> tuple[np.ndarray, float]:
+def approach_block_coord_descent(
+    f0: np.ndarray, block_size: int = 300, rounds: int = 3
+) -> tuple[np.ndarray, float]:
     """Block coordinate descent: optimize one block at a time."""
     print(f"\n=== Approach: Block Coordinate Descent (block_size={block_size}) ===")
     n = len(f0)
@@ -156,12 +161,13 @@ def approach_block_coord_descent(f0: np.ndarray, block_size: int = 300,
                     perturbation = -block_grad * 1e-4
                 elif trial < 5:
                     # Random perturbation scaled by gradient magnitude
-                    scale = np.abs(block_grad).mean() * (0.5 ** trial)
+                    scale = np.abs(block_grad).mean() * (0.5**trial)
                     perturbation = rng.normal(scale=scale, size=end - start)
                 else:
                     # Random proportional perturbation
-                    perturbation = original * rng.normal(scale=1e-4 * (0.5 ** (trial - 5)),
-                                                          size=end - start)
+                    perturbation = original * rng.normal(
+                        scale=1e-4 * (0.5 ** (trial - 5)), size=end - start
+                    )
 
                 f[start:end] = np.maximum(original + perturbation, 0.0)
                 if f.sum() <= 0:
@@ -180,22 +186,26 @@ def approach_block_coord_descent(f0: np.ndarray, block_size: int = 300,
                 best_c = block_best_c
                 best_f = f.copy()
                 improved_count += 1
-                print(f"  round={rd} block={block_idx}/{n_blocks} C={best_c:.18f} "
-                      f"delta={delta:.3e}", flush=True)
+                print(
+                    f"  round={rd} block={block_idx}/{n_blocks} C={best_c:.18f} delta={delta:.3e}",
+                    flush=True,
+                )
             else:
                 f[start:end] = original
 
             if bi % 50 == 0 and bi > 0:
                 elapsed_blocks = bi + 1
-                print(f"  round={rd} progress: {elapsed_blocks}/{n_blocks} blocks, "
-                      f"improved={improved_count}", flush=True)
+                print(
+                    f"  round={rd} progress: {elapsed_blocks}/{n_blocks} blocks, "
+                    f"improved={improved_count}",
+                    flush=True,
+                )
 
     print(f"Final: C={best_c:.18f} (improved {improved_count} times)")
     return best_f, best_c
 
 
-def approach_perturbation_lottery(f0: np.ndarray,
-                                   n_trials: int = 1000) -> tuple[np.ndarray, float]:
+def approach_perturbation_lottery(f0: np.ndarray, n_trials: int = 1000) -> tuple[np.ndarray, float]:
     """Try many random perturbation patterns, keep improvements."""
     print(f"\n=== Approach: Perturbation Lottery ({n_trials} trials) ===")
     f = f0.astype(np.float64).copy()
@@ -250,7 +260,9 @@ def approach_perturbation_lottery(f0: np.ndarray,
             # Perturb random low frequencies
             k = rng.integers(1, min(1000, len(V)))
             V_noise = np.zeros_like(V)
-            V_noise[k] = rng.normal(scale=abs(V[k]) * 1e-4) + 1j * rng.normal(scale=abs(V[k]) * 1e-4)
+            V_noise[k] = rng.normal(scale=abs(V[k]) * 1e-4) + 1j * rng.normal(
+                scale=abs(V[k]) * 1e-4
+            )
             noise = np.fft.irfft(V_noise, n=n)
         else:
             # Scale perturbation (multiply by 1+epsilon)
@@ -267,8 +279,9 @@ def approach_perturbation_lottery(f0: np.ndarray,
             best_f = f_try.copy()
             f = f_try.copy()
             improved += 1
-            print(f"  trial={trial} strategy={strategy} C={best_c:.18f} delta={delta:.3e}",
-                  flush=True)
+            print(
+                f"  trial={trial} strategy={strategy} C={best_c:.18f} delta={delta:.3e}", flush=True
+            )
 
         if trial % 200 == 0 and trial > 0:
             print(f"  progress: {trial}/{n_trials}, improved={improved}", flush=True)
@@ -279,7 +292,7 @@ def approach_perturbation_lottery(f0: np.ndarray,
 
 def approach_equioscillation(f0: np.ndarray) -> tuple[np.ndarray, float]:
     """Analyze and exploit the equioscillation structure."""
-    print(f"\n=== Approach: Equioscillation Analysis ===")
+    print("\n=== Approach: Equioscillation Analysis ===")
     n = len(f0)
     dx = 0.5 / n
     f = f0.astype(np.float64).copy()
@@ -349,8 +362,11 @@ def approach_equioscillation(f0: np.ndarray) -> tuple[np.ndarray, float]:
             best_c = c_try
             best_f = f_try.copy()
             f = f_try.copy()
-            print(f"  trial={trial} C={best_c:.18f} delta={delta:.3e} "
-                  f"(moved mass from {i_reduce} to {i_grow})", flush=True)
+            print(
+                f"  trial={trial} C={best_c:.18f} delta={delta:.3e} "
+                f"(moved mass from {i_reduce} to {i_grow})",
+                flush=True,
+            )
 
     print(f"Final: C={best_c:.18f}")
     return best_f, best_c
@@ -387,19 +403,19 @@ def main():
     update(f1, c1, "grad-descent")
 
     elapsed = time.time() - t_start
-    print(f"\n--- Elapsed: {elapsed/60:.1f} min ---")
+    print(f"\n--- Elapsed: {elapsed / 60:.1f} min ---")
 
     f2, c2 = approach_perturbation_lottery(global_best_f, n_trials=2000)
     update(f2, c2, "perturbation")
 
     elapsed = time.time() - t_start
-    print(f"\n--- Elapsed: {elapsed/60:.1f} min ---")
+    print(f"\n--- Elapsed: {elapsed / 60:.1f} min ---")
 
     f3, c3 = approach_equioscillation(global_best_f)
     update(f3, c3, "equioscillation")
 
     elapsed = time.time() - t_start
-    print(f"\n--- Elapsed: {elapsed/60:.1f} min ---")
+    print(f"\n--- Elapsed: {elapsed / 60:.1f} min ---")
 
     if elapsed < 7200:
         f4, c4 = approach_block_coord_descent(global_best_f, block_size=300, rounds=2)
@@ -407,13 +423,13 @@ def main():
 
     # Summary
     elapsed = time.time() - t_start
-    print(f"\n{'='*60}")
-    print(f"SMART POLISH COMPLETE")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("SMART POLISH COMPLETE")
+    print(f"{'=' * 60}")
     print(f"OrganonAgent: {c_org:.18f}")
     print(f"Our best:     {global_best_c:.18f}")
     print(f"Delta:        {c_org - global_best_c:+.6e}")
-    print(f"Time:         {elapsed/60:.1f} min")
+    print(f"Time:         {elapsed / 60:.1f} min")
 
 
 if __name__ == "__main__":

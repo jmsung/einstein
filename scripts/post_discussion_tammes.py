@@ -9,10 +9,9 @@ The thread is high-level and based on the public docs/problem-11-tammes.md.
 
 import json
 import sys
-import urllib.request
 import urllib.error
+import urllib.request
 from pathlib import Path
-
 
 SLUG = "tammes-problem"
 TITLE = "Warm-start from sphere-code library + constrained polish"

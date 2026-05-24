@@ -63,10 +63,14 @@ def numerical_hessian(fn, x: np.ndarray, eps: float = 1e-5) -> np.ndarray:
     n = len(x)
     H = np.zeros((n, n))
     for i in range(n):
-        ei = np.zeros(n); ei[i] = eps
+        ei = np.zeros(n)
+        ei[i] = eps
         for j in range(i, n):
-            ej = np.zeros(n); ej[j] = eps
-            H[i, j] = (fn(x + ei + ej) - fn(x + ei - ej) - fn(x - ei + ej) + fn(x - ei - ej)) / (4 * eps * eps)
+            ej = np.zeros(n)
+            ej[j] = eps
+            H[i, j] = (fn(x + ei + ej) - fn(x + ei - ej) - fn(x - ei + ej) + fn(x - ei - ej)) / (
+                4 * eps * eps
+            )
             H[j, i] = H[i, j]
     return H
 
@@ -83,9 +87,12 @@ def main() -> None:
     f_true[20:40] = 0.05 * np.random.rand(20)
     f_true /= f_true.sum() * dx
 
-    C_exp = lambda v: C_beta(np.exp(v), beta, dx)
+    def C_exp(v):
+        return C_beta(np.exp(v), beta, dx)
+
     def make_C_vp(p):
         return lambda v: C_beta(np.abs(v) ** p, beta, dx)
+
     # Sigmoid: f = U * σ(v); image is the bounded interval (0, U). Boundary at v→-∞ (σ→0)
     # and at v→+∞ (σ→1). Both have σ' and σ'' vanishing — same structural family as exp at the
     # f=0 boundary, but doubled (TWO saturating boundaries instead of one). U=5 here binds on
@@ -94,20 +101,25 @@ def main() -> None:
     # would behave at upper-bound activity. The result (52 near-zero eigs vs 32 dead = 35 lower
     # boundary + 17 upper saturation) confirms both boundaries contribute to rank deficiency.
     U = 5.0
-    def C_sig(v): return C_beta(U / (1.0 + np.exp(-v)), beta, dx)
+
+    def C_sig(v):
+        return C_beta(U / (1.0 + np.exp(-v)), beta, dx)
+
     clamped = np.clip(f_true, 1e-300, U - 1e-12)
     v0_sig = np.log(clamped / (U - clamped))
 
     cases = [
-        ("exp(v)",       "-", C_exp,        np.log(np.maximum(f_true, 1e-300))),
-        ("v**2",         "2", make_C_vp(2), np.abs(f_true) ** (1.0 / 2)),
-        ("v**3",         "3", make_C_vp(3), np.abs(f_true) ** (1.0 / 3)),
-        ("v**4",         "4", make_C_vp(4), np.abs(f_true) ** (1.0 / 4)),
-        ("v**6",         "6", make_C_vp(6), np.abs(f_true) ** (1.0 / 6)),
-        ("U*sigmoid(v)", "s", C_sig,        v0_sig),
+        ("exp(v)", "-", C_exp, np.log(np.maximum(f_true, 1e-300))),
+        ("v**2", "2", make_C_vp(2), np.abs(f_true) ** (1.0 / 2)),
+        ("v**3", "3", make_C_vp(3), np.abs(f_true) ** (1.0 / 3)),
+        ("v**4", "4", make_C_vp(4), np.abs(f_true) ** (1.0 / 4)),
+        ("v**6", "6", make_C_vp(6), np.abs(f_true) ** (1.0 / 6)),
+        ("U*sigmoid(v)", "s", C_sig, v0_sig),
     ]
 
-    print(f"{'param':>10} {'p':>4} {'C_crit':>14} {'dead':>6} {'near0eig':>10} {'smallest>0':>12} {'largest':>12} {'cond':>10}")
+    print(
+        f"{'param':>10} {'p':>4} {'C_crit':>14} {'dead':>6} {'near0eig':>10} {'smallest>0':>12} {'largest':>12} {'cond':>10}"
+    )
     print("-" * 90)
 
     for label, pstr, fn, v0 in cases:
@@ -129,7 +141,9 @@ def main() -> None:
         smallest = pos.min() if len(pos) else float("nan")
         largest = eigs[-1]
         cond = largest / smallest if smallest > 0 else float("inf")
-        print(f"{label:>10} {pstr:>4} {r.fun:>14.10f} {dead:>6} {near0:>10} {smallest:>12.4e} {largest:>12.4e} {cond:>10.2e}")
+        print(
+            f"{label:>10} {pstr:>4} {r.fun:>14.10f} {dead:>6} {near0:>10} {smallest:>12.4e} {largest:>12.4e} {cond:>10.2e}"
+        )
 
 
 if __name__ == "__main__":

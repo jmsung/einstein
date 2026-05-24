@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from einstein.autocorrelation.fast import fast_evaluate, diagnose
+from einstein.autocorrelation.fast import diagnose, fast_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
@@ -68,9 +68,17 @@ def compute_C_batch(h_batch, device):
     return C
 
 
-def adam_optimize(n, batch_size=64, n_explore=5000, n_exploit=5000,
-                  lr_explore=3e-2, lr_exploit=5e-3, device='cpu',
-                  seed=42, time_limit=120):
+def adam_optimize(
+    n,
+    batch_size=64,
+    n_explore=5000,
+    n_exploit=5000,
+    lr_explore=3e-2,
+    lr_exploit=5e-3,
+    device="cpu",
+    seed=42,
+    time_limit=120,
+):
     """Batched Adam optimization with peak-flattening gradient.
 
     Args:
@@ -134,8 +142,10 @@ def adam_optimize(n, batch_size=64, n_explore=5000, n_exploit=5000,
                     best_score = c_val
                     best_f = h[best_idx].detach().cpu().numpy().copy()
                 if (t + 1) % 1000 == 0:
-                    print(f"    iter {t+1}: best C={best_score:.8f}, "
-                          f"batch mean={C_vals.mean().item():.6f}")
+                    print(
+                        f"    iter {t + 1}: best C={best_score:.8f}, "
+                        f"batch mean={C_vals.mean().item():.6f}"
+                    )
 
     # Phase 2: Exploitation — elitist selection + clean gradients
     print(f"  Phase 2: Exploitation ({n_exploit} iters)")
@@ -187,8 +197,10 @@ def adam_optimize(n, batch_size=64, n_explore=5000, n_exploit=5000,
                 if c_val > best_score and c_val < 1.0:
                     best_score = c_val
                     best_f = h[best_idx].detach().cpu().numpy().copy()
-                print(f"    iter {t+1}: best C={best_score:.8f}, "
-                      f"batch mean={C_vals.mean().item():.6f}")
+                print(
+                    f"    iter {t + 1}: best C={best_score:.8f}, "
+                    f"batch mean={C_vals.mean().item():.6f}"
+                )
 
     # Final extraction
     with torch.no_grad():
@@ -223,23 +235,28 @@ def main():
     print("Based on Jaech & Joseph (arXiv:2508.02803)")
     print("=" * 60)
 
-    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
     print(f"Device: {device}")
 
     # Stage 1: Small n, find good structure
     n_start = 768
     print(f"\n=== Stage 1: n={n_start} ===")
     f, score = adam_optimize(
-        n_start, batch_size=128, n_explore=8000, n_exploit=8000,
-        lr_explore=3e-2, lr_exploit=5e-3, device=device,
-        time_limit=120
+        n_start,
+        batch_size=128,
+        n_explore=8000,
+        n_exploit=8000,
+        lr_explore=3e-2,
+        lr_exploit=5e-3,
+        device=device,
+        time_limit=120,
     )
     save_result(f, score, f"adam_n{n_start}")
 
     # Trim leading/trailing zeros
     nz = np.nonzero(f > 1e-8)[0]
     if len(nz) > 0:
-        f_trimmed = f[nz[0]:nz[-1]+1]
+        f_trimmed = f[nz[0] : nz[-1] + 1]
         score_trimmed = fast_evaluate(f_trimmed)
         print(f"  Trimmed: {len(f)}→{len(f_trimmed)}, C={score_trimmed:.8f}")
         if score_trimmed > score:
@@ -260,9 +277,15 @@ def main():
         # Refine at new scale (fewer iters, smaller batch)
         # Convert to torch, run Adam
         f_refined, score_refined = adam_optimize(
-            new_n, batch_size=16, n_explore=3000, n_exploit=3000,
-            lr_explore=1e-2, lr_exploit=3e-3, device=device,
-            seed=0, time_limit=90
+            new_n,
+            batch_size=16,
+            n_explore=3000,
+            n_exploit=3000,
+            lr_explore=1e-2,
+            lr_exploit=3e-3,
+            device=device,
+            seed=0,
+            time_limit=90,
         )
 
         # Also try refining the upscaled version directly
@@ -279,12 +302,12 @@ def main():
             opt.step()
             with torch.no_grad():
                 h.clamp_(min=0)
-            if (t+1) % 1000 == 0:
+            if (t + 1) % 1000 == 0:
                 cv = C.item()
                 if cv > best_up and cv < 1.0:
                     best_up = cv
                     best_f_up = h[0].detach().cpu().numpy().copy()
-                print(f"    Refine upscaled iter {t+1}: C={best_up:.8f}")
+                print(f"    Refine upscaled iter {t + 1}: C={best_up:.8f}")
 
         # Verify both
         best_f_up = np.maximum(best_f_up, 0)
@@ -307,7 +330,7 @@ def main():
     print(f"FINAL: C={score:.10f}, n={len(f)}")
     print(f"  nnz={d['nnz']}, blocks={d['n_blocks']}")
     print(f"  flat_0.1%={d['flatness_0.1pct']}")
-    print(f"  Done.")
+    print("  Done.")
     print("=" * 60)
 
     save_result(f, score, "adam_final")

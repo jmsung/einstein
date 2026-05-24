@@ -13,6 +13,7 @@ the drop step is the mechanism that escapes a vanilla-FW fixed point.
 Uses a smooth-max surrogate for the gradient (stable softmax over top
 peaks), but accepts a step only if the exact C decreases.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -81,7 +82,7 @@ def gradient_and_C(f: np.ndarray, beta: float) -> tuple[np.ndarray, float]:
     W = np.fft.rfft(w, n=m_pad)
     F_rev = np.fft.rfft(f_rev, n=m_pad)
     conv_wfr = np.fft.irfft(W * F_rev, n=m_pad)[:m_full]
-    d_vec = conv_wfr[n - 1: 2 * n - 1]  # length n
+    d_vec = conv_wfr[n - 1 : 2 * n - 1]  # length n
     grad = (2.0 / (s * s * dx)) * d_vec - (2.0 * L) / s
     return grad, L
 
@@ -139,8 +140,23 @@ def pairwise_fw(
             best_new_c = current_c
 
             # Grid of fractions: large first (drop step at frac=1.0 if accepted)
-            fracs = [1.0, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01, 3e-3, 1e-3,
-                     3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6]
+            fracs = [
+                1.0,
+                0.5,
+                0.25,
+                0.1,
+                0.05,
+                0.02,
+                0.01,
+                3e-3,
+                1e-3,
+                3e-4,
+                1e-4,
+                3e-5,
+                1e-5,
+                3e-6,
+                1e-6,
+            ]
             for frac in fracs:
                 gamma = frac * gmax
                 f_try = f.copy()
@@ -157,7 +173,9 @@ def pairwise_fw(
                 no_progress += 1
                 if no_progress >= 5:
                     if verbose:
-                        print(f"  iter={it:>5}  stuck after 5 failed steps (dg_smooth={dg_smooth:.2e})")
+                        print(
+                            f"  iter={it:>5}  stuck after 5 failed steps (dg_smooth={dg_smooth:.2e})"
+                        )
                     break
                 continue
 
@@ -176,10 +194,12 @@ def pairwise_fw(
 
             if verbose and (it < 10 or it % 50 == 0):
                 drop = " * DROP" if best_gamma == gmax else ""
-                print(f"  iter={it:>5}  C={c_now:.18f}  "
-                      f"best={best_c:.18f}  "
-                      f"dg={dg_smooth:.2e}  γ={best_gamma:.2e}{drop}",
-                      flush=True)
+                print(
+                    f"  iter={it:>5}  C={c_now:.18f}  "
+                    f"best={best_c:.18f}  "
+                    f"dg={dg_smooth:.2e}  γ={best_gamma:.2e}{drop}",
+                    flush=True,
+                )
 
     return best_f, best_c
 
@@ -201,7 +221,7 @@ def main():
     betas = [float(b) for b in args.beta.split(",")]
     t0 = time.time()
     f_best, c_best = pairwise_fw(f, args.iters, betas)
-    print(f"\nFinal C = {c_best:.18f}  ({time.time()-t0:.1f}s)")
+    print(f"\nFinal C = {c_best:.18f}  ({time.time() - t0:.1f}s)")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as fh:

@@ -20,12 +20,11 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import sys
 import time
 from pathlib import Path
 
-import numpy as np
 import numba as nb
+import numpy as np
 
 SOTA_PATH = (
     Path.home()
@@ -409,8 +408,7 @@ def verify_atom(A, target_v):
 
 
 def run_direct(args):
-    print(f"Direct BnB: k={args.k}, target_v={args.target_v}, S_max={args.S_max}",
-          flush=True)
+    print(f"Direct BnB: k={args.k}, target_v={args.target_v}, S_max={args.S_max}", flush=True)
 
     # Initialize state
     marks = np.zeros(args.k, dtype=np.int32)
@@ -425,27 +423,34 @@ def run_direct(args):
     print("JIT compile (first call takes ~5s)...", flush=True)
     while True:
         status, level, nodes = bnb_direct_batch(
-            marks, covered, partner_idx, level,
-            args.k, args.target_v, args.S_max, batch,
+            marks,
+            covered,
+            partner_idx,
+            level,
+            args.k,
+            args.target_v,
+            args.S_max,
+            batch,
         )
         total_nodes += nodes
         wall = time.time() - t_start
         if status == 1:
             A = sorted(int(x) for x in marks)
             c = verify_atom(A, args.target_v)
-            print(f"Found atom: k={len(A)}, c(A)={c}, "
-                  f"nodes={total_nodes:,}, wall={wall:.1f}s", flush=True)
+            print(
+                f"Found atom: k={len(A)}, c(A)={c}, nodes={total_nodes:,}, wall={wall:.1f}s",
+                flush=True,
+            )
             return A
         if status == 4:
-            print(f"Tree exhausted, no solution. "
-                  f"nodes={total_nodes:,}, wall={wall:.1f}s", flush=True)
+            print(
+                f"Tree exhausted, no solution. nodes={total_nodes:,}, wall={wall:.1f}s", flush=True
+            )
             return None
         # In progress
-        print(f"  ... {total_nodes:,} nodes, {wall:.1f}s, level={level}",
-              flush=True)
+        print(f"  ... {total_nodes:,} nodes, {wall:.1f}s, level={level}", flush=True)
         if wall > args.time_limit:
-            print(f"Time limit hit. nodes={total_nodes:,}, wall={wall:.1f}s",
-                  flush=True)
+            print(f"Time limit hit. nodes={total_nodes:,}, wall={wall:.1f}s", flush=True)
             return None
         if total_nodes > args.max_nodes:
             print(f"Node limit hit. nodes={total_nodes:,}", flush=True)
@@ -456,8 +461,7 @@ def run_lns(args):
     A_sota = load_sota_atom()
     k = len(A_sota)
     assert k == 90
-    print(f"LNS: remove {args.w} marks from SOTA (k={k}), search replacements",
-          flush=True)
+    print(f"LNS: remove {args.w} marks from SOTA (k={k}), search replacements", flush=True)
     print(f"target_v={args.target_v}, S_max={args.S_max}", flush=True)
 
     rng = random.Random(args.seed)
@@ -508,9 +512,17 @@ def run_lns(args):
         batch = 2_000_000
         while True:
             status, level, nodes = bnb_lns_batch(
-                combined, n_fixed, covered, uncov_cache, d_star_cache,
-                partner_idx, level,
-                k, args.target_v, args.S_max, batch,
+                combined,
+                n_fixed,
+                covered,
+                uncov_cache,
+                d_star_cache,
+                partner_idx,
+                level,
+                k,
+                args.target_v,
+                args.S_max,
+                batch,
             )
             total_nodes += nodes
             wall_trial = time.time() - t_trial
@@ -520,9 +532,11 @@ def run_lns(args):
                 status = 2  # per-trial timeout
                 break
 
-        msg = (f"Trial {trial + 1}/{args.trials}: rm={remove_idx[:5]} "
-               f"unc_before={uncovered_before} status={status} "
-               f"nodes={total_nodes:,} wall={wall_trial:.1f}s")
+        msg = (
+            f"Trial {trial + 1}/{args.trials}: rm={remove_idx[:5]} "
+            f"unc_before={uncovered_before} status={status} "
+            f"nodes={total_nodes:,} wall={wall_trial:.1f}s"
+        )
         print(msg, flush=True)
         if status == 1:
             A = sorted(int(combined[i]) for i in range(k))
@@ -553,13 +567,13 @@ def main():
     parser.add_argument("--target-v", type=int, default=1044)
     parser.add_argument("--S-max", type=int, default=6967)
     parser.add_argument("--k", type=int, default=90)
-    parser.add_argument("--time-limit", type=int, default=60,
-                        help="Total time limit (direct mode)")
+    parser.add_argument("--time-limit", type=int, default=60, help="Total time limit (direct mode)")
     parser.add_argument("--max-nodes", type=int, default=1_000_000_000)
     parser.add_argument("--w", type=int, default=5, help="LNS swap width")
     parser.add_argument("--trials", type=int, default=100, help="LNS random trials")
-    parser.add_argument("--per-trial-time", type=int, default=10,
-                        help="Time per LNS trial (seconds)")
+    parser.add_argument(
+        "--per-trial-time", type=int, default=10, help="Time per LNS trial (seconds)"
+    )
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -570,20 +584,25 @@ def main():
 
     if A is not None:
         B, v, score = kronecker_score(A)
-        sota = 360 ** 2 / 49109
+        sota = 360**2 / 49109
         print(f"Kronecker B: k={len(B)}, v={v}, score={score:.16f}", flush=True)
         print(f"Δ vs SOTA: {score - sota:+.6e}", flush=True)
         if v > 49109:
             RESULTS_DIR.mkdir(parents=True, exist_ok=True)
             out = RESULTS_DIR / f"atom-bnb-{args.mode}-v{v}-score{score:.10f}.json"
-            out.write_text(json.dumps({
-                "set": [int(b) for b in B],
-                "atom": [int(a) for a in A],
-                "score": float(score),
-                "k": len(B),
-                "v": int(v),
-                "mode": args.mode,
-            }, indent=2))
+            out.write_text(
+                json.dumps(
+                    {
+                        "set": [int(b) for b in B],
+                        "atom": [int(a) for a in A],
+                        "score": float(score),
+                        "k": len(B),
+                        "v": int(v),
+                        "mode": args.mode,
+                    },
+                    indent=2,
+                )
+            )
             print(f"Wrote {out}", flush=True)
 
 

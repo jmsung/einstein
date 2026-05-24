@@ -9,14 +9,12 @@ scallop k to inside scallop k-1 with various offsets, then polish with
 bounded L-BFGS.
 """
 
-import json
 import sys
 from pathlib import Path
 
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
@@ -53,7 +51,9 @@ def main():
             pol, _ = lbfgs_polish_bounded(adjusted, bi_xs, max_rounds=80)
             sc = true_score(bi_xs, pol)
             marker = " NEW BEST" if sc > best_score + 1e-13 else ""
-            print(f"  offset={offset:.1e}: raw={true_score(bi_xs, adjusted):.14f} polished={sc:.14f}{marker}")
+            print(
+                f"  offset={offset:.1e}: raw={true_score(bi_xs, adjusted):.14f} polished={sc:.14f}{marker}"
+            )
             if sc > best_score + 1e-13:
                 best_multi = pol.copy()
                 best_score = sc
@@ -79,7 +79,9 @@ def main():
                 if sc > best_score + 1e-13:
                     best_multi = pol.copy()
                     best_score = sc
-                    print(f"  k={k:2d} offset={offset:.1e}: {sc:.14f} NEW BEST (+{sc-init_score:.3e})")
+                    print(
+                        f"  k={k:2d} offset={offset:.1e}: {sc:.14f} NEW BEST (+{sc - init_score:.3e})"
+                    )
             except Exception:
                 pass
 

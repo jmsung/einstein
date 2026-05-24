@@ -85,7 +85,7 @@ def smart_init(n: int, seed: int = None) -> np.ndarray:
     # Set roughly n/2 elements to 1
     # Use a random permutation
     perm = rng.permutation(n)
-    h[perm[:n//2]] = 1.0
+    h[perm[: n // 2]] = 1.0
     # Add some randomness to smooth it out
     h += rng.normal(0, 0.05, n)
     h = np.clip(h, 0.0, 1.0)

@@ -77,7 +77,7 @@ def polish_slsqp(
     # Recompute after normalization
     D0 = np.sqrt(((V0[:, None] - V0[None]) ** 2).sum(-1))
     maxd0 = D0[iu].max()
-    s0 = maxd0 ** 2 + 1e-9
+    s0 = maxd0**2 + 1e-9
 
     x0 = _pack(V0, s0)
 

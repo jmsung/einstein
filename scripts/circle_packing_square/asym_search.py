@@ -19,13 +19,13 @@ from pathlib import Path
 
 import numpy as np
 
-
 PAIR_TOL_ARENA = 1e-9
 WALL_TOL_ARENA = 0.0
 
 
-def arena_verify(arr: np.ndarray, pair_tol: float = PAIR_TOL_ARENA,
-                 wall_tol: float = WALL_TOL_ARENA) -> bool:
+def arena_verify(
+    arr: np.ndarray, pair_tol: float = PAIR_TOL_ARENA, wall_tol: float = WALL_TOL_ARENA
+) -> bool:
     cx, cy, r = arr[:, 0], arr[:, 1], arr[:, 2]
     walls = np.concatenate([cx - r, 1.0 - cx - r, cy - r, 1.0 - cy - r])
     if walls.min() < -wall_tol:
@@ -41,11 +41,15 @@ def arena_verify(arr: np.ndarray, pair_tol: float = PAIR_TOL_ARENA,
 
 def worker(args):
     seed, base_circles, sigma, pair_slack, wall_slack = args
-    import scipy.optimize as opt
     import numpy as np
+    import scipy.optimize as opt
+
     from einstein.circle_packing_square import N_CIRCLES
     from einstein.circle_packing_square.polish import (
-        _all_constraints, _objective, _objective_jac, _pack
+        _all_constraints,
+        _objective,
+        _objective_jac,
+        _pack,
     )
 
     rng = np.random.default_rng(seed)
@@ -67,24 +71,30 @@ def worker(args):
     best_score = -1.0
     safe_pair_tol = 9e-10  # arena_verify uses this; matches polish target
     schedule = (
-        (1e-5, False),      # land in basin
+        (1e-5, False),  # land in basin
         (1e-7, False),
         (1e-9, False),
-        (8.7e-10, True),    # arena-tight w/ margin
+        (8.7e-10, True),  # arena-tight w/ margin
         (8.85e-10, True),
         (8.95e-10, True),
     )
     for ps, check in schedule:
         x0 = _pack(cur)
-        constraints = [{
-            "type": "ineq",
-            "fun": lambda x, ps=ps, ws=wall_slack: _all_constraints(x, slack=ps, wall_slack=ws),
-        }]
+        constraints = [
+            {
+                "type": "ineq",
+                "fun": lambda x, ps=ps, ws=wall_slack: _all_constraints(x, slack=ps, wall_slack=ws),
+            }
+        ]
         bounds = [(0.0, 1.0)] * (3 * N_CIRCLES)
         try:
             result = opt.minimize(
-                _objective, x0, jac=_objective_jac,
-                constraints=constraints, bounds=bounds, method="SLSQP",
+                _objective,
+                x0,
+                jac=_objective_jac,
+                constraints=constraints,
+                bounds=bounds,
+                method="SLSQP",
                 options={"ftol": 1e-16, "maxiter": 3000},
             )
             cur = result.x.reshape(N_CIRCLES, 3)
@@ -125,7 +135,7 @@ def main():
         base = np.array(data["circles"], dtype=np.float64)
     else:
         raise ValueError("Unknown base file format")
-    print(f"Base sum_r: {base[:,2].sum():.13f}")
+    print(f"Base sum_r: {base[:, 2].sum():.13f}")
 
     rng = np.random.default_rng(args.seed_base)
     tasks = []
@@ -153,19 +163,31 @@ def main():
                 best_circles = circles
                 elapsed = time.time() - t0
                 marker = " <<< above AE!" if score > AE + 1e-12 else ""
-                print(f"  seed={seed:5d} NEW BEST {score:.16f}  d_AE={score-AE:+.2e}  ({elapsed:.1f}s){marker}", flush=True)
+                print(
+                    f"  seed={seed:5d} NEW BEST {score:.16f}  d_AE={score - AE:+.2e}  ({elapsed:.1f}s){marker}",
+                    flush=True,
+                )
             elif n_done % 50 == 0:
                 elapsed = time.time() - t0
-                print(f"  ...{n_done}/{args.n_trials} done, best={best_score:.16f}, fail={n_failed}, {elapsed:.1f}s", flush=True)
+                print(
+                    f"  ...{n_done}/{args.n_trials} done, best={best_score:.16f}, fail={n_failed}, {elapsed:.1f}s",
+                    flush=True,
+                )
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "n_trials": args.n_trials,
-            "best_score": best_score,
-            "best_circles": best_circles,
-        }, f, indent=2)
-    print(f"\nFinal: best={best_score:.16f}  d_AE={best_score-AE:+.3e}  ({time.time()-t0:.1f}s, fail={n_failed}/{args.n_trials})")
+        json.dump(
+            {
+                "n_trials": args.n_trials,
+                "best_score": best_score,
+                "best_circles": best_circles,
+            },
+            f,
+            indent=2,
+        )
+    print(
+        f"\nFinal: best={best_score:.16f}  d_AE={best_score - AE:+.3e}  ({time.time() - t0:.1f}s, fail={n_failed}/{args.n_trials})"
+    )
     print(f"Output: {args.output}")
 
 

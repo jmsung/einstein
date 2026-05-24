@@ -38,7 +38,8 @@ import time
 from pathlib import Path
 
 import numpy as np
-from mpmath import mp, mpf, sqrt as mpsqrt
+from mpmath import mp, mpf
+from mpmath import sqrt as mpsqrt
 
 from einstein.kissing_number.evaluator import overlap_loss_mpmath
 
@@ -143,9 +144,7 @@ def step_coord(v_ik: float, k_ulps: int) -> float:
     return x
 
 
-def compute_row_mp(
-    v_row_f64: np.ndarray, dps: int
-) -> list[mpf]:
+def compute_row_mp(v_row_f64: np.ndarray, dps: int) -> list[mpf]:
     """Lift an f64 row to mpmath centers c = 2*v/||v||."""
     mp.dps = dps
     V = [mpf(repr(float(x))) for x in v_row_f64]
@@ -279,10 +278,10 @@ def main() -> None:
 
             if time.time() - last_print > 20:
                 print(
-                    f"  row {row_idx+1:4d}/{len(row_gaps)}  (i={i:3d})  "
+                    f"  row {row_idx + 1:4d}/{len(row_gaps)}  (i={i:3d})  "
                     f"score={float(best_score):.6e}  "
                     f"accepts={sweep_accepts}  tries={total_tries}  "
-                    f"elapsed={time.time()-t_start:.0f}s",
+                    f"elapsed={time.time() - t_start:.0f}s",
                     flush=True,
                 )
                 last_print = time.time()
@@ -302,7 +301,7 @@ def main() -> None:
             out = {
                 "vectors": v_out.tolist(),
                 "score": verify_score,
-                "source": f"polish_ulp_coord:sweep{sweep+1}",
+                "source": f"polish_ulp_coord:sweep{sweep + 1}",
             }
             path = RESULTS / "solution_best_mpmath.json"
             try:

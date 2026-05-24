@@ -10,7 +10,6 @@ Usage:
 
 import json
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -69,13 +68,15 @@ def random_perturbation_search(
         f_trial = f_best.copy()
 
         # Choose perturbation type
-        ptype = rng.choice([
-            "scale_random_blocks",
-            "gaussian_noise",
-            "block_swap",
-            "block_scale_group",
-            "tooth_jitter",
-        ])
+        ptype = rng.choice(
+            [
+                "scale_random_blocks",
+                "gaussian_noise",
+                "block_swap",
+                "block_scale_group",
+                "tooth_jitter",
+            ]
+        )
 
         if ptype == "scale_random_blocks":
             # Scale 1-5 random blocks
@@ -103,9 +104,9 @@ def random_perturbation_search(
             w1, w2 = e1 - s1, e2 - s2
             wmin = min(w1, w2)
             if wmin > 0:
-                temp = f_trial[s1:s1+wmin].copy()
-                f_trial[s1:s1+wmin] = f_trial[s2:s2+wmin]
-                f_trial[s2:s2+wmin] = temp
+                temp = f_trial[s1 : s1 + wmin].copy()
+                f_trial[s1 : s1 + wmin] = f_trial[s2 : s2 + wmin]
+                f_trial[s2 : s2 + wmin] = temp
 
         elif ptype == "block_scale_group":
             # Scale a contiguous group of 5-20 blocks
@@ -125,16 +126,15 @@ def random_perturbation_search(
             new_e = min(len(f), e + shift)
             w = min(e - s, new_e - new_s)
             if w > 0 and new_s != s:
-                vals = f_trial[s:s+w].copy()
+                vals = f_trial[s : s + w].copy()
                 f_trial[s:e] = 0.0
-                f_trial[new_s:new_s+w] = vals
+                f_trial[new_s : new_s + w] = vals
 
         C_trial = score(f_trial)
         if C_trial > C_best:
             n_improved += 1
             print(
-                f"    trial {trial:5d} ({ptype:20s}): "
-                f"C={C_trial:.13f} (dC={C_trial - C_best:+.2e})"
+                f"    trial {trial:5d} ({ptype:20s}): C={C_trial:.13f} (dC={C_trial - C_best:+.2e})"
             )
             C_best = C_trial
             f_best = f_trial
@@ -142,10 +142,7 @@ def random_perturbation_search(
         if (trial + 1) % 500 == 0:
             elapsed = time.time() - t0
             rate = (trial + 1) / elapsed
-            print(
-                f"    ... {trial+1}/{n_trials}, {n_improved} improvements, "
-                f"{rate:.0f} trials/s"
-            )
+            print(f"    ... {trial + 1}/{n_trials}, {n_improved} improvements, {rate:.0f} trials/s")
 
     elapsed = time.time() - t0
     print(f"  Done: {n_trials} trials in {elapsed:.0f}s, {n_improved} improvements")
@@ -155,7 +152,10 @@ def random_perturbation_search(
 
 
 def cpu_dinkelbach_polish(
-    f: np.ndarray, n_outer: int = 3, n_inner: int = 500, beta: float = 1e7,
+    f: np.ndarray,
+    n_outer: int = 3,
+    n_inner: int = 500,
+    beta: float = 1e7,
 ) -> tuple[np.ndarray, float]:
     """CPU-based Dinkelbach polish using scipy L-BFGS-B.
 
@@ -180,7 +180,7 @@ def cpu_dinkelbach_polish(
 
         def neg_objective(w_flat):
             """Negative Dinkelbach objective for minimization."""
-            ff = w_flat ** 2
+            ff = w_flat**2
             F = np.fft.rfft(ff, n=nfft)
             conv = np.fft.irfft(F * F, n=nfft)[:nc]
             conv = np.maximum(conv, 0.0)
@@ -201,21 +201,22 @@ def cpu_dinkelbach_polish(
             log_ratios = beta * (conv / (c_max + 1e-18) - 1.0)
             log_ratios = np.clip(log_ratios, -500, 500)
             linf_proxy = c_max * np.exp(
-                np.log(np.sum(np.exp(log_ratios - np.max(log_ratios))))
-                / beta + np.max(log_ratios) / beta
+                np.log(np.sum(np.exp(log_ratios - np.max(log_ratios)))) / beta
+                + np.max(log_ratios) / beta
             )
 
             obj = l2sq - lam * l1 * linf_proxy
             return -obj
 
         result = minimize(
-            neg_objective, w,
+            neg_objective,
+            w,
             method="L-BFGS-B",
             options={"maxiter": n_inner, "ftol": 1e-15, "gtol": 1e-14},
         )
 
         w_new = result.x
-        f_new = w_new ** 2
+        f_new = w_new**2
         C_new = score(f_new)
 
         if C_new > C_best and np.all(np.isfinite(f_new)):
@@ -254,13 +255,11 @@ def main():
     # ------------------------------------------------------------------
     # Phase 1: Random perturbation search
     # ------------------------------------------------------------------
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Phase 1: Random perturbation search")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
-    f_new, C_new = random_perturbation_search(
-        f_best, blocks, n_trials=2000, seed=42
-    )
+    f_new, C_new = random_perturbation_search(f_best, blocks, n_trials=2000, seed=42)
     if C_new > C_best:
         C_best = C_new
         f_best = f_new
@@ -274,12 +273,12 @@ def main():
     # ------------------------------------------------------------------
     improvement = C_best - C_initial
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("RESULTS")
     print(f"  Initial C: {C_initial:.13f}")
     print(f"  Final C:   {C_best:.13f}")
     print(f"  Improvement: {improvement:+.2e}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     out_tag = f"c2_n{n}_{C_best:.8f}_perturb_search"
     out_json = RESULTS / f"{out_tag}.json"

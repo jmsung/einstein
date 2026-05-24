@@ -98,21 +98,29 @@ def main():
     # Arena-tolerance validity (overlaps within arena-accepted range)
     v = evaluate_verbose(sol, eps=1e-15)
     c3 = abs(v["worst_overlap"]) <= ARENA_OVERLAP_SAFE
-    print(f"  [{'x' if c3 else ' '}] 3. Overlap {v['worst_overlap']:.4e} within arena tolerance (<= {ARENA_OVERLAP_SAFE:.0e})")
+    print(
+        f"  [{'x' if c3 else ' '}] 3. Overlap {v['worst_overlap']:.4e} within arena tolerance (<= {ARENA_OVERLAP_SAFE:.0e})"
+    )
 
     # Perimeter check — arena accepts small float64 noise
     PERIM_NOISE = 3e-9
     c4 = v["perimeter"] <= PERIMETER_BOUND + PERIM_NOISE
-    print(f"  [{'x' if c4 else ' '}] 4. Perimeter {v['perimeter']:.16f} ≤ 4.0 + {PERIM_NOISE:.0e}  (excess {v['perimeter']-PERIMETER_BOUND:.4e})")
+    print(
+        f"  [{'x' if c4 else ' '}] 4. Perimeter {v['perimeter']:.16f} ≤ 4.0 + {PERIM_NOISE:.0e}  (excess {v['perimeter'] - PERIMETER_BOUND:.4e})"
+    )
 
     # minImprovement gate: must improve over OUR OWN previous best
     improvement = score - our_prev_best
     c5 = improvement > min_improvement
-    print(f"  [{'x' if c5 else ' '}] 5. minImprovement gate: {improvement:.4e} > {min_improvement:.0e}")
+    print(
+        f"  [{'x' if c5 else ' '}] 5. minImprovement gate: {improvement:.4e} > {min_improvement:.0e}"
+    )
 
     # Must tie or beat current #1 (rank #1 target)
     c6 = score >= sota_score
-    print(f"  [{'x' if c6 else ' '}] 6. Ties/beats SOTA: {score:.16f} >= {sota_score:.16f}  (by {score-sota_score:+.4e})")
+    print(
+        f"  [{'x' if c6 else ' '}] 6. Ties/beats SOTA: {score:.16f} >= {sota_score:.16f}  (by {score - sota_score:+.4e})"
+    )
 
     # Projected rank
     strictly_better = sum(1 for e in lb if e["score"] > score)

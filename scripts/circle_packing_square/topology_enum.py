@@ -25,8 +25,8 @@ import numpy as np
 
 def worker(args):
     seed, base_circles, drop_edge, add_edge, sigma = args
-    import math
     import numpy as np
+
     from einstein.circle_packing_square import N_CIRCLES
     from einstein.circle_packing_square.active_set import identify_active
     from scripts.circle_packing_square.newton_max import newton_solve
@@ -68,7 +68,8 @@ def worker(args):
 
     try:
         polished, info = newton_solve(
-            init, new_active,
+            init,
+            new_active,
             pair_gap=0.0,
             wall_gap=0.0,
             max_iter=80,
@@ -103,8 +104,7 @@ def worker(args):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--base", type=str, default="results-temp/p14_top.json")
-    p.add_argument("--n-trials", type=int, default=1000,
-                   help="number of (drop, add) pairs to try")
+    p.add_argument("--n-trials", type=int, default=1000, help="number of (drop, add) pairs to try")
     p.add_argument("--workers", type=int, default=None)
     p.add_argument("--sigma", type=float, default=0.005)
     p.add_argument("--seed-base", type=int, default=70000)
@@ -125,9 +125,10 @@ def main():
     else:
         raise ValueError("Unknown base format")
 
-    print(f"Base sum_r: {base[:,2].sum():.16f}")
+    print(f"Base sum_r: {base[:, 2].sum():.16f}")
 
     from einstein.circle_packing_square.active_set import identify_active
+
     active = identify_active(base, eps=1e-7)
     n = 26
     all_pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
@@ -167,29 +168,43 @@ def main():
                 if score > best_score:
                     best_score = score
                     best_record = {
-                        "seed": seed, "drop": drop, "add": add,
-                        "score": score, "pmin": pmin, "wmin": wmin,
+                        "seed": seed,
+                        "drop": drop,
+                        "add": add,
+                        "score": score,
+                        "pmin": pmin,
+                        "wmin": wmin,
                         "circles": circles,
                     }
                     elapsed = time.time() - t0
-                    print(f"  seed={seed:5d} drop={drop} add={add} score={score:.16f} d_AE={score-AE:+.3e} ({elapsed:.1f}s) <<< NEW", flush=True)
+                    print(
+                        f"  seed={seed:5d} drop={drop} add={add} score={score:.16f} d_AE={score - AE:+.3e} ({elapsed:.1f}s) <<< NEW",
+                        flush=True,
+                    )
             if n_done % 50 == 0:
                 elapsed = time.time() - t0
-                print(f"  ...{n_done}/{args.n_trials} done, converged={n_converged}, found above AE: {len(found_above)}, best={best_score:.16f} ({elapsed:.1f}s)", flush=True)
+                print(
+                    f"  ...{n_done}/{args.n_trials} done, converged={n_converged}, found above AE: {len(found_above)}, best={best_score:.16f} ({elapsed:.1f}s)",
+                    flush=True,
+                )
 
     print()
-    print(f"Final: best={best_score:.16f}  d_AE={best_score-AE:+.3e}  ({time.time()-t0:.1f}s)")
+    print(f"Final: best={best_score:.16f}  d_AE={best_score - AE:+.3e}  ({time.time() - t0:.1f}s)")
     print(f"Converged: {n_converged}/{args.n_trials}, found above AE: {len(found_above)}")
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "base_score": AE,
-            "best_score": best_score,
-            "best_record": best_record,
-            "n_converged": n_converged,
-            "n_above_AE": len(found_above),
-        }, f, indent=2)
+        json.dump(
+            {
+                "base_score": AE,
+                "best_score": best_score,
+                "best_record": best_record,
+                "n_converged": n_converged,
+                "n_above_AE": len(found_above),
+            },
+            f,
+            indent=2,
+        )
 
 
 if __name__ == "__main__":

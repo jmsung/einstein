@@ -46,7 +46,7 @@ def verify_energy(vectors):
     pts = pts / norms
 
     diff = pts[:, None, :] - pts[None, :, :]
-    dist_sq = np.sum(diff ** 2, axis=-1)
+    dist_sq = np.sum(diff**2, axis=-1)
     n = len(pts)
     ii, jj = np.triu_indices(n, k=1)
     dists = np.sqrt(dist_sq[ii, jj])
@@ -114,10 +114,14 @@ def main():
     c1 = True
     print(f"  [{'x' if c1 else ' '}] Local evaluator uses tolerance=0 (strict)")
     c3 = verified_score < SOTA_SCORE - MIN_IMPROVEMENT
-    print(f"  [{'x' if c3 else ' '}] Score < leaderboard #3 - minImprovement ({SOTA_SCORE - MIN_IMPROVEMENT:.15f})")
+    print(
+        f"  [{'x' if c3 else ' '}] Score < leaderboard #3 - minImprovement ({SOTA_SCORE - MIN_IMPROVEMENT:.15f})"
+    )
 
     if not c3:
-        print(f"\n  WARNING: Score {verified_score:.15f} is NOT below target {SOTA_SCORE - MIN_IMPROVEMENT:.15f}")
+        print(
+            f"\n  WARNING: Score {verified_score:.15f} is NOT below target {SOTA_SCORE - MIN_IMPROVEMENT:.15f}"
+        )
         print(f"  Gap to target: {verified_score - (SOTA_SCORE - MIN_IMPROVEMENT):+.2e}")
         if not dry_run:
             print("  Refusing to submit. Use --dry-run to see what would happen.")
@@ -125,7 +129,7 @@ def main():
 
     result = submit(vectors, dry_run=dry_run)
     if result:
-        print(f"\nSolution submitted. Check leaderboard.")
+        print("\nSolution submitted. Check leaderboard.")
 
 
 if __name__ == "__main__":

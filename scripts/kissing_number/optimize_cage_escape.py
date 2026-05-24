@@ -8,7 +8,6 @@ Usage:
 """
 
 import json
-import time
 from pathlib import Path
 
 import numpy as np
@@ -133,7 +132,7 @@ def multi_vector_perturbation(vecs, cage_indices, scale, n_iters, seed, accept_w
         if (it + 1) % 100_000 == 0:
             exact = overlap_loss_exact(best_vecs)
             print(
-                f"  [{scale:.0e}] {it+1:>8,d} | exact {exact:.15f} | "
+                f"  [{scale:.0e}] {it + 1:>8,d} | exact {exact:.15f} | "
                 f"impr {improvements} | worse_accepted {accepted_worse}"
             )
 
@@ -179,7 +178,7 @@ def directional_push(vecs, pair_i, pair_j, scale, n_iters, seed):
         if (it + 1) % 100_000 == 0:
             exact = overlap_loss_exact(best_vecs)
             print(
-                f"  push({pair_i},{pair_j}) [{scale:.0e}] {it+1:>8,d} | "
+                f"  push({pair_i},{pair_j}) [{scale:.0e}] {it + 1:>8,d} | "
                 f"exact {exact:.15f} | impr {improvements}"
             )
 
@@ -227,8 +226,7 @@ def so11_rotation_escape(vecs, cage_indices, theta_range, n_iters, seed):
         if (it + 1) % 10_000 == 0:
             exact = overlap_loss_exact(best_vecs)
             print(
-                f"  SO(11) [{theta_range}] {it+1:>8,d} | exact {exact:.15f} | "
-                f"impr {improvements}"
+                f"  SO(11) [{theta_range}] {it + 1:>8,d} | exact {exact:.15f} | impr {improvements}"
             )
 
     return best_vecs, best_loss, improvements
@@ -286,7 +284,7 @@ def sa_multi_scale(vecs, cage_indices, n_iters, seed):
         if (it + 1) % 200_000 == 0:
             exact = overlap_loss_exact(best_vecs)
             print(
-                f"  SA T={T:.2e} s={scale:.0e} | {it+1:>8,d} | exact {exact:.15f} | "
+                f"  SA T={T:.2e} s={scale:.0e} | {it + 1:>8,d} | exact {exact:.15f} | "
                 f"impr {improvements} | worse {accepted_worse}"
             )
 
@@ -367,6 +365,7 @@ def main():
     # Final fine polish
     print("\n=== Phase 5: Fine polish (1e-12 to 1e-14) ===")
     from scripts.kissing_number.optimize_harden import run_perturbation
+
     for scale in [1e-12, 1e-13]:
         v, l, n = run_perturbation(best_vecs.copy(), scale, 5_000_000, 9999)
         if l < best_score:
@@ -374,11 +373,11 @@ def main():
             best_vecs = v.copy()
 
     final = overlap_loss_exact(best_vecs)
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Final:   {final:.15f}")
     print(f"Start:   {initial:.15f}")
     print(f"Delta:   {initial - final:.2e}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     if final < initial:
         save_solution(best_vecs, final)

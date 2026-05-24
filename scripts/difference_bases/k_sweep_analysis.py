@@ -20,17 +20,19 @@ Strategy:
 
 Stop condition: if any (k, v) configuration achieves score < 2.6390274695, triple-verify and report.
 """
+
 from __future__ import annotations
 
 import json
-import sys
 from collections import Counter
 from pathlib import Path
 
 import numpy as np
 
 # Load SOTA
-SOTA_PATH = Path("/Users/jongmin/projects/einstein/mb/problems/19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json")
+SOTA_PATH = Path(
+    "/Users/jongmin/projects/einstein/mb/problems/19-difference-bases/solutions/sota-rank01-CHRONOS-score2.6390274695.json"
+)
 TARGET_SCORE = 2.6390274695066
 MIN_IMPROVEMENT = 1e-8
 
@@ -107,10 +109,12 @@ def k_359_analysis(B: np.ndarray, v_sota: int):
 
     # Sort by v_after descending — best removal candidates first
     candidates.sort(reverse=True)
-    print(f"\n  Top 10 cheapest mark removals (k=360 -> 359):")
-    print(f"    {'rank':<5} {'v_after':<10} {'mark':<10} {'idx':<6} {'score@359':<12} {'beats SOTA?':<12}")
+    print("\n  Top 10 cheapest mark removals (k=360 -> 359):")
+    print(
+        f"    {'rank':<5} {'v_after':<10} {'mark':<10} {'idx':<6} {'score@359':<12} {'beats SOTA?':<12}"
+    )
     for rank, (v_after, x, idx) in enumerate(candidates[:10], 1):
-        score_359 = 359 ** 2 / v_after if v_after > 0 else float("inf")
+        score_359 = 359**2 / v_after if v_after > 0 else float("inf")
         beats = "YES" if score_359 + MIN_IMPROVEMENT < TARGET_SCORE else "no"
         print(f"    {rank:<5} {v_after:<10} {x:<10} {idx:<6} {score_359:<12.6f} {beats:<12}")
     return candidates
@@ -146,11 +150,13 @@ def k_358_analysis(B: np.ndarray, v_sota: int, top_pairs: int = 200):
 
     # Top-N marks with highest single v_after
     top_marks = sorted(single_v_after.items(), key=lambda x: -x[1])[:top_pairs]
-    print(f"  Testing pairs of top-{top_pairs} single-removal candidates ({len(top_marks) * (len(top_marks) - 1) // 2} pairs)")
+    print(
+        f"  Testing pairs of top-{top_pairs} single-removal candidates ({len(top_marks) * (len(top_marks) - 1) // 2} pairs)"
+    )
 
     best = (0, -1, -1)  # (v_after, idx_a, idx_b)
     for ai, (idx_a, _) in enumerate(top_marks):
-        for idx_b, _ in top_marks[ai + 1:]:
+        for idx_b, _ in top_marks[ai + 1 :]:
             # Remove both — recompute first-killed
             x_a, x_b = int(B[idx_a]), int(B[idx_b])
             diffs_removed_count = Counter()
@@ -177,9 +183,11 @@ def k_358_analysis(B: np.ndarray, v_sota: int, top_pairs: int = 200):
                 best = (v_after, idx_a, idx_b)
 
     v_a, ia, ib = best
-    score_358 = 358 ** 2 / v_a if v_a > 0 else float("inf")
+    score_358 = 358**2 / v_a if v_a > 0 else float("inf")
     beats = "YES" if score_358 + MIN_IMPROVEMENT < TARGET_SCORE else "no"
-    print(f"  Best k=358 pair: v_after={v_a}, score={score_358:.6f}, beats SOTA? {beats}  marks=({int(B[ia])}, {int(B[ib])})")
+    print(
+        f"  Best k=358 pair: v_after={v_a}, score={score_358:.6f}, beats SOTA? {beats}  marks=({int(B[ia])}, {int(B[ib])})"
+    )
     return best
 
 
@@ -188,7 +196,7 @@ def k_add_analysis(B: np.ndarray, v_sota: int, k_target: int, max_y: int = 20000
     For k>361, requires multi-mark add — heuristic: greedy add.
     """
     n = len(B)
-    target_v = int(np.ceil(k_target ** 2 / TARGET_SCORE)) + 1
+    target_v = int(np.ceil(k_target**2 / TARGET_SCORE)) + 1
     print(f"\n  k={k_target} needs v >= {target_v}")
 
     if k_target == 361:
@@ -220,9 +228,11 @@ def k_add_analysis(B: np.ndarray, v_sota: int, k_target: int, max_y: int = 20000
                 best_y = y
                 if v_after >= target_v:
                     print(f"    HIT: y={y} -> v_after={v_after} (score={361**2 / v_after:.6f})")
-        score_361 = 361 ** 2 / best_v if best_v > 0 else float("inf")
+        score_361 = 361**2 / best_v if best_v > 0 else float("inf")
         beats = "YES" if score_361 + MIN_IMPROVEMENT < TARGET_SCORE else "no"
-        print(f"  Best k=361 single add: y={best_y} -> v_after={best_v}, score={score_361:.6f}, beats SOTA? {beats}")
+        print(
+            f"  Best k=361 single add: y={best_y} -> v_after={best_v}, score={score_361:.6f}, beats SOTA? {beats}"
+        )
         return best_v
 
     return None
@@ -245,7 +255,9 @@ def main():
     score_sota = len(B) ** 2 / v_sota
     print(f"  v={v_sota}, score={score_sota:.10f}")
     if abs(score_sota - TARGET_SCORE) > 1e-9:
-        print(f"  WARNING: computed score differs from target by {abs(score_sota - TARGET_SCORE):.2e}")
+        print(
+            f"  WARNING: computed score differs from target by {abs(score_sota - TARGET_SCORE):.2e}"
+        )
         return
 
     print("\n[3/3] k=359 analysis (single mark removal)")
@@ -262,9 +274,13 @@ def main():
     best_359 = candidates_359[0]
     print(f"k=359 best: v_after={best_359[0]}, score={359**2 / best_359[0]:.6f}")
     print(f"k=358 best: v_after={best_358[0]}, score={358**2 / best_358[0]:.6f}")
-    print(f"k=361 best: v_after={best_361}, score={361**2 / best_361:.6f}" if best_361 else "k=361: skipped")
+    print(
+        f"k=361 best: v_after={best_361}, score={361**2 / best_361:.6f}"
+        if best_361
+        else "k=361: skipped"
+    )
     print(f"SOTA:        v={v_sota}, score={score_sota:.10f}")
-    print(f"\nAll k tested: NEGATIVE — no improvement over SOTA found.")
+    print("\nAll k tested: NEGATIVE — no improvement over SOTA found.")
 
 
 if __name__ == "__main__":

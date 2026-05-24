@@ -19,7 +19,6 @@ from scipy.optimize import linprog
 from scipy.signal import fftconvolve
 
 sys.path.insert(0, "src")
-from einstein.erdos.evaluator import evaluate as exact_evaluate
 from einstein.erdos.fast import fast_evaluate
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
@@ -74,7 +73,7 @@ def slp_step(h: np.ndarray, trust_radius: float = 0.01, n_active: int = 50) -> n
             ip = i + s
             im = i - s
             if 0 <= ip < n:
-                g += (1.0 - h[ip])
+                g += 1.0 - h[ip]
             if 0 <= im < n:
                 g -= h[im]
             grads[idx, i] = g * 2.0 / n
@@ -108,8 +107,9 @@ def slp_step(h: np.ndarray, trust_radius: float = 0.01, n_active: int = 50) -> n
     bounds.append((None, None))  # t is unbounded
 
     try:
-        result = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
-                        bounds=bounds, method='highs')
+        result = linprog(
+            c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs"
+        )
 
         if result.success:
             delta = result.x[:n]
@@ -129,7 +129,9 @@ def slp_step(h: np.ndarray, trust_radius: float = 0.01, n_active: int = 50) -> n
     return h  # No improvement
 
 
-def slp_optimize(h: np.ndarray, max_iters: int = 200, trust_radius: float = 0.01) -> tuple[np.ndarray, float]:
+def slp_optimize(
+    h: np.ndarray, max_iters: int = 200, trust_radius: float = 0.01
+) -> tuple[np.ndarray, float]:
     """Run SLP optimization loop."""
     best_score = fast_evaluate(h)
     best_h = h.copy()
@@ -145,12 +147,12 @@ def slp_optimize(h: np.ndarray, max_iters: int = 200, trust_radius: float = 0.01
             h = h_new
 
             if (it + 1) % 10 == 0 or improvement > 1e-8:
-                print(f"    SLP iter {it+1}: C={best_score:.13f} (imp={improvement:.2e})")
+                print(f"    SLP iter {it + 1}: C={best_score:.13f} (imp={improvement:.2e})")
         else:
             # Reduce trust radius
             trust_radius *= 0.8
             if trust_radius < 1e-12:
-                print(f"    SLP converged at iter {it+1} (trust radius exhausted)")
+                print(f"    SLP converged at iter {it + 1} (trust radius exhausted)")
                 break
 
     return best_h, best_score
@@ -218,11 +220,12 @@ def generate_diverse_starts(n: int = 600, n_starts: int = 30) -> list[tuple[str,
         else:
             # Bernstein polynomial
             from scipy.special import comb
+
             degree = 5 + seed - 25
             coeffs = rng.uniform(0, 1, degree + 1)
             h = np.zeros(n)
             for k in range(degree + 1):
-                h += coeffs[k] * comb(degree, k) * (x ** k) * ((1 - x) ** (degree - k))
+                h += coeffs[k] * comb(degree, k) * (x**k) * ((1 - x) ** (degree - k))
             name = f"bernstein-d{degree}"
 
         # Normalize
@@ -275,8 +278,9 @@ def main():
             return fast_evaluate(x_clip)
 
         bounds = [(0, 1)] * 600
-        result = sp_minimize(obj, h, method='L-BFGS-B', bounds=bounds,
-                           options={'maxiter': 500, 'ftol': 1e-15})
+        result = sp_minimize(
+            obj, h, method="L-BFGS-B", bounds=bounds, options={"maxiter": 500, "ftol": 1e-15}
+        )
         polished_score = result.fun
         h_polished = np.clip(result.x, 0, 1)
         target = 300.0
@@ -289,11 +293,11 @@ def main():
 
     # Sort by score, take top 5 for SLP
     results.sort(key=lambda x: x[2])
-    print(f"\nTop 5 after pre-polish:")
+    print("\nTop 5 after pre-polish:")
     for name, init, polished, _ in results[:5]:
         print(f"  {name}: {polished:.10f}")
 
-    print(f"\nPhase 2: SLP refinement of top 5...")
+    print("\nPhase 2: SLP refinement of top 5...")
     for name, _, polished_score, h_polished in results[:5]:
         print(f"\n  SLP on {name} (start={polished_score:.10f}):")
         h_slp, slp_score = slp_optimize(h_polished, max_iters=100, trust_radius=0.01)

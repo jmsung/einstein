@@ -24,12 +24,12 @@ from pathlib import Path
 
 import numpy as np
 
-from einstein.circle_packing_square import N_CIRCLES, evaluate, evaluate_strict
+from einstein.circle_packing_square import N_CIRCLES, evaluate
+from einstein.circle_packing_square.active_set import identify_active, newton_polish
 from einstein.circle_packing_square.polish import polish
-from einstein.circle_packing_square.active_set import newton_polish, identify_active
-
 
 # ----- initialization strategies -----
+
 
 def init_hex(rng, jitter: float = 0.005) -> np.ndarray:
     """5-row hexagonal: 6+5+6+5+6 = 28, drop 2 corners."""
@@ -64,7 +64,7 @@ def init_grid(rng, rows: int = 5, cols: int = 6, jitter: float = 0.005) -> np.nd
     pts = pts[:N_CIRCLES]
     pts = np.array(pts)
     pts += rng.normal(0, jitter, pts.shape)
-    radii = np.full(N_CIRCLES, min(0.5/cols, 0.5/rows) * 0.9)
+    radii = np.full(N_CIRCLES, min(0.5 / cols, 0.5 / rows) * 0.9)
     return np.column_stack([pts, radii])
 
 
@@ -155,6 +155,7 @@ def init_topo_swap(rng, base: np.ndarray, n_swaps: int = 2) -> np.ndarray:
 
 # ----- polish with cascade -----
 
+
 def cascade_polish(circles: np.ndarray) -> tuple[np.ndarray, float] | None:
     """SLSQP slack cascade then Newton refinement."""
     try:
@@ -164,7 +165,9 @@ def cascade_polish(circles: np.ndarray) -> tuple[np.ndarray, float] | None:
         c, info = polish(c, method="SLSQP", ftol=1e-16, maxiter=2000, overlap_slack=1e-12)
         # Newton on active set for machine precision
         active = identify_active(c, eps=1e-7)
-        n_act = sum(len(v) if isinstance(v, list) else 0 for k, v in active.items() if k != "pairs") + len(active["pairs"])
+        n_act = sum(
+            len(v) if isinstance(v, list) else 0 for k, v in active.items() if k != "pairs"
+        ) + len(active["pairs"])
         if n_act >= 3 * N_CIRCLES - 4:  # near-rigid
             c, info = newton_polish(c, active=active, max_iter=20, tol=1e-15)
         # Verify strict
@@ -175,6 +178,7 @@ def cascade_polish(circles: np.ndarray) -> tuple[np.ndarray, float] | None:
 
 
 # ----- main -----
+
 
 def main():
     p = argparse.ArgumentParser()
@@ -237,24 +241,35 @@ def main():
             best_score = score
             best_circles = circles
             best_strategy = strat
-            results.append({
-                "trial": trial, "strategy": strat,
-                "score": score, "circles": circles.tolist(),
-            })
+            results.append(
+                {
+                    "trial": trial,
+                    "strategy": strat,
+                    "score": score,
+                    "circles": circles.tolist(),
+                }
+            )
             elapsed = time.time() - t0
-            print(f"  [{strat:10s}] trial {trial:4d} NEW BEST {score:.16f}  ({elapsed:.1f}s)", flush=True)
+            print(
+                f"  [{strat:10s}] trial {trial:4d} NEW BEST {score:.16f}  ({elapsed:.1f}s)",
+                flush=True,
+            )
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "n_trials": args.n_trials,
-            "seed": args.seed,
-            "best_score": best_score,
-            "best_strategy": best_strategy,
-            "best_circles": best_circles.tolist() if best_circles is not None else None,
-            "history": results,
-        }, f, indent=2)
-    print(f"\nFinal: best={best_score:.16f}  strategy={best_strategy}  ({time.time()-t0:.1f}s)")
+        json.dump(
+            {
+                "n_trials": args.n_trials,
+                "seed": args.seed,
+                "best_score": best_score,
+                "best_strategy": best_strategy,
+                "best_circles": best_circles.tolist() if best_circles is not None else None,
+                "history": results,
+            },
+            f,
+            indent=2,
+        )
+    print(f"\nFinal: best={best_score:.16f}  strategy={best_strategy}  ({time.time() - t0:.1f}s)")
 
 
 if __name__ == "__main__":

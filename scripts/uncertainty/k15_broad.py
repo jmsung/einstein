@@ -5,6 +5,7 @@ that converges below the base-k best score.
 
 Usage: uv run python scripts/uncertainty/k15_broad.py [--workers N]
 """
+
 import argparse
 import json
 import os
@@ -18,6 +19,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 sys.path.insert(0, "src")
 
 import multiprocessing as mp
+
 import numpy as np
 
 from einstein.uncertainty.fast import fast_evaluate
@@ -108,8 +110,14 @@ def make_starts(rng, base_roots):
 
     target_k = len(base_roots) + 1
     for n_near, n_mid, n_far in [
-        (3, 6, 6), (3, 7, 5), (4, 6, 5), (4, 7, 4),
-        (3, 5, 7), (5, 5, 5), (2, 8, 5), (3, 8, 4),
+        (3, 6, 6),
+        (3, 7, 5),
+        (4, 6, 5),
+        (4, 7, 4),
+        (3, 5, 7),
+        (5, 5, 5),
+        (2, 8, 5),
+        (3, 8, 4),
     ]:
         if n_near + n_mid + n_far != target_k:
             continue

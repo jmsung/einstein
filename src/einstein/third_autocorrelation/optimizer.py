@@ -69,7 +69,7 @@ def surrogate(f: torch.Tensor, beta: float, *, fft: bool) -> torch.Tensor:
     dx = 0.5 / n
     conv = (autoconv_fft(f) if fft else autoconv_direct(f)) * dx
     integral = f.sum() * dx
-    return smooth_max(conv, beta) / (integral ** 2)
+    return smooth_max(conv, beta) / (integral**2)
 
 
 def exact_score(f: torch.Tensor) -> float:

@@ -18,8 +18,9 @@ from einstein.min_distance_ratio.optimizer import polish_full
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=Path, required=True,
-                        help="JSON with {'vectors': [[x,y]*16]}")
+    parser.add_argument(
+        "--input", type=Path, required=True, help="JSON with {'vectors': [[x,y]*16]}"
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--lottery-rounds", type=int, default=10)
     parser.add_argument("--n-rotations", type=int, default=20000)

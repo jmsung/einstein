@@ -16,7 +16,7 @@ import numpy as np
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_densities, compute_score, turan_row  # noqa: E402
+from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import (  # noqa: E402
@@ -31,7 +31,10 @@ torch.set_default_dtype(torch.float64)
 
 
 def lbfgs_polish(
-    multi_xs: np.ndarray, bi_xs: np.ndarray, x_lo: float, x_hi: float,
+    multi_xs: np.ndarray,
+    bi_xs: np.ndarray,
+    x_lo: float,
+    x_hi: float,
     max_rounds: int = 20,
 ) -> tuple[np.ndarray, float]:
     """L-BFGS from given multi_xs, returns (new_multi_xs, score)."""
@@ -42,9 +45,13 @@ def lbfgs_polish(
     raw = torch.tensor(raw_np, dtype=torch.float64, requires_grad=True)
 
     opt = torch.optim.LBFGS(
-        [raw], lr=1.0, max_iter=30,
-        tolerance_grad=1e-18, tolerance_change=1e-18,
-        history_size=80, line_search_fn="strong_wolfe",
+        [raw],
+        lr=1.0,
+        max_iter=30,
+        tolerance_grad=1e-18,
+        tolerance_change=1e-18,
+        history_size=80,
+        line_search_fn="strong_wolfe",
     )
 
     best_score = -float("inf")
@@ -79,8 +86,11 @@ def lbfgs_polish(
 
 
 def perturb_log_gaps(
-    multi_xs: np.ndarray, x_lo: float, x_hi: float,
-    noise_scale: float, rng: np.random.Generator,
+    multi_xs: np.ndarray,
+    x_lo: float,
+    x_hi: float,
+    noise_scale: float,
+    rng: np.random.Generator,
 ) -> np.ndarray:
     """Perturb via log-gap noise (gap-space jump, preserves ordering)."""
     gaps = np.empty(len(multi_xs) + 1)
@@ -165,11 +175,15 @@ def main():
                 best_multi = new_multi.copy()
                 best_score = new_score
                 n_improvements += 1
-                print(f"  seed={seed:2d} noise={noise:.3f}: {new_score:.14f}{marker} (+{new_score-init_score:.2e})")
+                print(
+                    f"  seed={seed:2d} noise={noise:.3f}: {new_score:.14f}{marker} (+{new_score - init_score:.2e})"
+                )
                 base_multi = new_multi.copy()
                 base_score = new_score
                 # save intermediate
-                save_solution(bi_xs, best_multi, f"push-e-seed{seed}-n{noise:.3f}".replace(".", "p"))
+                save_solution(
+                    bi_xs, best_multi, f"push-e-seed{seed}-n{noise:.3f}".replace(".", "p")
+                )
             elif new_score > base_score:
                 print(f"  seed={seed:2d} noise={noise:.3f}: {new_score:.14f}{marker}")
 

@@ -26,10 +26,10 @@ from scipy.optimize import linprog
 
 from einstein.first_autocorrelation.evaluator import verify_and_compute
 
-
 # ----------------------------------------------------------------------------
 # Warmstart loaders (shared with km_lp.py)
 # ----------------------------------------------------------------------------
+
 
 def load_warmstart(path: Path) -> np.ndarray:
     with open(path) as fh:
@@ -62,6 +62,7 @@ def block_repeat(f: np.ndarray, n_target: int) -> np.ndarray:
 # Sparse Toeplitz (full, all 2n-1 constraints)
 # ----------------------------------------------------------------------------
 
+
 def build_full_toeplitz_coo(f: np.ndarray, drop_tol: float = 0.0) -> sp.csr_matrix:
     """Build the full 2n-1 × n sparse Toeplitz T with T[k, j] = f[k-j].
 
@@ -91,6 +92,7 @@ def build_full_toeplitz_coo(f: np.ndarray, drop_tol: float = 0.0) -> sp.csr_matr
 # ----------------------------------------------------------------------------
 # KM LP step via scipy.linprog
 # ----------------------------------------------------------------------------
+
 
 def km_lp_step_scipy(
     f: np.ndarray,
@@ -148,17 +150,20 @@ def km_lp_step_scipy(
 # Line search
 # ----------------------------------------------------------------------------
 
+
 def line_search(f: np.ndarray, b: np.ndarray):
     base_C = float(verify_and_compute((f / f.sum()).tolist()))
     best_eps = 0.0
     best_f = f / f.sum()
     best_C = base_C
 
-    eps_grid = np.concatenate([
-        [0.0],
-        np.geomspace(1e-8, 1e-1, 32),
-        np.geomspace(1e-1, 1e2, 16),
-    ])
+    eps_grid = np.concatenate(
+        [
+            [0.0],
+            np.geomspace(1e-8, 1e-1, 32),
+            np.geomspace(1e-1, 1e2, 16),
+        ]
+    )
 
     for eps in eps_grid:
         f_new = f + eps * b
@@ -180,6 +185,7 @@ def line_search(f: np.ndarray, b: np.ndarray):
 # ----------------------------------------------------------------------------
 # Iteration loop
 # ----------------------------------------------------------------------------
+
 
 def km_iterate(
     f0: np.ndarray,
@@ -207,8 +213,7 @@ def km_iterate(
             break
         eps, f_new, C_new = line_search(f, b_star)
         print(
-            f"  line-search: best_eps={eps:.3e} C_new={C_new:.16f} "
-            f"delta={best_C - C_new:+.3e}",
+            f"  line-search: best_eps={eps:.3e} C_new={C_new:.16f} delta={best_C - C_new:+.3e}",
             flush=True,
         )
         if C_new < best_C - 1e-15:
@@ -225,15 +230,23 @@ def km_iterate(
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--warmstart", type=Path, required=True)
-    p.add_argument("--n", type=int, default=None,
-                   help="Target n (downsample warmstart via block-sum)")
-    p.add_argument("--downsample", choices=["sum", "avg"], default="sum",
-                   help="Downsample method: sum (preserves L¹) or avg")
+    p.add_argument(
+        "--n", type=int, default=None, help="Target n (downsample warmstart via block-sum)"
+    )
+    p.add_argument(
+        "--downsample",
+        choices=["sum", "avg"],
+        default="sum",
+        help="Downsample method: sum (preserves L¹) or avg",
+    )
     p.add_argument("--max-iters", type=int, default=20)
-    p.add_argument("--method", default="highs-ipm",
-                   choices=["highs", "highs-ds", "highs-ipm"])
-    p.add_argument("--drop-tol", type=float, default=0.0,
-                   help="Drop |f| < drop-tol when building Toeplitz (sparsify)")
+    p.add_argument("--method", default="highs-ipm", choices=["highs", "highs-ds", "highs-ipm"])
+    p.add_argument(
+        "--drop-tol",
+        type=float,
+        default=0.0,
+        help="Drop |f| < drop-tol when building Toeplitz (sparsify)",
+    )
     p.add_argument("--verbose", action="store_true")
     p.add_argument("--out", type=Path, default=None)
     args = p.parse_args()
@@ -262,22 +275,28 @@ def main():
     print(f"Starting C at n={len(f0)}: {base_C:.16f}", flush=True)
 
     best_f, best_C = km_iterate(
-        f0, max_iters=args.max_iters, method=args.method,
-        drop_tol=args.drop_tol, verbose=args.verbose,
+        f0,
+        max_iters=args.max_iters,
+        method=args.method,
+        drop_tol=args.drop_tol,
+        verbose=args.verbose,
     )
 
-    print(f"\n=== FINAL ===")
+    print("\n=== FINAL ===")
     print(f"Best C = {best_C:.16f}")
 
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         with open(args.out, "w") as fh:
-            json.dump({
-                "values": best_f.tolist(),
-                "score": best_C,
-                "n": len(best_f),
-                "warmstart": str(args.warmstart),
-            }, fh)
+            json.dump(
+                {
+                    "values": best_f.tolist(),
+                    "score": best_C,
+                    "n": len(best_f),
+                    "warmstart": str(args.warmstart),
+                },
+                fh,
+            )
         print(f"Saved: {args.out}")
 
 

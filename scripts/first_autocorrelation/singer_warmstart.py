@@ -65,8 +65,24 @@ def singer_17() -> list[int]:
     (https://ljcr.dmgordon.org/diffsets/ds_307_18_1.html).
     """
     return [
-        0, 1, 3, 13, 32, 36, 43, 52, 57,
-        88, 126, 144, 154, 198, 212, 257, 278, 290,
+        0,
+        1,
+        3,
+        13,
+        32,
+        36,
+        43,
+        52,
+        57,
+        88,
+        126,
+        144,
+        154,
+        198,
+        212,
+        257,
+        278,
+        290,
     ]
 
 
@@ -103,14 +119,22 @@ def build_warmstart(
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--n", type=int, default=30000)
-    p.add_argument("--family", choices=["mian_chowla", "bose_chowla", "singer_17"],
-                   default="singer_17")
-    p.add_argument("--size", type=int, default=14,
-                   help="Number of Sidon elements (mian_chowla/bose_chowla only)")
-    p.add_argument("--block-width", type=int, default=102,
-                   help="Thick-block width in grid cells")
-    p.add_argument("--block-mass", type=float, default=0.5,
-                   help="Fraction of total mass in the block (rest in spikes)")
+    p.add_argument(
+        "--family", choices=["mian_chowla", "bose_chowla", "singer_17"], default="singer_17"
+    )
+    p.add_argument(
+        "--size",
+        type=int,
+        default=14,
+        help="Number of Sidon elements (mian_chowla/bose_chowla only)",
+    )
+    p.add_argument("--block-width", type=int, default=102, help="Thick-block width in grid cells")
+    p.add_argument(
+        "--block-mass",
+        type=float,
+        default=0.5,
+        help="Fraction of total mass in the block (rest in spikes)",
+    )
     p.add_argument("--out", type=Path, required=True)
     args = p.parse_args()
 
@@ -131,7 +155,11 @@ def main():
     print(f"Sidon set ({len(sidon)} elements): {sidon}")
 
     f, positions = build_warmstart(
-        args.n, sidon, args.block_width, args.block_mass, 1.0 - args.block_mass,
+        args.n,
+        sidon,
+        args.block_width,
+        args.block_mass,
+        1.0 - args.block_mass,
     )
     print(f"Spike positions in grid: {positions[:20]}{'...' if len(positions) > 20 else ''}")
     print(f"n = {args.n}, sum(f) = {f.sum():.6f}, max(f) = {f.max():.6e}")
@@ -142,15 +170,18 @@ def main():
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as fh:
-        json.dump({
-            "values": f.tolist(),
-            "score": C,
-            "n": args.n,
-            "family": args.family,
-            "sidon_set": sidon,
-            "block_width": args.block_width,
-            "block_mass": args.block_mass,
-        }, fh)
+        json.dump(
+            {
+                "values": f.tolist(),
+                "score": C,
+                "n": args.n,
+                "family": args.family,
+                "sidon_set": sidon,
+                "block_width": args.block_width,
+                "block_mass": args.block_mass,
+            },
+            fh,
+        )
     print(f"Saved: {args.out}")
 
 

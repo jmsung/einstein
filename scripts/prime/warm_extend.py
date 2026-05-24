@@ -158,9 +158,16 @@ def main():
 
         t1 = time.time()
         result = linprog(
-            c_obj, A_ub=A, b_ub=b, bounds=bounds, method="highs",
-            options={"time_limit": 3600, "primal_feasibility_tolerance": 1e-9,
-                     "dual_feasibility_tolerance": 1e-9},
+            c_obj,
+            A_ub=A,
+            b_ub=b,
+            bounds=bounds,
+            method="highs",
+            options={
+                "time_limit": 3600,
+                "primal_feasibility_tolerance": 1e-9,
+                "dual_feasibility_tolerance": 1e-9,
+            },
         )
         t_solve = time.time() - t1
 
@@ -176,15 +183,17 @@ def main():
 
         _, worst_G, viols = check_viols(all_keys, f_vec, max_n)
 
-        log(f"  R{rnd}: score={score:.10f}, cons={len(active_ns)}, "
+        log(
+            f"  R{rnd}: score={score:.10f}, cons={len(active_ns)}, "
             f"viol={len(viols)}, worst_G={worst_G:.10f}, "
-            f"build={t_build:.0f}s solve={t_solve:.0f}s")
+            f"build={t_build:.0f}s solve={t_solve:.0f}s"
+        )
 
         if not viols:
             best_f = f_vec.copy()
             best_score = score
             best_worst_G = worst_G
-            log(f"  *** FEASIBLE ***")
+            log("  *** FEASIBLE ***")
             break
 
         active_set = set(active_ns)
@@ -206,7 +215,7 @@ def main():
     safe_scale = 1.0 + 0.999 * (max_scale - 1.0)
     scaled_score = best_score * safe_scale
 
-    log(f"\nResults:")
+    log("\nResults:")
     log(f"  Base score:   {best_score:.12f}")
     log(f"  Worst G:      {best_worst_G:.12f}")
     log(f"  Safe scale:   {safe_scale:.10f}")
@@ -230,7 +239,7 @@ def main():
 
     # MC verification if target met
     if scaled_score > TARGET:
-        log(f"\nMC Verification:")
+        log("\nMC Verification:")
         passed, wmc = mc_verify(pf, 10_000_000, 42, ARENA_TOL)
         log(f"  MC(10M,42): worst={wmc:.10f} {'PASS' if passed else 'FAIL'}")
         if passed:

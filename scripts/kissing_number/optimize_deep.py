@@ -49,7 +49,7 @@ def overlap_loss_fast(unit_vecs):
 
 
 def incremental_loss(vecs, idx, old_total, old_vec):
-    others = np.concatenate([vecs[:idx], vecs[idx+1:]], axis=0)
+    others = np.concatenate([vecs[:idx], vecs[idx + 1 :]], axis=0)
     old_cos = np.clip(old_vec @ others.T, -1.0, 1.0)
     old_d = 2.0 * np.sqrt(2.0 * np.maximum(0.0, 1.0 - old_cos))
     old_p = np.maximum(0.0, 2.0 - old_d)
@@ -108,7 +108,7 @@ def run_perturbation(vecs, scale, n_iters, seed=42):
             rate = improvements / (it + 1) * 100
             exact = overlap_loss_exact(best_vecs)
             print(
-                f"  [{scale:.0e}] {it+1:>9,d} | exact {exact:.14f} | "
+                f"  [{scale:.0e}] {it + 1:>9,d} | exact {exact:.14f} | "
                 f"impr {improvements:>5d} ({rate:.3f}%) | {elapsed:.0f}s"
             )
 
@@ -144,9 +144,12 @@ def main():
     ]
 
     for i, (scale, iters, seed) in enumerate(configs):
-        print(f"\n--- Round {i+1}/{len(configs)}: scale={scale:.0e}, {iters:,} iters ---")
+        print(f"\n--- Round {i + 1}/{len(configs)}: scale={scale:.0e}, {iters:,} iters ---")
         new_vecs, new_loss, n_impr = run_perturbation(
-            best_vecs.copy(), scale=scale, n_iters=iters, seed=seed,
+            best_vecs.copy(),
+            scale=scale,
+            n_iters=iters,
+            seed=seed,
         )
         exact = overlap_loss_exact(new_vecs)
         print(f"  Final exact: {exact:.14f} ({n_impr} improvements)")

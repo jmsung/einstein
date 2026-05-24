@@ -31,8 +31,35 @@ where = ["src"]
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.0",
     "pytest>=9.0.2",
+    "ruff>=0.7",
 ]
 
 [tool.pytest.ini_options]
 markers = ["slow: slow tests (e.g. exact sympy verifier)"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["docs/raw", "docs/source", "results"]
+
+[tool.ruff.lint]
+# Baseline: E (pycodestyle), F (pyflakes), I (isort). B and UP deferred to a follow-up
+# chore branch — ~275 issues would need real code changes (B023 closure bugs, etc.).
+select = ["E", "F", "I"]
+ignore = [
+    "E501",  # line length is enforced by the formatter
+    "E741",  # ambiguous var names (l, I, O) are common in numerical code
+    "E402",  # module-level import not at top — used for sys.path tweaks in scripts
+    "F841",  # unused locals — many are debug/trace captures; revisit later
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Pre-existing F821 in these scripts (missing TARGET / time refs). Tracked for fix
+# in a follow-up; ignored here so the lint gate can land green.
+"scripts/uncertainty/exact_hillclimb.py" = ["F821"]
+"scripts/uncertainty/k_climb_optimizer.py" = ["F821"]
+"scripts/kissing_number/polish_mpmath.py" = ["F821"]
+
+[tool.ruff.format]

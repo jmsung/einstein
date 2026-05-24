@@ -84,7 +84,7 @@ def optimize_594th_vector(vecs, n_trials=1_000_000, seed=42):
             best_vec = v.copy()
 
         if (trial + 1) % 200_000 == 0:
-            print(f"    {trial+1}: best_loss={best_loss:.10f} ({time.time()-t0:.0f}s)")
+            print(f"    {trial + 1}: best_loss={best_loss:.10f} ({time.time() - t0:.0f}s)")
 
     vecs[593] = best_vec
     return vecs, best_loss
@@ -126,7 +126,7 @@ def targeted_perturbation(vecs, scale, n_iters, seed, recompute_every=50_000):
             rate = improvements / (it + 1) * 100
             exact = overlap_loss_exact(best_vecs)
             print(
-                f"  [{scale:.0e}] {it+1:>10,d} | exact {exact:.15f} | "
+                f"  [{scale:.0e}] {it + 1:>10,d} | exact {exact:.15f} | "
                 f"impr {improvements:>6d} ({rate:.3f}%) | {elapsed:.0f}s"
             )
 
@@ -195,10 +195,10 @@ def main():
             save_solution(best_vecs, best_score)
 
     final = overlap_loss_exact(best_vecs)
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Final:   {final:.15f}")
     print(f"Start:   {initial:.15f}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     if final < initial:
         print("*** BEATS SOTA! ***")
         save_solution(best_vecs, final, tag="best")

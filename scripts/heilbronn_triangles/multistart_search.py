@@ -26,9 +26,7 @@ from scipy.optimize import minimize
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 from einstein.heilbronn_triangles import (  # noqa: E402
-    EQ_TRI_AREA,
     arena_score,
-    all_triangle_areas,
 )
 
 N = 11
@@ -227,14 +225,12 @@ def init_d3_symmetric(seed):
     phase1 = rng.uniform(0, 2 * math.pi / 3)
     phase2 = rng.uniform(0, 2 * math.pi / 3)
     phase3 = rng.uniform(0, 2 * math.pi / 3)
-    for (rr, ph) in [(r1, phase1), (r2, phase2), (r3, phase3)]:
+    for rr, ph in [(r1, phase1), (r2, phase2), (r3, phase3)]:
         for k in range(3):
             a = ph + k * 2 * math.pi / 3
-            pts.append([CENTROID[0] + rr * math.cos(a),
-                        CENTROID[1] + rr * math.sin(a)])
+            pts.append([CENTROID[0] + rr * math.cos(a), CENTROID[1] + rr * math.sin(a)])
     # 1 extra slightly off-center
-    pts.append([CENTROID[0] + 0.02 * rng.uniform(-1, 1),
-                CENTROID[1] + 0.02 * rng.uniform(-1, 1)])
+    pts.append([CENTROID[0] + 0.02 * rng.uniform(-1, 1), CENTROID[1] + 0.02 * rng.uniform(-1, 1)])
     return np.array(pts).flatten()
 
 
@@ -408,14 +404,13 @@ def main():
                 marker = " ★"
             if not args.quiet:
                 print(
-                    f"[{time.time() - t0:6.1f}s] t{trial:4d} {strat:22s} "
-                    f"s={s:.17g}{marker}",
+                    f"[{time.time() - t0:6.1f}s] t{trial:4d} {strat:22s} s={s:.17g}{marker}",
                     flush=True,
                 )
         seed += 1
 
     print("\n=== Summary ===")
-    print(f"Target (CHRONOS #1): 0.036529889880030156")
+    print("Target (CHRONOS #1): 0.036529889880030156")
     print(f"Best found:          {best_score!r}  via {best_strat}")
     print(f"Delta:               {best_score - 0.036529889880030156:+.3e}")
     print("\nPer-strategy bests (sorted):")

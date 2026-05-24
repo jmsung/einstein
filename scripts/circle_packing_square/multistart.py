@@ -22,7 +22,7 @@ from pathlib import Path
 
 import numpy as np
 
-from einstein.circle_packing_square import N_CIRCLES, evaluate, evaluate_strict
+from einstein.circle_packing_square import N_CIRCLES, evaluate
 from einstein.circle_packing_square.polish import polish
 
 
@@ -81,8 +81,9 @@ def main():
     p.add_argument("--n-trials", type=int, default=50)
     p.add_argument("--sigma", type=float, default=0.02)
     p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--warm", type=str, default=None,
-                   help="JSON file with seed solutions (for perturb)")
+    p.add_argument(
+        "--warm", type=str, default=None, help="JSON file with seed solutions (for perturb)"
+    )
     p.add_argument("--output", type=str, default="results-temp/p14_multistart.json")
     args = p.parse_args()
 
@@ -126,20 +127,27 @@ def main():
             print(f"  trial {trial:4d} NEW BEST {score:.16f}  ({elapsed:.1f}s)", flush=True)
         elif trial % 25 == 0:
             elapsed = time.time() - t0
-            print(f"  trial {trial:4d} score={score:.16f}  best={best_score:.16f}  ({elapsed:.1f}s)", flush=True)
+            print(
+                f"  trial {trial:4d} score={score:.16f}  best={best_score:.16f}  ({elapsed:.1f}s)",
+                flush=True,
+            )
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "strategy": args.strategy,
-            "n_trials": args.n_trials,
-            "sigma": args.sigma,
-            "seed": args.seed,
-            "best_score": best_score,
-            "best_circles": best_circles.tolist() if best_circles is not None else None,
-            "history": results,
-        }, f, indent=2)
-    print(f"\nFinal: best={best_score:.16f}  ({time.time()-t0:.1f}s)  -> {args.output}")
+        json.dump(
+            {
+                "strategy": args.strategy,
+                "n_trials": args.n_trials,
+                "sigma": args.sigma,
+                "seed": args.seed,
+                "best_score": best_score,
+                "best_circles": best_circles.tolist() if best_circles is not None else None,
+                "history": results,
+            },
+            f,
+            indent=2,
+        )
+    print(f"\nFinal: best={best_score:.16f}  ({time.time() - t0:.1f}s)  -> {args.output}")
 
 
 if __name__ == "__main__":

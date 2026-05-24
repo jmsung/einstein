@@ -3,13 +3,17 @@
 Screens candidates with fast evaluator, validates with exact sympy.
 Loads starting roots from results/ (gitignored).
 """
+
 import sys
+
 sys.path.insert(0, "src")
 
 import json
 import time
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+
 from einstein.uncertainty.fast import fast_evaluate
 from einstein.uncertainty.verifier import evaluate as exact_evaluate
 
@@ -54,9 +58,9 @@ def save_result(roots, score, tag):
 
 
 def main():
-    log("="*70)
+    log("=" * 70)
     log("EXACT HILLCLIMB — Sympy-verified improvements only")
-    log("="*70)
+    log("=" * 70)
 
     # First: get exact baseline score
     log("Computing exact baseline...")
@@ -97,9 +101,9 @@ def main():
                     trial[i] += d * step
                     if trial[i] <= 0 or trial[i] > 300:
                         continue
-                    if i > 0 and trial[i] <= trial[i-1] + 0.01:
+                    if i > 0 and trial[i] <= trial[i - 1] + 0.01:
                         continue
-                    if i < k-1 and trial[i] >= trial[i+1] - 0.01:
+                    if i < k - 1 and trial[i] >= trial[i + 1] - 0.01:
                         continue
 
                     # Fast screen: only verify if fast score improves
@@ -110,8 +114,10 @@ def main():
                         continue
 
                     # Exact verification
-                    log(f"  z[{i}] += {d*step:+.6f}: fast={fast_score:.14f} "
-                        f"(Δ={fast_score-best_fast:+.4e}). Verifying...")
+                    log(
+                        f"  z[{i}] += {d * step:+.6f}: fast={fast_score:.14f} "
+                        f"(Δ={fast_score - best_fast:+.4e}). Verifying..."
+                    )
 
                     t0 = time.time()
                     try:
@@ -124,8 +130,9 @@ def main():
 
                     diff = abs(fast_score - exact_score)
                     if diff > 1e-4:
-                        log(f"    REJECTED: exact={exact_score:.10f} ({dt:.0f}s) "
-                            f"— far sign change!")
+                        log(
+                            f"    REJECTED: exact={exact_score:.10f} ({dt:.0f}s) — far sign change!"
+                        )
                         continue
 
                     if exact_score < best_exact - 1e-12:
@@ -136,9 +143,11 @@ def main():
                         step_sizes[i] = step
                         total_improvements += 1
                         save_result(roots, exact_score, f"exact_hc_r{round_idx}_i{i}")
-                        log(f"    *** VERIFIED IMPROVEMENT #{total_improvements}: "
+                        log(
+                            f"    *** VERIFIED IMPROVEMENT #{total_improvements}: "
                             f"{old:.14f} → {exact_score:.14f} "
-                            f"(Δ={old-exact_score:.4e}) ({dt:.0f}s) ***")
+                            f"(Δ={old - exact_score:.4e}) ({dt:.0f}s) ***"
+                        )
                         round_improved = True
 
                         if exact_score < TARGET:
@@ -154,22 +163,23 @@ def main():
         if not round_improved:
             # Shrink step sizes
             step_sizes = [s * 0.3 for s in step_sizes]
-            log(f"  Round {round_idx+1}: no improvement, shrinking steps "
-                f"(max={max(step_sizes):.2e})")
+            log(
+                f"  Round {round_idx + 1}: no improvement, shrinking steps "
+                f"(max={max(step_sizes):.2e})"
+            )
             if max(step_sizes) < 1e-12:
                 log("  Steps too small, stopping")
                 break
         else:
-            log(f"  Round {round_idx+1}: improvement found. "
-                f"Best={best_exact:.14f}")
+            log(f"  Round {round_idx + 1}: improvement found. Best={best_exact:.14f}")
 
     # Phase 2: Pairwise perturbation with exact verification
     log("\n--- Phase 2: Pairwise perturbation ---")
     for round_idx in range(20):
         improved = False
         for i in range(k):
-            for j in range(i+1, k):
-                for di, dj in [(1,1), (1,-1), (-1,1), (-1,-1)]:
+            for j in range(i + 1, k):
+                for di, dj in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
                     for s in [0.001, 0.01, 0.05, 0.1]:
                         trial = list(roots)
                         trial[i] += di * s
@@ -177,8 +187,7 @@ def main():
                         trial_sorted = sorted(trial)
                         if any(z <= 0 or z > 300 for z in trial_sorted):
                             continue
-                        if any(trial_sorted[m+1] - trial_sorted[m] < 0.01
-                               for m in range(k-1)):
+                        if any(trial_sorted[m + 1] - trial_sorted[m] < 0.01 for m in range(k - 1)):
                             continue
 
                         fast_score = fast_evaluate(trial_sorted)
@@ -187,15 +196,14 @@ def main():
 
                         log(f"  z[{i},{j}]: fast={fast_score:.14f}. Verifying...")
                         try:
-                            exact_score = exact_evaluate(
-                                {"laguerre_double_roots": trial_sorted})
+                            exact_score = exact_evaluate({"laguerre_double_roots": trial_sorted})
                         except Exception:
                             continue
                         total_evals += 1
 
                         diff = abs(fast_score - exact_score)
                         if diff > 1e-4:
-                            log(f"    REJECTED (far sign change)")
+                            log("    REJECTED (far sign change)")
                             continue
 
                         if exact_score < best_exact - 1e-12:
@@ -204,14 +212,15 @@ def main():
                             best_fast = fast_score
                             roots = list(trial_sorted)
                             total_improvements += 1
-                            save_result(roots, exact_score,
-                                       f"exact_pair_r{round_idx}_i{i}_j{j}")
-                            log(f"    *** PAIR IMPROVEMENT #{total_improvements}: "
-                                f"{old:.14f} → {exact_score:.14f} ***")
+                            save_result(roots, exact_score, f"exact_pair_r{round_idx}_i{i}_j{j}")
+                            log(
+                                f"    *** PAIR IMPROVEMENT #{total_improvements}: "
+                                f"{old:.14f} → {exact_score:.14f} ***"
+                            )
                             improved = True
 
                             if exact_score < TARGET:
-                                log(f"\n!!! BEAT TARGET !!!")
+                                log("\n!!! BEAT TARGET !!!")
                                 return
                             break
                     if improved:
@@ -221,10 +230,10 @@ def main():
             if improved:
                 break
         if not improved:
-            log(f"  Pairwise round {round_idx+1}: no improvement")
+            log(f"  Pairwise round {round_idx + 1}: no improvement")
             break
 
-    log(f"\n{'='*70}")
+    log(f"\n{'=' * 70}")
     log(f"Final exact score: {best_exact:.16f}")
     log(f"Total exact evals: {total_evals}")
     log(f"Total improvements: {total_improvements}")

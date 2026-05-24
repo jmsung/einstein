@@ -6,11 +6,11 @@ Two-tier approach:
 
 Performance: ~3-5x faster than pure scipy/numpy thanks to numba JIT.
 """
+
+import mpmath
 import numpy as np
 from numba import njit, prange
 from scipy.optimize import brentq
-from scipy.special import eval_genlaguerre
-import mpmath
 
 
 def _laguerre_mp(n, alpha, x):
@@ -204,23 +204,31 @@ if __name__ == "__main__":
     import time
 
     best_roots = [
-        3.1427440085666496, 4.469993893132148, 6.078689469782297,
-        32.637646271046336, 38.265477818082566, 41.06153063739393,
-        43.09262298321874, 50.81816373872074, 58.61770809389174,
-        96.07661117430976, 111.48735817427675, 118.74229251036576,
+        3.1427440085666496,
+        4.469993893132148,
+        6.078689469782297,
+        32.637646271046336,
+        38.265477818082566,
+        41.06153063739393,
+        43.09262298321874,
+        50.81816373872074,
+        58.61770809389174,
+        96.07661117430976,
+        111.48735817427675,
+        118.74229251036576,
         141.09580664199572,
     ]
     print(f"Testing k={len(best_roots)} roots...")
     t0 = time.time()
     score = fast_evaluate(best_roots)
     print(f"Fast score: {score} ({time.time() - t0:.1f}s)")
-    print(f"Expected:   ~0.3189")
+    print("Expected:   ~0.3189")
 
     k6_roots = [3.64273649, 5.68246114, 33.00463486, 40.97185579, 50.1028231, 53.76768016]
     t0 = time.time()
     score6 = fast_evaluate(k6_roots)
     print(f"\nk=6 score: {score6} ({time.time() - t0:.1f}s)")
-    print(f"Expected:  ~0.3283")
+    print("Expected:  ~0.3283")
 
     # Benchmark: how many evals per second?
     print("\nBenchmark: 10 evaluations of k=13...")
@@ -228,4 +236,4 @@ if __name__ == "__main__":
     for _ in range(10):
         fast_evaluate(best_roots)
     dt = time.time() - t0
-    print(f"  {dt:.1f}s total, {dt/10:.2f}s/eval, {10/dt:.1f} evals/sec")
+    print(f"  {dt:.1f}s total, {dt / 10:.2f}s/eval, {10 / dt:.1f} evals/sec")

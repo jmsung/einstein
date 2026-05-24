@@ -20,7 +20,6 @@ import time
 from pathlib import Path
 
 import numpy as np
-from scipy.signal import fftconvolve
 
 from einstein.autocorrelation.fast import diagnose, fast_evaluate
 
@@ -72,13 +71,23 @@ def elementwise_ascent(f, max_iters=200, verbose=True):
             # Additive and multiplicative deltas
             deltas = []
             if old_val > 0:
-                deltas.extend([
-                    old_val * 1.5, old_val * 0.67, old_val * 2.0, old_val * 0.5,
-                    old_val * 1.1, old_val * 0.9, old_val * 1.02, old_val * 0.98,
-                    old_val + 0.1, max(0, old_val - 0.1),
-                    old_val + 0.01, max(0, old_val - 0.01),
-                    0.0,  # try removing this element
-                ])
+                deltas.extend(
+                    [
+                        old_val * 1.5,
+                        old_val * 0.67,
+                        old_val * 2.0,
+                        old_val * 0.5,
+                        old_val * 1.1,
+                        old_val * 0.9,
+                        old_val * 1.02,
+                        old_val * 0.98,
+                        old_val + 0.1,
+                        max(0, old_val - 0.1),
+                        old_val + 0.01,
+                        max(0, old_val - 0.01),
+                        0.0,  # try removing this element
+                    ]
+                )
             else:
                 # Try activating this zero element
                 deltas.extend([0.01, 0.1, 0.5, 1.0])
@@ -97,10 +106,12 @@ def elementwise_ascent(f, max_iters=200, verbose=True):
             break
         if verbose and (iteration + 1) % 5 == 0:
             nnz = np.count_nonzero(f)
-            print(f"    iter {iteration+1}: C={best_score:.8f} (nnz={nnz}, {improved_total} impr)")
+            print(
+                f"    iter {iteration + 1}: C={best_score:.8f} (nnz={nnz}, {improved_total} impr)"
+            )
 
     if verbose:
-        print(f"    Final: C={best_score:.8f} ({improved_total} impr, {iteration+1} iters)")
+        print(f"    Final: C={best_score:.8f} ({improved_total} impr, {iteration + 1} iters)")
     return f, best_score
 
 
@@ -212,7 +223,7 @@ def generate_starts(n):
     starts = {}
     x = np.linspace(-3, 3, n)
 
-    starts["gaussian"] = np.exp(-x**2)
+    starts["gaussian"] = np.exp(-(x**2))
     starts["narrow_gauss"] = np.exp(-10 * x**2)
     starts["uniform"] = np.ones(n)
     starts["cosine"] = np.maximum(0, np.cos(np.pi * x / 6))
@@ -224,7 +235,9 @@ def generate_starts(n):
     starts["sparse_random"] = f
 
     # Multi-peak
-    starts["multi_peak"] = np.exp(-2 * x**2) + 0.5 * np.exp(-2 * (x - 2)**2) + 0.5 * np.exp(-2 * (x + 2)**2)
+    starts["multi_peak"] = (
+        np.exp(-2 * x**2) + 0.5 * np.exp(-2 * (x - 2) ** 2) + 0.5 * np.exp(-2 * (x + 2) ** 2)
+    )
 
     return starts
 
@@ -263,7 +276,7 @@ def main():
         best_f, best_score = elementwise_ascent(best_f, max_iters=50)
         for sigma in [0.3, 0.1, 0.03]:
             best_f, best_score = perturb_search(best_f, n_trials=1000, sigma=sigma)
-        print(f"  Round {rnd+1}: C={best_score:.8f}, nnz={np.count_nonzero(best_f)}")
+        print(f"  Round {rnd + 1}: C={best_score:.8f}, nnz={np.count_nonzero(best_f)}")
 
     save_result(best_f, best_score, "phaseA_deep")
 
@@ -276,7 +289,7 @@ def main():
             f_up, score = elementwise_ascent(f_up, max_iters=30)
             for sigma in [0.2, 0.05]:
                 f_up, score = perturb_search(f_up, n_trials=500, sigma=sigma)
-            print(f"  Round {rnd+1}: C={score:.8f}, nnz={np.count_nonzero(f_up)}")
+            print(f"  Round {rnd + 1}: C={score:.8f}, nnz={np.count_nonzero(f_up)}")
 
         best_f = f_up
         best_score = score
@@ -294,7 +307,7 @@ def main():
         for rnd in range(2):
             f_up, score = elementwise_ascent(f_up, max_iters=20)
             f_up, score = perturb_search(f_up, n_trials=300, sigma=0.1)
-            print(f"  Round {rnd+1}: C={score:.8f}")
+            print(f"  Round {rnd + 1}: C={score:.8f}")
 
         best_f = f_up
         best_score = score
@@ -302,10 +315,11 @@ def main():
 
     # Final verification
     from einstein.autocorrelation import evaluate
+
     arena_score = evaluate({"values": best_f.tolist()})
 
     print("\n" + "=" * 60)
-    print(f"FINAL RESULT")
+    print("FINAL RESULT")
     print(f"  Fast score:  C={best_score:.10f}")
     print(f"  Arena score: C={arena_score:.10f}")
     print(f"  n={len(best_f)}, nonzero={np.count_nonzero(best_f)}")

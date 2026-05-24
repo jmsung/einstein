@@ -22,9 +22,8 @@ import time
 from pathlib import Path
 
 import numpy as np
-from scipy.spatial import ConvexHull
 
-from einstein.heilbronn_convex import arena_score, fast_score, active_triples, hull_vertex_indices
+from einstein.heilbronn_convex import active_triples, arena_score, fast_score, hull_vertex_indices
 from einstein.heilbronn_convex.optimizer import polish_slsqp
 
 RESULTS_DIR = Path("results/problem-16-heilbronn-convex")
@@ -133,10 +132,7 @@ def sa_move(pts, rng, temp, move_type="auto"):
     return new_pts
 
 
-def simulated_annealing(
-    pts_init, rng, max_iter=500_000, t_start=0.1, t_end=1e-8,
-    callback=None
-):
+def simulated_annealing(pts_init, rng, max_iter=500_000, t_start=0.1, t_end=1e-8, callback=None):
     """Custom SA with structure-aware moves and slow geometric cooling."""
     pts = pts_init.copy()
     score = fast_score(pts)
@@ -149,7 +145,7 @@ def simulated_annealing(
     improves = 0
 
     for step in range(max_iter):
-        temp = t_start * (alpha ** step)
+        temp = t_start * (alpha**step)
         new_pts = sa_move(pts, rng, temp)
         new_score = fast_score(new_pts)
 
@@ -214,8 +210,10 @@ def main():
 
     def status_callback(step, best, current, temp, acc, imp):
         elapsed = time.time() - start
-        print(f"    step={step:7d}  best={best:.16f}  cur={current:.16f}  "
-              f"T={temp:.2e}  acc={acc}  imp={imp}  [{elapsed:.0f}s]")
+        print(
+            f"    step={step:7d}  best={best:.16f}  cur={current:.16f}  "
+            f"T={temp:.2e}  acc={acc}  imp={imp}  [{elapsed:.0f}s]"
+        )
 
     round_num = 0
     while time.time() - start < args.time:
@@ -277,14 +275,14 @@ def main():
         t_start = rng.choice([0.01, 0.05, 0.1, 0.5, 1.0])
         t_end = rng.choice([1e-8, 1e-10, 1e-12])
 
-        print(f"\nRound {round_num} [{elapsed:.0f}s]: {init_type}  "
-              f"SA(iter={n_iter}, T={t_start:.2e}→{t_end:.2e})")
+        print(
+            f"\nRound {round_num} [{elapsed:.0f}s]: {init_type}  "
+            f"SA(iter={n_iter}, T={t_start:.2e}→{t_end:.2e})"
+        )
 
         # Run SA
         sa_pts, sa_score = simulated_annealing(
-            pts0, rng, max_iter=n_iter,
-            t_start=t_start, t_end=t_end,
-            callback=status_callback
+            pts0, rng, max_iter=n_iter, t_start=t_start, t_end=t_end, callback=status_callback
         )
 
         # Polish with SLSQP
@@ -297,18 +295,22 @@ def main():
         hv = hull_vertex_indices(final)
         at = active_triples(final, rel_tol=1e-9)
 
-        print(f"  → SA={sa_score:.12f}  polish={pol_score:.16f}  "
-              f"final={final_arena:.16f}  hull={len(hv)}+{14-len(hv)}  active={len(at)}")
+        print(
+            f"  → SA={sa_score:.12f}  polish={pol_score:.16f}  "
+            f"final={final_arena:.16f}  hull={len(hv)}+{14 - len(hv)}  active={len(at)}"
+        )
 
-        all_records.append({
-            "round": round_num,
-            "init_type": init_type,
-            "sa_score": sa_score,
-            "polish_score": pol_score,
-            "final_score": final_arena,
-            "n_hull": len(hv),
-            "active": len(at),
-        })
+        all_records.append(
+            {
+                "round": round_num,
+                "init_type": init_type,
+                "sa_score": sa_score,
+                "polish_score": pol_score,
+                "final_score": final_arena,
+                "n_hull": len(hv),
+                "active": len(at),
+            }
+        )
 
         if final_arena > best_score:
             best_score = final_arena
@@ -316,15 +318,15 @@ def main():
             delta = final_arena - ARENA_BEST
             print(f"\n*** NEW BEST! {final_arena:.20f}  delta={delta:+.3e}")
             if final_arena > SUBMIT_THRESHOLD:
-                print(f"*** ABOVE SUBMIT THRESHOLD! ***")
+                print("*** ABOVE SUBMIT THRESHOLD! ***")
                 out = {"points": final.tolist(), "score": final_arena, "round": round_num}
                 Path("/tmp/heilbronn_sa_candidate.json").write_text(json.dumps(out, indent=2))
 
     # Summary
     elapsed = time.time() - start
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"SA ATTACK SUMMARY after {elapsed:.1f}s, {round_num} rounds")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Best score: {best_score:.20f}")
     print(f"Arena #1:   {ARENA_BEST:.20f}")
     print(f"Threshold:  {SUBMIT_THRESHOLD:.20f}")

@@ -12,8 +12,7 @@ is always tight). 64 variables, 21·4 wall + C(21,2)=210 pair constraints.
 
 from __future__ import annotations
 
-import itertools
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from scipy.optimize import minimize
@@ -51,12 +50,14 @@ def _wall_constraints(x: np.ndarray) -> np.ndarray:
     cx = circles[:, 0]
     cy = circles[:, 1]
     r = circles[:, 2]
-    return np.concatenate([
-        cx - r,            # left wall: cx - r ≥ 0
-        w - cx - r,        # right wall
-        cy - r,            # bottom wall
-        h - cy - r,        # top wall
-    ])
+    return np.concatenate(
+        [
+            cx - r,  # left wall: cx - r ≥ 0
+            w - cx - r,  # right wall
+            cy - r,  # bottom wall
+            h - cy - r,  # top wall
+        ]
+    )
 
 
 def _pair_constraints(x: np.ndarray, slack: float = 0.0) -> np.ndarray:
@@ -123,11 +124,13 @@ def polish(
 
     x0 = _pack(circles, initial_w)
 
-    constraints = [{
-        "type": "ineq",
-        "fun": _all_constraints,
-        "args": (overlap_slack,),
-    }]
+    constraints = [
+        {
+            "type": "ineq",
+            "fun": _all_constraints,
+            "args": (overlap_slack,),
+        }
+    ]
 
     bounds = [(0.0, 2.0)] * (3 * N_CIRCLES) + [(0.01, 1.99)]
 
@@ -143,9 +146,8 @@ def polish(
         )
     else:
         from scipy.optimize import NonlinearConstraint
-        nlc = NonlinearConstraint(
-            lambda x: _all_constraints(x, slack=overlap_slack), 0, np.inf
-        )
+
+        nlc = NonlinearConstraint(lambda x: _all_constraints(x, slack=overlap_slack), 0, np.inf)
         result = minimize(
             _objective,
             x0,

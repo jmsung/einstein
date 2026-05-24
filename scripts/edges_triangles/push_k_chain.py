@@ -4,7 +4,6 @@ Cycle: snap-to-boundary → BH-polish → snap → BH → ... until no more gain
 Also tries multi-point snapping (snap 2 points per boundary).
 """
 
-import json
 import sys
 import time
 from pathlib import Path
@@ -12,17 +11,21 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
-from push_g_bounded import lbfgs_polish_bounded, perturb_log_gaps, save_solution, true_score  # noqa: E402
+from push_g_bounded import (  # noqa: E402
+    lbfgs_polish_bounded,
+    perturb_log_gaps,
+    save_solution,
+    true_score,
+)
 from push_h_aggressive import (  # noqa: E402
     perturb_adjacent_pair_swap_or_replace,
     perturb_block_shuffle,
     perturb_point_move,
 )
-from push_j_boundary_snap import insert_boundary_points, snap_to_boundaries  # noqa: E402
+from push_j_boundary_snap import snap_to_boundaries  # noqa: E402
 
 RESULTS = Path("results/problem-13-edges-triangles")
 
@@ -44,9 +47,15 @@ def bh_local(multi_xs, bi_xs, n_seeds=20, max_time=120) -> tuple[np.ndarray, flo
         rng = np.random.default_rng(seed * 73 + 29)
         # Mix of perturbation strategies
         for strategy in [
-            ("bs", {"w": 3}), ("bs", {"w": 5}), ("bs", {"w": 10}), ("bs", {"w": 20}),
-            ("ps", {"n": 1}), ("ps", {"n": 5}), ("pm", {"n": 1}),
-            ("lg", {"noise": 0.08}), ("lg", {"noise": 0.03}),
+            ("bs", {"w": 3}),
+            ("bs", {"w": 5}),
+            ("bs", {"w": 10}),
+            ("bs", {"w": 20}),
+            ("ps", {"n": 1}),
+            ("ps", {"n": 5}),
+            ("pm", {"n": 1}),
+            ("lg", {"noise": 0.08}),
+            ("lg", {"noise": 0.03}),
         ]:
             if strategy[0] == "bs":
                 pert = perturb_block_shuffle(best, strategy[1]["w"], rng)
@@ -110,7 +119,7 @@ def main():
             print(f"\nConverged at iter {it}")
             break
 
-    print(f"\n===== DONE =====")
+    print("\n===== DONE =====")
     print(f"Initial: {init_score:.14f}")
     print(f"Final  : {best_score:.14f}")
     print(f"Gain   : {best_score - init_score:+.3e}")

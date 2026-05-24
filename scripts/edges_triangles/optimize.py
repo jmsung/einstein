@@ -24,7 +24,7 @@ def _segment_area(y0: float, y1: float, h: float) -> float:
     if dy < 0:
         return y1 * h
     elif dy <= 3 * h:
-        return -dy**2 / 6 + y1 * h
+        return -(dy**2) / 6 + y1 * h
     else:
         return y0 * h + 1.5 * h**2
 
@@ -56,6 +56,7 @@ def _recompute_ys(xs: np.ndarray) -> np.ndarray:
 # Phase functions
 # ---------------------------------------------------------------------------
 
+
 def greedy_insert(xs: list, ys: list, n_target: int, n_candidates: int = 50):
     """Greedily insert points in [0.5, 0.95] to minimize area."""
     while len(xs) - 2 < n_target:
@@ -82,11 +83,13 @@ def greedy_insert(xs: list, ys: list, n_target: int, n_candidates: int = 50):
         xs.insert(best_idx, best_x)
         ys.insert(best_idx, best_y)
         if (len(xs) - 2) % 100 == 0:
-            print(f"  {len(xs)-2} pts: {_score_from_arrays(np.array(xs), np.array(ys)):.10f}")
+            print(f"  {len(xs) - 2} pts: {_score_from_arrays(np.array(xs), np.array(ys)):.10f}")
 
 
 def coordinate_descent(
-    xs: np.ndarray, ys: np.ndarray, n_iters: int = 20,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    n_iters: int = 20,
     step_fracs: list[float] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Optimize x-positions via coordinate descent."""
@@ -100,7 +103,9 @@ def coordinate_descent(
                 if xs[i] < 0.49:
                     continue
                 h_left, h_right = xs[i] - xs[i - 1], xs[i + 1] - xs[i]
-                old_area = _segment_area(ys[i - 1], ys[i], h_left) + _segment_area(ys[i], ys[i + 1], h_right)
+                old_area = _segment_area(ys[i - 1], ys[i], h_left) + _segment_area(
+                    ys[i], ys[i + 1], h_right
+                )
                 step = min(h_left, h_right) * frac
                 for dx in [-step, step]:
                     x_new = xs[i] + dx
@@ -108,7 +113,9 @@ def coordinate_descent(
                         continue
                     p = turan_row(x_new)
                     _, y_new = compute_densities(p)
-                    new_area = _segment_area(ys[i - 1], y_new, x_new - xs[i - 1]) + _segment_area(y_new, ys[i + 1], xs[i + 1] - x_new)
+                    new_area = _segment_area(ys[i - 1], y_new, x_new - xs[i - 1]) + _segment_area(
+                        y_new, ys[i + 1], xs[i + 1] - x_new
+                    )
                     if new_area < old_area - 1e-18:
                         xs[i], ys[i], old_area = x_new, y_new, new_area
                         improved += 1
@@ -120,7 +127,9 @@ def coordinate_descent(
 
 
 def golden_section_sweep(
-    xs: np.ndarray, ys: np.ndarray, n_sweeps: int = 200,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    n_sweeps: int = 200,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Optimize each point via golden-section line search."""
     xs, ys = xs.copy(), ys.copy()
@@ -137,10 +146,17 @@ def golden_section_sweep(
             def local_area(x_new):
                 p = turan_row(x_new)
                 _, y_new = compute_densities(p)
-                return _segment_area(ys[i - 1], y_new, x_new - xs[i - 1]) + _segment_area(y_new, ys[i + 1], xs[i + 1] - x_new)
+                return _segment_area(ys[i - 1], y_new, x_new - xs[i - 1]) + _segment_area(
+                    y_new, ys[i + 1], xs[i + 1] - x_new
+                )
 
             old_area = local_area(xs[i])
-            res = minimize_scalar(local_area, bounds=(lo, hi), method="bounded", options={"xatol": 1e-14, "maxiter": 200})
+            res = minimize_scalar(
+                local_area,
+                bounds=(lo, hi),
+                method="bounded",
+                options={"xatol": 1e-14, "maxiter": 200},
+            )
             if res.fun < old_area - 1e-18:
                 xs[i] = res.x
                 _, ys[i] = compute_densities(turan_row(res.x))
@@ -153,7 +169,9 @@ def golden_section_sweep(
 
 
 def redistribute(
-    xs: np.ndarray, ys: np.ndarray, windows: list[int] | None = None,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    windows: list[int] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Redistribute points in sliding windows (uniform spacing)."""
     xs, ys = xs.copy(), ys.copy()
@@ -166,25 +184,37 @@ def redistribute(
             end = start + w
             if end >= len(xs) - 1:
                 break
-            old_area = sum(_segment_area(ys[j], ys[j + 1], xs[j + 1] - xs[j]) for j in range(start, end))
+            old_area = sum(
+                _segment_area(ys[j], ys[j + 1], xs[j + 1] - xs[j]) for j in range(start, end)
+            )
             n_inner = end - start - 1
             if n_inner <= 0:
                 continue
             new_xs = np.linspace(xs[start], xs[end], n_inner + 2)[1:-1]
-            new_ys = np.array([compute_densities(turan_row(np.clip(x, 0.0, 0.95)))[1] for x in new_xs])
+            new_ys = np.array(
+                [compute_densities(turan_row(np.clip(x, 0.0, 0.95)))[1] for x in new_xs]
+            )
             all_xs = np.concatenate([[xs[start]], new_xs, [xs[end]]])
             all_ys = np.concatenate([[ys[start]], new_ys, [ys[end]]])
-            new_area = sum(_segment_area(all_ys[j], all_ys[j + 1], all_xs[j + 1] - all_xs[j]) for j in range(len(all_xs) - 1))
+            new_area = sum(
+                _segment_area(all_ys[j], all_ys[j + 1], all_xs[j + 1] - all_xs[j])
+                for j in range(len(all_xs) - 1)
+            )
             if new_area < old_area - 1e-18:
-                xs[start + 1:end], ys[start + 1:end] = new_xs, new_ys
+                xs[start + 1 : end], ys[start + 1 : end] = new_xs, new_ys
                 improved += 1
         print(f"  Redist w={w}: {_score_from_arrays(xs, ys):.10f} ({improved} moves)")
     return xs, ys
 
 
 def basin_hopping_optimize(
-    xs: np.ndarray, ys: np.ndarray, n_iter: int = 50, temp: float = 1e-8,
-    seed: int = 777, noise_max: float = 0.1, noise_min: float = 0.01,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    n_iter: int = 50,
+    temp: float = 1e-8,
+    seed: int = 777,
+    noise_max: float = 0.1,
+    noise_min: float = 0.01,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Basin-hopping: random global jumps in gap-space + GS local minimizer."""
     best_xs, best_ys = xs.copy(), ys.copy()
@@ -207,7 +237,7 @@ def basin_hopping_optimize(
         new_gaps = ez / ez.sum() * (all_sorted[-1] - all_sorted[0])
         new_multi = np.clip(all_sorted[0] + np.cumsum(new_gaps)[:-1], 0.5, 0.95)
 
-        xs_trial[first_multi:first_multi + len(new_multi)] = np.sort(new_multi)
+        xs_trial[first_multi : first_multi + len(new_multi)] = np.sort(new_multi)
         ys_trial = _recompute_ys(xs_trial)
 
         # Local minimizer
@@ -229,9 +259,12 @@ def basin_hopping_optimize(
 
 
 def sa_perturb(
-    xs: np.ndarray, ys: np.ndarray,
-    n_rounds: int = 20, n_perturbations: int = 50,
-    seed: int = 42, block_size: int = 1,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    n_rounds: int = 20,
+    n_perturbations: int = 50,
+    seed: int = 42,
+    block_size: int = 1,
 ) -> tuple[np.ndarray, np.ndarray]:
     """SA-style perturbation: perturb random blocks, re-optimize, keep best."""
     best_xs, best_ys = xs.copy(), ys.copy()
@@ -248,7 +281,10 @@ def sa_perturb(
             for i in range(i_start, min(i_start + block_size, last_multi + 1)):
                 h = min(xs_trial[i] - xs_trial[i - 1], xs_trial[i + 1] - xs_trial[i])
                 x_new = xs_trial[i] + rng.normal(0, h * scale_frac)
-                if xs_trial[i - 1] + 1e-15 < x_new < xs_trial[i + 1] - 1e-15 and 0.5 <= x_new <= 0.95:
+                if (
+                    xs_trial[i - 1] + 1e-15 < x_new < xs_trial[i + 1] - 1e-15
+                    and 0.5 <= x_new <= 0.95
+                ):
                     xs_trial[i] = x_new
                     _, ys_trial[i] = compute_densities(turan_row(x_new))
 
@@ -265,6 +301,7 @@ def sa_perturb(
 # ---------------------------------------------------------------------------
 # Solution I/O
 # ---------------------------------------------------------------------------
+
 
 def load_solution(path: Path) -> tuple[np.ndarray, np.ndarray]:
     """Load solution.json → (xs_with_boundary, ys_with_boundary)."""
@@ -308,6 +345,7 @@ def save_solution(xs_arr: np.ndarray, ys_arr: np.ndarray, out_dir: Path) -> Path
 # Main
 # ---------------------------------------------------------------------------
 
+
 def full_pipeline() -> tuple[np.ndarray, np.ndarray]:
     """Run from scratch: seed → greedy → CD → fine CD → GS → redist."""
     print("=== Full Pipeline ===\n")
@@ -335,7 +373,9 @@ def full_pipeline() -> tuple[np.ndarray, np.ndarray]:
     xa, ya = coordinate_descent(xa, ya, n_iters=20)
 
     print("\nPhase 3: Ultra-fine CD...")
-    xa, ya = coordinate_descent(xa, ya, n_iters=100, step_fracs=[0.001, 0.0003, 0.0001, 0.00003, 0.00001])
+    xa, ya = coordinate_descent(
+        xa, ya, n_iters=100, step_fracs=[0.001, 0.0003, 0.0001, 0.00003, 0.00001]
+    )
 
     print("\nPhase 4: Golden section...")
     xa, ya = golden_section_sweep(xa, ya, n_sweeps=200)
@@ -355,7 +395,7 @@ def main():
     if polish and sol_path.exists():
         print("=== Polish Mode ===\n")
         xs, ys = load_solution(sol_path)
-        print(f"Loaded: {_score_from_arrays(xs, ys):.10f} ({len(xs)-2} pts)")
+        print(f"Loaded: {_score_from_arrays(xs, ys):.10f} ({len(xs) - 2} pts)")
     else:
         xs, ys = full_pipeline()
 
@@ -376,11 +416,15 @@ def main():
     print(f"\nPhase 7: SA mega-cycles from {best_score:.10f}...")
     for mega in range(5):
         print(f"\n=== Mega {mega} ===")
-        xm, ym = sa_perturb(best_xs, best_ys, n_rounds=20, n_perturbations=100, seed=mega * 13 + 7, block_size=5)
+        xm, ym = sa_perturb(
+            best_xs, best_ys, n_rounds=20, n_perturbations=100, seed=mega * 13 + 7, block_size=5
+        )
         for _ in range(2):
             xm, ym = redistribute(xm, ym)
             xm, ym = golden_section_sweep(xm, ym, n_sweeps=100)
-        xm, ym = coordinate_descent(xm, ym, n_iters=20, step_fracs=[0.0001, 0.00003, 0.00001, 0.000003, 0.000001])
+        xm, ym = coordinate_descent(
+            xm, ym, n_iters=20, step_fracs=[0.0001, 0.00003, 0.00001, 0.000003, 0.000001]
+        )
         sm = _score_from_arrays(xm, ym)
         if sm > best_score:
             best_xs, best_ys, best_score = xm.copy(), ym.copy(), sm
@@ -389,7 +433,10 @@ def main():
             print(f"  Mega {mega}: {sm:.10f} (no improvement)")
 
     # Final
-    area = sum(_segment_area(best_ys[i], best_ys[i + 1], best_xs[i + 1] - best_xs[i]) for i in range(len(best_xs) - 1))
+    area = sum(
+        _segment_area(best_ys[i], best_ys[i + 1], best_xs[i + 1] - best_xs[i])
+        for i in range(len(best_xs) - 1)
+    )
     gap = max(best_xs[i + 1] - best_xs[i] for i in range(len(best_xs) - 1))
     print(f"\nFinal: score={best_score:.10f} (area={area:.10f}, gap={gap:.6f})")
 

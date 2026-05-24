@@ -14,6 +14,7 @@ for compute_router.py to consume.
 Run periodically (every few weeks) — calibration drifts with macOS updates,
 torch versions, and machine state.
 """
+
 from __future__ import annotations
 
 import json
@@ -79,7 +80,12 @@ def cpu_mp_scaling():
     dt_serial = time.perf_counter() - t0
     speedup = dt_serial / dt_parallel if dt_parallel > 0 else 0
     print(f"  mp scaling: {dt_serial:.2f}s serial vs {dt_parallel:.2f}s parallel ({speedup:.1f}x)")
-    return {"cores": cores, "mp_speedup": speedup, "serial_seconds": dt_serial, "parallel_seconds": dt_parallel}
+    return {
+        "cores": cores,
+        "mp_speedup": speedup,
+        "serial_seconds": dt_serial,
+        "parallel_seconds": dt_parallel,
+    }
 
 
 def mps_throughput():
@@ -105,7 +111,11 @@ def mps_throughput():
     torch.mps.synchronize()
     dt = (time.perf_counter() - t0) / 5
     print(f"  MPS float32 matmul {n}^3: {dt:.3f}s/iter")
-    return {"mps_available": True, "matmul_4096_f32_seconds": dt, "gflops_estimate": (2 * n**3) / dt / 1e9}
+    return {
+        "mps_available": True,
+        "matmul_4096_f32_seconds": dt,
+        "gflops_estimate": (2 * n**3) / dt / 1e9,
+    }
 
 
 def mpmath_seq_throughput():

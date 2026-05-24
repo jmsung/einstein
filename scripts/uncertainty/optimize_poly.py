@@ -8,9 +8,9 @@ Usage:
   uv run python -u scripts/uncertainty/optimize_poly.py --base-k 19 --sigma 0.5 --fevals 8000
   uv run python -u scripts/uncertainty/optimize_poly.py --base-k 19 --insert  # try k+1
 """
+
 import argparse
 import json
-import os
 import sys
 import time
 from pathlib import Path
@@ -88,7 +88,8 @@ def cma_optimize(start_roots, sigma, fevals, seed, tag, dps=100):
 
     try:
         es = cma.CMAEvolutionStrategy(
-            gaps, sigma,
+            gaps,
+            sigma,
             {"maxfevals": fevals, "verbose": -9, "tolx": 1e-14, "seed": seed, "popsize": 14},
         )
         es.optimize(obj)
@@ -185,9 +186,7 @@ def main():
             sigma = args.sigma * (0.5 ** (rnd // 2))  # anneal sigma
             tag = f"r{rnd}_s{sigma:.4f}"
 
-            score, gaps, _ = cma_optimize(
-                best_roots, sigma, args.fevals, seed, tag, args.dps
-            )
+            score, gaps, _ = cma_optimize(best_roots, sigma, args.fevals, seed, tag, args.dps)
             roots = gaps_to_roots(gaps)
             if score < best_score - 1e-12 and all(0 < r <= 300 for r in roots):
                 h = verify_and_save(roots, score, f"k{len(roots)}_{tag}")

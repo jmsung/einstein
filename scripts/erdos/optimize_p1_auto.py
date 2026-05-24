@@ -6,11 +6,10 @@ CPU-only, no torch. Runs spectral search + basin hopping + multi-n.
 import json
 import sys
 import time
-from pathlib import Path
 from functools import partial
+from pathlib import Path
 
 import numpy as np
-from scipy.signal import fftconvolve
 
 print = partial(print, flush=True)
 
@@ -66,8 +65,10 @@ def polish(h, n_iters=200_000, delta_scale=1e-7, seed=42, label=""):
             h[idx] = old
 
         if (trial + 1) % 100_000 == 0:
-            print(f"    {label} iter {trial+1}: C={best:.13f} imp={improved} "
-                  f"t={time.time()-t0:.0f}s")
+            print(
+                f"    {label} iter {trial + 1}: C={best:.13f} imp={improved} "
+                f"t={time.time() - t0:.0f}s"
+            )
 
     return h, best
 
@@ -174,9 +175,9 @@ def approach_basin_hop(h_sota, n=600, n_hops=30):
         if ptype == 0:
             start = rng.integers(0, n - 80)
             length = rng.integers(20, 80)
-            seg = h[start:start+length].copy()
+            seg = h[start : start + length].copy()
             rng.shuffle(seg)
-            h[start:start+length] = seg
+            h[start : start + length] = seg
         elif ptype == 1:
             k = rng.integers(1, 50)
             amp = rng.uniform(0.05, 0.3)
@@ -185,14 +186,14 @@ def approach_basin_hop(h_sota, n=600, n_hops=30):
         elif ptype == 2:
             start = rng.integers(0, n - 40)
             length = rng.integers(10, 40)
-            h[start:start+length] = 1.0 - h[start:start+length]
+            h[start : start + length] = 1.0 - h[start : start + length]
         elif ptype == 3:
             h += rng.normal(0, 0.15, n)
         elif ptype == 4:
             s1, s2 = rng.integers(0, n - 40, 2)
             L = rng.integers(10, 40)
-            seg1, seg2 = h[s1:s1+L].copy(), h[s2:s2+L].copy()
-            h[s1:s1+L], h[s2:s2+L] = seg2, seg1
+            seg1, seg2 = h[s1 : s1 + L].copy(), h[s2 : s2 + L].copy()
+            h[s1 : s1 + L], h[s2 : s2 + L] = seg2, seg1
         elif ptype == 5:
             noise = rng.normal(0, 0.2, n)
             H = np.fft.rfft(noise)
@@ -259,7 +260,7 @@ def approach_cold_start_polish(n=600, n_starts=8):
         else:
             h = rng.random(n)
             H = np.fft.rfft(h)
-            H[20 + i * 5:] = 0
+            H[20 + i * 5 :] = 0
             h = np.fft.irfft(H, n=n)
 
         h = np.clip(h, 0, 1)
@@ -283,9 +284,9 @@ def approach_cold_start_polish(n=600, n_starts=8):
             xc = np.clip(xc, 0, 1)
             return fast_evaluate(xc)
 
-        result = sp_minimize(obj, h, method='L-BFGS-B',
-                           bounds=[(0, 1)] * n,
-                           options={'maxiter': 1000, 'ftol': 1e-15})
+        result = sp_minimize(
+            obj, h, method="L-BFGS-B", bounds=[(0, 1)] * n, options={"maxiter": 1000, "ftol": 1e-15}
+        )
         h_opt = np.clip(result.x, 0, 1)
         s = np.sum(h_opt)
         if s > 0:
@@ -353,7 +354,7 @@ def main():
     print(f"SOTA:         {ARENA_SOTA:.16f}")
     print(f"Difference:   {best_score - ARENA_SOTA:+.2e}")
     print(f"Beats SOTA by 1e-6? {'YES' if best_score < TARGET else 'NO'}")
-    print(f"Total elapsed: {elapsed:.0f}s ({elapsed/60:.1f} min)")
+    print(f"Total elapsed: {elapsed:.0f}s ({elapsed / 60:.1f} min)")
 
     # Save best
     all_h = [h1, h2, h3]
@@ -364,7 +365,7 @@ def main():
     if bh is not None:
         exact = exact_evaluate({"values": bh.tolist()})
         fast = fast_evaluate(bh)
-        print(f"\nTriple verification:")
+        print("\nTriple verification:")
         print(f"  Fast:  {fast:.16f}")
         print(f"  Exact: {exact:.16f}")
         print(f"  Match: {abs(fast - exact) < 1e-10}")

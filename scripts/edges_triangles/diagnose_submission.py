@@ -23,7 +23,6 @@ Usage:
 import argparse
 import json
 import math
-import sys
 import time
 import urllib.request
 from pathlib import Path
@@ -42,15 +41,16 @@ def submit_and_monitor(payload, label, timeout_s=300):
     """Submit and monitor for up to timeout_s seconds."""
     api_key = load_api_key()
     data = json.dumps(payload).encode()
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"TEST: {label}")
     print(f"Payload size: {len(data)} bytes")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Check for scientific notation
     payload_str = json.dumps(payload["solution"])
     import re
-    sci = re.findall(r'\d[eE][+-]?\d', payload_str)
+
+    sci = re.findall(r"\d[eE][+-]?\d", payload_str)
     print(f"Scientific notation in payload: {'YES: ' + str(sci[:3]) if sci else 'NO'}")
 
     req = urllib.request.Request(
@@ -90,8 +90,10 @@ def submit_and_monitor(payload, label, timeout_s=300):
             score = status.get("score")
             error = status.get("error")
             evaluated = status.get("evaluatedAt")
-            print(f"  [{time.strftime('%H:%M:%S')}] status={s} score={score} "
-                  f"error={error} evaluated={evaluated}")
+            print(
+                f"  [{time.strftime('%H:%M:%S')}] status={s} score={score} "
+                f"error={error} evaluated={evaluated}"
+            )
             if s != "pending":
                 if s == "completed":
                     print(f"\n✓ SUBMISSION ACCEPTED! Score: {score}")
@@ -101,7 +103,7 @@ def submit_and_monitor(payload, label, timeout_s=300):
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 print(f"  [{time.strftime('%H:%M:%S')}] 404 — SUBMISSION DELETED!")
-                print(f"\n✗ Submission was silently deleted (same as previous failures)")
+                print("\n✗ Submission was silently deleted (same as previous failures)")
                 return
             print(f"  [{time.strftime('%H:%M:%S')}] HTTP {e.code}")
 
@@ -144,7 +146,7 @@ def test3_minimal():
             if k >= 20:
                 p = [1.0 / 20] * 20
             else:
-                disc = 4 * k ** 2 - 4 * k * (k + 1) * x
+                disc = 4 * k**2 - 4 * k * (k + 1) * x
                 if disc < 0:
                     for j in range(k + 1):
                         p[j] = 1.0 / (k + 1)

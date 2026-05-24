@@ -5,16 +5,13 @@ sized to the local feature scale, popsize=100, diagonal-CMA warmup for the
 first 100 iters, and BIPOP large/small population restarts.
 """
 
-import json
 import sys
 import time
 from pathlib import Path
 
 import cma
-import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
@@ -67,7 +64,7 @@ def main():
         best_x = result[0]
         best_fit = -objective(best_x, bi_xs, x_lo, x_hi)
         print(f"Done. Total evals: {es.countevals}")
-        print(f"Best CMA-ES score: {best_fit:.14f}  delta={best_fit-init_score:+.3e}")
+        print(f"Best CMA-ES score: {best_fit:.14f}  delta={best_fit - init_score:+.3e}")
 
         if best_fit > best_score + 1e-13:
             best_multi = log_gaps_to_multi(best_x, x_lo, x_hi)
@@ -81,6 +78,7 @@ def main():
     except Exception as e:
         print(f"BIPOP-CMA failed: {e}")
         import traceback
+
         traceback.print_exc()
 
     print(f"\nFinal: {best_score:.14f}")

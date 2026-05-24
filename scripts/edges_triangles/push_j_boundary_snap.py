@@ -13,15 +13,12 @@ Strategy:
 5. Also try: ADD a new point at each boundary (replaces a redundant interior point)
 """
 
-import json
-import shutil
 import sys
 from pathlib import Path
 
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, compute_densities, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
@@ -45,7 +42,9 @@ def snap_to_boundaries(multi_xs: np.ndarray, k_range: range = range(3, 20)) -> n
     return np.sort(snapped)
 
 
-def polish_with_snapped(multi_xs: np.ndarray, bi_xs: np.ndarray, snap_ks: range) -> tuple[np.ndarray, float]:
+def polish_with_snapped(
+    multi_xs: np.ndarray, bi_xs: np.ndarray, snap_ks: range
+) -> tuple[np.ndarray, float]:
     """Snap to boundaries, then polish the rest."""
     snapped = snap_to_boundaries(multi_xs, snap_ks)
     # Now polish
@@ -53,7 +52,9 @@ def polish_with_snapped(multi_xs: np.ndarray, bi_xs: np.ndarray, snap_ks: range)
     return polished, true_score(bi_xs, polished)
 
 
-def insert_boundary_points(multi_xs: np.ndarray, k_range: range, x_lo: float = 0.5, x_hi: float = 0.95) -> np.ndarray:
+def insert_boundary_points(
+    multi_xs: np.ndarray, k_range: range, x_lo: float = 0.5, x_hi: float = 0.95
+) -> np.ndarray:
     """Insert points at scallop boundaries, remove an equal number of redundant interior points.
 
     Strategy: for each scallop boundary not already present, insert a point there.
@@ -89,7 +90,7 @@ def insert_boundary_points(multi_xs: np.ndarray, k_range: range, x_lo: float = 0
     for i in range(1, len(new_xs) - 1):
         if is_boundary[i]:
             continue
-        local_gaps[i] = min(new_xs[i] - new_xs[i-1], new_xs[i+1] - new_xs[i])
+        local_gaps[i] = min(new_xs[i] - new_xs[i - 1], new_xs[i + 1] - new_xs[i])
 
     # Remove n_remove points with smallest local_gaps
     remove_idx = np.argsort(local_gaps)[:n_remove]
@@ -109,9 +110,9 @@ def main():
     # Strategy 1: snap points to boundaries
     print("\n=== Snap to boundaries + polish ===")
     for k_set in [
-        range(3, 20),      # all scallop boundaries
-        range(3, 10),      # low-k only (bigger scallops)
-        range(10, 20),     # high-k only
+        range(3, 20),  # all scallop boundaries
+        range(3, 10),  # low-k only (bigger scallops)
+        range(10, 20),  # high-k only
         range(3, 8),
         range(8, 15),
     ]:
@@ -137,7 +138,9 @@ def main():
             sc = true_score(bi_xs, pol)
             delta = sc - init_score
             marker = " NEW BEST" if sc > best_score + 1e-13 else ""
-            print(f"  insert {list(k_set)[0]}..{list(k_set)[-1]}: {sc:.14f} delta={delta:+.3e}{marker}")
+            print(
+                f"  insert {list(k_set)[0]}..{list(k_set)[-1]}: {sc:.14f} delta={delta:+.3e}{marker}"
+            )
             if sc > best_score + 1e-13:
                 best_multi = pol.copy()
                 best_score = sc

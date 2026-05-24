@@ -23,12 +23,11 @@ Usage:
 Companion: cross-pollination-not-compute.md (the filter for which candidates
 to keep). This tool says what to *consider*. Together = the discipline.
 """
+
 from __future__ import annotations
 
 import argparse
 import datetime as dt
-import json
-import os
 import re
 import subprocess
 import sys
@@ -42,8 +41,8 @@ QUESTIONS = WIKI / "questions"
 AGENT_OUT = _REPO / "docs" / "agent"
 
 SIMILARITY_THRESHOLD = 0.50  # qmd score above which we treat as latent edge
-                              # (was 0.70 — first run found 0 hits; lowered to 0.50 per
-                              # 2026-05-02 tuning. Documented in finding-the-fertile-gaps "Limits".)
+# (was 0.70 — first run found 0 hits; lowered to 0.50 per
+# 2026-05-02 tuning. Documented in finding-the-fertile-gaps "Limits".)
 LONG_PATH_THRESHOLD = 4  # path length > this between high-similarity pages = chain gap
 UMBRELLA_CLUSTER_MIN = 4  # min pages in a tight cluster to flag as needing concept
 
@@ -51,14 +50,21 @@ UMBRELLA_CLUSTER_MIN = 4  # min pages in a tight cluster to flag as needing conc
 def parse_page(path: Path) -> dict:
     """Parse a wiki page: extract title, frontmatter, outbound links."""
     text = path.read_text()
-    out = {"path": path, "rel_path": str(path.relative_to(WIKI)), "frontmatter": {},
-           "title": None, "body": text, "links_out": set(), "concepts_mentioned": set()}
+    out = {
+        "path": path,
+        "rel_path": str(path.relative_to(WIKI)),
+        "frontmatter": {},
+        "title": None,
+        "body": text,
+        "links_out": set(),
+        "concepts_mentioned": set(),
+    }
 
     # Frontmatter
     m = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
     if m:
         fm_text = m.group(1)
-        out["body"] = text[m.end():]
+        out["body"] = text[m.end() :]
         # Crude YAML parse — sufficient for our flat frontmatter
         fm = {}
         current_list = None
@@ -87,9 +93,17 @@ def parse_page(path: Path) -> dict:
         # cites: are explicit edges
         for cite in fm.get("cites", []) or []:
             out["links_out"].add(_normalize_link(cite, path))
-        for rel_field in ("related_techniques", "related_concepts", "related_findings",
-                          "related_problems", "techniques_used", "concepts_invoked",
-                          "findings_produced", "synthesized_into", "answer_finding"):
+        for rel_field in (
+            "related_techniques",
+            "related_concepts",
+            "related_findings",
+            "related_problems",
+            "techniques_used",
+            "concepts_invoked",
+            "findings_produced",
+            "synthesized_into",
+            "answer_finding",
+        ):
             v = fm.get(rel_field)
             if not v:
                 continue
@@ -112,11 +126,15 @@ def parse_page(path: Path) -> dict:
 
     # Body wiki-links: [[path/to/page]]
     for href in re.findall(r"\[\[([^\]]+)\]\]", out["body"]):
-        out["links_out"].add(_normalize_link(href + ".md" if not href.endswith(".md") else href, path))
+        out["links_out"].add(
+            _normalize_link(href + ".md" if not href.endswith(".md") else href, path)
+        )
 
     # Concept mentions: capitalized noun phrases (heuristic — Type 1 detection)
     # Restrict to within-line matches (no newlines) and reasonable length.
-    for cp in re.findall(r"\b([A-Z][a-z]+(?:[-–][A-Z][a-z]+)*(?:[ \t]+[A-Z][a-z]+){0,3})\b", out["body"]):
+    for cp in re.findall(
+        r"\b([A-Z][a-z]+(?:[-–][A-Z][a-z]+)*(?:[ \t]+[A-Z][a-z]+){0,3})\b", out["body"]
+    ):
         if "\n" in cp or len(cp) > 60:
             continue
         out["concepts_mentioned"].add(cp)
@@ -195,8 +213,13 @@ def compute_explicit_stats(nodes, edges):
     out_deg = {rp: len(tgts) for rp, tgts in edges.items()}
     most_outbound = sorted(out_deg.items(), key=lambda x: -x[1])[:10]
 
-    return {"in_deg": in_deg, "out_deg": out_deg, "orphans": orphans,
-            "most_cited": most_cited, "most_outbound": most_outbound}
+    return {
+        "in_deg": in_deg,
+        "out_deg": out_deg,
+        "orphans": orphans,
+        "most_cited": most_cited,
+        "most_outbound": most_outbound,
+    }
 
 
 def shortest_paths_undirected(nodes, edges):
@@ -280,9 +303,9 @@ def compute_type1_concept_gaps(nodes, edges):
             # Lowercase + emit all contiguous 2-word substrings
             words = title_tail.lower().split()
             for i in range(len(words) - 1):
-                problem_title_phrases.add(f"{words[i]} {words[i+1]}")
+                problem_title_phrases.add(f"{words[i]} {words[i + 1]}")
             for i in range(len(words) - 2):
-                problem_title_phrases.add(f"{words[i]} {words[i+1]} {words[i+2]}")
+                problem_title_phrases.add(f"{words[i]} {words[i + 1]} {words[i + 2]}")
             break  # one H1 per page
 
     # v6: extract author surnames from source/ filenames (year-author-topic.md
@@ -302,32 +325,105 @@ def compute_type1_concept_gaps(nodes, edges):
 
     STOPWORDS = {
         # frontmatter / structural
-        "concepts", "techniques", "findings", "problems", "questions", "personas",
-        "references", "related", "cites", "type", "author", "drafted", "source",
-        "status", "related", "private", "compute", "wisdom", "always",
+        "concepts",
+        "techniques",
+        "findings",
+        "problems",
+        "questions",
+        "personas",
+        "references",
+        "related",
+        "cites",
+        "type",
+        "author",
+        "drafted",
+        "source",
+        "status",
+        "private",
+        "compute",
+        "wisdom",
+        "always",
         # markdown / page structure
-        "summary", "section", "table", "rule", "page", "wiki", "result",
-        "data", "score", "sample", "test", "branch", "agent", "find",
-        "key", "value", "list", "overall", "main", "common", "first",
-        "second", "third", "lesson", "method", "step", "row", "classic",
-        "procedure", "pitfalls", "dispatch", "yes", "no", "open", "closed",
+        "summary",
+        "section",
+        "table",
+        "rule",
+        "page",
+        "wiki",
+        "result",
+        "data",
+        "score",
+        "sample",
+        "test",
+        "branch",
+        "agent",
+        "find",
+        "key",
+        "value",
+        "list",
+        "overall",
+        "main",
+        "common",
+        "first",
+        "second",
+        "third",
+        "lesson",
+        "method",
+        "step",
+        "row",
+        "classic",
+        "procedure",
+        "pitfalls",
+        "dispatch",
+        "yes",
+        "no",
+        "open",
+        "closed",
         # arena / project nouns (have their own pages already)
-        "tammes", "thomson", "wichmann", "kissing", "modal", "github", "arxiv",
-        "einstein", "arena", "score",
-        "problem", "problems", "score", "min", "max", "size", "true", "false",
+        "tammes",
+        "thomson",
+        "wichmann",
+        "kissing",
+        "modal",
+        "github",
+        "arxiv",
+        "einstein",
+        "arena",
+        "problem",
+        "min",
+        "max",
+        "size",
+        "true",
+        "false",
         # parsing artifacts surfaced by v5 detector (2026-05-02 noise pass)
-        "triggering", "structure", "uniform", "lattice", "lattices",
+        "triggering",
+        "structure",
+        "uniform",
+        "lattice",
+        "lattices",
         "leech-sloane",  # proper-noun-as-author (paper ref); not a concept gap
         # operational / non-math
-        "heartbeat", "worker", "modal-worker",
+        "heartbeat",
+        "worker",
+        "modal-worker",
         # v6: generic abstract nouns surfaced by v5 noise pass (2026-05-03)
         "optimality",  # ends in -ality but is too generic to be a concept gap
     }
     # Multi-word phrase prefixes/suffixes that indicate parsing artifacts
     # (regex catches "For Problem", "The Hardin", etc. — first word is generic)
     PHRASE_PREFIX_NOISE = {"for", "the", "by", "from", "with", "and", "but"}
-    PHRASE_SUFFIX_NOISE = {"lesson", "lessons", "rule", "rules", "section",
-                           "result", "results", "tammes", "p19", "p22"}
+    PHRASE_SUFFIX_NOISE = {
+        "lesson",
+        "lessons",
+        "rule",
+        "rules",
+        "section",
+        "result",
+        "results",
+        "tammes",
+        "p19",
+        "p22",
+    }
 
     # Mentions tally
     mention_pages = defaultdict(set)
@@ -366,12 +462,40 @@ def compute_type1_concept_gaps(nodes, edges):
                 if phrase in STOPWORDS or len(phrase) < 7:
                     continue
                 # Single-word should look math-y: contains hyphen or ends in -ness/-tion/-ity/-set/-bound/-theorem/-conjecture
-                math_suffixes = ("set", "sets", "bound", "bounds", "theorem", "lemma",
-                                 "conjecture", "problem", "principle", "ality", "graph",
-                                 "structure", "polynomial", "polynomials", "lattice",
-                                 "lattices", "algebra", "algebras", "manifold", "topology",
-                                 "ring", "rings", "form", "forms", "group", "groups",
-                                 "field", "fields", "ruler", "rulers", "code", "codes")
+                math_suffixes = (
+                    "set",
+                    "sets",
+                    "bound",
+                    "bounds",
+                    "theorem",
+                    "lemma",
+                    "conjecture",
+                    "problem",
+                    "principle",
+                    "ality",
+                    "graph",
+                    "structure",
+                    "polynomial",
+                    "polynomials",
+                    "lattice",
+                    "lattices",
+                    "algebra",
+                    "algebras",
+                    "manifold",
+                    "topology",
+                    "ring",
+                    "rings",
+                    "form",
+                    "forms",
+                    "group",
+                    "groups",
+                    "field",
+                    "fields",
+                    "ruler",
+                    "rulers",
+                    "code",
+                    "codes",
+                )
                 if not (any(phrase.endswith(s) for s in math_suffixes) or "-" in phrase):
                     continue
             else:
@@ -386,7 +510,9 @@ def compute_type1_concept_gaps(nodes, edges):
                 if words[-1] in PHRASE_SUFFIX_NOISE:
                     continue
             mention_pages[phrase].add(rp)
-    candidates = [(p, len(srcs), sorted(srcs)[:3]) for p, srcs in mention_pages.items() if len(srcs) >= 3]
+    candidates = [
+        (p, len(srcs), sorted(srcs)[:3]) for p, srcs in mention_pages.items() if len(srcs) >= 3
+    ]
     candidates.sort(key=lambda x: -x[1])
     return candidates[:20]
 
@@ -398,7 +524,9 @@ def qmd_semantic_neighbors(query_text: str, k: int = 8) -> list[tuple[str, float
     try:
         result = subprocess.run(
             ["qmd", "vsearch", query_text, "-c", "einstein-wiki", "-n", str(k)],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return []
@@ -464,8 +592,14 @@ def compute_type4_chain_gaps(nodes, edges, type2_candidates):
     for c in type2_candidates:
         d = bfs_shortest_path(adj, c["a"], c["b"], max_depth=6)
         if d == float("inf") or d > LONG_PATH_THRESHOLD:
-            chains.append({"a": c["a"], "b": c["b"], "similarity": c["similarity"],
-                           "path_length": "∞" if d == float("inf") else d})
+            chains.append(
+                {
+                    "a": c["a"],
+                    "b": c["b"],
+                    "similarity": c["similarity"],
+                    "path_length": "∞" if d == float("inf") else d,
+                }
+            )
     return chains[:10]
 
 
@@ -484,7 +618,9 @@ def compute_type5_umbrella_gaps(nodes, edges):
     for rp in findings_techniques:
         if not nodes[rp]["title"]:
             continue
-        nbrs = qmd_semantic_neighbors(nodes[rp]["title"], k=6)  # k=6 to leave room after self-filter
+        nbrs = qmd_semantic_neighbors(
+            nodes[rp]["title"], k=6
+        )  # k=6 to leave room after self-filter
         # Exclude self from neighbor list (self-cluster bug fix)
         nbr_paths = [n[0] for n in nbrs if n[0] != rp and n[1] >= 0.5]
         if len(nbr_paths) < 2:
@@ -501,12 +637,12 @@ def write_report(stats, type1, type2, type4, type5, out_path: Path | None):
     """Write the gap-detector report as markdown."""
     today = dt.date.today().isoformat()
     lines = [
-        f"---",
-        f"type: gap-report",
-        f"author: agent",
+        "---",
+        "type: gap-report",
+        "author: agent",
         f"drafted: {today}",
-        f"tool: tools/wiki_graph.py",
-        f"---",
+        "tool: tools/wiki_graph.py",
+        "---",
         "",
         f"# Wiki gap report — {today}",
         "",
@@ -516,7 +652,7 @@ def write_report(stats, type1, type2, type4, type5, out_path: Path | None):
         "",
         f"- Total pages: {sum(1 for _ in stats['in_deg']) + len(stats['orphans']) + 7}",
         f"- Orphan pages (in-degree 0, excluding entry-points): {len(stats['orphans'])}",
-        f"- Most-cited (load-bearing) pages — top 5:",
+        "- Most-cited (load-bearing) pages — top 5:",
     ]
     for rp, c in stats["most_cited"][:5]:
         lines.append(f"  - `{rp}` ({c} incoming citations)")
@@ -543,7 +679,9 @@ def write_report(stats, type1, type2, type4, type5, out_path: Path | None):
     if not type4:
         lines.append("_None detected._")
     for c in type4:
-        lines.append(f"- `{c['a']}` → … → `{c['b']}` (similarity {c['similarity']:.2f}, current path length {c['path_length']})")
+        lines.append(
+            f"- `{c['a']}` → … → `{c['b']}` (similarity {c['similarity']:.2f}, current path length {c['path_length']})"
+        )
     lines.append("")
 
     # Type 5
@@ -613,15 +751,24 @@ def file_top_questions(type1, type2, today: str, n: int = 3) -> list[Path]:
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--out", help="Output report path (default: stdout)")
-    p.add_argument("--file-questions", action="store_true",
-                   help="Auto-file top-3 Type-2 candidates as docs/wiki/questions/")
-    p.add_argument("--no-qmd", action="store_true",
-                   help="Skip semantic-similarity layer (faster; Types 1, 5 only)")
+    p.add_argument(
+        "--file-questions",
+        action="store_true",
+        help="Auto-file top-3 Type-2 candidates as docs/wiki/questions/",
+    )
+    p.add_argument(
+        "--no-qmd",
+        action="store_true",
+        help="Skip semantic-similarity layer (faster; Types 1, 5 only)",
+    )
     args = p.parse_args()
 
     print("Building wiki graph from explicit citations...", file=sys.stderr)
     nodes, edges = build_graph(WIKI)
-    print(f"  {len(nodes)} pages, {sum(len(e) for e in edges.values())} explicit edges", file=sys.stderr)
+    print(
+        f"  {len(nodes)} pages, {sum(len(e) for e in edges.values())} explicit edges",
+        file=sys.stderr,
+    )
 
     print("Computing explicit-graph stats (orphans, in-degree)...", file=sys.stderr)
     stats = compute_explicit_stats(nodes, edges)

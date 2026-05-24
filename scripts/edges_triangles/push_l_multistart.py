@@ -7,15 +7,10 @@ Tries push_k (snap + BH chain) from several starting points:
 Keeps the best across all.
 """
 
-import json
-import shutil
 import sys
 from pathlib import Path
 
-import numpy as np
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
@@ -86,9 +81,9 @@ def main():
             global_best = m_ws.copy()
             global_bi = bi_ws.copy()
             global_score = s_ws
-            print(f"  *** NEW GLOBAL BEST ***")
+            print("  *** NEW GLOBAL BEST ***")
 
-    print(f"\n===== DONE =====")
+    print("\n===== DONE =====")
     print(f"Current: {current_score:.14f}")
     print(f"Final  : {global_score:.14f}")
     print(f"Gain   : {global_score - current_score:+.3e}")

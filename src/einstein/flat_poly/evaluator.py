@@ -145,7 +145,9 @@ def spectral_equalization_score(
 
 
 def crt_tensor(
-    b2: list[int], b5: list[int], b7: list[int],
+    b2: list[int],
+    b5: list[int],
+    b7: list[int],
 ) -> list[int]:
     """CRT tensor product construction using 70 = 2 × 5 × 7.
 
@@ -487,9 +489,7 @@ def memetic_tabu_search(
     rng = np.random.default_rng(seed)
 
     # Initialize population
-    pop = [
-        rng.choice([-1, 1], size=n_coeffs).tolist() for _ in range(pop_size)
-    ]
+    pop = [rng.choice([-1, 1], size=n_coeffs).tolist() for _ in range(pop_size)]
     if warm_start:
         for i, ws in enumerate(warm_start[:pop_size]):
             pop[i] = list(ws)
@@ -508,9 +508,7 @@ def memetic_tabu_search(
         p2 = pop[c2[np.argmin([scores[c] for c in c2])]]
 
         # Uniform crossover
-        child = [
-            p1[i] if rng.random() < 0.5 else p2[i] for i in range(n_coeffs)
-        ]
+        child = [p1[i] if rng.random() < 0.5 else p2[i] for i in range(n_coeffs)]
 
         # Mutation (flip each bit with prob 1/n)
         for i in range(n_coeffs):

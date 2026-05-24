@@ -188,11 +188,11 @@ def main() -> None:
             else:
                 n_no_improve += 1
                 if n_no_improve >= 30:
-                    print(f"  stalled after {step_i+1} steps at lr={lr:.0e}")
+                    print(f"  stalled after {step_i + 1} steps at lr={lr:.0e}")
                     break
             if (step_i + 1) % 50 == 0:
                 print(
-                    f"  step {step_i+1}: best={best_score:.15e}",
+                    f"  step {step_i + 1}: best={best_score:.15e}",
                     flush=True,
                 )
         save_best(best_v, best_score, f"lr{lr:.0e}_final")

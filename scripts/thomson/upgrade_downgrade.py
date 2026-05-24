@@ -25,6 +25,7 @@ N = 282
 # Core energy / gradient routines
 # ---------------------------------------------------------------------------
 
+
 def normalize(pts: np.ndarray) -> np.ndarray:
     """Project points onto unit sphere."""
     norms = np.linalg.norm(pts, axis=1, keepdims=True)
@@ -34,7 +35,7 @@ def normalize(pts: np.ndarray) -> np.ndarray:
 def coulomb_energy(pts: np.ndarray) -> float:
     """Compute Coulomb energy (vectorized)."""
     diff = pts[:, None, :] - pts[None, :, :]
-    dist_sq = np.sum(diff ** 2, axis=-1)
+    dist_sq = np.sum(diff**2, axis=-1)
     n = len(pts)
     idx_i, idx_j = np.triu_indices(n, k=1)
     dists = np.sqrt(dist_sq[idx_i, idx_j])
@@ -45,7 +46,7 @@ def coulomb_energy(pts: np.ndarray) -> float:
 def coulomb_gradient(pts: np.ndarray) -> np.ndarray:
     """Gradient of Coulomb energy: dE/dp_i = -sum_{j!=i} (p_i-p_j)/||p_i-p_j||^3."""
     diff = pts[:, None, :] - pts[None, :, :]  # (n, n, 3)
-    dist_sq = np.sum(diff ** 2, axis=-1, keepdims=True)  # (n, n, 1)
+    dist_sq = np.sum(diff**2, axis=-1, keepdims=True)  # (n, n, 1)
     dist_sq = np.maximum(dist_sq, 1e-24)
     dist = np.sqrt(dist_sq)
     inv_dist3 = 1.0 / (dist_sq * dist)
@@ -57,6 +58,7 @@ def coulomb_gradient(pts: np.ndarray) -> np.ndarray:
 # ---------------------------------------------------------------------------
 # L-BFGS optimizer (spherical coordinates)
 # ---------------------------------------------------------------------------
+
 
 def cart_to_sph(pts: np.ndarray) -> np.ndarray:
     x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
@@ -73,8 +75,9 @@ def sph_to_cart(sph: np.ndarray) -> np.ndarray:
     return np.column_stack([x, y, z])
 
 
-def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
-                   verbose: bool = True) -> tuple[np.ndarray, float]:
+def lbfgs_optimize(
+    pts: np.ndarray, maxiter: int = 10000, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """L-BFGS optimization with spherical coordinates."""
 
     def energy_and_grad(params):
@@ -94,8 +97,7 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
         dx_dp = -st * sp
         dy_dp = st * cp
 
-        grad_theta = (grad_cart[:, 0] * dx_dt + grad_cart[:, 1] * dy_dt
-                      + grad_cart[:, 2] * dz_dt)
+        grad_theta = grad_cart[:, 0] * dx_dt + grad_cart[:, 1] * dy_dt + grad_cart[:, 2] * dz_dt
         grad_phi = grad_cart[:, 0] * dx_dp + grad_cart[:, 1] * dy_dp
 
         grad_sph = np.column_stack([grad_theta, grad_phi]).ravel()
@@ -117,8 +119,11 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
             print(f"    L-BFGS iter {best['count']}: E = {best['energy']:.11f}")
 
     result = scipy_minimize(
-        energy_and_grad, x0, method='L-BFGS-B', jac=True,
-        options={'maxiter': maxiter, 'ftol': 1e-16, 'gtol': 1e-14},
+        energy_and_grad,
+        x0,
+        method="L-BFGS-B",
+        jac=True,
+        options={"maxiter": maxiter, "ftol": 1e-16, "gtol": 1e-14},
         callback=callback,
     )
 
@@ -126,8 +131,10 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
     final_energy = coulomb_energy(final_pts)
 
     if verbose:
-        print(f"    L-BFGS done: E = {final_energy:.11f} "
-              f"(converged={result.success}, iters={result.nit})")
+        print(
+            f"    L-BFGS done: E = {final_energy:.11f} "
+            f"(converged={result.success}, iters={result.nit})"
+        )
 
     return final_pts, final_energy
 
@@ -135,6 +142,7 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
 # ---------------------------------------------------------------------------
 # Download Wales configurations
 # ---------------------------------------------------------------------------
+
 
 def download_wales_xyz(n: int) -> np.ndarray:
     """Download n-point Thomson configuration from Wales Cambridge database."""
@@ -176,6 +184,7 @@ def download_wales_xyz(n: int) -> np.ndarray:
 # UPGRADE: n-1 -> n (insert a point)
 # ---------------------------------------------------------------------------
 
+
 def find_voronoi_vertices(pts: np.ndarray) -> np.ndarray:
     """Compute Voronoi vertices on the unit sphere."""
     center = np.array([0.0, 0.0, 0.0])
@@ -188,8 +197,7 @@ def find_voronoi_vertices(pts: np.ndarray) -> np.ndarray:
     return vertices
 
 
-def upgrade(pts_small: np.ndarray, target_n: int,
-            verbose: bool = True) -> tuple[np.ndarray, float]:
+def upgrade(pts_small: np.ndarray, target_n: int, verbose: bool = True) -> tuple[np.ndarray, float]:
     """Upgrade: insert best point into n-1 configuration, optimize to n.
 
     Strategy:
@@ -225,7 +233,7 @@ def upgrade(pts_small: np.ndarray, target_n: int,
             best_idx = i
 
         if verbose and (i + 1) % 100 == 0:
-            print(f"    Tested {i+1}/{n_vertices}, best so far: {best_energy:.11f}")
+            print(f"    Tested {i + 1}/{n_vertices}, best so far: {best_energy:.11f}")
 
     print(f"  Best insertion at vertex {best_idx}: E = {best_energy:.11f}")
     print(f"  Energy range: [{min(energies):.6f}, {max(energies):.6f}]")
@@ -247,8 +255,7 @@ def upgrade(pts_small: np.ndarray, target_n: int,
         pts_trial = np.vstack([pts_small, v.reshape(1, 3)])
         e_before = energies[idx]
 
-        print(f"\n  --- Candidate {rank+1} (vertex {idx}): "
-              f"pre-opt E = {e_before:.11f} ---")
+        print(f"\n  --- Candidate {rank + 1} (vertex {idx}): pre-opt E = {e_before:.11f} ---")
 
         pts_opt, e_opt = lbfgs_optimize(pts_trial, maxiter=10000, verbose=verbose)
 
@@ -266,13 +273,14 @@ def upgrade(pts_small: np.ndarray, target_n: int,
 # DOWNGRADE: n+1 -> n (remove a point)
 # ---------------------------------------------------------------------------
 
+
 def compute_point_contributions(pts: np.ndarray) -> np.ndarray:
     """Compute per-point energy contribution (sum of 1/r to all other points)."""
     n = len(pts)
     contributions = np.zeros(n)
 
     diff = pts[:, None, :] - pts[None, :, :]
-    dist_sq = np.sum(diff ** 2, axis=-1)
+    dist_sq = np.sum(diff**2, axis=-1)
     dists = np.sqrt(dist_sq)
     np.fill_diagonal(dists, 1e30)
     dists = np.maximum(dists, 1e-12)
@@ -283,20 +291,20 @@ def compute_point_contributions(pts: np.ndarray) -> np.ndarray:
     return contributions
 
 
-def energy_without_point(pts: np.ndarray, total_energy: float,
-                         idx: int) -> float:
+def energy_without_point(pts: np.ndarray, total_energy: float, idx: int) -> float:
     """Compute energy of configuration with point idx removed. O(n)."""
     # Remove all pairwise interactions involving point idx
     diffs = pts - pts[idx]
-    dists = np.sqrt(np.sum(diffs ** 2, axis=1))
+    dists = np.sqrt(np.sum(diffs**2, axis=1))
     dists[idx] = 1e30
     dists = np.maximum(dists, 1e-12)
     contribution = np.sum(1.0 / dists)
     return total_energy - contribution
 
 
-def downgrade(pts_large: np.ndarray, target_n: int,
-              verbose: bool = True) -> tuple[np.ndarray, float]:
+def downgrade(
+    pts_large: np.ndarray, target_n: int, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """Downgrade: remove best point from n+1 configuration, optimize to n.
 
     Strategy:
@@ -320,10 +328,11 @@ def downgrade(pts_large: np.ndarray, target_n: int,
     best_removal_energy = removal_energies[best_removal]
     worst_removal = np.argmax(removal_energies)
 
-    print(f"  Best removal: point {best_removal}, "
-          f"E_remaining = {best_removal_energy:.11f}")
-    print(f"  Worst removal: point {worst_removal}, "
-          f"E_remaining = {removal_energies[worst_removal]:.11f}")
+    print(f"  Best removal: point {best_removal}, E_remaining = {best_removal_energy:.11f}")
+    print(
+        f"  Worst removal: point {worst_removal}, "
+        f"E_remaining = {removal_energies[worst_removal]:.11f}"
+    )
 
     # Try top-k removals
     sorted_indices = np.argsort(removal_energies)
@@ -339,11 +348,9 @@ def downgrade(pts_large: np.ndarray, target_n: int,
         assert len(pts_reduced) == target_n
         e_before = removal_energies[idx]
 
-        print(f"\n  --- Candidate {rank+1} (remove point {idx}): "
-              f"pre-opt E = {e_before:.11f} ---")
+        print(f"\n  --- Candidate {rank + 1} (remove point {idx}): pre-opt E = {e_before:.11f} ---")
 
-        pts_opt, e_opt = lbfgs_optimize(pts_reduced, maxiter=10000,
-                                        verbose=verbose)
+        pts_opt, e_opt = lbfgs_optimize(pts_reduced, maxiter=10000, verbose=verbose)
 
         print(f"  Post-optimization: E = {e_opt:.11f}")
 
@@ -359,6 +366,7 @@ def downgrade(pts_large: np.ndarray, target_n: int,
 # Save solution
 # ---------------------------------------------------------------------------
 
+
 def save_solution(pts: np.ndarray, score: float, tag: str):
     """Save solution to results directory."""
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -372,6 +380,7 @@ def save_solution(pts: np.ndarray, score: float, tag: str):
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     t_start = time.time()
@@ -438,8 +447,7 @@ def main():
     # Multiple rounds of L-BFGS with re-parameterization
     for round_i in range(3):
         print(f"\n  Polish round {round_i + 1}...")
-        pts_pol, e_pol = lbfgs_optimize(best_pts.copy(), maxiter=20000,
-                                        verbose=False)
+        pts_pol, e_pol = lbfgs_optimize(best_pts.copy(), maxiter=20000, verbose=False)
         if e_pol < best_energy:
             improvement = best_energy - e_pol
             best_energy = e_pol

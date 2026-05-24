@@ -35,6 +35,7 @@ T = H * H + H * K + K * K  # 28
 # Icosahedron
 # ---------------------------------------------------------------------------
 
+
 def icosahedron_vertices() -> np.ndarray:
     """12 vertices of a regular icosahedron on the unit sphere."""
     phi = (1 + np.sqrt(5)) / 2
@@ -71,6 +72,7 @@ def icosahedron_faces(verts: np.ndarray) -> list[tuple[int, int, int]]:
 # ---------------------------------------------------------------------------
 # (h,k) lattice points in a triangle
 # ---------------------------------------------------------------------------
+
 
 def lattice_points_in_triangle(h: int, k: int) -> list[tuple[float, float]]:
     """Find all triangular lattice points inside the super-cell triangle.
@@ -122,6 +124,7 @@ def lattice_points_in_triangle(h: int, k: int) -> list[tuple[float, float]]:
 # Full geodesic polyhedron
 # ---------------------------------------------------------------------------
 
+
 def icosadeltahedral_points(h: int, k: int) -> np.ndarray:
     """Generate the vertices of a {3,5+}_{h,k} geodesic polyhedron.
 
@@ -145,10 +148,12 @@ def icosadeltahedral_points(h: int, k: int) -> np.ndarray:
 
     # Classify each barycentric point
     tol = 1e-10
-    n_corner = sum(1 for s, t in bary_list
-                   if min(s, t, 1-s-t) < tol and max(s, t, 1-s-t) > 1-tol)
-    n_edge = sum(1 for s, t in bary_list
-                 if min(s, t, 1-s-t) < tol and max(s, t, 1-s-t) < 1-tol)
+    n_corner = sum(
+        1 for s, t in bary_list if min(s, t, 1 - s - t) < tol and max(s, t, 1 - s - t) > 1 - tol
+    )
+    n_edge = sum(
+        1 for s, t in bary_list if min(s, t, 1 - s - t) < tol and max(s, t, 1 - s - t) < 1 - tol
+    )
     n_interior = len(bary_list) - n_corner - n_edge
     print(f"    Corners: {n_corner}, Edge: {n_edge}, Interior: {n_interior}")
 
@@ -176,7 +181,7 @@ def icosadeltahedral_points(h: int, k: int) -> np.ndarray:
 
     if len(pts) != expected_n:
         # Debug: try different dedup precisions
-        print(f"    Trying different dedup precisions...")
+        print("    Trying different dedup precisions...")
         for dec in range(12, 4, -1):
             test_points = {}
             for face in faces:
@@ -205,10 +210,11 @@ def icosadeltahedral_points(h: int, k: int) -> np.ndarray:
 # L-BFGS optimizer
 # ---------------------------------------------------------------------------
 
+
 def coulomb_energy(pts: np.ndarray) -> float:
     """Fast Coulomb energy."""
     diff = pts[:, None, :] - pts[None, :, :]
-    dist_sq = np.sum(diff ** 2, axis=-1)
+    dist_sq = np.sum(diff**2, axis=-1)
     n = len(pts)
     idx_i, idx_j = np.triu_indices(n, k=1)
     dists = np.sqrt(dist_sq[idx_i, idx_j])
@@ -219,7 +225,7 @@ def coulomb_energy(pts: np.ndarray) -> float:
 def coulomb_gradient(pts: np.ndarray) -> np.ndarray:
     """Gradient of Coulomb energy."""
     diff = pts[:, None, :] - pts[None, :, :]
-    dist_sq = np.sum(diff ** 2, axis=-1, keepdims=True)
+    dist_sq = np.sum(diff**2, axis=-1, keepdims=True)
     dist_sq = np.maximum(dist_sq, 1e-24)
     dist = np.sqrt(dist_sq)
     inv_dist3 = 1.0 / (dist_sq * dist)
@@ -227,9 +233,11 @@ def coulomb_gradient(pts: np.ndarray) -> np.ndarray:
     return -np.sum(diff * inv_dist3, axis=1)
 
 
-def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
-                   verbose: bool = True) -> tuple[np.ndarray, float]:
+def lbfgs_optimize(
+    pts: np.ndarray, maxiter: int = 10000, verbose: bool = True
+) -> tuple[np.ndarray, float]:
     """L-BFGS optimization using spherical coordinates."""
+
     def cart_to_sph(pts):
         x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
         theta = np.arccos(np.clip(z, -1, 1))
@@ -238,11 +246,13 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
 
     def sph_to_cart(sph):
         theta, phi = sph[:, 0], sph[:, 1]
-        return np.column_stack([
-            np.sin(theta) * np.cos(phi),
-            np.sin(theta) * np.sin(phi),
-            np.cos(theta),
-        ])
+        return np.column_stack(
+            [
+                np.sin(theta) * np.cos(phi),
+                np.sin(theta) * np.sin(phi),
+                np.cos(theta),
+            ]
+        )
 
     def energy_and_grad(params):
         sph = params.reshape(-1, 2)
@@ -254,11 +264,8 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
         st, ct = np.sin(theta), np.cos(theta)
         sp, cp = np.sin(phi), np.cos(phi)
 
-        grad_theta = (grad_cart[:, 0] * ct * cp +
-                      grad_cart[:, 1] * ct * sp +
-                      grad_cart[:, 2] * (-st))
-        grad_phi = (grad_cart[:, 0] * (-st * sp) +
-                    grad_cart[:, 1] * (st * cp))
+        grad_theta = grad_cart[:, 0] * ct * cp + grad_cart[:, 1] * ct * sp + grad_cart[:, 2] * (-st)
+        grad_phi = grad_cart[:, 0] * (-st * sp) + grad_cart[:, 1] * (st * cp)
 
         return energy, np.column_stack([grad_theta, grad_phi]).ravel()
 
@@ -276,22 +283,28 @@ def lbfgs_optimize(pts: np.ndarray, maxiter: int = 10000,
             print(f"    L-BFGS iter {best['n']}: E = {best['e']:.15f}")
 
     result = scipy_minimize(
-        energy_and_grad, x0, method='L-BFGS-B', jac=True,
-        options={'maxiter': maxiter, 'ftol': 1e-16, 'gtol': 1e-14},
+        energy_and_grad,
+        x0,
+        method="L-BFGS-B",
+        jac=True,
+        options={"maxiter": maxiter, "ftol": 1e-16, "gtol": 1e-14},
         callback=callback,
     )
 
     final_pts = sph_to_cart(result.x.reshape(-1, 2))
     final_energy = coulomb_energy(final_pts)
     if verbose:
-        print(f"    L-BFGS done: E = {final_energy:.15f} "
-              f"(converged={result.success}, iters={best['n']})")
+        print(
+            f"    L-BFGS done: E = {final_energy:.15f} "
+            f"(converged={result.success}, iters={best['n']})"
+        )
     return final_pts, final_energy
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     # Load SOTA from data file
@@ -303,7 +316,7 @@ def main():
         SOTA = float("inf")
     print("=" * 70)
     print("Icosadeltahedral Seed Generator for Thomson Problem n=282")
-    print(f"(h,k) = ({H},{K}), T = {T}, n = 10*{T}+2 = {10*T+2}")
+    print(f"(h,k) = ({H},{K}), T = {T}, n = 10*{T}+2 = {10 * T + 2}")
     print("=" * 70)
 
     # Step 1: Generate icosadeltahedral seed
@@ -335,6 +348,7 @@ def main():
 
         # Check pairwise distances for near-duplicates
         from scipy.spatial.distance import pdist
+
         dists = pdist(all_raw)
         close_pairs = np.sum(dists < 1e-6)
         print(f"    Near-duplicate pairs (dist < 1e-6): {close_pairs}")
@@ -345,9 +359,10 @@ def main():
 
         # Find clusters
         from scipy.cluster.hierarchy import fcluster, linkage
-        Z = linkage(all_raw, method='single')
+
+        Z = linkage(all_raw, method="single")
         for thr in [1e-6, 1e-8, 1e-10, 1e-12]:
-            clusters = fcluster(Z, t=thr, criterion='distance')
+            clusters = fcluster(Z, t=thr, criterion="distance")
             n_clusters = len(set(clusters))
             print(f"    Clusters at threshold {thr:.0e}: {n_clusters}")
 
@@ -375,7 +390,9 @@ def main():
         "vectors": pts_opt.tolist(),
         "score": energy_opt,
         "seed": "icosadeltahedral",
-        "h": H, "k": K, "T": T,
+        "h": H,
+        "k": K,
+        "T": T,
     }
     with open(out_path, "w") as f:
         json.dump(data, f)

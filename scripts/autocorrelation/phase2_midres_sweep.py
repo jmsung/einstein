@@ -22,9 +22,7 @@ RESULTS = "results/problem-3-autocorrelation"
 os.makedirs(RESULTS, exist_ok=True)
 
 f_orig_1600k = np.load(
-    os.path.expanduser(
-        "~/projects/einstein/cb/results/problem-3-autocorrelation/best_1600k.npy"
-    )
+    os.path.expanduser("~/projects/einstein/cb/results/problem-3-autocorrelation/best_1600k.npy")
 )
 f_sota_400k = np.load("/tmp/sota_400k.npy")
 
@@ -36,7 +34,7 @@ t_start = time.time()
 
 
 def log(msg):
-    print(f"[{time.time()-t_start:7.1f}s] {msg}", flush=True)
+    print(f"[{time.time() - t_start:7.1f}s] {msg}", flush=True)
 
 
 def save_if_best(f, score, tag):
@@ -239,7 +237,7 @@ def optimize_at_n(f_init, n_target, tag, time_budget):
             if res.nit <= 2:
                 break
 
-    log(f"  {tag}: FINAL score={best_score:.16f} ({time.time()-t0:.1f}s)")
+    log(f"  {tag}: FINAL score={best_score:.16f} ({time.time() - t0:.1f}s)")
     return best_w * best_w, best_score
 
 
@@ -256,36 +254,41 @@ for n_target in [500000, 600000, 700000, 800000]:
         log(f"Time limit approaching, skipping n={n_target}")
         break
 
-    log(f"\n{'='*60}")
+    log(f"\n{'=' * 60}")
     log(f"n = {n_target}")
-    log(f"{'='*60}")
+    log(f"{'=' * 60}")
 
     # Method 1: Upsample from SOTA 400k
     f_up = upsample_linear(f_sota_400k, n_target)
-    optimize_at_n(f_up, n_target, f"up400k_n{n_target//1000}k", PER_N_TIME)
+    optimize_at_n(f_up, n_target, f"up400k_n{n_target // 1000}k", PER_N_TIME)
 
     # Method 2: Avg-pool transplant from 1.6M
     f_tp = avg_pool_transplant(f_orig_1600k, n_target)
-    optimize_at_n(f_tp, n_target, f"tp16m_n{n_target//1000}k", PER_N_TIME)
+    optimize_at_n(f_tp, n_target, f"tp16m_n{n_target // 1000}k", PER_N_TIME)
 
     # Method 3: Block-average downsample from 1.6M
     f_ds = block_avg_downsample(f_orig_1600k, n_target)
-    optimize_at_n(f_ds, n_target, f"ds16m_n{n_target//1000}k", PER_N_TIME)
+    optimize_at_n(f_ds, n_target, f"ds16m_n{n_target // 1000}k", PER_N_TIME)
 
     # Method 4: Transplant with threshold
     f_tp2 = avg_pool_transplant(f_orig_1600k, n_target, threshold=1e-3)
-    optimize_at_n(f_tp2, n_target, f"tpt1e3_n{n_target//1000}k", PER_N_TIME)
+    optimize_at_n(f_tp2, n_target, f"tpt1e3_n{n_target // 1000}k", PER_N_TIME)
 
 # Final summary
-log(f"\n{'='*60}")
-log(f"PHASE 2 COMPLETE")
+log(f"\n{'=' * 60}")
+log("PHASE 2 COMPLETE")
 log(f"Best overall: {best_overall:.16f} ({best_overall_tag})")
 log(f"Gap to target: {TARGET - best_overall:.10f}")
-log(f"Total time: {time.time()-t_start:.1f}s")
+log(f"Total time: {time.time() - t_start:.1f}s")
 
 if best_overall_f is not None:
     n = len(best_overall_f)
-    data = {"values": best_overall_f.tolist(), "score": best_overall, "n": n, "tag": best_overall_tag}
+    data = {
+        "values": best_overall_f.tolist(),
+        "score": best_overall,
+        "n": n,
+        "tag": best_overall_tag,
+    }
     with open(f"{RESULTS}/phase2_best.json", "w") as fh:
         json.dump(data, fh)
     log(f"Saved best to {RESULTS}/phase2_best.json")
@@ -293,4 +296,4 @@ if best_overall_f is not None:
     # Estimate JSON size
     nnz = np.count_nonzero(best_overall_f)
     est_size = nnz * 18 + (n - nnz) * 2
-    log(f"Estimated JSON payload: {est_size/1e6:.1f}MB (n={n}, nnz={nnz})")
+    log(f"Estimated JSON payload: {est_size / 1e6:.1f}MB (n={n}, nnz={nnz})")

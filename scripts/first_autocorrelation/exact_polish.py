@@ -139,10 +139,12 @@ def polish(f: np.ndarray, iters: int, lr0: float, verbose: bool = True) -> tuple
                 break
 
         if verbose and (it < 20 or it % 50 == 0):
-            print(f"  iter={it:>5}  C={best_c:.18f}  lr={lr:.2e}  "
-                  f"t*={t_star}  gnorm={gnorm:.2e}  "
-                  f"{'* new peak' if t_star != t_star_prev else ''}",
-                  flush=True)
+            print(
+                f"  iter={it:>5}  C={best_c:.18f}  lr={lr:.2e}  "
+                f"t*={t_star}  gnorm={gnorm:.2e}  "
+                f"{'* new peak' if t_star != t_star_prev else ''}",
+                flush=True,
+            )
         t_star_prev = t_star
 
     return best_f, best_c
@@ -164,14 +166,12 @@ def main():
 
     t0 = time.time()
     f_best, c_best = polish(f0, args.iters, args.lr, verbose=True)
-    print(f"\nFinal C = {c_best:.18f}  ({time.time()-t0:.1f}s)")
+    print(f"\nFinal C = {c_best:.18f}  ({time.time() - t0:.1f}s)")
 
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         with open(args.out, "w") as fh:
-            json.dump(
-                {"values": f_best.tolist(), "score": c_best, "n": len(f_best)}, fh
-            )
+            json.dump({"values": f_best.tolist(), "score": c_best, "n": len(f_best)}, fh)
         print(f"Saved: {args.out}")
 
 

@@ -17,12 +17,10 @@ import time
 from pathlib import Path
 
 import numpy as np
-from scipy.optimize import differential_evolution, minimize
+from scipy.optimize import differential_evolution
 from scipy.signal import fftconvolve
 
 sys.path.insert(0, "src")
-from einstein.erdos.evaluator import evaluate as exact_evaluate
-from einstein.erdos.fast import fast_evaluate
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -121,7 +119,7 @@ def approach_multi_n(sota_values: np.ndarray, n_list: list[int], iters_per_n: in
                 h[idx] = old
 
             if (trial + 1) % 200_000 == 0:
-                print(f"    iter {trial+1}: C={best_n:.13f}, improved={improved}")
+                print(f"    iter {trial + 1}: C={best_n:.13f}, improved={improved}")
 
         print(f"  n={n_new} final: {best_n:.13f} (improved {improved} times)")
         if best_n < best_overall:
@@ -144,8 +142,8 @@ def cosine_construction(params: np.ndarray, n: int = 600) -> np.ndarray:
     x = np.linspace(0, 1, n, endpoint=False)
     h = np.full(n, 0.5)
     for k in range(K):
-        h += params[2*k] * np.cos(2 * np.pi * (k+1) * x)
-        h += params[2*k+1] * np.sin(2 * np.pi * (k+1) * x)
+        h += params[2 * k] * np.cos(2 * np.pi * (k + 1) * x)
+        h += params[2 * k + 1] * np.sin(2 * np.pi * (k + 1) * x)
     h = np.clip(h, 0, 1)
     target = n / 2.0
     s = np.sum(h)
@@ -158,8 +156,9 @@ def cosine_construction(params: np.ndarray, n: int = 600) -> np.ndarray:
     return h
 
 
-def approach_cosine_de(K_values: list[int] = [10, 20, 30, 50], n: int = 600,
-                       maxiter: int = 200, popsize: int = 15):
+def approach_cosine_de(
+    K_values: list[int] = [10, 20, 30, 50], n: int = 600, maxiter: int = 200, popsize: int = 15
+):
     """Differential evolution in cosine-basis parameter space."""
     print("\n" + "=" * 60)
     print("APPROACH 2: Cosine-basis + Differential Evolution")
@@ -169,7 +168,7 @@ def approach_cosine_de(K_values: list[int] = [10, 20, 30, 50], n: int = 600,
     best_h = None
 
     for K in K_values:
-        print(f"\n  K={K} ({2*K} params)...")
+        print(f"\n  K={K} ({2 * K} params)...")
 
         def objective(params):
             h = cosine_construction(params, n)
@@ -179,8 +178,14 @@ def approach_cosine_de(K_values: list[int] = [10, 20, 30, 50], n: int = 600,
         t0 = time.time()
 
         result = differential_evolution(
-            objective, bounds, maxiter=maxiter, popsize=popsize,
-            tol=1e-12, seed=42, disp=False, workers=1
+            objective,
+            bounds,
+            maxiter=maxiter,
+            popsize=popsize,
+            tol=1e-12,
+            seed=42,
+            disp=False,
+            workers=1,
         )
 
         elapsed = time.time() - t0
@@ -230,7 +235,7 @@ def approach_subgradient(h_init: np.ndarray, n_iters: int = 50000):
                 i_minus_s = i - s
                 g = 0.0
                 if 0 <= i_plus_s < n:
-                    g += (1.0 - h[i_plus_s])
+                    g += 1.0 - h[i_plus_s]
                 if 0 <= i_minus_s < n:
                     g -= h[i_minus_s]
                 grad[i] += g
@@ -268,8 +273,10 @@ def approach_subgradient(h_init: np.ndarray, n_iters: int = 50000):
             h = h_new
 
         if (iteration + 1) % 5000 == 0:
-            print(f"    iter {iteration+1}: C={best_score:.13f}, C_max={C_max:.13f}, "
-                  f"active={len(active)}, step={step:.2e}")
+            print(
+                f"    iter {iteration + 1}: C={best_score:.13f}, C_max={C_max:.13f}, "
+                f"active={len(active)}, step={step:.2e}"
+            )
 
     print(f"  Final: C={best_score:.13f}")
     return best_h, best_score
@@ -292,9 +299,13 @@ def haugland_step_function(K: int, n: int = 600) -> np.ndarray:
         mask = (x >= breakpoints[i]) & (x < breakpoints[i + 1])
         # Alternate between high and low, with gradual transitions
         if i % 2 == 0:
-            h[mask] = 0.8 - 0.3 * np.sin(np.pi * (x[mask] - breakpoints[i]) / (breakpoints[i+1] - breakpoints[i]))
+            h[mask] = 0.8 - 0.3 * np.sin(
+                np.pi * (x[mask] - breakpoints[i]) / (breakpoints[i + 1] - breakpoints[i])
+            )
         else:
-            h[mask] = 0.2 + 0.3 * np.sin(np.pi * (x[mask] - breakpoints[i]) / (breakpoints[i+1] - breakpoints[i]))
+            h[mask] = 0.2 + 0.3 * np.sin(
+                np.pi * (x[mask] - breakpoints[i]) / (breakpoints[i + 1] - breakpoints[i])
+            )
 
     h = np.clip(h, 0, 1)
     target = n / 2.0
@@ -411,7 +422,7 @@ def approach_constructions(n: int = 600, polish_iters: int = 500_000):
                 h[idx] = old
 
             if (trial + 1) % 200_000 == 0:
-                print(f"    iter {trial+1}: C={best_s:.10f}, improved={improved}")
+                print(f"    iter {trial + 1}: C={best_s:.10f}, improved={improved}")
 
         print(f"  {name} polished: {best_s:.10f}")
         if best_s < best_overall:
@@ -456,7 +467,7 @@ def approach_admm(h_init: np.ndarray, n_iters: int = 1000, rho: float = 1.0):
             i_plus_s = i + s
             i_minus_s = i - s
             if 0 <= i_plus_s < n:
-                g += (1.0 - h[i_plus_s])
+                g += 1.0 - h[i_plus_s]
             if 0 <= i_minus_s < n:
                 g -= h[i_minus_s]
             grad[i] = g * 2.0 / n
@@ -487,8 +498,10 @@ def approach_admm(h_init: np.ndarray, n_iters: int = 1000, rho: float = 1.0):
             best_h = z.copy()
 
         if (iteration + 1) % 200 == 0:
-            print(f"    iter {iteration+1}: C_max={C_max:.10f}, best={best_score:.10f}, "
-                  f"primal_res={np.linalg.norm(h-z):.2e}")
+            print(
+                f"    iter {iteration + 1}: C_max={C_max:.10f}, best={best_score:.10f}, "
+                f"primal_res={np.linalg.norm(h - z):.2e}"
+            )
 
     print(f"  Final: C={best_score:.13f}")
     return best_h, best_score
@@ -513,9 +526,9 @@ def main():
 
     # Approach 1: Multi-n exploration
     t0 = time.time()
-    h1, s1 = approach_multi_n(sota_values,
-                               n_list=[480, 540, 599, 601, 660, 720],
-                               iters_per_n=300_000)
+    h1, s1 = approach_multi_n(
+        sota_values, n_list=[480, 540, 599, 601, 660, 720], iters_per_n=300_000
+    )
     results["multi_n"] = (s1, time.time() - t0)
 
     # Approach 2: Cosine-basis DE
@@ -561,7 +574,9 @@ def main():
 
     # Save best result
     all_results = [(h1, s1), (h2, s2), (h3, s3), (h4, s4), (h5, s5)]
-    best_idx = min(range(5), key=lambda i: all_results[i][1] if all_results[i][0] is not None else float("inf"))
+    best_idx = min(
+        range(5), key=lambda i: all_results[i][1] if all_results[i][0] is not None else float("inf")
+    )
     best_h, best_s = all_results[best_idx]
 
     if best_h is not None:

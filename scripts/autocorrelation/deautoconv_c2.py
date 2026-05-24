@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 from scipy.signal import fftconvolve
 
-from einstein.autocorrelation.fast import diagnose, fast_evaluate, score_from_conv
+from einstein.autocorrelation.fast import diagnose, fast_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
@@ -134,7 +134,7 @@ def deautoconv_multi_start(n, n_starts=20, n_iter=500, target_shape="constant"):
             best_score = score
             best_f = f.copy()
         if (s + 1) % 5 == 0:
-            print(f"  Start {s+1}/{n_starts}: best C={best_score:.8f}")
+            print(f"  Start {s + 1}/{n_starts}: best C={best_score:.8f}")
 
     return best_f, best_score
 
@@ -198,9 +198,7 @@ def main():
         for shape in ["constant", "plateau"]:
             print(f"\n  Target shape: {shape}")
             t0 = time.time()
-            f, score = deautoconv_multi_start(
-                n, n_starts=20, n_iter=300, target_shape=shape
-            )
+            f, score = deautoconv_multi_start(n, n_starts=20, n_iter=300, target_shape=shape)
             elapsed = time.time() - t0
             d = diagnose(f)
             print(
@@ -211,7 +209,7 @@ def main():
             save_result(f, score, f"deautoconv_{shape}_n{n}")
 
     # Phase 2: Take best small-n result and refine
-    print(f"\n--- Phase 2: Refine best result ---")
+    print("\n--- Phase 2: Refine best result ---")
     # Find best result file
     best_score = 0
     best_f = None
@@ -229,14 +227,12 @@ def main():
         save_result(f_refined, score_refined, "deautoconv_refined")
 
         # Phase 3: Multi-scale upsampling
-        print(f"\n--- Phase 3: Multi-scale upsampling ---")
+        print("\n--- Phase 3: Multi-scale upsampling ---")
         f_current = f_refined
         for target_n in [4000, 8000, 16000]:
             f_up = upscale_and_refine(f_current, target_n)
             # Quick deautoconv refinement at new scale
-            f_deconv, score_deconv = deautoconv_flat(
-                target_n, n_iter=100, seed=42
-            )
+            f_deconv, score_deconv = deautoconv_flat(target_n, n_iter=100, seed=42)
             # Use whichever is better
             score_up = fast_evaluate(f_up)
             if score_deconv > score_up:
@@ -255,7 +251,7 @@ def main():
         print(f"FINAL: C={final_score:.8f}, n={len(f_current)}")
         print(f"  nnz={d['nnz']}, blocks={d['n_blocks']}")
         print(f"  flat_0.1%={d['flatness_0.1pct']}, flat_1%={d['flatness_1pct']}")
-        print(f"  Done.")
+        print("  Done.")
     print("=" * 60)
 
 

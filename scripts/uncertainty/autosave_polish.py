@@ -7,18 +7,18 @@ Usage:
   uv run python -u scripts/uncertainty/autosave_polish.py
   uv run python -u scripts/uncertainty/autosave_polish.py --sigma 0.05 --cma-evals 2000 --nm-evals 5000
 """
+
 import argparse
 import json
-import glob
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, "src")
 
+import cma
 import numpy as np
 from scipy.optimize import minimize
-import cma
 
 from einstein.uncertainty.poly_eval import poly_evaluate
 
@@ -130,14 +130,20 @@ def main():
 
         # CMA-ES phase
         seed = int(rng.integers(1, 2**31))
-        sigma = args.sigma * (0.7 ** rnd)  # anneal sigma
+        sigma = args.sigma * (0.7**rnd)  # anneal sigma
         obj, best, best_gaps, count = make_obj(args.k, f"r{rnd}_cma", args.dps)
         log(f"CMA-ES sigma={sigma:.4f}, seed={seed}...")
         try:
             es = cma.CMAEvolutionStrategy(
-                current_gaps, sigma,
-                {"maxfevals": args.cma_evals, "verbose": -9, "tolx": 1e-16,
-                 "seed": seed, "popsize": 20},
+                current_gaps,
+                sigma,
+                {
+                    "maxfevals": args.cma_evals,
+                    "verbose": -9,
+                    "tolx": 1e-16,
+                    "seed": seed,
+                    "popsize": 20,
+                },
             )
             es.optimize(obj)
         except Exception as e:
@@ -157,7 +163,9 @@ def main():
         obj, best, best_gaps, count = make_obj(args.k, f"r{rnd}_nm", args.dps)
         log(f"Nelder-Mead ({args.nm_evals} evals)...")
         result = minimize(
-            obj, current_gaps, method="Nelder-Mead",
+            obj,
+            current_gaps,
+            method="Nelder-Mead",
             options={"maxfev": args.nm_evals, "xatol": 1e-16, "fatol": 1e-16},
         )
         nm_gaps = best_gaps[0] if best_gaps[0] is not None else list(result.x)
@@ -172,7 +180,9 @@ def main():
 
         # Reload best from disk
         disk_roots, disk_score = load_best_k(args.k)
-        if disk_roots is not None and disk_score < poly_evaluate(gaps_to_roots(current_gaps), dps=100):
+        if disk_roots is not None and disk_score < poly_evaluate(
+            gaps_to_roots(current_gaps), dps=100
+        ):
             current_gaps = roots_to_gaps(disk_roots)
             log(f"Loaded better from disk: {disk_score:.14e}")
 
@@ -181,7 +191,7 @@ def main():
     h80 = poly_evaluate(final_roots, dps=80)
     h100 = poly_evaluate(final_roots, dps=100)
     h150 = poly_evaluate(final_roots, dps=150)
-    log(f"\n=== FINAL VERIFICATION ===")
+    log("\n=== FINAL VERIFICATION ===")
     log(f"dps=80:  {h80:.16e}")
     log(f"dps=100: {h100:.16e}")
     log(f"dps=150: {h150:.16e}")
