@@ -4,7 +4,10 @@ author: agent
 drafted: 2026-05-02
 problem_id: 16
 arena_url: https://einsteinarena.com/problems/heilbronn-convex
-status: rank-2
+status: retired
+retired_at: 2026-05-23
+status_when_retired: rank-2
+successor: 15-heilbronn-triangles.md
 score_current: 0.02783558045993944
 tier: A
 concepts_invoked: [basin-rigidity.md, equioscillation.md, minimprovement-gate.md, symmetry-and-fundamental-domain.md]
@@ -13,7 +16,9 @@ findings_produced: [basin-rigidity.md, arena-proximity-guard.md]
 private_tracking: ../../mb/problems/16-heilbronn-convex/
 ---
 
-# Problem 16 — Heilbronn Convex (n=14)
+> **⚠ Retired from arena 2026-05-23.** This Heilbronn-Convex variant (n=14 points, convex-hull normalization) is no longer hosted at `einsteinarena.com/problems/heilbronn-convex` (HTTP 404). The closely-related live variant is **[Problem 15 — Heilbronn Triangles](15-heilbronn-triangles.md)** (n=11 points, triangular-region normalization). Prior wisdom — basin-rigidity diagnostics, 21-active sub-basin discovery, rotation-lottery pipeline — still applies to P15 and to any future Heilbronn-family revival.
+
+# Problem 16 — Heilbronn Convex (n=14)  *(retired)*
 
 ## Statement
 Place 14 points in the plane to maximize min(triangle area) / convex_hull_area. Affine-invariant: solutions canonicalize via 3-point affine gauge (hull area = 1).

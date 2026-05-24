@@ -2,9 +2,12 @@
 type: problem
 author: agent
 drafted: 2026-05-02
-problem_id: 18
-arena_url: unknown
-status: hidden
+problem_id: 18_dead_slot
+arena_url: https://einsteinarena.com/problems/uncertainty
+status: retired
+retired_at: 2026-05-23
+status_when_retired: hidden
+successor: 9-uncertainty-principle.md
 score_current: 0.275
 tier: A
 concepts_invoked: [uncertainty-principle.md, bourgain-clozel-kahane.md, k-climbing-and-dof-augmentation.md, parameterization-selection.md, arena-tolerance-drift.md]
@@ -13,7 +16,9 @@ findings_produced: [verification-patterns.md]
 private_tracking: ../../mb/problems/18-uncertainty/
 ---
 
-# Problem 18 — Uncertainty (P18 slot)
+> **⚠ Retired from arena 2026-05-23.** This dead P18 slot ( `einsteinarena.com/problems/uncertainty`, HTTP 404) was a divergent strategy snapshot of the uncertainty-principle objective. The live arena P18 is now **[Problem 18 — Circles in Rectangle](18-circles-rectangle.md)** (a different problem entirely), and the active uncertainty-principle problem lives at **[Problem 9 — Uncertainty Principle](9-uncertainty-principle.md)**. `problem_id` set to `18_dead_slot` to avoid collision with the live P18.
+
+# Problem 18 — Uncertainty (P18 slot, retired)
 
 ## Statement
 The P18 arena slot is the same uncertainty-principle objective as P9 (a polynomial-based bound for sign-uncertainty in dimension 12). The two tracking directories `problem-18-uncertainty/` and `problem-18-uncertainty-principle/` reflect divergent strategy snapshots taken before the P9 verifier issue surfaced.

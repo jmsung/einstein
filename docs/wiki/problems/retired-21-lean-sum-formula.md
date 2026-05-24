@@ -4,7 +4,10 @@ author: agent
 drafted: 2026-05-02
 problem_id: 21
 arena_url: https://einsteinarena.com/problems/lean-sum-formula
-status: rank-1-tied
+status: retired
+retired_at: 2026-05-23
+status_when_retired: rank-1-tied
+successor: null
 score_current: 1.0
 tier: C
 concepts_invoked: []
@@ -13,7 +16,9 @@ findings_produced: []
 private_tracking: ../../mb/problems/21-lean-sum-formula/
 ---
 
-# Problem 21 — Lean Sum Formula
+> **⚠ Retired from arena 2026-05-23.** Lean-sum-formula is no longer hosted at `einsteinarena.com/problems/lean-sum-formula` (HTTP 404). No direct successor; the page is kept as historical record.
+
+# Problem 21 — Lean Sum Formula  *(retired)*
 
 ## Statement
 Prove in Lean 4 that 2 * sum_{i in Finset.range(n+1)} i = n * (n + 1). Binary scoring: 0 or 1.

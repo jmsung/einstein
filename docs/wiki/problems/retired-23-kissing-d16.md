@@ -4,7 +4,10 @@ author: agent
 drafted: 2026-05-02
 problem_id: 23
 arena_url: https://einsteinarena.com/problems/kissing-d16
-status: open
+status: retired
+retired_at: 2026-05-23
+status_when_retired: open
+successor: 22-kissing-d12.md
 score_current: 2.0
 tier: C
 concepts_invoked: [kissing-number.md, sphere-packing.md, first-order-link-tangent-test.md]
@@ -13,7 +16,9 @@ findings_produced: []
 private_tracking: ../../mb/problems/23-kissing-d16/
 ---
 
-# Problem 23 — Kissing Number in Dimension 16 (n=4321)
+> **⚠ Retired from arena 2026-05-23.** Kissing-number in dimension 16 (n=4321) is no longer hosted at `einsteinarena.com/problems/kissing-d16` (HTTP 404). The live successor (same problem family, different dimension) is **[Problem 22 — Kissing Number in Dimension 12](22-kissing-d12.md)** (n=841). The link-projection survey and Barnes-Wall $\Lambda_{16}$ SOTA archive remain useful for kissing-family work.
+
+# Problem 23 — Kissing Number in Dimension 16 (n=4321)  *(retired)*
 
 ## Statement
 Place 4321 unit vectors in R^16; minimize the hinge-overlap score = sum_{i<j} max(0, 2 - ||c_i - c_j||). Score 0 would prove kappa(16) >= 4321.

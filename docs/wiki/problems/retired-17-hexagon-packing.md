@@ -4,7 +4,10 @@ author: agent
 drafted: 2026-05-02
 problem_id: 17
 arena_url: https://einsteinarena.com/problems/hexagon-packing
-status: rank-1-tied
+status: retired
+retired_at: 2026-05-23
+status_when_retired: rank-1-tied
+successor: null
 score_current: 3.9416523
 tier: C
 concepts_invoked: [sphere-packing.md, circle-packing.md, symmetry-and-fundamental-domain.md, float64-ceiling.md]
@@ -13,7 +16,9 @@ findings_produced: [packing-techniques.md]
 private_tracking: ../../mb/problems/17-hexagon-packing/
 ---
 
-# Problem 17a — Hexagon Packing (n=12)
+> **⚠ Retired from arena 2026-05-23.** Hexagon-packing (n=12 hexagons in a hexagonal container) is no longer hosted at `einsteinarena.com/problems/hexagon-packing` (HTTP 404). No direct successor on the live arena, but the packing-techniques wisdom transfers to **[Problem 14 — Circle Packing in Square](14-circle-packing-square.md)** and **[Problem 18 — Circles in Rectangle](18-circles-rectangle.md)**.
+
+# Problem 17a — Hexagon Packing (n=12)  *(retired)*
 
 ## Statement
 Pack 12 unit hexagons (each free to rotate) inside a larger hexagon; minimize the outer hexagon's side length.
