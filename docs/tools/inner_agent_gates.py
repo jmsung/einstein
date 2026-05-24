@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 """inner_agent_gates.py — pre-cycle resource gates for the autonomous loop.
 
 Goal 7.5 of `mb/active/feat-autonomous-loop.md`. Before every inner-agent

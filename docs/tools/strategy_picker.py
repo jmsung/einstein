@@ -22,6 +22,7 @@ Usage:
     uv run python docs/tools/strategy_picker.py --problem-id 22
     uv run python docs/tools/strategy_picker.py --category sphere-packing
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,12 +54,12 @@ _PROBLEM_CATEGORY: dict[int, str] = {
     # Geometric packing (bounded region, 2D)
     5: "packing",
     14: "packing",
-    17: "packing",   # 17a + 17b both
+    17: "packing",  # 17a + 17b both
     18: "packing",
     # Discrete combinatorics
     12: "discrete-combinatorics",
     19: "discrete-combinatorics",
-    21: "discrete-combinatorics",   # lean sum formula
+    21: "discrete-combinatorics",  # lean sum formula
     # Functional inequalities
     1: "functional-inequality",
     9: "functional-inequality",
@@ -111,15 +112,17 @@ def load_skill_library(path: Path) -> list[SkillRow]:
         if not m:
             continue
         try:
-            rows.append(SkillRow(
-                technique=m.group(1).strip(),
-                category=m.group(2).strip(),
-                tried=int(m.group(3)),
-                top3=int(m.group(4)),
-                finding=int(m.group(5)),
-                last_used=m.group(6).strip(),
-                hit_rate=float(m.group(7)),
-            ))
+            rows.append(
+                SkillRow(
+                    technique=m.group(1).strip(),
+                    category=m.group(2).strip(),
+                    tried=int(m.group(3)),
+                    top3=int(m.group(4)),
+                    finding=int(m.group(5)),
+                    last_used=m.group(6).strip(),
+                    hit_rate=float(m.group(7)),
+                )
+            )
         except ValueError:
             continue
     return rows
@@ -149,16 +152,32 @@ def _category_matches(row_category: str, target: str) -> bool:
     return False
 
 
-def pick_strategy(library_path: Path, *, category: str) -> StrategyPick:
-    """Apply the autoresearch 1+1 rule: max 1 prior + max 1 novel per attempt."""
+def pick_strategy(
+    library_path: Path, *, category: str, avoid_techniques: set[str] | None = None
+) -> StrategyPick:
+    """Apply the autoresearch 1+1 rule: max 1 prior + max 1 novel per attempt.
+
+    `avoid_techniques`: technique names to exclude from selection. Used by
+    `run_one_visit` (Goal 7.4) to make attempts 2/3 within a visit avoid
+    repeating the strategies that earlier attempts already picked. None or
+    empty set = no exclusions.
+    """
     rows = load_skill_library(library_path)
     candidates = [r for r in rows if _category_matches(r.category, category)]
+    avoid = avoid_techniques or set()
+    if avoid:
+        candidates = [r for r in candidates if r.technique not in avoid]
     if not candidates:
+        avoid_note = f" (avoid={sorted(avoid)})" if avoid else ""
         return StrategyPick(
-            category=category, prior=None, novel=None,
-            rationale=(f"no techniques in skill-library matching category "
-                       f"'{category}' — council dispatch + gap_search may "
-                       f"be needed to seed."),
+            category=category,
+            prior=None,
+            novel=None,
+            rationale=(
+                f"no techniques in skill-library matching category "
+                f"'{category}'{avoid_note} — council dispatch + "
+                f"gap_search may be needed to seed."
+            ),
         )
 
     # Prior: highest hit_rate, with finding count as tiebreak (more findings = more proven)
@@ -167,7 +186,11 @@ def pick_strategy(library_path: Path, *, category: str) -> StrategyPick:
     # Novel: highest finding_rate among remaining, with low hit_rate breaking ties
     # toward genuinely exploratory techniques. Exclude the prior pick.
     remaining = [r for r in candidates if r.technique != prior.technique]
-    novel = max(remaining, key=lambda r: (r.finding_rate, r.finding, -r.hit_rate)) if remaining else None
+    novel = (
+        max(remaining, key=lambda r: (r.finding_rate, r.finding, -r.hit_rate))
+        if remaining
+        else None
+    )
 
     rationale = (
         f"prior = {prior.technique} (hit_rate={prior.hit_rate}, "
@@ -180,6 +203,8 @@ def pick_strategy(library_path: Path, *, category: str) -> StrategyPick:
         )
     else:
         rationale += "; novel = none (only one technique in category)"
+    if avoid:
+        rationale += f"; avoided={sorted(avoid)}"
 
     return StrategyPick(category=category, prior=prior, novel=novel, rationale=rationale)
 
@@ -189,7 +214,7 @@ def pick_strategy(library_path: Path, *, category: str) -> StrategyPick:
 
 @dataclass
 class ConvergenceDecision:
-    action: str   # "continue" | "stop"
+    action: str  # "continue" | "stop"
     reason: str
 
 
@@ -232,9 +257,11 @@ def convergence_detect(
     if no_progress and no_new_gap:
         return ConvergenceDecision(
             action="stop",
-            reason=(f"no progress (Δ={last_score - prev_score:+.6g} within "
-                    f"tol {score_tolerance}) and no new gap surfaced — "
-                    f"inner loop converged"),
+            reason=(
+                f"no progress (Δ={last_score - prev_score:+.6g} within "
+                f"tol {score_tolerance}) and no new gap surfaced — "
+                f"inner loop converged"
+            ),
         )
 
     return ConvergenceDecision(
@@ -258,8 +285,10 @@ def main(argv: list[str] | None = None) -> int:
     category = args.category if args.category else category_for(args.problem_id)
     print(f"category: {category}")
     if category == "?":
-        print(f"  (problem-id {args.problem_id} not mapped — using '?' "
-              f"won't match any library row)")
+        print(
+            f"  (problem-id {args.problem_id} not mapped — using '?' "
+            f"won't match any library row)"
+        )
 
     pick = pick_strategy(args.library, category=category)
     print(f"\n{pick.rationale}")
