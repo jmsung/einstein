@@ -2,26 +2,6 @@
   "generated_at": "2026-05-23",
   "rows": [
     {
-      "name": "basin-rigidity.md",
-      "kind": "concept",
-      "refs": [
-        5,
-        6,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        19,
-        22
-      ],
-      "has_page": true,
-      "has_source": false,
-      "classification": "under-sourced"
-    },
-    {
       "name": "slsqp-active-pair-polish.md",
       "kind": "technique",
       "refs": [
@@ -33,53 +13,6 @@
         16,
         18,
         22
-      ],
-      "has_page": true,
-      "has_source": false,
-      "classification": "under-sourced"
-    },
-    {
-      "name": "basin-hopping-multistart.md",
-      "kind": "technique",
-      "refs": [
-        1,
-        10,
-        12,
-        13,
-        15,
-        16,
-        17
-      ],
-      "has_page": true,
-      "has_source": false,
-      "classification": "under-sourced"
-    },
-    {
-      "name": "mpmath-ulp-polish.md",
-      "kind": "technique",
-      "refs": [
-        5,
-        6,
-        9,
-        10,
-        11,
-        14,
-        18
-      ],
-      "has_page": true,
-      "has_source": false,
-      "classification": "under-sourced"
-    },
-    {
-      "name": "parameterization-selection.md",
-      "kind": "concept",
-      "refs": [
-        2,
-        3,
-        4,
-        9,
-        13,
-        18
       ],
       "has_page": true,
       "has_source": false,
@@ -180,30 +113,6 @@
       "classification": "under-sourced"
     },
     {
-      "name": "basin-rigidity.md",
-      "kind": "finding",
-      "refs": [
-        5,
-        15,
-        16
-      ],
-      "has_page": true,
-      "has_source": false,
-      "classification": "under-sourced"
-    },
-    {
-      "name": "equioscillation-escape.md",
-      "kind": "finding",
-      "refs": [
-        1,
-        2,
-        4
-      ],
-      "has_page": true,
-      "has_source": false,
-      "classification": "under-sourced"
-    },
-    {
       "name": "p2-peak-locking-hessian-mechanism.md",
       "kind": "finding",
       "refs": [
@@ -234,18 +143,6 @@
         2,
         4,
         13
-      ],
-      "has_page": true,
-      "has_source": false,
-      "classification": "under-sourced"
-    },
-    {
-      "name": "cma-es-with-warmstart.md",
-      "kind": "technique",
-      "refs": [
-        9,
-        15,
-        16
       ],
       "has_page": true,
       "has_source": false,
@@ -325,17 +222,6 @@
       "refs": [
         2,
         3
-      ],
-      "has_page": true,
-      "has_source": false,
-      "classification": "under-sourced"
-    },
-    {
-      "name": "probabilistic-method.md",
-      "kind": "concept",
-      "refs": [
-        12,
-        19
       ],
       "has_page": true,
       "has_source": false,
@@ -452,6 +338,26 @@
       "classification": "under-sourced"
     },
     {
+      "name": "basin-rigidity.md",
+      "kind": "concept",
+      "refs": [
+        5,
+        6,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        19,
+        22
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
       "name": "sphere-packing.md",
       "kind": "concept",
       "refs": [
@@ -470,6 +376,38 @@
       "classification": "well-covered"
     },
     {
+      "name": "basin-hopping-multistart.md",
+      "kind": "technique",
+      "refs": [
+        1,
+        10,
+        12,
+        13,
+        15,
+        16,
+        17
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "mpmath-ulp-polish.md",
+      "kind": "technique",
+      "refs": [
+        5,
+        6,
+        9,
+        10,
+        11,
+        14,
+        18
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
       "name": "equioscillation.md",
       "kind": "concept",
       "refs": [
@@ -479,6 +417,21 @@
         13,
         15,
         16
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "parameterization-selection.md",
+      "kind": "concept",
+      "refs": [
+        2,
+        3,
+        4,
+        9,
+        13,
+        18
       ],
       "has_page": true,
       "has_source": true,
@@ -558,6 +511,42 @@
       "classification": "well-covered"
     },
     {
+      "name": "basin-rigidity.md",
+      "kind": "finding",
+      "refs": [
+        5,
+        15,
+        16
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "equioscillation-escape.md",
+      "kind": "finding",
+      "refs": [
+        1,
+        2,
+        4
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "cma-es-with-warmstart.md",
+      "kind": "technique",
+      "refs": [
+        9,
+        15,
+        16
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
       "name": "parallel-tempering-sa.md",
       "kind": "technique",
       "refs": [
@@ -586,6 +575,17 @@
       "refs": [
         1,
         7
+      ],
+      "has_page": true,
+      "has_source": true,
+      "classification": "well-covered"
+    },
+    {
+      "name": "probabilistic-method.md",
+      "kind": "concept",
+      "refs": [
+        12,
+        19
       ],
       "has_page": true,
       "has_source": true,
@@ -652,7 +652,7 @@
         13
       ],
       "has_page": true,
-      "has_source": false,
+      "has_source": true,
       "classification": "orphan-or-singleton"
     },
     {
@@ -832,7 +832,7 @@
         6
       ],
       "has_page": true,
-      "has_source": false,
+      "has_source": true,
       "classification": "orphan-or-singleton"
     },
     {
@@ -892,7 +892,7 @@
         1
       ],
       "has_page": true,
-      "has_source": false,
+      "has_source": true,
       "classification": "orphan-or-singleton"
     }
   ]

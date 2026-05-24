@@ -182,12 +182,19 @@ def distill_via_claude_code(*, extracted_md: str, metadata: dict,
 
 
 def distill_batch(items: list[dict], *, model: str = "claude-opus-4-7[1m]",
-                  max_workers: int = 4, timeout: int = 180) -> list[dict]:
+                  max_workers: int = 4, timeout: int = 180,
+                  delay_seconds: float = 0) -> list[dict]:
     """Distill N papers concurrently. Each item: {slug, extracted_md, metadata}.
 
     Returns a list of {slug, ok, summary | error} dicts in the same order
     as `items`. Failures are isolated — one bad paper doesn't sink the batch.
+
+    `delay_seconds` introduces a sleep BEFORE each task submission, throttling
+    the rate of Claude Code calls to avoid burning the session-token budget too
+    fast. With max_workers=1 + delay=180, runs one paper every ~3 minutes.
     """
+    import time as _time
+
     results: list[dict | None] = [None] * len(items)
 
     def _one(idx: int, item: dict) -> tuple[int, dict]:
@@ -203,7 +210,11 @@ def distill_batch(items: list[dict], *, model: str = "claude-opus-4-7[1m]",
             return (idx, {"slug": item["slug"], "ok": False, "error": str(e)})
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as ex:
-        futures = [ex.submit(_one, i, item) for i, item in enumerate(items)]
+        futures = []
+        for i, item in enumerate(items):
+            if i > 0 and delay_seconds > 0:
+                _time.sleep(delay_seconds)
+            futures.append(ex.submit(_one, i, item))
         for fut in concurrent.futures.as_completed(futures):
             idx, payload = fut.result()
             results[idx] = payload

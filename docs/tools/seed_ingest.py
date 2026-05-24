@@ -562,6 +562,358 @@ def author_sweep(
              total, len(blocks), out_path)
 
 
+# ---------------- problem-sweep (8.2) ----------------
+
+# Problem statuses for which problem-sweep SKIPS arxiv querying.
+# Only `retired` (removed from arena) is in the default skip-list — local
+# `conquered` often means "JSAgent reached its internal target," not "arena
+# floor hit"; other agents may still compete. Caller passes `--exclude P6`
+# for the rare arena-theoretical-floor case (e.g. score=0 on kissing-d11).
+PROBLEM_SWEEP_SKIP_STATUSES = {"retired"}
+
+
+def _parse_problem_frontmatter(path: Path) -> dict | None:
+    """Pull a minimal problem-page record from frontmatter.
+
+    Returns dict with keys: problem_id (int|None), status (str), slug (str),
+    concepts_invoked (list[str]), techniques_used (list[str]), path (Path).
+    Returns None if the file is not a parseable problem page.
+    """
+    try:
+        text = path.read_text()
+    except OSError:
+        return None
+    if not text.startswith("---"):
+        return None
+    end = text.find("\n---", 3)
+    if end < 0:
+        return None
+    fm_block = text[3:end].strip()
+
+    def _scalar(key: str) -> str | None:
+        m = re.search(rf"^{re.escape(key)}:\s*(.+?)\s*$", fm_block, re.MULTILINE)
+        return m.group(1).strip() if m else None
+
+    def _list(key: str) -> list[str]:
+        m = re.search(rf"^{re.escape(key)}:\s*\[(.*?)\]\s*$", fm_block, re.MULTILINE | re.DOTALL)
+        if not m:
+            return []
+        raw = m.group(1).strip()
+        if not raw:
+            return []
+        items: list[str] = []
+        for piece in raw.split(","):
+            piece = piece.strip().strip("\"'")
+            if piece:
+                items.append(piece)
+        return items
+
+    pid_raw = _scalar("problem_id")
+    try:
+        problem_id = int(pid_raw) if pid_raw and pid_raw.isdigit() else None
+    except ValueError:
+        problem_id = None
+
+    status = _scalar("status") or ""
+
+    # Slug from filename (strip leading <id>- if present, drop .md)
+    stem = path.stem
+    slug = re.sub(r"^\d+-", "", stem)
+
+    return {
+        "path": path,
+        "problem_id": problem_id,
+        "status": status,
+        "slug": slug,
+        "concepts_invoked": _list("concepts_invoked"),
+        "techniques_used": _list("techniques_used"),
+    }
+
+
+def _collect_active_problems(problems_dir: Path,
+                             skip_statuses: set[str],
+                             exclude_ids: set[int]) -> list[dict]:
+    """Walk problems_dir, return parsed records for non-skipped, non-excluded problems."""
+    records: list[dict] = []
+    for p in sorted(problems_dir.glob("[0-9]*.md")):
+        rec = _parse_problem_frontmatter(p)
+        if rec is None:
+            continue
+        if rec["status"] in skip_statuses:
+            log.info("    skip %s (status=%s)", p.name, rec["status"])
+            continue
+        if rec["problem_id"] in exclude_ids:
+            log.info("    skip %s (excluded)", p.name)
+            continue
+        records.append(rec)
+    return records
+
+
+def _build_problem_query(*, concepts: list[str], techniques: list[str],
+                         vocab: dict[str, list[str]]) -> tuple[str, list[str]]:
+    """Build an arxiv query from a problem's concepts+techniques via vocab YAML.
+
+    Returns (query_string, phrase_list). Phrases used for relevance scoring.
+    """
+    phrases: list[str] = []
+    for slug in (*concepts, *techniques):
+        phrases.extend(vocab.get(slug, []))
+    # Drop empties + dedup, preserve order
+    seen_p: set[str] = set()
+    deduped: list[str] = []
+    for p in phrases:
+        if p and p not in seen_p:
+            seen_p.add(p)
+            deduped.append(p)
+    return _build_vocab_query(deduped), deduped
+
+
+def problem_sweep(
+    *,
+    problems_dir: Path,
+    out_path: Path,
+    top_n: int = 10,
+    vocab_path: Path | None = None,
+    source_dir: Path | None = None,
+    exclude: list[int] | None = None,
+    skip_statuses: set[str] | None = None,
+    auto_approve_threshold: float | None = None,
+    rate_limit_seconds: float = ARXIV_RATE_LIMIT_SECONDS,
+) -> None:
+    """Per-problem arxiv sweep: walks problems_dir, queries arxiv with each
+    problem's concept+technique phrase set, writes apply()-compatible JSON.
+
+    Skips retired/conquered problems by default (configurable via skip_statuses).
+    Output shape matches author_sweep so apply() can consume it directly.
+    """
+    vocab_p = vocab_path if vocab_path is not None else DEFAULT_VOCAB_PATH
+    vocab = _load_vocab(vocab_p)
+    if not vocab:
+        log.warning("problem-sweep: empty vocab (%s); queries will be empty", vocab_p)
+
+    src_dir = source_dir if source_dir is not None else (_REPO / "docs" / "source")
+    seen = _existing_source_urls(src_dir)
+    log.info("problem-sweep: %d known source URLs to dedup against", len(seen))
+
+    exclude_set: set[int] = set(exclude or [])
+    statuses = skip_statuses if skip_statuses is not None else PROBLEM_SWEEP_SKIP_STATUSES
+
+    records = _collect_active_problems(problems_dir, statuses, exclude_set)
+    log.info("problem-sweep: %d active problems to query", len(records))
+
+    blocks: list[dict] = []
+    for i, rec in enumerate(records):
+        query, phrases = _build_problem_query(
+            concepts=rec["concepts_invoked"],
+            techniques=rec["techniques_used"],
+            vocab=vocab,
+        )
+        log.info("[%d/%d] P%s — %s (%d phrases)",
+                 i + 1, len(records), rec["problem_id"], rec["slug"], len(phrases))
+
+        if not phrases:
+            log.info("    no phrases; skipping arxiv query")
+            results = []
+        else:
+            try:
+                results = search_arxiv(query, max_results=top_n)
+            except Exception as e:
+                log.error("    search failed: %s", e)
+                results = []
+
+        fresh = _filter_already_ingested(results, seen)
+        log.info("    %d hits → %d new", len(results), len(fresh))
+
+        n_auto = 0
+        for r in fresh:
+            r["slug"] = _slug_from_metadata(
+                title=r["title"], year=r.get("year", ""), authors=r.get("authors", "")
+            )
+            r["approved"] = None
+            r["relevance"] = round(_relevance_score(candidate=r, phrases=phrases), 4)
+            if auto_approve_threshold is not None and r["relevance"] >= auto_approve_threshold:
+                r["approved"] = True
+                r["auto_approved"] = True
+                n_auto += 1
+        if auto_approve_threshold is not None and n_auto:
+            log.info("    auto-approved %d/%d", n_auto, len(fresh))
+
+        # Track every fresh URL so the next problem's results don't double-up
+        for r in fresh:
+            seen.add(r["abs_url"])
+            seen.add(_arxiv_id_stem(r["abs_url"]))
+
+        blocks.append({
+            "kind": "problem-sweep",
+            "problem_id": rec["problem_id"],
+            "problem_slug": rec["slug"],
+            "query": query,
+            "candidates": fresh,
+        })
+
+        if i + 1 < len(records) and rate_limit_seconds > 0:
+            time.sleep(rate_limit_seconds)
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps({
+        "generated_at": dt.date.today().isoformat(),
+        "concepts": blocks,
+    }, indent=2) + "\n")
+    total = sum(len(b["candidates"]) for b in blocks)
+    log.info("problem-sweep complete: %d fresh candidates across %d problems → %s",
+             total, len(blocks), out_path)
+
+
+# ---------------- category-sweep (8.4) ----------------
+
+
+def _build_category_query(min_year: int) -> str:
+    """Build an arxiv query: math.* categories AND submittedDate ≥ min_year.
+
+    arxiv submittedDate format: YYYYMMDDHHMM. Open-ended end via 999912312359.
+    """
+    cat_clause = " OR ".join(f"cat:{c}" for c in MATH_CATEGORIES)
+    date_clause = f"submittedDate:[{min_year}01010000 TO 999912312359]"
+    return f"({cat_clause}) AND {date_clause}"
+
+
+def _search_arxiv_paged(*, query: str, start: int, max_results: int) -> list[dict]:
+    """Hit arxiv with explicit `start` parameter for pagination.
+
+    Separate from gap_search.search_arxiv (which hardcodes start=0) so we can
+    page across thousands of math.* submissions without changing gap_search's
+    public API. Format-compatible with search_arxiv: returns list of dicts
+    with {title, authors, year, abs_url, summary}.
+    """
+    import urllib.parse  # local; gap_search has its own import
+
+    params = urllib.parse.urlencode({
+        "search_query": query,
+        "start": str(start),
+        "max_results": str(max_results),
+        "sortBy": "submittedDate",
+        "sortOrder": "descending",
+    })
+    url = f"http://export.arxiv.org/api/query?{params}"
+    req = urllib.request.Request(url, headers={"User-Agent": "einstein-seed-ingest/1"})
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        body = resp.read().decode("utf-8", errors="replace")
+
+    # Minimal feedparser-free Atom parse — gap_search uses feedparser but
+    # we want this module self-contained for paginated bulk pulls.
+    import re as _re
+    entries = _re.findall(r"<entry>(.*?)</entry>", body, _re.DOTALL)
+    out: list[dict] = []
+    for entry in entries:
+        title_m = _re.search(r"<title>(.*?)</title>", entry, _re.DOTALL)
+        sum_m = _re.search(r"<summary>(.*?)</summary>", entry, _re.DOTALL)
+        id_m = _re.search(r"<id>(.*?)</id>", entry, _re.DOTALL)
+        pub_m = _re.search(r"<published>(\d{4})", entry)
+        authors = _re.findall(r"<name>(.*?)</name>", entry)
+        if not (title_m and id_m):
+            continue
+        out.append({
+            "title": _re.sub(r"\s+", " ", title_m.group(1)).strip(),
+            "summary": _re.sub(r"\s+", " ", sum_m.group(1)).strip() if sum_m else "",
+            "abs_url": id_m.group(1).strip(),
+            "year": pub_m.group(1) if pub_m else "",
+            "authors": ", ".join(authors),
+        })
+    return out
+
+
+def category_sweep(
+    *,
+    out_path: Path,
+    vocab_path: Path | None = None,
+    source_dir: Path | None = None,
+    min_year: int = 2022,
+    min_relevance: float = 0.20,
+    max_pages: int = 5,
+    page_size: int = 100,
+    auto_approve_threshold: float | None = None,
+    rate_limit_seconds: float = ARXIV_RATE_LIMIT_SECONDS,
+) -> None:
+    """Bulk math.* category sweep: paginate arxiv, score against the full
+    concept vocabulary, keep candidates with relevance ≥ min_relevance.
+
+    Dedups against existing source/. Writes apply()-compatible JSON with a
+    single block kind=category-sweep.
+    """
+    vocab_p = vocab_path if vocab_path is not None else DEFAULT_VOCAB_PATH
+    vocab = _load_vocab(vocab_p)
+    # Flat phrase list across all concepts — broad relevance signal.
+    all_phrases: list[str] = []
+    seen_phrase: set[str] = set()
+    for phrases in vocab.values():
+        for p in phrases:
+            if p and p not in seen_phrase:
+                seen_phrase.add(p)
+                all_phrases.append(p)
+    if not all_phrases:
+        log.warning("category-sweep: empty vocab (%s); cannot score relevance", vocab_p)
+
+    src_dir = source_dir if source_dir is not None else (_REPO / "docs" / "source")
+    seen = _existing_source_urls(src_dir)
+    log.info("category-sweep: %d known source URLs to dedup against", len(seen))
+
+    query = _build_category_query(min_year=min_year)
+    log.info("category-sweep: query=%s", query[:120] + ("…" if len(query) > 120 else ""))
+
+    raw_hits: list[dict] = []
+    for page in range(max_pages):
+        start = page * page_size
+        log.info("[%d/%d] page start=%d", page + 1, max_pages, start)
+        try:
+            results = _search_arxiv_paged(query=query, start=start, max_results=page_size)
+        except Exception as e:
+            log.error("    page failed: %s", e)
+            break
+        log.info("    %d entries", len(results))
+        if not results:
+            break
+        raw_hits.extend(results)
+        if page + 1 < max_pages and rate_limit_seconds > 0:
+            time.sleep(rate_limit_seconds)
+
+    # Dedup against existing source/ first (cheap, before scoring)
+    fresh = _filter_already_ingested(raw_hits, seen)
+    log.info("category-sweep: %d raw hits → %d after dedup", len(raw_hits), len(fresh))
+
+    kept: list[dict] = []
+    n_auto = 0
+    for r in fresh:
+        r["slug"] = _slug_from_metadata(
+            title=r["title"], year=r.get("year", ""), authors=r.get("authors", "")
+        )
+        r["approved"] = None
+        r["relevance"] = round(_relevance_score(candidate=r, phrases=all_phrases), 4)
+        if r["relevance"] < min_relevance:
+            continue
+        if auto_approve_threshold is not None and r["relevance"] >= auto_approve_threshold:
+            r["approved"] = True
+            r["auto_approved"] = True
+            n_auto += 1
+        kept.append(r)
+
+    if auto_approve_threshold is not None and n_auto:
+        log.info("    auto-approved %d/%d", n_auto, len(kept))
+    log.info("category-sweep: %d kept at relevance ≥ %.2f", len(kept), min_relevance)
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps({
+        "generated_at": dt.date.today().isoformat(),
+        "concepts": [{
+            "kind": "category-sweep",
+            "min_year": min_year,
+            "min_relevance": min_relevance,
+            "query": query,
+            "candidates": kept,
+        }],
+    }, indent=2) + "\n")
+    log.info("category-sweep complete: → %s", out_path)
+
+
 # ---------------- network I/O (mockable seams) ----------------
 
 
@@ -782,7 +1134,8 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
           download_retries: int = 3,
           llm_distill_enabled: bool = True,
           llm_model: str = "claude-opus-4-7[1m]",
-          llm_workers: int = 4) -> list[Path]:
+          llm_workers: int = 4,
+          llm_delay_seconds: float = 0) -> list[Path]:
     """Step 2: download approved candidates + write source/ entries.
 
     Refactored from one-PDF-at-a-time to:
@@ -916,9 +1269,11 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
 
         if distill_items:
             log.info("phase 3.5: LLM-distill %d papers via claude -p (model %s, "
-                     "%d workers)", len(distill_items), llm_model, llm_workers)
+                     "%d workers, %.1fs delay between calls)",
+                     len(distill_items), llm_model, llm_workers, llm_delay_seconds)
             distill_results = llm_distill.distill_batch(
                 distill_items, model=llm_model, max_workers=llm_workers,
+                delay_seconds=llm_delay_seconds,
             )
             for r in distill_results:
                 if r["ok"]:
@@ -1026,6 +1381,40 @@ def main(argv: list[str] | None = None) -> int:
     p_citation.add_argument("--max-refs-per-paper", type=int, default=200)
     p_citation.add_argument("--auto-approve-above", type=float, default=None,
                             metavar="THRESHOLD")
+    p_citation.add_argument("--arxiv-ids", type=str, default=None,
+                            metavar="ID1,ID2,...",
+                            help="Comma-separated arxiv IDs to crawl instead of "
+                                 "scanning all of source/. Useful for survey-paper "
+                                 "bibliography expansion (8.3).")
+
+    p_problem = sub.add_parser("problem-sweep",
+                               help="Per-problem arxiv sweep: walks docs/wiki/problems/ "
+                                    "frontmatter and queries arxiv per active problem.")
+    p_problem.add_argument("--problems-dir", type=Path,
+                           default=_REPO / "docs" / "wiki" / "problems")
+    p_problem.add_argument("--out", type=Path, required=True)
+    p_problem.add_argument("--top-n", type=int, default=10)
+    p_problem.add_argument("--vocab", type=Path, default=None,
+                           help=f"Slug → search-phrase YAML (default: {DEFAULT_VOCAB_PATH.name}).")
+    p_problem.add_argument("--source-dir", type=Path, default=None)
+    p_problem.add_argument("--exclude", type=str, default=None,
+                           metavar="P6,P22",
+                           help="Comma-separated problem IDs to skip (e.g. 'P6' or '6').")
+    p_problem.add_argument("--auto-approve-above", type=float, default=None,
+                           metavar="THRESHOLD")
+
+    p_category = sub.add_parser("category-sweep",
+                                help="Bulk math.* category sweep with date + relevance filter.")
+    p_category.add_argument("--out", type=Path, required=True)
+    p_category.add_argument("--vocab", type=Path, default=None,
+                            help=f"Phrase YAML for relevance scoring (default: {DEFAULT_VOCAB_PATH.name}).")
+    p_category.add_argument("--source-dir", type=Path, default=None)
+    p_category.add_argument("--min-year", type=int, default=2022)
+    p_category.add_argument("--min-relevance", type=float, default=0.20)
+    p_category.add_argument("--max-pages", type=int, default=5)
+    p_category.add_argument("--page-size", type=int, default=100)
+    p_category.add_argument("--auto-approve-above", type=float, default=None,
+                            metavar="THRESHOLD")
 
     p_apply = sub.add_parser("apply", help="Download approved candidates + write source/ entries.")
     p_apply.add_argument("--candidates", type=Path, required=True)
@@ -1038,6 +1427,11 @@ def main(argv: list[str] | None = None) -> int:
                          help="Model alias for claude -p distillation.")
     p_apply.add_argument("--llm-workers", type=int, default=4,
                          help="Parallel claude -p invocations during distillation.")
+    p_apply.add_argument("--llm-delay-seconds", type=float, default=0,
+                         help="Sleep N seconds between successive claude -p submissions. "
+                              "Use to throttle Claude Code session-quota burn. "
+                              "Typical: --llm-workers 1 --llm-delay-seconds 240 (one paper "
+                              "every 4 min, safe over a multi-hour session).")
 
     args = parser.parse_args(argv)
 
@@ -1053,8 +1447,12 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.cmd == "citation-crawl":
         src = args.source_dir if args.source_dir is not None else (_REPO / "docs" / "source")
-        arxiv_ids = _collect_arxiv_ids(src)
-        log.info("citation-crawl: %d arxiv ids found in source/", len(arxiv_ids))
+        if args.arxiv_ids:
+            arxiv_ids = [s.strip() for s in args.arxiv_ids.split(",") if s.strip()]
+            log.info("citation-crawl: %d arxiv ids from --arxiv-ids", len(arxiv_ids))
+        else:
+            arxiv_ids = _collect_arxiv_ids(src)
+            log.info("citation-crawl: %d arxiv ids found in source/", len(arxiv_ids))
         candidates = citation_crawl(
             arxiv_ids=arxiv_ids, source_dir=src,
             rate_limit_seconds=args.rate_limit,
@@ -1080,6 +1478,26 @@ def main(argv: list[str] | None = None) -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(out, indent=2) + "\n")
         log.info("wrote %d candidates → %s", len(candidates), args.out)
+    elif args.cmd == "problem-sweep":
+        exclude_ids: list[int] = []
+        if args.exclude:
+            for tok in args.exclude.split(","):
+                tok = tok.strip().lstrip("Pp")
+                if tok.isdigit():
+                    exclude_ids.append(int(tok))
+        problem_sweep(
+            problems_dir=args.problems_dir, out_path=args.out, top_n=args.top_n,
+            vocab_path=args.vocab, source_dir=args.source_dir,
+            exclude=exclude_ids if exclude_ids else None,
+            auto_approve_threshold=args.auto_approve_above,
+        )
+    elif args.cmd == "category-sweep":
+        category_sweep(
+            out_path=args.out, vocab_path=args.vocab, source_dir=args.source_dir,
+            min_year=args.min_year, min_relevance=args.min_relevance,
+            max_pages=args.max_pages, page_size=args.page_size,
+            auto_approve_threshold=args.auto_approve_above,
+        )
     elif args.cmd == "apply":
         results = apply(
             candidates_json=args.candidates,
@@ -1087,6 +1505,7 @@ def main(argv: list[str] | None = None) -> int:
             llm_distill_enabled=not args.no_llm,
             llm_model=args.llm_model,
             llm_workers=args.llm_workers,
+            llm_delay_seconds=args.llm_delay_seconds,
         )
         log.info("%s %d source/ entries",
                  "would write" if args.dry_run else "wrote", len(results))

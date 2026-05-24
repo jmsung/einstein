@@ -918,3 +918,353 @@ def test_apply_dry_run_writes_nothing(tmp_path: Path) -> None:
     mock_p2m.assert_not_called()
     # No source file written
     assert not (docs / "source" / "2020-smith-test.md").exists()
+
+
+# ---------------- citation-crawl --arxiv-ids flag (8.3) ----------------
+
+
+def test_citation_crawl_accepts_explicit_arxiv_ids(tmp_path: Path) -> None:
+    """citation_crawl(arxiv_ids=[...]) crawls only the provided ids, not all of source/."""
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+    # Sprinkle a few existing source/ entries to ensure dedup works against them.
+    (src_dir / "2010-other.md").write_text(
+        "---\nsource_url: https://arxiv.org/abs/0999.9999\n---\n"
+    )
+
+    fetched: list[str] = []
+
+    def fake_fetch(aid: str) -> list[dict]:
+        fetched.append(aid)
+        # Mimic semanticscholar's reference record shape
+        ref_id = f"2305.{abs(hash(aid)) % 99999:05d}"
+        return [{
+            "title": f"Ref of {aid}",
+            "year": 2020,
+            "authors": [{"name": "X. Y."}],
+            "externalIds": {"ArXiv": ref_id},
+            "abstract": "abstract",
+        }]
+
+    with patch.object(si, "_s2_fetch_references", side_effect=fake_fetch):
+        cands = si.citation_crawl(
+            arxiv_ids=["1234.5678", "2306.00001"],
+            source_dir=src_dir,
+            rate_limit_seconds=0,
+        )
+
+    assert fetched == ["1234.5678", "2306.00001"], "exactly the provided ids"
+    assert len(cands) == 2
+    assert all(c["abs_url"].startswith("https://arxiv.org/abs/") for c in cands)
+
+
+def test_cli_citation_crawl_arxiv_ids_flag(tmp_path: Path) -> None:
+    """Comma-separated --arxiv-ids on the CLI overrides full-corpus scan."""
+    out = tmp_path / "candidates.json"
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+
+    seen_ids: list[list[str]] = []
+
+    def fake_crawl(*, arxiv_ids, source_dir, rate_limit_seconds, max_refs_per_paper):
+        seen_ids.append(list(arxiv_ids))
+        return []
+
+    with patch.object(si, "citation_crawl", side_effect=fake_crawl):
+        rc = si.main([
+            "citation-crawl",
+            "--out", str(out),
+            "--source-dir", str(src_dir),
+            "--arxiv-ids", "1234.5678, 2306.00001 , 2401.99999",
+            "--rate-limit", "0",
+        ])
+    assert rc == 0
+    assert seen_ids == [["1234.5678", "2306.00001", "2401.99999"]]
+
+
+# ---------------- problem-sweep (8.2) ----------------
+
+
+def _write_problem_fixture(problems_dir: Path, *, problem_id: int, slug: str,
+                           status: str, concepts: list[str],
+                           techniques: list[str] | None = None) -> Path:
+    problems_dir.mkdir(parents=True, exist_ok=True)
+    p = problems_dir / f"{problem_id}-{slug}.md"
+    body = (
+        "---\n"
+        "type: problem\n"
+        "author: agent\n"
+        f"problem_id: {problem_id}\n"
+        f"status: {status}\n"
+        f"concepts_invoked: {json.dumps(concepts)}\n"
+        f"techniques_used: {json.dumps(techniques or [])}\n"
+        "---\n"
+        f"# Problem {problem_id} — {slug}\n"
+    )
+    p.write_text(body)
+    return p
+
+
+def test_parse_problem_frontmatter_extracts_concepts_and_status(tmp_path: Path) -> None:
+    p = _write_problem_fixture(
+        tmp_path / "problems", problem_id=15, slug="heilbronn-triangles",
+        status="rank-3", concepts=["basin-rigidity.md", "equioscillation.md"],
+        techniques=["slsqp-active-pair-polish.md"],
+    )
+    parsed = si._parse_problem_frontmatter(p)
+    assert parsed is not None
+    assert parsed["problem_id"] == 15
+    assert parsed["status"] == "rank-3"
+    assert "basin-rigidity.md" in parsed["concepts_invoked"]
+    assert "slsqp-active-pair-polish.md" in parsed["techniques_used"]
+
+
+def test_problem_sweep_skips_retired_only_by_default(tmp_path: Path) -> None:
+    """Default skip-list: only `retired` is excluded. `conquered` often means
+    'JSAgent hit its internal target', not 'arena floor reached' — other agents
+    may still be competing. Caller passes --exclude P6 for arena-floor cases."""
+    pd = tmp_path / "problems"
+    _write_problem_fixture(pd, problem_id=6, slug="kissing-d11",
+                           status="conquered", concepts=["kissing-number.md"])
+    _write_problem_fixture(pd, problem_id=16, slug="heilbronn-convex",
+                           status="retired", concepts=["basin-rigidity.md"])
+    _write_problem_fixture(pd, problem_id=15, slug="heilbronn-triangles",
+                           status="frozen", concepts=["basin-rigidity.md"])
+
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+    vocab = tmp_path / "vocab.yaml"
+    vocab.write_text("basin-rigidity.md:\n  - \"first-order rigidity\"\n"
+                     "kissing-number.md:\n  - \"kissing number\"\n")
+
+    queried_problems: list[int] = []
+
+    def fake_search(query: str, max_results: int = 5) -> list[dict]:
+        if "rigidity" in query:
+            queried_problems.append(15)
+        if "kissing number" in query:
+            queried_problems.append(6)
+        return []
+
+    with patch("seed_ingest.search_arxiv", side_effect=fake_search):
+        out = tmp_path / "candidates.json"
+        si.problem_sweep(
+            problems_dir=pd, out_path=out, top_n=10,
+            vocab_path=vocab, source_dir=src_dir,
+            rate_limit_seconds=0,
+        )
+
+    # Only P16 (retired) is skipped; P6 (conquered) and P15 (frozen) both swept
+    assert sorted(queried_problems) == [6, 15], f"got {queried_problems}"
+
+
+def test_problem_sweep_excludes_arena_floored_via_cli_exclude(tmp_path: Path) -> None:
+    """User-supplied --exclude P6 is the right mechanism for arena-floor problems."""
+    pd = tmp_path / "problems"
+    _write_problem_fixture(pd, problem_id=6, slug="kissing-d11",
+                           status="conquered", concepts=["kissing-number.md"])
+    _write_problem_fixture(pd, problem_id=15, slug="heilbronn-triangles",
+                           status="frozen", concepts=["basin-rigidity.md"])
+
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+    vocab = tmp_path / "vocab.yaml"
+    vocab.write_text("basin-rigidity.md:\n  - \"first-order rigidity\"\n"
+                     "kissing-number.md:\n  - \"kissing number\"\n")
+
+    queried: list[int] = []
+
+    def fake_search(query: str, max_results: int = 5) -> list[dict]:
+        if "kissing number" in query:
+            queried.append(6)
+        if "rigidity" in query:
+            queried.append(15)
+        return []
+
+    with patch("seed_ingest.search_arxiv", side_effect=fake_search):
+        out = tmp_path / "candidates.json"
+        si.problem_sweep(
+            problems_dir=pd, out_path=out, top_n=10,
+            vocab_path=vocab, source_dir=src_dir,
+            exclude=[6], rate_limit_seconds=0,
+        )
+
+    assert queried == [15]
+
+
+def test_problem_sweep_excludes_listed_problem_ids(tmp_path: Path) -> None:
+    pd = tmp_path / "problems"
+    _write_problem_fixture(pd, problem_id=15, slug="heilbronn-triangles",
+                           status="rank-3", concepts=["basin-rigidity.md"])
+    _write_problem_fixture(pd, problem_id=11, slug="tammes-n50",
+                           status="rank-2", concepts=["basin-rigidity.md"])
+
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+    vocab = tmp_path / "vocab.yaml"
+    vocab.write_text("basin-rigidity.md:\n  - \"first-order rigidity\"\n")
+
+    queried: list[int] = []
+
+    def fake_search(query: str, max_results: int = 5) -> list[dict]:
+        queried.append(max_results)
+        return []
+
+    with patch("seed_ingest.search_arxiv", side_effect=fake_search):
+        out = tmp_path / "candidates.json"
+        si.problem_sweep(
+            problems_dir=pd, out_path=out, top_n=10,
+            vocab_path=vocab, source_dir=src_dir,
+            exclude=[15], rate_limit_seconds=0,
+        )
+
+    # P15 excluded → exactly 1 search call (P11)
+    assert len(queried) == 1
+
+
+def test_problem_sweep_output_shape_matches_author_sweep(tmp_path: Path) -> None:
+    """Output JSON must be apply()-compatible: same shape as author_sweep."""
+    pd = tmp_path / "problems"
+    _write_problem_fixture(pd, problem_id=15, slug="heilbronn-triangles",
+                           status="rank-3", concepts=["basin-rigidity.md"])
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+    vocab = tmp_path / "vocab.yaml"
+    vocab.write_text("basin-rigidity.md:\n  - \"first-order rigidity\"\n")
+
+    def fake_search(query: str, max_results: int = 5) -> list[dict]:
+        return [{
+            "title": "Rigidity paper", "authors": "X. Y.", "year": "2023",
+            "abs_url": "http://arxiv.org/abs/2305.00001", "summary": "first-order rigidity in extremal",
+        }]
+
+    out = tmp_path / "candidates.json"
+    with patch("seed_ingest.search_arxiv", side_effect=fake_search):
+        si.problem_sweep(
+            problems_dir=pd, out_path=out, top_n=10,
+            vocab_path=vocab, source_dir=src_dir,
+            rate_limit_seconds=0,
+        )
+
+    data = json.loads(out.read_text())
+    assert "concepts" in data, "apply() consumes a 'concepts' top-level key"
+    block = data["concepts"][0]
+    assert block["kind"] == "problem-sweep"
+    assert block["problem_id"] == 15
+    assert "candidates" in block
+    assert len(block["candidates"]) == 1
+    c = block["candidates"][0]
+    assert "slug" in c
+    assert c["approved"] is None
+    assert "relevance" in c
+
+
+# ---------------- category-sweep (8.4) ----------------
+
+
+def test_build_category_query_has_math_cat_and_date_filter() -> None:
+    q = si._build_category_query(min_year=2022)
+    # Math categories OR'd
+    assert "cat:math.NT" in q
+    assert "cat:math.CO" in q
+    assert " OR " in q
+    # Date filter present
+    assert "submittedDate:[" in q
+    assert "202201010000" in q or "20220101" in q
+
+
+def test_category_sweep_paginates_and_filters_by_relevance(tmp_path: Path) -> None:
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+    vocab = tmp_path / "vocab.yaml"
+    vocab.write_text(
+        "basin-rigidity.md:\n  - \"first-order rigidity\"\n"
+        "kissing-number.md:\n  - \"kissing number\"\n"
+    )
+
+    page_calls: list[int] = []
+
+    def fake_search_paged(*, query: str, start: int, max_results: int) -> list[dict]:
+        page_calls.append(start)
+        # Page 0: 2 highly relevant + 1 noise
+        # Page 1: 1 noise
+        if start == 0:
+            return [
+                {"title": "First-order rigidity and the kissing number",
+                 "authors": "A.", "year": "2023",
+                 "abs_url": "http://arxiv.org/abs/2301.00001",
+                 "summary": "first-order rigidity proof for kissing number"},
+                {"title": "Bounds on kissing number in low dim",
+                 "authors": "B.", "year": "2024",
+                 "abs_url": "http://arxiv.org/abs/2401.00001",
+                 "summary": "kissing number new bound"},
+                {"title": "Unrelated PDE paper",
+                 "authors": "C.", "year": "2023",
+                 "abs_url": "http://arxiv.org/abs/2302.99999",
+                 "summary": "elliptic regularity"},
+            ]
+        if start == 100:
+            return [
+                {"title": "Another noise paper",
+                 "authors": "D.", "year": "2023",
+                 "abs_url": "http://arxiv.org/abs/2303.99999",
+                 "summary": "completely unrelated"},
+            ]
+        return []  # exhausted
+
+    with patch.object(si, "_search_arxiv_paged", side_effect=fake_search_paged):
+        out = tmp_path / "candidates.json"
+        si.category_sweep(
+            out_path=out, vocab_path=vocab, source_dir=src_dir,
+            min_year=2022, min_relevance=0.10,
+            max_pages=3, page_size=100,
+            rate_limit_seconds=0,
+        )
+
+    assert page_calls == [0, 100, 200], "should paginate through max_pages=3"
+    data = json.loads(out.read_text())
+    cands = data["concepts"][0]["candidates"]
+    # Only the 2 high-relevance papers survive
+    assert len(cands) == 2
+    urls = sorted(c["abs_url"] for c in cands)
+    assert urls == ["http://arxiv.org/abs/2301.00001",
+                    "http://arxiv.org/abs/2401.00001"]
+
+
+def test_category_sweep_dedupes_against_existing_source(tmp_path: Path) -> None:
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+    # Pre-existing source entry for the highly-relevant 2301 paper
+    (src_dir / "existing.md").write_text(
+        "---\nsource_url: https://arxiv.org/abs/2301.00001\n---\n"
+    )
+    vocab = tmp_path / "vocab.yaml"
+    vocab.write_text("basin-rigidity.md:\n  - \"first-order rigidity\"\n")
+
+    def fake_paged(*, query, start, max_results):
+        if start == 0:
+            return [
+                {"title": "First-order rigidity",
+                 "authors": "A.", "year": "2023",
+                 "abs_url": "http://arxiv.org/abs/2301.00001",
+                 "summary": "first-order rigidity"},
+                {"title": "Fresh rigidity paper",
+                 "authors": "B.", "year": "2024",
+                 "abs_url": "http://arxiv.org/abs/2405.00001",
+                 "summary": "first-order rigidity new result"},
+            ]
+        return []
+
+    with patch.object(si, "_search_arxiv_paged", side_effect=fake_paged):
+        out = tmp_path / "candidates.json"
+        si.category_sweep(
+            out_path=out, vocab_path=vocab, source_dir=src_dir,
+            min_year=2022, min_relevance=0.10,
+            max_pages=1, page_size=100,
+            rate_limit_seconds=0,
+        )
+
+    cands = json.loads(out.read_text())["concepts"][0]["candidates"]
+    # 2301 is pre-existing → only 2405 survives
+    assert len(cands) == 1
+    assert cands[0]["abs_url"] == "http://arxiv.org/abs/2405.00001"
