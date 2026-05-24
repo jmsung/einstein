@@ -31,6 +31,13 @@ PROBLEM_SLUG="${2:?usage: cycle_runner.sh <cycle_id> <problem_slug>}"
 
 cd "$(dirname "$0")/../.."   # repo root
 
+# Goal 7.8b: regression-detect sentinel. Hard failures (wiki_lint exiting
+# non-zero) drop `mb/.inner-agent-disabled` which 7.5's precheck honors.
+# The human re-enables via `rm`. Other steps (refresh_qmd, gap_search) are
+# soft warnings — transient infra issues shouldn't block cycles.
+SENTINEL_PATH="${SENTINEL_PATH:-../mb/.inner-agent-disabled}"
+HARD_FAIL_REASONS=""
+
 echo "==> cycle $CYCLE_ID — $PROBLEM_SLUG — post-cycle discipline"
 echo
 
@@ -68,10 +75,13 @@ fi
 echo
 
 # 4. wiki_lint — structural health check (orphans / broken cites / body link gaps)
+#    Hard failure (non-zero exit) → drop the regression-detect sentinel
+#    (Goal 7.8b). Future cycles skip until a human inspects + `rm`s it.
 echo "[4/5] wiki_lint — structural wiki health"
 if [[ -f docs/tools/wiki_lint.py ]]; then
   if ! uv run python docs/tools/wiki_lint.py; then
-    echo "  warning: wiki_lint reported issues (continuing)"
+    HARD_FAIL_REASONS="${HARD_FAIL_REASONS}wiki_lint exit non-zero;"
+    echo "  HARD-FAIL: wiki_lint reported issues — sentinel will be dropped"
   fi
 else
   echo "  skip: docs/tools/wiki_lint.py not present"
@@ -88,5 +98,18 @@ else
   echo "  no promotion-log; nothing to surface this cycle"
 fi
 echo
+
+if [[ -n "$HARD_FAIL_REASONS" ]]; then
+  echo
+  echo "==> HARD REGRESSION detected — writing sentinel"
+  uv run python docs/tools/inner_agent_gates.py write-sentinel \
+    "$SENTINEL_PATH" \
+    --reason "cycle $CYCLE_ID ($PROBLEM_SLUG): $HARD_FAIL_REASONS" \
+    --cycle-id "$CYCLE_ID"
+  echo
+  echo "Future autonomous cycles will skip until you:"
+  echo "  rm $SENTINEL_PATH"
+  exit 2
+fi
 
 echo "✓ cycle $CYCLE_ID discipline complete"
