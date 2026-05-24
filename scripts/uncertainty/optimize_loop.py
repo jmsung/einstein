@@ -17,16 +17,19 @@ Usage: PYTHONUNBUFFERED=1 nohup python scripts/optimize_loop.py &
 
 import os
 import sys
+
 sys.path.insert(0, "src")
 
 import json
 import re
 import time
-import numpy as np
-import cma
 from collections import defaultdict
-from scipy.optimize import minimize, basinhopping
 from pathlib import Path
+
+import cma
+import numpy as np
+from scipy.optimize import basinhopping, minimize
+
 from einstein.uncertainty.fast import fast_evaluate
 from einstein.uncertainty.verifier import evaluate as exact_evaluate
 
@@ -43,8 +46,16 @@ REFERENCE_ROOTS = None
 REFERENCE_SCORE = None
 
 # Strategy names (must match function names below)
-STRATEGY_NAMES = ["hillclimb", "lbfgsb", "cma", "basin_hop", "perturb",
-                  "pairwise", "nelder_mead", "differential_evolution"]
+STRATEGY_NAMES = [
+    "hillclimb",
+    "lbfgsb",
+    "cma",
+    "basin_hop",
+    "perturb",
+    "pairwise",
+    "nelder_mead",
+    "differential_evolution",
+]
 
 
 def log(msg):
@@ -79,10 +90,17 @@ def read_strategy_stats():
         "avg_rank": float,  # average rank across iterations
     }}
     """
-    stats = defaultdict(lambda: {
-        "wins": 0, "top3": 0, "rejected": 0, "improved": 0,
-        "runs": 0, "ranks": [], "times": [],
-    })
+    stats = defaultdict(
+        lambda: {
+            "wins": 0,
+            "top3": 0,
+            "rejected": 0,
+            "improved": 0,
+            "runs": 0,
+            "ranks": [],
+            "times": [],
+        }
+    )
     if not PROGRESS_FILE.exists():
         return stats
     for line in PROGRESS_FILE.read_text().splitlines():
@@ -128,8 +146,7 @@ def pick_strategies(stats, rng):
         avg_rank = sum(s["ranks"]) / len(s["ranks"])
         avg_time = sum(s["times"]) / len(s["times"]) if s["times"] else 300
         # Core score: rank performance + verified improvements
-        perf = (s["improved"] * 10 + s["wins"] * 3 + s["top3"] * 1
-                - s["rejected"] * 5)
+        perf = s["improved"] * 10 + s["wins"] * 3 + s["top3"] * 1 - s["rejected"] * 5
         rank_score = max(0, 9.0 - avg_rank)  # rank 1 → 8, rank 8 → 1
         # Time penalty only for bad performers (slow + bad rank)
         time_penalty = 0
@@ -183,13 +200,14 @@ def obj(x, dps=30):
     r = sorted(x)
     if any(z <= 0 or z > 300 for z in r):
         return 1e6
-    if any(r[i+1] - r[i] < 0.01 for i in range(len(r)-1)):
+    if any(r[i + 1] - r[i] < 0.01 for i in range(len(r) - 1)):
         return 1e6
     s = fast_evaluate(r, dps=dps)
     return s if np.isfinite(s) else 1e6
 
 
 # ── Strategies ──────────────────────────────────────────────────────────────
+
 
 def strategy_hillclimb(roots, rng):
     """Coordinate hillclimb with adaptive step sizes."""
@@ -207,9 +225,9 @@ def strategy_hillclimb(roots, rng):
                     trial[i] += d * step_sizes[i] * s
                     if trial[i] <= 0 or trial[i] > 300:
                         continue
-                    if i > 0 and trial[i] <= trial[i-1] + 0.01:
+                    if i > 0 and trial[i] <= trial[i - 1] + 0.01:
                         continue
-                    if i < k-1 and trial[i] >= trial[i+1] - 0.01:
+                    if i < k - 1 and trial[i] >= trial[i + 1] - 0.01:
                         continue
                     score = fast_evaluate(trial)
                     if score < best - 1e-15:
@@ -233,10 +251,10 @@ def strategy_pairwise(roots, rng):
     best = fast_evaluate(roots)
     for _ in range(40):
         improved = False
-        pairs = [(i, j) for i in range(k) for j in range(i+1, k)]
+        pairs = [(i, j) for i in range(k) for j in range(i + 1, k)]
         rng.shuffle(pairs)
         for i, j in pairs[:20]:  # sample subset for speed
-            for di, dj in [(1,1), (1,-1), (-1,1), (-1,-1)]:
+            for di, dj in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
                 for s in [0.01, 0.05, 0.1, 0.5]:
                     trial = list(roots)
                     trial[i] += di * s
@@ -244,7 +262,7 @@ def strategy_pairwise(roots, rng):
                     trial_s = sorted(trial)
                     if any(z <= 0 or z > 300 for z in trial_s):
                         continue
-                    if any(trial_s[m+1] - trial_s[m] < 0.01 for m in range(k-1)):
+                    if any(trial_s[m + 1] - trial_s[m] < 0.01 for m in range(k - 1)):
                         continue
                     score = fast_evaluate(trial_s)
                     if score < best - 1e-15:
@@ -271,8 +289,9 @@ def strategy_lbfgsb(roots, rng):
         return roots, fast_evaluate(roots)
     k = len(trial)
     bounds = [(0.01, 300.0)] * k
-    res = minimize(obj, trial, method="L-BFGS-B", bounds=bounds,
-                   options={"maxiter": 300, "ftol": 1e-16})
+    res = minimize(
+        obj, trial, method="L-BFGS-B", bounds=bounds, options={"maxiter": 300, "ftol": 1e-16}
+    )
     return sorted(res.x), res.fun
 
 
@@ -282,8 +301,9 @@ def strategy_nelder_mead(roots, rng):
     for i in range(len(trial)):
         trial[i] += rng.randn() * 0.05
     trial.sort()
-    res = minimize(obj, trial, method="Nelder-Mead",
-                   options={"maxiter": 2000, "xatol": 1e-12, "fatol": 1e-16})
+    res = minimize(
+        obj, trial, method="Nelder-Mead", options={"maxiter": 2000, "xatol": 1e-12, "fatol": 1e-16}
+    )
     return sorted(res.x), res.fun
 
 
@@ -299,7 +319,7 @@ def strategy_cma(roots, rng):
     opts["maxfevals"] = 800
     opts["tolfun"] = 1e-16
     opts["verbose"] = -1
-    opts["bounds"] = [[0.01]*k, [300.0]*k]
+    opts["bounds"] = [[0.01] * k, [300.0] * k]
     try:
         es = cma.CMAEvolutionStrategy(trial, sigma, opts)
         es.optimize(obj)
@@ -313,10 +333,18 @@ def strategy_basin_hop(roots, rng):
     step = rng.choice([0.1, 0.3, 0.5, 1.0])
     k = len(roots)
     bounds = [(0.01, 300.0)] * k
-    res = basinhopping(obj, roots, niter=5, stepsize=step,
-                       minimizer_kwargs={"method": "L-BFGS-B", "bounds": bounds,
-                                         "options": {"maxiter": 100, "ftol": 1e-16}},
-                       seed=int(rng.randint(0, 10000)))
+    res = basinhopping(
+        obj,
+        roots,
+        niter=5,
+        stepsize=step,
+        minimizer_kwargs={
+            "method": "L-BFGS-B",
+            "bounds": bounds,
+            "options": {"maxiter": 100, "ftol": 1e-16},
+        },
+        seed=int(rng.randint(0, 10000)),
+    )
     return sorted(res.x), res.fun
 
 
@@ -324,7 +352,7 @@ def strategy_perturb(roots, rng):
     """Big perturbation + hillclimb refinement."""
     k = len(roots)
     trial = list(roots)
-    n_perturb = rng.randint(2, min(6, k+1))
+    n_perturb = rng.randint(2, min(6, k + 1))
     indices = rng.choice(k, n_perturb, replace=False)
     sigma = rng.choice([0.3, 0.5, 1.0, 2.0])
     for i in indices:
@@ -332,7 +360,7 @@ def strategy_perturb(roots, rng):
     trial.sort()
     if any(z <= 0 or z > 300 for z in trial):
         return roots, fast_evaluate(roots)
-    if any(trial[i+1] - trial[i] < 0.01 for i in range(k-1)):
+    if any(trial[i + 1] - trial[i] < 0.01 for i in range(k - 1)):
         return roots, fast_evaluate(roots)
     return strategy_hillclimb(trial, rng)
 
@@ -340,12 +368,20 @@ def strategy_perturb(roots, rng):
 def strategy_differential_evolution(roots, rng):
     """Differential evolution — population-based global optimizer."""
     from scipy.optimize import differential_evolution as de
+
     k = len(roots)
     # Tight bounds around current best
     margin = 3.0
     bounds = [(max(0.01, r - margin), min(300.0, r + margin)) for r in roots]
-    res = de(obj, bounds, maxiter=50, seed=int(rng.randint(0, 10000)),
-             tol=1e-16, polish=True, init="sobol")
+    res = de(
+        obj,
+        bounds,
+        maxiter=50,
+        seed=int(rng.randint(0, 10000)),
+        tol=1e-16,
+        polish=True,
+        init="sobol",
+    )
     return sorted(res.x), res.fun
 
 
@@ -363,6 +399,7 @@ STRATEGY_MAP = {
 
 # ── Main loop ───────────────────────────────────────────────────────────────
 
+
 def main():
     # Write PID for easy kill
     PID_FILE.write_text(str(os.getpid()))
@@ -374,14 +411,14 @@ def main():
 
     best_roots, best_score = load_best_verified()
     log(f"Starting best: {best_score:.16f} (k={len(best_roots)})")
-    log(f"Target: improve on current best")
+    log("Target: improve on current best")
 
     iteration = 0
     total_improvements = 0
 
     while True:
         iteration += 1
-        log(f"\n{'='*60}")
+        log(f"\n{'=' * 60}")
         log(f"--- Iteration {iteration} ---")
 
         # ── RALPH: read learnings and adapt ──
@@ -389,15 +426,17 @@ def main():
         iter_rng = np.random.RandomState(iteration * 31 + int(time.time()) % 10000)
         chosen = pick_strategies(stats, iter_rng)
 
-        total_runs = sum(s['runs'] for s in stats.values())
+        total_runs = sum(s["runs"] for s in stats.values())
         log(f"  Stats ({total_runs} past runs):")
         for name in STRATEGY_NAMES:
             s = stats[name]
-            avg_r = f"{sum(s['ranks'])/len(s['ranks']):.1f}" if s['ranks'] else "-"
-            avg_t = f"{sum(s['times'])/len(s['times']):.0f}s" if s['times'] else "-"
+            avg_r = f"{sum(s['ranks']) / len(s['ranks']):.1f}" if s["ranks"] else "-"
+            avg_t = f"{sum(s['times']) / len(s['times']):.0f}s" if s["times"] else "-"
             picked = " <<<" if name in chosen else ""
-            log(f"    {name:25s}: runs={s['runs']}, wins={s['wins']}, top3={s['top3']}, "
-                f"rej={s['rejected']}, avg_rank={avg_r}, avg_time={avg_t}{picked}")
+            log(
+                f"    {name:25s}: runs={s['runs']}, wins={s['wins']}, top3={s['top3']}, "
+                f"rej={s['rejected']}, avg_rank={avg_r}, avg_time={avg_t}{picked}"
+            )
 
         log(f"  Running {len(chosen)} strategies sequentially: {', '.join(chosen)}")
 
@@ -438,7 +477,9 @@ def main():
 
         if cand_score >= best_score - 1e-15:
             log(f"  No improvement this iteration (best: {cand_name} = {cand_score:.16f})")
-            record_learning(f"iter={iteration} NO_IMPROVEMENT: best_candidate={cand_score:.10f} from {cand_name}, current_best={best_score:.10f}")
+            record_learning(
+                f"iter={iteration} NO_IMPROVEMENT: best_candidate={cand_score:.10f} from {cand_name}, current_best={best_score:.10f}"
+            )
             continue
 
         # ── QUALITY GATE: exact SymPy verification ──
@@ -456,8 +497,10 @@ def main():
         log(f"  Diff:  {diff:.2e}")
 
         if diff > 1e-4:
-            log(f"  REJECTED — fast/exact disagree (far sign change)")
-            record_learning(f"iter={iteration} strategy={cand_name} REJECTED: fast={cand_score:.10f} exact={exact_score:.4f}")
+            log("  REJECTED — fast/exact disagree (far sign change)")
+            record_learning(
+                f"iter={iteration} strategy={cand_name} REJECTED: fast={cand_score:.10f} exact={exact_score:.4f}"
+            )
             continue
 
         if exact_score < best_score - 1e-15:
@@ -467,10 +510,14 @@ def main():
             total_improvements += 1
             save_verified(cand_roots, cand_score, exact_score, cand_name, iteration)
             log(f"  *** VERIFIED IMPROVEMENT #{total_improvements}: {exact_score:.16f} ***")
-            record_learning(f"iter={iteration} strategy={cand_name} IMPROVED: {old_best:.10f} -> {exact_score:.10f} (Δ={old_best - exact_score:.2e})")
+            record_learning(
+                f"iter={iteration} strategy={cand_name} IMPROVED: {old_best:.10f} -> {exact_score:.10f} (Δ={old_best - exact_score:.2e})"
+            )
         else:
-            log(f"  Exact score not better than current best")
-            record_learning(f"iter={iteration} strategy={cand_name} verified but not better: {exact_score:.10f} vs best {best_score:.10f}")
+            log("  Exact score not better than current best")
+            record_learning(
+                f"iter={iteration} strategy={cand_name} verified but not better: {exact_score:.10f} vs best {best_score:.10f}"
+            )
 
         log(f"  Current best: {best_score:.16f} (k={len(best_roots)})")
         log(f"  Total improvements: {total_improvements}")

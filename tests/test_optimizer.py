@@ -2,8 +2,6 @@
 
 import pytest
 import yaml
-from pathlib import Path
-
 
 from einstein.knowledge import KNOWLEDGE_PATH
 
@@ -38,7 +36,10 @@ class TestKnowledgeSchema:
         for slug, info in knowledge["problems"].items():
             assert "category" in info, f"Problem {slug} missing category"
             assert "direction" in info, f"Problem {slug} missing direction"
-            assert info["direction"] in ("minimize", "maximize"), f"Problem {slug} invalid direction"
+            assert info["direction"] in (
+                "minimize",
+                "maximize",
+            ), f"Problem {slug} invalid direction"
 
     def test_patterns_have_required_fields(self, knowledge):
         for pattern in knowledge["patterns"]:
@@ -61,6 +62,7 @@ class TestKnowledgeLoader:
 
     def test_load_knowledge(self):
         from einstein.knowledge import load_knowledge
+
         k = load_knowledge()
         assert "strategies" in k
         assert "problems" in k
@@ -68,6 +70,7 @@ class TestKnowledgeLoader:
     @_no_yaml
     def test_get_strategy_priors_known_category(self):
         from einstein.knowledge import get_strategy_priors
+
         priors = get_strategy_priors("fourier-analysis")
         assert isinstance(priors, list)
         assert len(priors) > 0
@@ -80,6 +83,7 @@ class TestKnowledgeLoader:
     @_no_yaml
     def test_get_strategy_priors_unknown_category(self):
         from einstein.knowledge import get_strategy_priors
+
         priors = get_strategy_priors("unknown-category")
         assert isinstance(priors, list)
         assert len(priors) > 0  # should return uniform priors
@@ -87,12 +91,14 @@ class TestKnowledgeLoader:
     def test_get_strategy_priors_empty_when_no_yaml(self):
         """Post-refactor: with knowledge.yaml removed, priors is an empty list."""
         from einstein.knowledge import get_strategy_priors
+
         if KNOWLEDGE_PATH is not None:
             pytest.skip("knowledge.yaml present — covered by the other priors tests")
         assert get_strategy_priors("any-category") == []
 
     def test_get_problem_insights(self):
         from einstein.knowledge import get_problem_insights
+
         insights = get_problem_insights("uncertainty-principle")
         assert isinstance(insights, dict)
         assert "insights" in insights
@@ -100,6 +106,7 @@ class TestKnowledgeLoader:
 
     def test_get_problem_insights_unknown(self):
         from einstein.knowledge import get_problem_insights
+
         insights = get_problem_insights("nonexistent-problem")
         assert insights["insights"] == []
         assert insights["pitfalls"] == []
@@ -111,10 +118,12 @@ class TestOptimizer:
     def _quadratic_scorer(self, solution):
         """Trivial test scorer: minimize sum of squares."""
         import numpy as np
+
         return float(np.sum(np.array(solution) ** 2))
 
     def test_optimizer_creation(self):
         from einstein.optimizer import Optimizer
+
         opt = Optimizer(
             score_fn=self._quadratic_scorer,
             direction="minimize",
@@ -125,6 +134,7 @@ class TestOptimizer:
 
     def test_optimizer_creation_maximize(self):
         from einstein.optimizer import Optimizer
+
         opt = Optimizer(
             score_fn=lambda x: -sum(v**2 for v in x),
             direction="maximize",
@@ -134,6 +144,7 @@ class TestOptimizer:
 
     def test_run_iteration_improves(self):
         from einstein.optimizer import Optimizer
+
         opt = Optimizer(
             score_fn=self._quadratic_scorer,
             direction="minimize",
@@ -146,6 +157,7 @@ class TestOptimizer:
 
     def test_run_iteration_returns_structure(self):
         from einstein.optimizer import Optimizer
+
         opt = Optimizer(
             score_fn=self._quadratic_scorer,
             direction="minimize",
@@ -159,6 +171,7 @@ class TestOptimizer:
 
     def test_select_strategies_uses_priors(self):
         from einstein.optimizer import Optimizer
+
         opt = Optimizer(
             score_fn=self._quadratic_scorer,
             direction="minimize",

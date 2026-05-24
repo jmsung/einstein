@@ -38,6 +38,7 @@ OUTPUT_PATH = "/tmp/p1_analytical_best.json"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def normalize_h(h: np.ndarray) -> np.ndarray:
     """Clamp to [0,1] and rescale so sum = n/2."""
     h = np.clip(h, 0.0, 1.0)
@@ -57,8 +58,9 @@ def correlation_vector(h: np.ndarray) -> np.ndarray:
     return corr * 2.0 / n
 
 
-def hillclimb_polish(h: np.ndarray, n_iters: int = 200_000,
-                     time_limit: float = 60.0, tag: str = "") -> tuple[np.ndarray, float]:
+def hillclimb_polish(
+    h: np.ndarray, n_iters: int = 200_000, time_limit: float = 60.0, tag: str = ""
+) -> tuple[np.ndarray, float]:
     """Zero-sum pairwise hill climbing to polish a solution."""
     rng = np.random.default_rng(42)
     h = normalize_h(h.copy())
@@ -93,8 +95,10 @@ def hillclimb_polish(h: np.ndarray, n_iters: int = 200_000,
 
         if (trial + 1) % 50_000 == 0:
             elapsed = time.time() - t0
-            print(f"    [{tag}] polish iter {trial+1}: C={best:.13f}, "
-                  f"improved={improved}, {elapsed:.0f}s")
+            print(
+                f"    [{tag}] polish iter {trial + 1}: C={best:.13f}, "
+                f"improved={improved}, {elapsed:.0f}s"
+            )
 
     return best_h, best
 
@@ -119,6 +123,7 @@ def save_best(h: np.ndarray, score_val: float, tag: str = ""):
 # ---------------------------------------------------------------------------
 # Construction 1: Haugland's piecewise step function (2016)
 # ---------------------------------------------------------------------------
+
 
 def haugland_construction() -> tuple[np.ndarray, float]:
     """Haugland (2016) achieved ~0.380927 with a piecewise constant function.
@@ -151,7 +156,7 @@ def haugland_construction() -> tuple[np.ndarray, float]:
                 # breakpoints has k+1 entries: [0, ..., 1]
 
                 # Next k params: values via sigmoid
-                val_logits = params[k:2 * k]
+                val_logits = params[k : 2 * k]
                 values = 1.0 / (1.0 + np.exp(-np.clip(val_logits, -20, 20)))
 
                 # Build h on grid
@@ -179,9 +184,12 @@ def haugland_construction() -> tuple[np.ndarray, float]:
 
             p0 = np.concatenate([gap_logits, val_logits])
 
-            res = minimize(_objective, p0, method="Nelder-Mead",
-                           options={"maxiter": 8000, "xatol": 1e-10,
-                                    "fatol": 1e-12, "adaptive": True})
+            res = minimize(
+                _objective,
+                p0,
+                method="Nelder-Mead",
+                options={"maxiter": 8000, "xatol": 1e-10, "fatol": 1e-12, "adaptive": True},
+            )
 
             s = res.fun
             if s < best_local:
@@ -202,6 +210,7 @@ def haugland_construction() -> tuple[np.ndarray, float]:
 # ---------------------------------------------------------------------------
 # Construction 2: Chebyshev equioscillation via Remez exchange
 # ---------------------------------------------------------------------------
+
 
 def equioscillation_construction() -> tuple[np.ndarray, float]:
     """Build h so C(k) is as equal as possible across all shifts.
@@ -231,7 +240,7 @@ def equioscillation_construction() -> tuple[np.ndarray, float]:
             block = 10
             h = np.zeros(n)
             for i in range(n // block):
-                h[i * block:(i + 1) * block] = 0.95 if i % 2 == 0 else 0.05
+                h[i * block : (i + 1) * block] = 0.95 if i % 2 == 0 else 0.05
         else:
             # Random smooth via Fourier
             h = 0.5 * np.ones(n)
@@ -268,7 +277,7 @@ def equioscillation_construction() -> tuple[np.ndarray, float]:
                 # partial wrt h[j] = (1-h[j-k]) where j-k in [0,n-1]
                 if k >= 0:
                     j_start, j_end = k, n
-                    grad[j_start:j_end] += one_minus_h[:n - k] * 2.0 / n
+                    grad[j_start:j_end] += one_minus_h[: n - k] * 2.0 / n
                 else:
                     j_start, j_end = 0, n + k
                     grad[j_start:j_end] += one_minus_h[-k:n] * 2.0 / n
@@ -280,7 +289,7 @@ def equioscillation_construction() -> tuple[np.ndarray, float]:
                     grad[j_start:j_end] -= h[k:n] * 2.0 / n
                 else:
                     j_start, j_end = -k, n
-                    grad[j_start:j_end] -= h[:n + k] * 2.0 / n
+                    grad[j_start:j_end] -= h[: n + k] * 2.0 / n
 
             # Normalize and project (zero-mean to preserve sum constraint)
             grad -= grad.mean()
@@ -311,8 +320,10 @@ def equioscillation_construction() -> tuple[np.ndarray, float]:
                 break
 
             if (iteration + 1) % 100 == 0:
-                print(f"    iter {iteration+1}: C={current_score:.10f}, "
-                      f"lr={lr:.6f}, hot={len(hot_idx)}")
+                print(
+                    f"    iter {iteration + 1}: C={current_score:.10f}, "
+                    f"lr={lr:.6f}, hot={len(hot_idx)}"
+                )
 
         print(f"  Trial {trial_seed} final: C={best_trial_score:.10f}")
 
@@ -327,6 +338,7 @@ def equioscillation_construction() -> tuple[np.ndarray, float]:
 # ---------------------------------------------------------------------------
 # Construction 3: Flat-spectrum spectral construction
 # ---------------------------------------------------------------------------
+
 
 def spectral_construction() -> tuple[np.ndarray, float]:
     """Design h so |DFT(h)|^2 is as flat as possible.
@@ -359,7 +371,7 @@ def spectral_construction() -> tuple[np.ndarray, float]:
 
         def _obj_phases(ph_sub, _mag=magnitudes, _n=n, _nf=n_freq, _base_ph=phases):
             ph = _base_ph.copy()
-            ph[1:n_opt + 1] = ph_sub
+            ph[1 : n_opt + 1] = ph_sub
             H = _mag * np.exp(1j * ph)
             H[0] = _n / 2.0
             h = np.fft.irfft(H, n=_n)
@@ -367,11 +379,10 @@ def spectral_construction() -> tuple[np.ndarray, float]:
             s = fast_evaluate(h)
             return s if s != float("inf") else 1.0
 
-        p0 = phases[1:n_opt + 1].copy()
-        res = minimize(_obj_phases, p0, method="Powell",
-                       options={"maxiter": 5000, "ftol": 1e-12})
+        p0 = phases[1 : n_opt + 1].copy()
+        res = minimize(_obj_phases, p0, method="Powell", options={"maxiter": 5000, "ftol": 1e-12})
 
-        phases[1:n_opt + 1] = res.x
+        phases[1 : n_opt + 1] = res.x
         H = magnitudes * np.exp(1j * phases)
         H[0] = n / 2.0
         h = np.fft.irfft(H, n=n)
@@ -400,9 +411,9 @@ def spectral_construction() -> tuple[np.ndarray, float]:
             ph_raw = params[n_opt:]
             mag = np.ones(_nf) * base_mag
             mag[0] = _n / 2.0
-            mag[1:n_opt + 1] = np.abs(mag_raw) + 0.1
+            mag[1 : n_opt + 1] = np.abs(mag_raw) + 0.1
             ph = np.zeros(_nf)
-            ph[1:n_opt + 1] = ph_raw
+            ph[1 : n_opt + 1] = ph_raw
             H = mag * np.exp(1j * ph)
             H[0] = _n / 2.0
             h = np.fft.irfft(H, n=_n)
@@ -410,20 +421,21 @@ def spectral_construction() -> tuple[np.ndarray, float]:
             s = fast_evaluate(h)
             return s if s != float("inf") else 1.0
 
-        p0 = np.concatenate([
-            np.ones(n_opt) * base_mag + rng2.standard_normal(n_opt) * 1.0,
-            rng2.uniform(0, 2 * np.pi, n_opt)
-        ])
-        res = minimize(_obj_mag_ph, p0, method="Powell",
-                       options={"maxiter": 8000, "ftol": 1e-12})
+        p0 = np.concatenate(
+            [
+                np.ones(n_opt) * base_mag + rng2.standard_normal(n_opt) * 1.0,
+                rng2.uniform(0, 2 * np.pi, n_opt),
+            ]
+        )
+        res = minimize(_obj_mag_ph, p0, method="Powell", options={"maxiter": 8000, "ftol": 1e-12})
 
         mag_params = res.x[:n_opt]
         ph_params = res.x[n_opt:]
         mag = np.ones(n_freq) * base_mag
         mag[0] = n / 2.0
-        mag[1:n_opt + 1] = np.abs(mag_params) + 0.1
+        mag[1 : n_opt + 1] = np.abs(mag_params) + 0.1
         ph = np.zeros(n_freq)
-        ph[1:n_opt + 1] = ph_params
+        ph[1 : n_opt + 1] = ph_params
         H = mag * np.exp(1j * ph)
         H[0] = n / 2.0
         h = np.fft.irfft(H, n=n)
@@ -444,6 +456,7 @@ def spectral_construction() -> tuple[np.ndarray, float]:
 # Construction 4: B-spline parametrization
 # ---------------------------------------------------------------------------
 
+
 def bspline_construction() -> tuple[np.ndarray, float]:
     """Represent h as a B-spline with K control points, optimize with scipy."""
     print("\n" + "=" * 60)
@@ -460,11 +473,13 @@ def bspline_construction() -> tuple[np.ndarray, float]:
             t0 = time.time()
 
             degree = 3
-            knots = np.concatenate([
-                np.zeros(degree),
-                np.linspace(0, 1, K - degree + 1),
-                np.ones(degree),
-            ])
+            knots = np.concatenate(
+                [
+                    np.zeros(degree),
+                    np.linspace(0, 1, K - degree + 1),
+                    np.ones(degree),
+                ]
+            )
 
             x_eval = np.linspace(0, 1, n, endpoint=False)
 
@@ -493,8 +508,9 @@ def bspline_construction() -> tuple[np.ndarray, float]:
                 c0[i] = 3.0 if i % 2 == 0 else -3.0
             c0 += rng.standard_normal(K) * 0.5
 
-            res = minimize(_objective, c0, method="Powell",
-                           options={"maxiter": 10000, "ftol": 1e-12})
+            res = minimize(
+                _objective, c0, method="Powell", options={"maxiter": 10000, "ftol": 1e-12}
+            )
 
             h = _coeffs_to_h(res.x)
             s = fast_evaluate(h)
@@ -512,6 +528,7 @@ def bspline_construction() -> tuple[np.ndarray, float]:
 # ---------------------------------------------------------------------------
 # Construction 5: Sigmoid network
 # ---------------------------------------------------------------------------
+
 
 def sigmoid_network_construction() -> tuple[np.ndarray, float]:
     """Parametrize h as a sum of sigmoids and optimize with torch.
@@ -622,6 +639,7 @@ def sigmoid_network_construction() -> tuple[np.ndarray, float]:
 # Construction 6: Direct minimax with torch + logsumexp annealing
 # ---------------------------------------------------------------------------
 
+
 def torch_minimax_construction() -> tuple[np.ndarray, float]:
     """Direct minimax: minimize logsumexp(C(k)/temp) with temp annealing.
 
@@ -669,7 +687,7 @@ def torch_minimax_construction() -> tuple[np.ndarray, float]:
             raw = rng.standard_normal(n)
             H_raw = np.fft.rfft(raw)
             freqs = np.arange(len(H_raw))
-            H_raw *= np.exp(-freqs**2 / (2 * 30**2))
+            H_raw *= np.exp(-(freqs**2) / (2 * 30**2))
             h_init = np.fft.irfft(H_raw, n=n)
             h_init = (h_init - h_init.min()) / (h_init.max() - h_init.min() + 1e-10)
         elif trial_seed == 4:
@@ -748,6 +766,7 @@ def torch_minimax_construction() -> tuple[np.ndarray, float]:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main():
     print("=" * 70)
     print("  Erdos Minimum Overlap -- Analytical Constructions")
@@ -782,6 +801,7 @@ def main():
         except Exception as e:
             print(f"\n  !!! {name} failed: {e}")
             import traceback
+
             traceback.print_exc()
 
     # Polish the best result
@@ -793,9 +813,7 @@ def main():
 
         remaining = max(120.0, 600.0 - (time.time() - t_total))
         polished_h, polished_score = hillclimb_polish(
-            global_best_h, n_iters=1_000_000,
-            time_limit=min(remaining, 180.0),
-            tag="final"
+            global_best_h, n_iters=1_000_000, time_limit=min(remaining, 180.0), tag="final"
         )
 
         if polished_score < global_best_score:

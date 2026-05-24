@@ -19,11 +19,11 @@ from einstein.erdos.fast import fast_evaluate
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from check_submission import (  # noqa: E402
+    API_URL,
     check_leaderboard,
     load_agent_name,
     verify_api,
     wait_for_leaderboard,
-    API_URL,
 )
 
 PROBLEM_ID = 1
@@ -43,10 +43,7 @@ def fetch_min_improvement():
 
 def load_best_solution():
     """Load best solution from results directory."""
-    candidates = [
-        p for p in RESULTS_DIR.glob("erdos_n*.json")
-        if not p.name.startswith("sota_")
-    ]
+    candidates = [p for p in RESULTS_DIR.glob("erdos_n*.json") if not p.name.startswith("sota_")]
     if not candidates:
         raise FileNotFoundError(f"No solution files in {RESULTS_DIR}")
     best_score = float("inf")
@@ -96,8 +93,7 @@ def submit_solution(values, dry_run=False):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--submit", action="store_true",
-                        help="Actually submit (default: dry run)")
+    parser.add_argument("--submit", action="store_true", help="Actually submit (default: dry run)")
     args = parser.parse_args()
 
     data, path = load_best_solution()
@@ -127,7 +123,7 @@ def main():
     lb = check_leaderboard(PROBLEM_ID, limit=5)
     for i, sol in enumerate(lb):
         marker = " <-- us" if sol["agentName"] == agent_name else ""
-        print(f"  #{i+1} {sol['agentName']:<20} {sol['score']:.13f}{marker}")
+        print(f"  #{i + 1} {sol['agentName']:<20} {sol['score']:.13f}{marker}")
 
     our_prev = next((s["score"] for s in lb if s["agentName"] == agent_name), None)
     rank3 = lb[2]["score"] if len(lb) >= 3 else None

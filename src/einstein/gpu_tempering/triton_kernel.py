@@ -20,33 +20,35 @@ Usage:
     # Falls back to fused_step if Triton not available
 """
 
-import torch
 import numpy as np
+import torch
 
 try:
     import triton
     import triton.language as tl
+
     HAS_TRITON = True
 except ImportError:
     HAS_TRITON = False
 
 
 if HAS_TRITON:
+
     @triton.jit
     def _hinge_delta_kernel(
         # Pointers
-        replicas_ptr,       # (R, N, D) flattened
-        old_vecs_ptr,       # (RK, D) old vectors
-        new_vecs_ptr,       # (RK, D) new vectors
-        flat_indices_ptr,   # (RK,) which vector was perturbed
-        replica_ids_ptr,    # (RK,) which replica each perturbation belongs to
-        deltas_out_ptr,     # (RK,) output deltas
+        replicas_ptr,  # (R, N, D) flattened
+        old_vecs_ptr,  # (RK, D) old vectors
+        new_vecs_ptr,  # (RK, D) new vectors
+        flat_indices_ptr,  # (RK,) which vector was perturbed
+        replica_ids_ptr,  # (RK,) which replica each perturbation belongs to
+        deltas_out_ptr,  # (RK,) output deltas
         # Sizes
         N: tl.constexpr,
         D: tl.constexpr,
-        stride_rep_r,       # stride for replica dimension
-        stride_rep_n,       # stride for vector dimension
-        stride_rep_d,       # stride for dim dimension
+        stride_rep_r,  # stride for replica dimension
+        stride_rep_n,  # stride for vector dimension
+        stride_rep_d,  # stride for dim dimension
     ):
         """Compute hinge overlap delta for one (replica, perturbation) pair."""
         pid = tl.program_id(0)  # index into RK
@@ -143,10 +145,10 @@ if HAS_TRITON:
 
 
 def triton_sa_step(
-    replicas: torch.Tensor,     # (R, N, D)
-    losses: torch.Tensor,       # (R,)
-    temps: torch.Tensor,        # (R,)
-    probs: torch.Tensor,        # (N,)
+    replicas: torch.Tensor,  # (R, N, D)
+    losses: torch.Tensor,  # (R,)
+    temps: torch.Tensor,  # (R,)
+    probs: torch.Tensor,  # (N,)
     scale: float,
     K: int,
     loss_type: str = "hinge",
@@ -158,6 +160,7 @@ def triton_sa_step(
     """
     if not HAS_TRITON or not replicas.is_cuda:
         from einstein.gpu_tempering.fused_step import fused_sa_step
+
         return fused_sa_step(replicas, losses, temps, probs, scale, K, loss_type, project_sphere)
 
     R, N, D = replicas.shape
@@ -238,7 +241,8 @@ def run_triton_tempering(
     Falls back to fused_step automatically if Triton not available.
     """
     import time
-    from einstein.gpu_tempering.losses import HingeOverlapLoss, CoulombLoss
+
+    from einstein.gpu_tempering.losses import CoulombLoss, HingeOverlapLoss
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.float64
@@ -269,7 +273,9 @@ def run_triton_tempering(
     best_vecs = replicas[losses.argmin()].clone()
 
     probs = loss_fn.contributions(replicas[0])
-    probs = probs / probs.sum() if probs.sum() > 0 else torch.ones(N, device=device, dtype=dtype) / N
+    probs = (
+        probs / probs.sum() if probs.sum() > 0 else torch.ones(N, device=device, dtype=dtype) / N
+    )
 
     total_perts = 0
     total_accepts = 0
@@ -281,7 +287,11 @@ def run_triton_tempering(
     for step in range(n_steps):
         if step > 0 and step % recompute_every == 0:
             probs = loss_fn.contributions(replicas[0])
-            probs = probs / probs.sum() if probs.sum() > 0 else torch.ones(N, device=device, dtype=dtype) / N
+            probs = (
+                probs / probs.sum()
+                if probs.sum() > 0
+                else torch.ones(N, device=device, dtype=dtype) / N
+            )
 
         losses, n_acc = triton_sa_step(replicas, losses, temps, probs, scale, K, loss_type)
         total_perts += R * K
@@ -300,7 +310,9 @@ def run_triton_tempering(
                     continue
                 swaps_att += len(rl)
                 delta = (losses[rl] - losses[rh]) * (1.0 / temps[rl] - 1.0 / temps[rh])
-                sm = torch.rand(len(rl), device=device, dtype=dtype) < torch.exp(delta.clamp(max=50))
+                sm = torch.rand(len(rl), device=device, dtype=dtype) < torch.exp(
+                    delta.clamp(max=50)
+                )
                 if sm.any():
                     sl, sh = rl[sm], rh[sm]
                     swaps_acc += sm.sum().item()
@@ -319,8 +331,8 @@ def run_triton_tempering(
             pps = total_perts / elapsed
 
             print(
-                f"  step {step+1:>8,d} | {elapsed:.0f}s | {pps:,.0f} p/s | "
-                f"BEST={exact:.15f} (Δ={initial_score-exact:.2e}) | "
+                f"  step {step + 1:>8,d} | {elapsed:.0f}s | {pps:,.0f} p/s | "
+                f"BEST={exact:.15f} (Δ={initial_score - exact:.2e}) | "
                 f"acc={ar:.1f}% | swap={sr:.1f}%"
             )
             total_accepts = 0
@@ -329,19 +341,19 @@ def run_triton_tempering(
             swaps_acc = 0
 
         if time.time() - t0 > timeout_sec:
-            print(f"\nTimeout at step {step+1}")
+            print(f"\nTimeout at step {step + 1}")
             break
 
     final = loss_fn.full_loss(best_vecs).item()
     elapsed = time.time() - t0
     eff = (step + 1) * R * K
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"FINAL: {final:.15f} ({backend})")
     print(f"START: {initial_score:.15f}")
     print(f"Delta: {initial_score - final:.2e}")
-    print(f"Time:  {elapsed:.0f}s | {eff/elapsed:,.0f} p/s | {eff:,} total")
-    print(f"{'='*70}")
+    print(f"Time:  {elapsed:.0f}s | {eff / elapsed:,.0f} p/s | {eff:,} total")
+    print(f"{'=' * 70}")
 
     return {
         "best_score": final,

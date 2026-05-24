@@ -23,14 +23,16 @@ def hinge_score_filler(filler: np.ndarray, core_centers: np.ndarray) -> tuple[fl
     f = filler / np.linalg.norm(filler)
     c_f = 2.0 * f
     diff = c_f[None, :] - core_centers
-    dist = np.sqrt((diff ** 2).sum(axis=1))
+    dist = np.sqrt((diff**2).sum(axis=1))
     pen_active = dist < 2.0
     score = float(np.maximum(0.0, 2.0 - dist).sum())
     # Gradient w.r.t. unconstrained filler isn't trivial — return score only here.
     return score, None
 
 
-def smooth_hinge(filler: np.ndarray, core_centers: np.ndarray, beta: float = 200.0) -> tuple[float, np.ndarray]:
+def smooth_hinge(
+    filler: np.ndarray, core_centers: np.ndarray, beta: float = 200.0
+) -> tuple[float, np.ndarray]:
     """Smooth hinge sum over filler vs fixed core centers.
 
     softplus(beta * h)/beta where h = 2 - dist. Returns scalar + gradient w.r.t. raw filler.
@@ -39,7 +41,7 @@ def smooth_hinge(filler: np.ndarray, core_centers: np.ndarray, beta: float = 200
     f = filler / norm
     c_f = 2.0 * f
     diff = c_f[None, :] - core_centers  # (N, 16)
-    dist2 = (diff ** 2).sum(axis=1)
+    dist2 = (diff**2).sum(axis=1)
     dist = np.sqrt(dist2 + 1e-30)
     h = 2.0 - dist  # (N,)
     bh = beta * h
@@ -61,7 +63,9 @@ def smooth_hinge(filler: np.ndarray, core_centers: np.ndarray, beta: float = 200
     return score, grad_filler
 
 
-def optimize_filler(core: np.ndarray, init: np.ndarray, beta_schedule=(50, 200, 1000)) -> tuple[float, np.ndarray]:
+def optimize_filler(
+    core: np.ndarray, init: np.ndarray, beta_schedule=(50, 200, 1000)
+) -> tuple[float, np.ndarray]:
     """Filler-only L-BFGS with annealing."""
     core_centers = 2.0 * core / np.linalg.norm(core, axis=1, keepdims=True)
     f = init.copy()
@@ -81,9 +85,15 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n-starts", type=int, default=200)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--mode", choices=["random", "tangent"], default="tangent",
-                        help="random=uniform on S^15; tangent=perturb v0 by random tangent")
-    parser.add_argument("--delta", type=float, default=0.05, help="perturbation magnitude (tangent mode)")
+    parser.add_argument(
+        "--mode",
+        choices=["random", "tangent"],
+        default="tangent",
+        help="random=uniform on S^15; tangent=perturb v0 by random tangent",
+    )
+    parser.add_argument(
+        "--delta", type=float, default=0.05, help="perturbation magnitude (tangent mode)"
+    )
     args = parser.parse_args()
 
     bw = bw16_min_vectors()
@@ -108,7 +118,9 @@ def main() -> None:
             best_score = score
             best_filler = f
             elapsed = time.time() - t_start
-            print(f"[{k+1}/{args.n_starts}] new best score = {score:.10f} (elapsed {elapsed:.0f}s)")
+            print(
+                f"[{k + 1}/{args.n_starts}] new best score = {score:.10f} (elapsed {elapsed:.0f}s)"
+            )
 
     print(f"\nFinal best score after {args.n_starts} starts: {best_score:.12f}")
 

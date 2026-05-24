@@ -23,8 +23,9 @@ RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def random_local_search(h: np.ndarray, n_iters: int, n_points_choices=None,
-                        delta_scale: float = 1e-7, seed: int = 0) -> tuple[np.ndarray, float]:
+def random_local_search(
+    h: np.ndarray, n_iters: int, n_points_choices=None, delta_scale: float = 1e-7, seed: int = 0
+) -> tuple[np.ndarray, float]:
     """Randomized local search with zero-sum perturbations across k indices."""
     if n_points_choices is None:
         n_points_choices = (2, 3, 4)
@@ -56,8 +57,10 @@ def random_local_search(h: np.ndarray, n_iters: int, n_points_choices=None,
             h[idx] = old
 
         if (trial + 1) % 500_000 == 0:
-            print(f"    iter {trial+1}: C={best:.13f}, improved={improved}, "
-                  f"time={time.time()-t0:.0f}s")
+            print(
+                f"    iter {trial + 1}: C={best:.13f}, improved={improved}, "
+                f"time={time.time() - t0:.0f}s"
+            )
 
     return h, best
 
@@ -91,7 +94,7 @@ def dyadic_pair_search(h: np.ndarray, n_iters: int, seed: int = 0) -> tuple[np.n
             h[i], h[j] = old_i, old_j
 
         if (trial + 1) % 100_000 == 0:
-            print(f"    iter {trial+1}: C={best:.13f}, improved={improved}")
+            print(f"    iter {trial + 1}: C={best:.13f}, improved={improved}")
 
     return h, best
 

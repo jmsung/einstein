@@ -101,8 +101,12 @@ def main():
 
         # 2. Perturbed core vectors (pick random core index, add Gaussian noise)
         idx_pert = torch.randint(0, 840, (n_pert,), device=device, generator=gen)
-        scales = 10 ** (torch.rand(n_pert, device=device, generator=gen, dtype=dtype) * 3 - 4)  # 1e-4 to 0.1
-        x_pert = core_t[idx_pert] + scales[:, None] * torch.randn(n_pert, 12, device=device, dtype=dtype, generator=gen)
+        scales = 10 ** (
+            torch.rand(n_pert, device=device, generator=gen, dtype=dtype) * 3 - 4
+        )  # 1e-4 to 0.1
+        x_pert = core_t[idx_pert] + scales[:, None] * torch.randn(
+            n_pert, 12, device=device, dtype=dtype, generator=gen
+        )
         x_pert = x_pert / x_pert.norm(dim=1, keepdim=True)
 
         # 3. Pair midpoints (random pairs of core vectors)
@@ -133,10 +137,16 @@ def main():
             elapsed = time.time() - t0
             best = top_scores.min().item()
             rate = (b + 1) * args.batch / elapsed / 1e6
-            print(f"  batch {b+1:3d}/{n_batches}  best={best:.6f}  rate={rate:.2f}M/s  ({elapsed:.1f}s)", flush=True)
+            print(
+                f"  batch {b + 1:3d}/{n_batches}  best={best:.6f}  rate={rate:.2f}M/s  ({elapsed:.1f}s)",
+                flush=True,
+            )
 
     elapsed_p1 = time.time() - t0
-    print(f"\nPhase 1 done in {elapsed_p1:.1f}s.  GPU best = {top_scores.min().item():.6f}", flush=True)
+    print(
+        f"\nPhase 1 done in {elapsed_p1:.1f}s.  GPU best = {top_scores.min().item():.6f}",
+        flush=True,
+    )
 
     # Phase 2: refine top-K on CPU with exact RGD
     top_scores_cpu = top_scores.cpu().numpy().astype(np.float64)
@@ -193,9 +203,14 @@ def main():
         if s_opt < best_overall - 1e-13:
             best_overall = s_opt
             best_v = v_opt
-            print(f"  refine[{k:4d}]  init={top_scores_cpu[i]:.6f}  refined={s_opt:.15f}  *** NEW BEST ***", flush=True)
+            print(
+                f"  refine[{k:4d}]  init={top_scores_cpu[i]:.6f}  refined={s_opt:.15f}  *** NEW BEST ***",
+                flush=True,
+            )
         if k < 5 or k % 200 == 0:
-            print(f"  refine[{k:4d}]  init={top_scores_cpu[i]:.6f}  refined={s_opt:.9f}", flush=True)
+            print(
+                f"  refine[{k:4d}]  init={top_scores_cpu[i]:.6f}  refined={s_opt:.9f}", flush=True
+            )
 
     elapsed_p2 = time.time() - t1
     print(f"\nPhase 2 done in {elapsed_p2:.1f}s", flush=True)

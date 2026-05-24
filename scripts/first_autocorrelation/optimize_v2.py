@@ -7,6 +7,7 @@ and fundamentally different Hessian landscape vs f=exp(v).
 Usage:
     uv run python scripts/first_autocorrelation/optimize_v2.py
 """
+
 from __future__ import annotations
 
 import json
@@ -22,6 +23,7 @@ RESULTS = Path("results/problem-2-first-autocorrelation")
 RESULTS.mkdir(parents=True, exist_ok=True)
 
 # ── Helpers ──────────────────────────────────────────────────────────────
+
 
 def exact_score(f: np.ndarray) -> float:
     return float(verify_and_compute(f.astype(np.float64).tolist()))
@@ -64,14 +66,20 @@ def save_solution(f: np.ndarray, score: float, path: Path, tag: str = ""):
 
 # ── V^2 L-BFGS optimizer ────────────────────────────────────────────────
 
-def lbfgs_vsq(v_init: np.ndarray, beta: float, max_iter: int = 2000,
-              lr: float = 1.0, history_size: int = 200) -> tuple[np.ndarray, float]:
+
+def lbfgs_vsq(
+    v_init: np.ndarray, beta: float, max_iter: int = 2000, lr: float = 1.0, history_size: int = 200
+) -> tuple[np.ndarray, float]:
     """Single L-BFGS run with v^2 parameterization."""
     v = torch.tensor(v_init.copy(), dtype=torch.float64, requires_grad=True)
     opt = torch.optim.LBFGS(
-        [v], lr=lr, max_iter=max_iter,
-        tolerance_grad=1e-15, tolerance_change=1e-20,
-        history_size=history_size, line_search_fn="strong_wolfe",
+        [v],
+        lr=lr,
+        max_iter=max_iter,
+        tolerance_grad=1e-15,
+        tolerance_change=1e-20,
+        history_size=history_size,
+        line_search_fn="strong_wolfe",
     )
 
     def closure():
@@ -86,9 +94,13 @@ def lbfgs_vsq(v_init: np.ndarray, beta: float, max_iter: int = 2000,
     return f_np, c
 
 
-def lbfgs_vsq_cascade(v_init: np.ndarray, betas: list[float],
-                       max_iter: int = 2000, lr: float = 1.0,
-                       history_size: int = 200) -> tuple[np.ndarray, float]:
+def lbfgs_vsq_cascade(
+    v_init: np.ndarray,
+    betas: list[float],
+    max_iter: int = 2000,
+    lr: float = 1.0,
+    history_size: int = 200,
+) -> tuple[np.ndarray, float]:
     """Run L-BFGS cascade with v^2 parameterization."""
     v = v_init.copy()
     best_c = float("inf")
@@ -97,9 +109,13 @@ def lbfgs_vsq_cascade(v_init: np.ndarray, betas: list[float],
     for beta in betas:
         v_t = torch.tensor(v.copy(), dtype=torch.float64, requires_grad=True)
         opt = torch.optim.LBFGS(
-            [v_t], lr=lr, max_iter=max_iter,
-            tolerance_grad=1e-15, tolerance_change=1e-20,
-            history_size=history_size, line_search_fn="strong_wolfe",
+            [v_t],
+            lr=lr,
+            max_iter=max_iter,
+            tolerance_grad=1e-15,
+            tolerance_change=1e-20,
+            history_size=history_size,
+            line_search_fn="strong_wolfe",
         )
 
         def closure():
@@ -110,7 +126,7 @@ def lbfgs_vsq_cascade(v_init: np.ndarray, betas: list[float],
 
         opt.step(closure)
         v = v_t.detach().cpu().numpy()
-        f_np = (v ** 2).astype(np.float64)
+        f_np = (v**2).astype(np.float64)
         c = exact_score(f_np)
         if c < best_c:
             best_c = c
@@ -122,8 +138,10 @@ def lbfgs_vsq_cascade(v_init: np.ndarray, betas: list[float],
 
 # ── Multi-peak subgradient polish ────────────────────────────────────────
 
-def multi_peak_polish(f: np.ndarray, iters: int = 500, topk: int = 1000,
-                      lr0: float = 1e-5) -> tuple[np.ndarray, float]:
+
+def multi_peak_polish(
+    f: np.ndarray, iters: int = 500, topk: int = 1000, lr0: float = 1e-5
+) -> tuple[np.ndarray, float]:
     """Subgradient polish on top-K peaks simultaneously."""
     f = f.astype(np.float64).copy()
     n = len(f)
@@ -197,16 +215,18 @@ def multi_peak_polish(f: np.ndarray, iters: int = 500, topk: int = 1000,
 
 # ── Approach 1: V^2 L-BFGS from OrganonAgent warmstart ──────────────────
 
-def approach_vsq_lbfgs(f_warm: np.ndarray, seeds: int = 8,
-                        label: str = "vsq-lbfgs") -> tuple[np.ndarray, float]:
+
+def approach_vsq_lbfgs(
+    f_warm: np.ndarray, seeds: int = 8, label: str = "vsq-lbfgs"
+) -> tuple[np.ndarray, float]:
     """V^2 L-BFGS cascade from warmstart with multiple seeds."""
     n = len(f_warm)
     best_c = exact_score(f_warm)
     best_f = f_warm.copy()
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Approach: {label} at n={n}")
     print(f"Starting C = {best_c:.18f}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Beta schedules to try
     schedules = [
@@ -233,10 +253,12 @@ def approach_vsq_lbfgs(f_warm: np.ndarray, seeds: int = 8,
         iters = 3000 if seed < 3 else 2000
 
         t0 = time.time()
-        print(f"\n  Seed {seed}: noise={noise_scale:.1e}, schedule={sched_idx}, "
-              f"hist={hist}, iters={iters}", flush=True)
-        f_new, c_new = lbfgs_vsq_cascade(v0, betas, max_iter=iters,
-                                           history_size=hist)
+        print(
+            f"\n  Seed {seed}: noise={noise_scale:.1e}, schedule={sched_idx}, "
+            f"hist={hist}, iters={iters}",
+            flush=True,
+        )
+        f_new, c_new = lbfgs_vsq_cascade(v0, betas, max_iter=iters, history_size=hist)
         dt = time.time() - t0
         tag = ""
         if c_new < best_c:
@@ -244,9 +266,12 @@ def approach_vsq_lbfgs(f_warm: np.ndarray, seeds: int = 8,
             best_c = c_new
             best_f = f_new.copy()
             tag = f"  *** NEW BEST delta={delta:.3e}"
-            save_solution(best_f, best_c,
-                         RESULTS / f"{label}-seed{seed}-{best_c:.8f}.json",
-                         tag=f"{label}-seed{seed}")
+            save_solution(
+                best_f,
+                best_c,
+                RESULTS / f"{label}-seed{seed}-{best_c:.8f}.json",
+                tag=f"{label}-seed{seed}",
+            )
         print(f"  => C={c_new:.18f} ({dt:.1f}s){tag}", flush=True)
 
     return best_f, best_c
@@ -254,14 +279,16 @@ def approach_vsq_lbfgs(f_warm: np.ndarray, seeds: int = 8,
 
 # ── Approach 2: Higher resolution ────────────────────────────────────────
 
-def approach_higher_n(f_warm_30k: np.ndarray, n_targets: list[int],
-                      seeds: int = 3) -> tuple[np.ndarray, float]:
+
+def approach_higher_n(
+    f_warm_30k: np.ndarray, n_targets: list[int], seeds: int = 3
+) -> tuple[np.ndarray, float]:
     """Try higher n with v^2 parameterization."""
     best_c = float("inf")
     best_f = None
-    print(f"\n{'='*60}")
-    print(f"Approach: higher-n from n=30k base")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("Approach: higher-n from n=30k base")
+    print(f"{'=' * 60}")
 
     for n_target in n_targets:
         if n_target % len(f_warm_30k) == 0:
@@ -285,18 +312,20 @@ def approach_higher_n(f_warm_30k: np.ndarray, n_targets: list[int],
             betas = [1e6, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13]
             t0 = time.time()
             print(f"    seed={seed}:", flush=True)
-            f_new, c_new = lbfgs_vsq_cascade(v0, betas, max_iter=3000,
-                                               history_size=300)
+            f_new, c_new = lbfgs_vsq_cascade(v0, betas, max_iter=3000, history_size=300)
             dt = time.time() - t0
             tag = ""
             if c_new < best_c:
                 delta = best_c - c_new if best_c < float("inf") else 0
                 best_c = c_new
                 best_f = f_new.copy()
-                tag = f"  *** NEW BEST"
-                save_solution(best_f, best_c,
-                             RESULTS / f"higher-n{n_target}-seed{seed}-{best_c:.8f}.json",
-                             tag=f"higher-n{n_target}-seed{seed}")
+                tag = "  *** NEW BEST"
+                save_solution(
+                    best_f,
+                    best_c,
+                    RESULTS / f"higher-n{n_target}-seed{seed}-{best_c:.8f}.json",
+                    tag=f"higher-n{n_target}-seed{seed}",
+                )
             print(f"    => C={c_new:.18f} ({dt:.1f}s){tag}", flush=True)
 
     return best_f, best_c if best_f is not None else (f_warm_30k, float("inf"))
@@ -304,36 +333,38 @@ def approach_higher_n(f_warm_30k: np.ndarray, n_targets: list[int],
 
 # ── Approach 3: Direct polish on OrganonAgent solution ───────────────────
 
+
 def approach_polish(f_warm: np.ndarray) -> tuple[np.ndarray, float]:
     """Multi-peak subgradient polish on the warmstart."""
     c0 = exact_score(f_warm)
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Approach: direct polish at n={len(f_warm)}")
     print(f"Starting C = {c0:.18f}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     best_f, best_c = multi_peak_polish(f_warm, iters=500, topk=1000, lr0=1e-5)
     print(f"  => C={best_c:.18f} (delta={c0 - best_c:.3e})", flush=True)
 
     if best_c < c0:
-        save_solution(best_f, best_c,
-                     RESULTS / f"polish-{best_c:.8f}.json",
-                     tag="multi-peak-polish")
+        save_solution(
+            best_f, best_c, RESULTS / f"polish-{best_c:.8f}.json", tag="multi-peak-polish"
+        )
 
     return best_f, best_c
 
 
 # ── Approach 4: Exp(v) L-BFGS (baseline comparison) ─────────────────────
 
+
 def approach_exp_lbfgs(f_warm: np.ndarray, seeds: int = 4) -> tuple[np.ndarray, float]:
     """Exp(v) parameterization as baseline."""
     n = len(f_warm)
     best_c = exact_score(f_warm)
     best_f = f_warm.copy()
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Approach: exp(v) L-BFGS at n={n} (baseline)")
     print(f"Starting C = {best_c:.18f}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     for seed in range(seeds):
         rng = np.random.default_rng(200 + seed)
@@ -347,16 +378,23 @@ def approach_exp_lbfgs(f_warm: np.ndarray, seeds: int = 4) -> tuple[np.ndarray, 
         t0 = time.time()
         for beta in betas:
             from einstein.first_autocorrelation.optimizer import surrogate_v
+
             opt = torch.optim.LBFGS(
-                [v_t], lr=1.0, max_iter=2000,
-                tolerance_grad=1e-15, tolerance_change=1e-20,
-                history_size=200, line_search_fn="strong_wolfe",
+                [v_t],
+                lr=1.0,
+                max_iter=2000,
+                tolerance_grad=1e-15,
+                tolerance_change=1e-20,
+                history_size=200,
+                line_search_fn="strong_wolfe",
             )
+
             def closure():
                 opt.zero_grad()
                 loss = surrogate_v(v_t, beta, fft=True)
                 loss.backward()
                 return loss
+
             opt.step(closure)
 
         f_np = np.exp(v_t.detach().cpu().numpy()).astype(np.float64)
@@ -375,15 +413,16 @@ def approach_exp_lbfgs(f_warm: np.ndarray, seeds: int = 4) -> tuple[np.ndarray, 
 
 # ── Approach 5: Alternating v^2 and polish ───────────────────────────────
 
+
 def approach_alternating(f_warm: np.ndarray, rounds: int = 5) -> tuple[np.ndarray, float]:
     """Alternate between v^2 L-BFGS and subgradient polish."""
     best_c = exact_score(f_warm)
     best_f = f_warm.copy()
     f = f_warm.copy()
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Approach: alternating v^2 + polish (n={len(f)})")
     print(f"Starting C = {best_c:.18f}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     for r in range(rounds):
         # V^2 L-BFGS
@@ -411,14 +450,13 @@ def approach_alternating(f_warm: np.ndarray, rounds: int = 5) -> tuple[np.ndarra
         f = best_f.copy()
 
     if best_c < exact_score(f_warm):
-        save_solution(best_f, best_c,
-                     RESULTS / f"alternating-{best_c:.8f}.json",
-                     tag="alternating")
+        save_solution(best_f, best_c, RESULTS / f"alternating-{best_c:.8f}.json", tag="alternating")
 
     return best_f, best_c
 
 
 # ── Main ─────────────────────────────────────────────────────────────────
+
 
 def main():
     t_start = time.time()
@@ -443,7 +481,7 @@ def main():
 
     target = c_org - 1e-7
     print(f"Target: < {target:.18f}")
-    print(f"Time budget: 3.5h (reserve 30 min for submit/exit)")
+    print("Time budget: 3.5h (reserve 30 min for submit/exit)")
 
     global_best_c = c_org
     global_best_f = f_org.copy()
@@ -454,8 +492,7 @@ def main():
             delta = global_best_c - c
             global_best_c = c
             global_best_f = f.copy()
-            save_solution(f, c, RESULTS / f"global-best-{c:.8f}.json",
-                         tag=label)
+            save_solution(f, c, RESULTS / f"global-best-{c:.8f}.json", tag=label)
             print(f"\n  >>>>>> GLOBAL BEST: {c:.18f} (delta={delta:.3e}) <<<<<<")
             return True
         return False
@@ -468,14 +505,14 @@ def main():
 
     # Check time
     elapsed = time.time() - t_start
-    print(f"\n--- Elapsed: {elapsed/60:.1f} min ---")
+    print(f"\n--- Elapsed: {elapsed / 60:.1f} min ---")
 
     # 2. Direct polish on OrganonAgent
     f2, c2 = approach_polish(f_org)
     update_global(f2, c2, "polish-org")
 
     elapsed = time.time() - t_start
-    print(f"\n--- Elapsed: {elapsed/60:.1f} min ---")
+    print(f"\n--- Elapsed: {elapsed / 60:.1f} min ---")
 
     # 3. Higher resolution from 30k
     if elapsed < 7200:  # only if under 2h
@@ -483,7 +520,7 @@ def main():
         update_global(f3, c3, "higher-n")
 
     elapsed = time.time() - t_start
-    print(f"\n--- Elapsed: {elapsed/60:.1f} min ---")
+    print(f"\n--- Elapsed: {elapsed / 60:.1f} min ---")
 
     # 4. Alternating v^2 + polish on best so far
     if elapsed < 9000:  # under 2.5h
@@ -491,7 +528,7 @@ def main():
         update_global(f4, c4, "alternating")
 
     elapsed = time.time() - t_start
-    print(f"\n--- Elapsed: {elapsed/60:.1f} min ---")
+    print(f"\n--- Elapsed: {elapsed / 60:.1f} min ---")
 
     # 5. Exp(v) baseline comparison (quick)
     if elapsed < 10000:
@@ -500,21 +537,21 @@ def main():
 
     # ── Summary ──────────────────────────────────────────────────────────
     elapsed = time.time() - t_start
-    print(f"\n{'='*60}")
-    print(f"OPTIMIZATION COMPLETE")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("OPTIMIZATION COMPLETE")
+    print(f"{'=' * 60}")
     print(f"OrganonAgent #1: {c_org:.18f}")
     print(f"Our best:        {global_best_c:.18f}")
     print(f"Delta:           {c_org - global_best_c:+.6e}")
-    print(f"Target delta:    > 1e-7")
+    print("Target delta:    > 1e-7")
     beat = global_best_c < target
     print(f"BEATS #1:        {'YES' if beat else 'NO'}")
-    print(f"Total time:      {elapsed/60:.1f} min")
+    print(f"Total time:      {elapsed / 60:.1f} min")
 
     # Save final best
-    save_solution(global_best_f, global_best_c,
-                 RESULTS / "final-best.json",
-                 tag="optimize_v2-final")
+    save_solution(
+        global_best_f, global_best_c, RESULTS / "final-best.json", tag="optimize_v2-final"
+    )
 
 
 if __name__ == "__main__":

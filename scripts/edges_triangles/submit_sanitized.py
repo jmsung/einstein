@@ -19,8 +19,6 @@ from check_submission import (
     API_URL,
     check_leaderboard,
     load_agent_name,
-    load_api_key,
-    print_leaderboard,
     verify_api,
     wait_for_leaderboard,
 )
@@ -46,12 +44,13 @@ def main():
     json_str = json.dumps(sol)
     # Check for scientific notation in numeric values only (not in key names)
     import re
-    sci_matches = re.findall(r'[\d]e[+-]?\d', json_str)
+
+    sci_matches = re.findall(r"[\d]e[+-]?\d", json_str)
     assert not sci_matches, f"Scientific notation found: {sci_matches[:5]}"
     print(f"Solution:    {SOLUTION_PATH}")
     print(f"Shape:       ({n_rows}, {n_cols})")
     print(f"JSON size:   {len(json_str)} bytes")
-    print(f"Sci notation: NO")
+    print("Sci notation: NO")
 
     # Score locally
     import numpy as np
@@ -81,7 +80,7 @@ def main():
         (score > best_sota, "3. Score beats SOTA"),
         (n_rows <= 500 and n_cols == 20, "4. Shape valid"),
         (all(v >= 0 for row in weights for v in row), "5. Non-negative"),
-        (not re.findall(r'[\d]e[+-]?\d', json_str), "6. No scientific notation"),
+        (not re.findall(r"[\d]e[+-]?\d", json_str), "6. No scientific notation"),
     ]
     for ok, desc in checks:
         print(f"  [{'x' if ok else ' '}] {desc}")
@@ -128,8 +127,10 @@ def main():
                 url = f"{API_URL}/solutions/{sid}"
                 with urllib.request.urlopen(url, timeout=10) as resp2:
                     status = json.loads(resp2.read())
-                print(f"  [{time.strftime('%H:%M:%S')}] status={status.get('status')} "
-                      f"score={status.get('score')} error={status.get('error')}")
+                print(
+                    f"  [{time.strftime('%H:%M:%S')}] status={status.get('status')} "
+                    f"score={status.get('score')} error={status.get('error')}"
+                )
                 if status.get("status") != "pending":
                     break
             except urllib.error.HTTPError as e:

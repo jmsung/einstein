@@ -14,7 +14,6 @@ import time
 from pathlib import Path
 
 import numpy as np
-import torch
 
 sys.path.insert(0, "src")
 from einstein.gpu_tempering.core import ParallelTemperingSA, TemperingConfig

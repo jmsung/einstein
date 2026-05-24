@@ -9,6 +9,7 @@ import time
 
 import numpy as np
 import pytest
+
 from einstein.autocorrelation import evaluate, verify_and_compute_c2
 
 
@@ -129,7 +130,7 @@ class TestEvaluateScoring:
         """Gaussian-like function."""
         n = 500
         x = np.linspace(-3, 3, n)
-        f = np.exp(-x**2).tolist()
+        f = np.exp(-(x**2)).tolist()
         score = evaluate({"values": f})
         assert 0 < score <= 1.0
 
@@ -226,9 +227,9 @@ class TestArenaMatch:
         f = rng.random(int(n)).tolist()
         ours = evaluate({"values": f})
         arena = _arena_verify(f)
-        assert ours == pytest.approx(arena, rel=1e-12), (
-            f"seed={seed}, n={n}: ours={ours}, arena={arena}"
-        )
+        assert ours == pytest.approx(
+            arena, rel=1e-12
+        ), f"seed={seed}, n={n}: ours={ours}, arena={arena}"
 
     def test_sparse_function_match(self):
         """Sparse function (mostly zeros) matches arena."""

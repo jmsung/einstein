@@ -5,12 +5,12 @@ Starts with tight temperature, anneals tighter over training.
 """
 
 import json
+import sys
 import time
+
 import numpy as np
 import torch
-from scipy.signal import fftconvolve
 
-import sys
 sys.path.insert(0, "src")
 from einstein.erdos.evaluator import evaluate
 from einstein.erdos.fast import fast_evaluate
@@ -25,7 +25,7 @@ def torch_correlate(h: torch.Tensor) -> torch.Tensor:
     H = torch.fft.rfft(h, n=pad_size)
     G = torch.fft.rfft(one_minus_h.flip(0), n=pad_size)
     corr = torch.fft.irfft(H * G, n=pad_size)
-    return corr[:2 * n - 1]
+    return corr[: 2 * n - 1]
 
 
 def smooth_max(x: torch.Tensor, temperature: float) -> torch.Tensor:
@@ -33,12 +33,17 @@ def smooth_max(x: torch.Tensor, temperature: float) -> torch.Tensor:
     return temperature * torch.logsumexp(x / temperature, dim=0)
 
 
-def optimize_torch(h_init: np.ndarray, lr: float = 1e-5,
-                    max_iters: int = 50000, temp_start: float = 1e-3,
-                    temp_end: float = 1e-6, label: str = "") -> tuple[float, np.ndarray]:
+def optimize_torch(
+    h_init: np.ndarray,
+    lr: float = 1e-5,
+    max_iters: int = 50000,
+    temp_start: float = 1e-3,
+    temp_end: float = 1e-6,
+    label: str = "",
+) -> tuple[float, np.ndarray]:
     """Optimize h using torch autograd with smooth max."""
     n = len(h_init)
-    device = torch.device('cpu')
+    device = torch.device("cpu")
 
     # Parametrize in unconstrained space via sigmoid
     # h = sigmoid(u), then normalize sum
@@ -51,7 +56,7 @@ def optimize_torch(h_init: np.ndarray, lr: float = 1e-5,
     optimizer = torch.optim.Adam([u], lr=lr)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max_iters)
 
-    best_score = float('inf')
+    best_score = float("inf")
     best_h = h_init.copy()
 
     t0 = time.time()
@@ -97,16 +102,18 @@ def optimize_torch(h_init: np.ndarray, lr: float = 1e-5,
                     best_h = h_np.copy()
 
                 elapsed = time.time() - t0
-                print(f"  [{label}] iter {it+1}/{max_iters}: loss={loss.item():.10f} "
-                      f"score={score:.12f} best={best_score:.12f} temp={temp:.2e} "
-                      f"time={elapsed:.0f}s")
+                print(
+                    f"  [{label}] iter {it + 1}/{max_iters}: loss={loss.item():.10f} "
+                    f"score={score:.12f} best={best_score:.12f} temp={temp:.2e} "
+                    f"time={elapsed:.0f}s"
+                )
 
     return best_score, best_h
 
 
-def optimize_direct_params(h_init: np.ndarray, lr: float = 1e-6,
-                            max_iters: int = 100000,
-                            label: str = "") -> tuple[float, np.ndarray]:
+def optimize_direct_params(
+    h_init: np.ndarray, lr: float = 1e-6, max_iters: int = 100000, label: str = ""
+) -> tuple[float, np.ndarray]:
     """Direct parametrization with projected gradient descent."""
     n = len(h_init)
     h = torch.tensor(h_init, dtype=torch.float64, requires_grad=True)
@@ -150,14 +157,17 @@ def optimize_direct_params(h_init: np.ndarray, lr: float = 1e-6,
                     best_score = score
                     best_h = h_np.copy()
                 elapsed = time.time() - t0
-                print(f"  [{label}] iter {it+1}: score={score:.12f} best={best_score:.12f} "
-                      f"time={elapsed:.0f}s")
+                print(
+                    f"  [{label}] iter {it + 1}: score={score:.12f} best={best_score:.12f} "
+                    f"time={elapsed:.0f}s"
+                )
 
     return best_score, best_h
 
 
-def polish_mass_transport(h: np.ndarray, iters: int = 500000,
-                           seed: int = 42) -> tuple[float, np.ndarray]:
+def polish_mass_transport(
+    h: np.ndarray, iters: int = 500000, seed: int = 42
+) -> tuple[float, np.ndarray]:
     """Mass transport polishing."""
     n = len(h)
     best_score = fast_evaluate(h)
@@ -184,7 +194,7 @@ def polish_mass_transport(h: np.ndarray, iters: int = 500000,
             improved += 1
 
         if (it + 1) % 100000 == 0:
-            print(f"    polish iter {it+1}: {best_score:.14f} ({improved} imp)")
+            print(f"    polish iter {it + 1}: {best_score:.14f} ({improved} imp)")
 
     return best_score, best_h
 
@@ -194,9 +204,9 @@ def main():
     print("Erdős Minimum Overlap — Torch Differentiable Optimizer")
     print("=" * 60)
 
-    with open('/tmp/p1_sota.json') as f:
+    with open("/tmp/p1_sota.json") as f:
         sota_data = json.load(f)
-    h_sota = np.array(sota_data['values'])
+    h_sota = np.array(sota_data["values"])
     print(f"SOTA: {fast_evaluate(h_sota):.16f}")
 
     overall_best = fast_evaluate(h_sota)
@@ -204,8 +214,9 @@ def main():
 
     # Run 1: Sigmoid parametrization from SOTA, tight temperature
     print("\n--- Run 1: Sigmoid param, tight temp, from SOTA ---")
-    s1, h1 = optimize_torch(h_sota, lr=1e-5, max_iters=30000,
-                             temp_start=1e-4, temp_end=1e-7, label="sigmoid-tight")
+    s1, h1 = optimize_torch(
+        h_sota, lr=1e-5, max_iters=30000, temp_start=1e-4, temp_end=1e-7, label="sigmoid-tight"
+    )
     if s1 < overall_best:
         overall_best, overall_best_h = s1, h1
         print(f"  *** New best: {s1:.14f}")
@@ -227,9 +238,14 @@ def main():
         h_start = np.clip(h_start, 0, 1)
         h_start *= 300 / np.sum(h_start)
 
-        s, h = optimize_torch(h_start, lr=5e-5, max_iters=20000,
-                               temp_start=1e-3, temp_end=1e-6,
-                               label=f"perturb-{trial}")
+        s, h = optimize_torch(
+            h_start,
+            lr=5e-5,
+            max_iters=20000,
+            temp_start=1e-3,
+            temp_end=1e-6,
+            label=f"perturb-{trial}",
+        )
         if s < overall_best:
             overall_best, overall_best_h = s, h
             print(f"  *** New best: {s:.14f}")
@@ -255,7 +271,7 @@ def main():
         basis_cos[k] = torch.tensor(np.cos(np.pi * k * x))
         basis_sin[k] = torch.tensor(np.sin(np.pi * k * x))
 
-    best_fourier = float('inf')
+    best_fourier = float("inf")
     best_fourier_h = None
     t0 = time.time()
 
@@ -287,8 +303,10 @@ def main():
                     best_fourier = score
                     best_fourier_h = h_np.copy()
                 elapsed = time.time() - t0
-                print(f"  [fourier K={K}] iter {it+1}: score={score:.12f} "
-                      f"best={best_fourier:.12f} time={elapsed:.0f}s")
+                print(
+                    f"  [fourier K={K}] iter {it + 1}: score={score:.12f} "
+                    f"best={best_fourier:.12f} time={elapsed:.0f}s"
+                )
 
     if best_fourier < overall_best:
         overall_best, overall_best_h = best_fourier, best_fourier_h
@@ -302,15 +320,15 @@ def main():
 
     # Final verification
     exact = evaluate({"values": overall_best_h.tolist()})
-    print(f"\n{'='*60}")
-    print(f"FINAL RESULT")
+    print(f"\n{'=' * 60}")
+    print("FINAL RESULT")
     print(f"Best (fast):  {overall_best:.16f}")
     print(f"Best (exact): {exact:.16f}")
-    print(f"SOTA:         0.3808703105862199")
+    print("SOTA:         0.3808703105862199")
     print(f"Improvement:  {0.3808703105862199 - exact:.2e}")
     print(f"Need >= 1e-6: {'YES!' if 0.3808703105862199 - exact >= 1e-6 else 'NO'}")
 
-    with open('/tmp/p1_torch_best.json', 'w') as f:
+    with open("/tmp/p1_torch_best.json", "w") as f:
         json.dump({"values": overall_best_h.tolist()}, f)
 
 

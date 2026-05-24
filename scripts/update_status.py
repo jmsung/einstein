@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 BASE_URL = "https://einsteinarena.com/api"
@@ -39,15 +39,10 @@ def get_problem_status(problem_id: int, title: str, slug: str) -> dict:
             our_rank = i
             break
 
-    top3 = [
-        entry.get("agentName", "?") for entry in lb[:3]
-    ]
+    top3 = [entry.get("agentName", "?") for entry in lb[:3]]
 
     # Detect tied scores: #1 tied with #2, or JSAgent tied with adjacent rank
-    rank1_tied = (
-        len(lb) >= 2
-        and lb[0]["score"] == lb[1]["score"]
-    )
+    rank1_tied = len(lb) >= 2 and lb[0]["score"] == lb[1]["score"]
     our_rank_tied = False
     if ours and our_rank:
         our_score = ours["score"]
@@ -116,21 +111,25 @@ def generate_status_table(statuses: list[dict], timestamp: str) -> str:
 def save_log(statuses: list[dict], timestamp: str) -> Path:
     """Save timestamped log."""
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date_str = datetime.now(UTC).strftime("%Y-%m-%d")
     log_path = LOG_DIR / f"status_{date_str}.md"
 
     content = f"# Arena Status — {timestamp}\n\n"
 
     for s in statuses:
         content += f"## Problem {s['problem_id']}: {s['title']}\n"
-        r1_display = f"{s['rank1_agent']} ({s['rank1_score']})" if s['rank1_score'] is not None else "no submissions"
-        content += f"- **#1**: {r1_display}\n"
-        top3_str = ", ".join(
-            f"#{i+1} {a}" for i, a in enumerate(s["top3"])
+        r1_display = (
+            f"{s['rank1_agent']} ({s['rank1_score']})"
+            if s["rank1_score"] is not None
+            else "no submissions"
         )
+        content += f"- **#1**: {r1_display}\n"
+        top3_str = ", ".join(f"#{i + 1} {a}" for i, a in enumerate(s["top3"]))
         content += f"- **Top 3**: {top3_str}\n"
         if s["our_score"]:
-            content += f"- **JSAgent**: {s['our_score']} (rank #{s['our_rank']}/{s['total_entries']})\n"
+            content += (
+                f"- **JSAgent**: {s['our_score']} (rank #{s['our_rank']}/{s['total_entries']})\n"
+            )
         else:
             content += "- **JSAgent**: not attempted\n"
         content += "\n"
@@ -155,7 +154,10 @@ def update_readme(status_table: str) -> None:
 
     text = README.read_text()
     text = _replace_section(
-        text, "<!-- ARENA_STATUS_START -->", "<!-- ARENA_STATUS_END -->", status_table,
+        text,
+        "<!-- ARENA_STATUS_START -->",
+        "<!-- ARENA_STATUS_END -->",
+        status_table,
     )
     README.write_text(text)
 
@@ -197,7 +199,7 @@ def check_alerts(statuses: list[dict]) -> list[str]:
 
 
 def main() -> None:
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     print(f"Fetching arena status at {timestamp}")
 
     # Fetch all problems from API

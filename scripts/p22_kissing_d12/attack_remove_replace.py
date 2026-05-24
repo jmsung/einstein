@@ -50,11 +50,13 @@ def score_pair_gpu(core_t: torch.Tensor, Va: torch.Tensor, Vb: torch.Tensor) -> 
     ga = Va @ core_t.t()
     gb = Vb @ core_t.t()
     gab = (Va * Vb).sum(dim=1, keepdim=True)  # (B, 1)
+
     # Pair penalties
     def pen(g):
         g = g.clamp(-1.0, 1.0)
         dist = 2.0 * torch.sqrt(2.0 * (1.0 - g))
         return (2.0 - dist).clamp(min=0.0)
+
     pen_a = pen(ga).sum(dim=1)
     pen_b = pen(gb).sum(dim=1)
     pen_ab = pen(gab).squeeze(-1)
@@ -67,14 +69,18 @@ def score_pair_cpu(core: np.ndarray, va: np.ndarray, vb: np.ndarray) -> float:
     ga = core @ va
     gb = core @ vb
     gab = va @ vb
+
     def pen(g):
         g = np.clip(g, -1.0, 1.0)
         dist = 2.0 * np.sqrt(2.0 * (1.0 - g))
         return np.maximum(0.0, 2.0 - dist)
+
     return float(pen(ga).sum() + pen(gb).sum() + pen(np.array([gab])).sum())
 
 
-def pair_rgd_cpu(core: np.ndarray, va0: np.ndarray, vb0: np.ndarray, steps: int, lr: float) -> tuple[np.ndarray, np.ndarray, float]:
+def pair_rgd_cpu(
+    core: np.ndarray, va0: np.ndarray, vb0: np.ndarray, steps: int, lr: float
+) -> tuple[np.ndarray, np.ndarray, float]:
     va = va0 / np.linalg.norm(va0)
     vb = vb0 / np.linalg.norm(vb0)
     best_va, best_vb = va.copy(), vb.copy()
@@ -172,8 +178,12 @@ def main():
             vb_rand = torch.randn(half, 12, device=device, dtype=dtype, generator=gen)
 
             pert_scale = 0.3
-            va_pert = v_rem_t[None] + pert_scale * torch.randn(B - half, 12, device=device, dtype=dtype, generator=gen)
-            vb_pert = v_rem_t[None] + pert_scale * torch.randn(B - half, 12, device=device, dtype=dtype, generator=gen)
+            va_pert = v_rem_t[None] + pert_scale * torch.randn(
+                B - half, 12, device=device, dtype=dtype, generator=gen
+            )
+            vb_pert = v_rem_t[None] + pert_scale * torch.randn(
+                B - half, 12, device=device, dtype=dtype, generator=gen
+            )
 
             Va = torch.cat([va_rand, va_pert])
             Vb = torch.cat([vb_rand, vb_pert])
@@ -200,8 +210,10 @@ def main():
         order = np.argsort(top_scores_cpu)
         best_refined_s = np.inf
         best_refined_va, best_refined_vb = None, None
-        for i in order[:args.top_k]:
-            va_opt, vb_opt, s_opt = pair_rgd_cpu(core, top_va_cpu[i], top_vb_cpu[i], args.refine_steps, args.refine_lr)
+        for i in order[: args.top_k]:
+            va_opt, vb_opt, s_opt = pair_rgd_cpu(
+                core, top_va_cpu[i], top_vb_cpu[i], args.refine_steps, args.refine_lr
+            )
             if s_opt < best_refined_s:
                 best_refined_s = s_opt
                 best_refined_va = va_opt
@@ -217,11 +229,13 @@ def main():
             }
             print(f"  >>> NEW BEST: {best_refined_s!r} (rem_i={rem_i})", flush=True)
 
-    print(f"\n=== FINAL ===", flush=True)
+    print("\n=== FINAL ===", flush=True)
     print(f"Best: {best_overall['score']!r}  rem_i={best_overall['rem_i']}", flush=True)
     if best_overall["va"] is not None:
         core_final = np.delete(core_full, best_overall["rem_i"], axis=0)
-        vectors = np.vstack([core_final, np.array([best_overall["va"]]), np.array([best_overall["vb"]])])
+        vectors = np.vstack(
+            [core_final, np.array([best_overall["va"]]), np.array([best_overall["vb"]])]
+        )
         out = {
             "method": "remove_replace",
             "best_score": best_overall["score"],

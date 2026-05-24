@@ -6,7 +6,6 @@ import torch
 
 from einstein.gpu_tempering import (
     CoulombLoss,
-    FlatManifold,
     HingeOverlapLoss,
     ParallelTemperingSA,
     SphereManifold,
@@ -160,8 +159,10 @@ class TestFusedStep:
         R, N, D, K = 4, 20, 5, 3
         replicas = torch.randn(R, N, D, dtype=torch.float64)
         replicas = replicas / replicas.norm(dim=2, keepdim=True)
-        losses = torch.tensor([HingeOverlapLoss().full_loss(replicas[r]).item() for r in range(R)],
-                              dtype=torch.float64)
+        losses = torch.tensor(
+            [HingeOverlapLoss().full_loss(replicas[r]).item() for r in range(R)],
+            dtype=torch.float64,
+        )
         temps = torch.tensor([1e-12, 1e-8, 1e-4, 1e-2], dtype=torch.float64)
         probs = torch.ones(N, dtype=torch.float64) / N
 
@@ -177,8 +178,9 @@ class TestFusedStep:
         R, N, D, K = 4, 20, 3, 5
         replicas = torch.randn(R, N, D, dtype=torch.float64)
         replicas = replicas / replicas.norm(dim=2, keepdim=True)
-        losses = torch.tensor([CoulombLoss().full_loss(replicas[r]).item() for r in range(R)],
-                              dtype=torch.float64)
+        losses = torch.tensor(
+            [CoulombLoss().full_loss(replicas[r]).item() for r in range(R)], dtype=torch.float64
+        )
         temps = torch.tensor([1e-12, 1e-8, 1e-4, 1e-2], dtype=torch.float64)
         probs = torch.ones(N, dtype=torch.float64) / N
 
@@ -217,8 +219,10 @@ class TestTritonKernel:
         R, N, D, K = 4, 20, 5, 3
         replicas = torch.randn(R, N, D, dtype=torch.float64)
         replicas = replicas / replicas.norm(dim=2, keepdim=True)
-        losses = torch.tensor([HingeOverlapLoss().full_loss(replicas[r]).item() for r in range(R)],
-                              dtype=torch.float64)
+        losses = torch.tensor(
+            [HingeOverlapLoss().full_loss(replicas[r]).item() for r in range(R)],
+            dtype=torch.float64,
+        )
         temps = torch.tensor([1e-12, 1e-8, 1e-4, 1e-2], dtype=torch.float64)
         probs = torch.ones(N, dtype=torch.float64) / N
 
@@ -234,8 +238,12 @@ class TestTritonKernel:
         vecs /= np.linalg.norm(vecs, axis=1, keepdims=True)
 
         result = run_triton_tempering(
-            vecs, n_replicas=4, n_steps=50, k_per_step=3,
-            report_every=25, timeout_sec=30,
+            vecs,
+            n_replicas=4,
+            n_steps=50,
+            k_per_step=3,
+            report_every=25,
+            timeout_sec=30,
         )
         assert result["best_score"] <= result["initial_score"]
         assert result["best_vectors"].shape == (20, 5)

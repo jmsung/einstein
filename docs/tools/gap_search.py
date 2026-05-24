@@ -19,6 +19,7 @@ Usage:
 Per .claude/rules/cycle-discipline.md step 4.5: this runs at cycle-end after
 wiki_graph.py --file-questions, before promotion-log review.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -67,16 +68,18 @@ def parse_frontmatter(text: str) -> tuple[dict, str]:
         else:
             fm[key] = val.strip().strip("\"'")
             current_list = None
-    return fm, text[m.end():]
+    return fm, text[m.end() :]
 
 
 MATH_CATEGORIES = ["math.NT", "math.CO", "math.OC", "math.MG", "math.PR", "math.CA", "math.NA"]
+
 
 def _clean(s: str) -> str:
     """Strip slashes and other arxiv-query-breaking chars; collapse whitespace."""
     s = re.sub(r"[/\\:;,()]+", " ", s)
     s = re.sub(r"\s+", " ", s).strip()
     return s
+
 
 def build_query(title: str, concepts: list[str], related_problems: list[str]) -> str:
     """Turn question title + concepts into an arxiv search query.
@@ -94,7 +97,9 @@ def build_query(title: str, concepts: list[str], related_problems: list[str]) ->
 
     clean_title = re.sub(
         r"\?$|^(Could|Can|Is|Does|Why does|How does|What is|When does)\s+(a|the)?\s*",
-        "", title, flags=re.IGNORECASE
+        "",
+        title,
+        flags=re.IGNORECASE,
     )
     clean_title = re.sub(r"\bP\d+[a-z]?\b|\b\d+\.\d{3,}\b|\bbelow \d+\b", "", clean_title)
     clean_title = _clean(clean_title)
@@ -114,13 +119,15 @@ def build_query(title: str, concepts: list[str], related_problems: list[str]) ->
 
 def search_arxiv(query: str, max_results: int = 5) -> list[dict]:
     """Hit the arxiv API. Return list of {title, authors, year, abs_url, summary}."""
-    params = urllib.parse.urlencode({
-        "search_query": query,
-        "start": "0",
-        "max_results": str(max_results),
-        "sortBy": "relevance",
-        "sortOrder": "descending",
-    })
+    params = urllib.parse.urlencode(
+        {
+            "search_query": query,
+            "start": "0",
+            "max_results": str(max_results),
+            "sortBy": "relevance",
+            "sortOrder": "descending",
+        }
+    )
     url = f"{ARXIV_API}?{params}"
 
     try:
@@ -133,22 +140,35 @@ def search_arxiv(query: str, max_results: int = 5) -> list[dict]:
     root = ET.fromstring(xml_text)
     results = []
     for entry in root.findall("a:entry", ATOM_NS):
-        title = (entry.findtext("a:title", default="", namespaces=ATOM_NS) or "").strip().replace("\n", " ")
+        title = (
+            (entry.findtext("a:title", default="", namespaces=ATOM_NS) or "")
+            .strip()
+            .replace("\n", " ")
+        )
         abs_url = entry.findtext("a:id", default="", namespaces=ATOM_NS) or ""
-        summary = (entry.findtext("a:summary", default="", namespaces=ATOM_NS) or "").strip().replace("\n", " ")
+        summary = (
+            (entry.findtext("a:summary", default="", namespaces=ATOM_NS) or "")
+            .strip()
+            .replace("\n", " ")
+        )
         # Authors
-        authors = [a.findtext("a:name", default="", namespaces=ATOM_NS) for a in entry.findall("a:author", ATOM_NS)]
+        authors = [
+            a.findtext("a:name", default="", namespaces=ATOM_NS)
+            for a in entry.findall("a:author", ATOM_NS)
+        ]
         # Year from published date
         published = entry.findtext("a:published", default="", namespaces=ATOM_NS) or ""
         year = published[:4] if published else ""
 
-        results.append({
-            "title": title,
-            "authors": ", ".join(a for a in authors if a)[:120],
-            "year": year,
-            "abs_url": abs_url,
-            "summary": (summary[:280] + "...") if len(summary) > 280 else summary,
-        })
+        results.append(
+            {
+                "title": title,
+                "authors": ", ".join(a for a in authors if a)[:120],
+                "year": year,
+                "abs_url": abs_url,
+                "summary": (summary[:280] + "...") if len(summary) > 280 else summary,
+            }
+        )
     return results
 
 
@@ -216,8 +236,12 @@ def enrich_question(path: Path, max_results: int, dry_run: bool) -> bool:
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--question", help="Enrich a single question (slug or path)")
-    p.add_argument("--max-per-question", type=int, default=3, help="arxiv results per question (default 3)")
-    p.add_argument("--dry-run", action="store_true", help="Show what would be enriched, don't modify files")
+    p.add_argument(
+        "--max-per-question", type=int, default=3, help="arxiv results per question (default 3)"
+    )
+    p.add_argument(
+        "--dry-run", action="store_true", help="Show what would be enriched, don't modify files"
+    )
     args = p.parse_args()
 
     if args.question:

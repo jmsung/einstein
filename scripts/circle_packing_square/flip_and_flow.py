@@ -64,8 +64,8 @@ def compute_stresses(circles: np.ndarray, pairs: list, walls: list) -> np.ndarra
 
 def worker(args):
     seed, base_circles, drop_edge_pair, sigma = args
-    import scipy.optimize as opt
     import numpy as np
+
     from einstein.circle_packing_square import N_CIRCLES, evaluate
     from einstein.circle_packing_square.polish import polish
 
@@ -127,10 +127,13 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--base", type=str, default="results-temp/p14_top.json")
     p.add_argument("--workers", type=int, default=None)
-    p.add_argument("--n-edges-to-drop", type=int, default=20,
-                   help="how many lowest-stress edges to try dropping")
-    p.add_argument("--n-jitters", type=int, default=10,
-                   help="random seed jitters per edge drop")
+    p.add_argument(
+        "--n-edges-to-drop",
+        type=int,
+        default=20,
+        help="how many lowest-stress edges to try dropping",
+    )
+    p.add_argument("--n-jitters", type=int, default=10, help="random seed jitters per edge drop")
     p.add_argument("--sigma", type=float, default=5e-3)
     p.add_argument("--seed-base", type=int, default=200000)
     p.add_argument("--output", type=str, default="results-temp/p14_flipflow.json")
@@ -148,7 +151,7 @@ def main():
     else:
         raise ValueError("Unknown base format")
 
-    print(f"Base sum_r: {base[:,2].sum():.16f}")
+    print(f"Base sum_r: {base[:, 2].sum():.16f}")
 
     # Build active set
     n = 26
@@ -160,10 +163,14 @@ def main():
                 pairs.append((i, j))
     walls = []
     for i in range(n):
-        if abs(base[i, 0] - base[i, 2]) < 1e-9: walls.append(("L", i))
-        if abs(1 - base[i, 0] - base[i, 2]) < 1e-9: walls.append(("R", i))
-        if abs(base[i, 1] - base[i, 2]) < 1e-9: walls.append(("B", i))
-        if abs(1 - base[i, 1] - base[i, 2]) < 1e-9: walls.append(("T", i))
+        if abs(base[i, 0] - base[i, 2]) < 1e-9:
+            walls.append(("L", i))
+        if abs(1 - base[i, 0] - base[i, 2]) < 1e-9:
+            walls.append(("R", i))
+        if abs(base[i, 1] - base[i, 2]) < 1e-9:
+            walls.append(("B", i))
+        if abs(1 - base[i, 1] - base[i, 2]) < 1e-9:
+            walls.append(("T", i))
 
     print(f"Active: {len(pairs)} pairs + {len(walls)} walls")
 
@@ -175,7 +182,7 @@ def main():
     pair_stresses = [(abs(lam[k]), k, pairs[k]) for k in range(len(pairs))]
     pair_stresses.sort()  # ascending |stress| = cheapest first
 
-    print(f"\n10 cheapest pair edges to break:")
+    print("\n10 cheapest pair edges to break:")
     for s, k, pair in pair_stresses[:10]:
         print(f"  pair {pair}: |λ| = {s:.4e}")
 
@@ -224,27 +231,41 @@ def main():
                 best_c = circles
                 elapsed = time.time() - t0
                 marker = " <<< above AE!" if score > AE else ""
-                diff_str = f" (graph diff: -{removed_from_ae} +{new_in_solution})" if different else ""
-                print(f"  seed={seed} drop={drop_edge} score={score:.16f} d_AE={score-AE:+.3e}{diff_str} ({elapsed:.1f}s){marker}", flush=True)
+                diff_str = (
+                    f" (graph diff: -{removed_from_ae} +{new_in_solution})" if different else ""
+                )
+                print(
+                    f"  seed={seed} drop={drop_edge} score={score:.16f} d_AE={score - AE:+.3e}{diff_str} ({elapsed:.1f}s){marker}",
+                    flush=True,
+                )
             elif different and score > AE - 1e-7:
-                different_basins.append({"seed": seed, "score": score, "diff": (removed_from_ae, new_in_solution)})
+                different_basins.append(
+                    {"seed": seed, "score": score, "diff": (removed_from_ae, new_in_solution)}
+                )
 
             if n_done % 50 == 0:
                 elapsed = time.time() - t0
-                print(f"  ...{n_done}/{len(tasks)} done, best={best_score:.16f}, different_basins_near_AE={len(different_basins)}, {elapsed:.1f}s", flush=True)
+                print(
+                    f"  ...{n_done}/{len(tasks)} done, best={best_score:.16f}, different_basins_near_AE={len(different_basins)}, {elapsed:.1f}s",
+                    flush=True,
+                )
 
-    print(f"\nFinal: best={best_score:.16f}  d_AE={best_score-AE:+.3e}")
+    print(f"\nFinal: best={best_score:.16f}  d_AE={best_score - AE:+.3e}")
     print(f"Different basins found near AE: {len(different_basins)}")
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "base_score": AE,
-            "best_score": best_score,
-            "best_circles": best_c,
-            "different_basins_count": len(different_basins),
-            "different_basins": different_basins[:20],
-        }, f, indent=2)
+        json.dump(
+            {
+                "base_score": AE,
+                "best_score": best_score,
+                "best_circles": best_c,
+                "different_basins_count": len(different_basins),
+                "different_basins": different_basins[:20],
+            },
+            f,
+            indent=2,
+        )
 
 
 if __name__ == "__main__":

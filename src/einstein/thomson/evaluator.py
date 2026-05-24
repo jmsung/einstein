@@ -48,7 +48,7 @@ def coulomb_energy_fast(points: np.ndarray) -> float:
 
     # Pairwise distance matrix via broadcasting
     diff = pts[:, None, :] - pts[None, :, :]
-    dist_sq = np.sum(diff ** 2, axis=-1)
+    dist_sq = np.sum(diff**2, axis=-1)
 
     n = len(pts)
     idx_i, idx_j = np.triu_indices(n, k=1)
@@ -62,7 +62,5 @@ def evaluate(data: dict) -> float:
     """Score a Thomson problem solution. Matches arena verifier."""
     vectors = np.array(data["vectors"], dtype=np.float64)
     if vectors.ndim != 2 or vectors.shape[0] != N_POINTS or vectors.shape[1] != DIMENSION:
-        raise ValueError(
-            f"Expected {N_POINTS} points in {DIMENSION}D, got shape {vectors.shape}"
-        )
+        raise ValueError(f"Expected {N_POINTS} points in {DIMENSION}D, got shape {vectors.shape}")
     return coulomb_energy_fast(vectors)

@@ -62,7 +62,9 @@ def s_grad(u: np.ndarray, w: np.ndarray) -> np.ndarray:
     return w[active].sum(axis=0)
 
 
-def min_s_over_sphere(w: np.ndarray, n_starts: int = 1000, n_steps: int = 500, lr: float = 0.05, seed: int = 0) -> tuple[float, np.ndarray]:
+def min_s_over_sphere(
+    w: np.ndarray, n_starts: int = 1000, n_steps: int = 500, lr: float = 0.05, seed: int = 0
+) -> tuple[float, np.ndarray]:
     """Multi-start projected gradient descent on S(u) over the unit sphere."""
     rng = np.random.default_rng(seed)
     best_s = np.inf
@@ -103,8 +105,8 @@ def main() -> None:
     print("\nMulti-start gradient descent on S(u)...")
     best_s, best_u = min_s_over_sphere(w15, n_starts=400, n_steps=600, lr=0.05)
     print(f"\nmin_u S(u) ≈ {best_s:.10f}")
-    print(f"First-order escape iff min S(u) < 1.")
-    print(f"Score change = 2*(S(u) - 1) per unit of |ε|; smaller S = better.")
+    print("First-order escape iff min S(u) < 1.")
+    print("Score change = 2*(S(u) - 1) per unit of |ε|; smaller S = better.")
 
     # Also report distribution of S(u) at convergence
     print()

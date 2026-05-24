@@ -20,15 +20,14 @@ from scipy.optimize import minimize
 from einstein.hexagon import evaluate
 
 _SOLUTION_FILE = (
-    pathlib.Path(__file__).parent.parent.parent
-    / "results" / "problem-17-hexagon" / "solution.json"
+    pathlib.Path(__file__).parent.parent.parent / "results" / "problem-17-hexagon" / "solution.json"
 )
 
 PENALTY = 1e6
 
 
 def pack_solution(x: np.ndarray) -> dict:
-    hexagons = [[float(x[3*i]), float(x[3*i+1]), float(x[3*i+2])] for i in range(12)]
+    hexagons = [[float(x[3 * i]), float(x[3 * i + 1]), float(x[3 * i + 2])] for i in range(12)]
     return {
         "hexagons": hexagons,
         "outer_side_length": float(x[39]),
@@ -40,7 +39,7 @@ def pack_solution(x: np.ndarray) -> dict:
 def unpack_solution(data: dict) -> np.ndarray:
     x = np.zeros(40)
     for i, h in enumerate(data["hexagons"]):
-        x[3*i], x[3*i+1], x[3*i+2] = h[0], h[1], h[2]
+        x[3 * i], x[3 * i + 1], x[3 * i + 2] = h[0], h[1], h[2]
     x[36], x[37] = data["outer_center"]
     x[38] = data["outer_angle_deg"]
     x[39] = data["outer_side_length"]
@@ -58,6 +57,7 @@ def log(msg: str):
 # ---------------------------------------------------------------------------
 # Warm-start solutions from arena leaderboard
 # ---------------------------------------------------------------------------
+
 
 def _load_warmstarts() -> dict:
     """Load warm-start solutions. Our best solution is loaded from results/ if present."""
@@ -96,6 +96,7 @@ WARMSTARTS = _load_warmstarts()
 # Optimization routines
 # ---------------------------------------------------------------------------
 
+
 def fit_outer(data: dict, maxiter: int = 50000) -> dict:
     """Optimize only outer params (4 vars) for fixed inner hexagons."""
     inner = []
@@ -105,27 +106,34 @@ def fit_outer(data: dict, maxiter: int = 50000) -> dict:
     def obj(p):
         return objective(np.array(inner + list(p)))
 
-    p0 = [data["outer_center"][0], data["outer_center"][1],
-          data["outer_angle_deg"], data["outer_side_length"]]
-    res = minimize(obj, p0, method="Nelder-Mead",
-                   options={"maxiter": maxiter, "xatol": 1e-15, "fatol": 1e-16})
+    p0 = [
+        data["outer_center"][0],
+        data["outer_center"][1],
+        data["outer_angle_deg"],
+        data["outer_side_length"],
+    ]
+    res = minimize(
+        obj, p0, method="Nelder-Mead", options={"maxiter": maxiter, "xatol": 1e-15, "fatol": 1e-16}
+    )
     data["outer_center"] = [float(res.x[0]), float(res.x[1])]
     data["outer_angle_deg"] = float(res.x[2])
     data["outer_side_length"] = float(res.x[3])
     return data
 
 
-def iterative_nelder_mead(x0: np.ndarray, deadline: float,
-                          chunk_iters: int = 2000) -> np.ndarray:
+def iterative_nelder_mead(x0: np.ndarray, deadline: float, chunk_iters: int = 2000) -> np.ndarray:
     """Run Nelder-Mead in bounded chunks until deadline."""
     x = x0.copy()
     best = objective(x0)
     total_iters = 0
 
     while time.time() < deadline:
-        res = minimize(objective, x, method="Nelder-Mead",
-                       options={"maxiter": chunk_iters, "xatol": 1e-15,
-                                "fatol": 1e-16, "adaptive": True})
+        res = minimize(
+            objective,
+            x,
+            method="Nelder-Mead",
+            options={"maxiter": chunk_iters, "xatol": 1e-15, "fatol": 1e-16, "adaptive": True},
+        )
         total_iters += res.nit
         if res.fun < best - 1e-14:
             best = res.fun
@@ -170,8 +178,7 @@ def hillclimb(x0: np.ndarray, deadline: float) -> np.ndarray:
     return x
 
 
-def perturbation_search(x0: np.ndarray, deadline: float,
-                         sigma: float = 0.005) -> np.ndarray:
+def perturbation_search(x0: np.ndarray, deadline: float, sigma: float = 0.005) -> np.ndarray:
     """Random perturbations + quick Nelder-Mead polish."""
     x_best = x0.copy()
     best = objective(x0)
@@ -182,8 +189,12 @@ def perturbation_search(x0: np.ndarray, deadline: float,
         xt[:36] += np.random.randn(36) * sigma
         xt[36:39] += np.random.randn(3) * sigma * 0.1
 
-        res = minimize(objective, xt, method="Nelder-Mead",
-                       options={"maxiter": 1000, "xatol": 1e-14, "fatol": 1e-15})
+        res = minimize(
+            objective,
+            xt,
+            method="Nelder-Mead",
+            options={"maxiter": 1000, "xatol": 1e-14, "fatol": 1e-15},
+        )
         trials += 1
 
         if res.fun < best - 1e-12:
@@ -207,13 +218,17 @@ def random_basin_search(deadline: float) -> tuple[np.ndarray | None, float]:
         for i in range(12):
             r = rng.uniform(0.5, 3.5)
             theta = rng.uniform(0, 2 * np.pi)
-            x[3*i] = r * np.cos(theta)
-            x[3*i+1] = r * np.sin(theta)
-            x[3*i+2] = rng.uniform(0, 60)
+            x[3 * i] = r * np.cos(theta)
+            x[3 * i + 1] = r * np.sin(theta)
+            x[3 * i + 2] = rng.uniform(0, 60)
         x[39] = 6.0
 
-        res = minimize(objective, x, method="Nelder-Mead",
-                       options={"maxiter": 3000, "xatol": 1e-13, "fatol": 1e-14})
+        res = minimize(
+            objective,
+            x,
+            method="Nelder-Mead",
+            options={"maxiter": 3000, "xatol": 1e-13, "fatol": 1e-14},
+        )
         trials += 1
 
         if res.fun < best_score:
@@ -230,6 +245,7 @@ def random_basin_search(deadline: float) -> tuple[np.ndarray | None, float]:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     parser = argparse.ArgumentParser()

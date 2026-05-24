@@ -109,9 +109,7 @@ def score_torch(
     return -(area + 10.0 * max_gap)
 
 
-def initialize_raw_gaps_from_multi(
-    multi_xs: np.ndarray, x_lo: float, x_hi: float
-) -> np.ndarray:
+def initialize_raw_gaps_from_multi(multi_xs: np.ndarray, x_lo: float, x_hi: float) -> np.ndarray:
     """Invert softplus+normalize to get raw_gaps matching a given multi_xs layout."""
     m = len(multi_xs)
     gaps = np.empty(m + 1)
@@ -128,7 +126,8 @@ def initialize_raw_gaps_from_multi(
 
 def save_solution(multi_xs: np.ndarray, bi_xs: np.ndarray, out_dir: Path, tag: str = "") -> Path:
     """Reconstruct weight matrix and save."""
-    from einstein.edges_triangles.evaluator import compute_densities, turan_row
+    from einstein.edges_triangles.evaluator import turan_row
+
     all_xs = np.concatenate([bi_xs, multi_xs])
     weights = np.array([turan_row(np.clip(x, 0.0, 0.95)) for x in all_xs])
     score = compute_score(weights)
@@ -147,8 +146,11 @@ def main():
     print(f"Loaded: {len(bi_xs_np)} bipartite, {len(multi_xs_np)} multipartite")
 
     # Current score
-    from einstein.edges_triangles.evaluator import compute_densities, turan_row
-    init_w = np.array([turan_row(np.clip(x, 0.0, 0.95)) for x in np.concatenate([bi_xs_np, multi_xs_np])])
+    from einstein.edges_triangles.evaluator import turan_row
+
+    init_w = np.array(
+        [turan_row(np.clip(x, 0.0, 0.95)) for x in np.concatenate([bi_xs_np, multi_xs_np])]
+    )
     init_score = compute_score(init_w)
     print(f"Initial score: {init_score:.14f}")
 

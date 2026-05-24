@@ -94,7 +94,7 @@ def dinkelbach_inner_mps(f_np, lam, beta=1e3, n_inner=1000):
     def closure():
         nonlocal best_w, best_C, eval_count
         optimizer.zero_grad()
-        f = w_t ** 2
+        f = w_t**2
 
         F = torch.fft.rfft(f, n=nfft)
         conv = torch.fft.irfft(F * F, n=nfft)[:nc]
@@ -105,20 +105,22 @@ def dinkelbach_inner_mps(f_np, lam, beta=1e3, n_inner=1000):
         z = torch.zeros(1, device=DEVICE, dtype=GPU_DTYPE)
         y = torch.cat([z, conv, z])
         y0, y1 = y[:-1], y[1:]
-        l2sq = (h / 3.0) * torch.sum(y0 ** 2 + y0 * y1 + y1 ** 2)
+        l2sq = (h / 3.0) * torch.sum(y0**2 + y0 * y1 + y1**2)
 
         l1 = torch.sum(conv) / (nc + 1)
 
         # Smooth Linf via LogSumExp
         g_max = torch.max(conv)
         lse_arg = beta * (conv / (g_max + 1e-12) - 1.0)
-        linf_proxy = g_max * torch.exp(
-            torch.logsumexp(lse_arg, dim=0) / beta
-        )
+        linf_proxy = g_max * torch.exp(torch.logsumexp(lse_arg, dim=0) / beta)
 
         obj = l2sq - lam * l1 * linf_proxy
 
-        C_exact = l2sq.item() / (l1.item() * g_max.item()) if (l1.item() > 0 and g_max.item() > 0) else 0.0
+        C_exact = (
+            l2sq.item() / (l1.item() * g_max.item())
+            if (l1.item() > 0 and g_max.item() > 0)
+            else 0.0
+        )
         eval_count += 1
         if C_exact > best_C and C_exact < 1.5:
             best_C = C_exact
@@ -133,7 +135,7 @@ def dinkelbach_inner_mps(f_np, lam, beta=1e3, n_inner=1000):
     except Exception as e:
         print(f"    L-BFGS MPS exception: {e}")
 
-    f_new = (best_w ** 2).cpu().numpy().astype(np.float64)
+    f_new = (best_w**2).cpu().numpy().astype(np.float64)
     C_new = fast_evaluate(f_new)
     return f_new, C_new, eval_count
 
@@ -185,7 +187,7 @@ def dinkelbach_obj_and_grad_cpu(w, lam, beta, n):
     dphi_dc = dnumer_dc - lam * ddenom_dc
 
     dphi_df = 2.0 * fftconvolve(dphi_dc, f[::-1], mode="full")
-    dphi_df = dphi_df[n - 1: 2 * n - 1]
+    dphi_df = dphi_df[n - 1 : 2 * n - 1]
 
     dobj_dw = -dphi_df * 2.0 * w
     dobj_dw = np.clip(dobj_dw, -1e15, 1e15)
@@ -217,9 +219,17 @@ def optimize_cpu_lbfgs(f_init, betas, n_outer=3, maxiter=500, time_limit=60, ver
                 return dinkelbach_obj_and_grad_cpu(w_flat, _lam, _beta, n)
 
             result = minimize(
-                obj_grad, w, method="L-BFGS-B", jac=True,
-                options={"maxiter": maxiter, "maxfun": maxiter * 3,
-                         "ftol": 1e-15, "gtol": 1e-12, "maxls": 40},
+                obj_grad,
+                w,
+                method="L-BFGS-B",
+                jac=True,
+                options={
+                    "maxiter": maxiter,
+                    "maxfun": maxiter * 3,
+                    "ftol": 1e-15,
+                    "gtol": 1e-12,
+                    "maxls": 40,
+                },
             )
             w = result.x
             f_current = w * w
@@ -232,11 +242,9 @@ def optimize_cpu_lbfgs(f_init, betas, n_outer=3, maxiter=500, time_limit=60, ver
                 best_score = score
                 best_f = f_current.copy()
                 if verbose:
-                    print(f"    CPU beta={beta:.0e} outer={outer+1}: "
-                          f"C={score:.13f} *** NEW BEST")
+                    print(f"    CPU beta={beta:.0e} outer={outer + 1}: C={score:.13f} *** NEW BEST")
             elif verbose:
-                print(f"    CPU beta={beta:.0e} outer={outer+1}: "
-                      f"C={score:.13f}")
+                print(f"    CPU beta={beta:.0e} outer={outer + 1}: C={score:.13f}")
 
             if result.nit <= 1:
                 break
@@ -247,8 +255,7 @@ def optimize_cpu_lbfgs(f_init, betas, n_outer=3, maxiter=500, time_limit=60, ver
 # ---------------------------------------------------------------------------
 # GPU-accelerated perturbation search
 # ---------------------------------------------------------------------------
-def perturb_search(f_init, n_trials=5000, time_limit=60, seed=42,
-                   sigma=0.01, verbose=True):
+def perturb_search(f_init, n_trials=5000, time_limit=60, seed=42, sigma=0.01, verbose=True):
     """Random perturbation search with fast CPU scoring.
 
     Perturbs support values and positions, scores with fast_evaluate.
@@ -350,15 +357,19 @@ def perturb_search(f_init, n_trials=5000, time_limit=60, seed=42,
             stagnant = 0
             if verbose and improved % 10 == 0:
                 elapsed = time.time() - t0
-                print(f"    trial={trial}: C={C_best:.13f} "
-                      f"({improved} impr, sigma={sigma:.4f}, {elapsed:.1f}s)")
+                print(
+                    f"    trial={trial}: C={C_best:.13f} "
+                    f"({improved} impr, sigma={sigma:.4f}, {elapsed:.1f}s)"
+                )
         else:
             stagnant += 1
 
     if verbose:
         elapsed = time.time() - t0
-        print(f"    Done: C={C_best:.13f} "
-              f"({improved} improvements in {trial+1} trials, {elapsed:.1f}s)")
+        print(
+            f"    Done: C={C_best:.13f} "
+            f"({improved} improvements in {trial + 1} trials, {elapsed:.1f}s)"
+        )
 
     return f_best, C_best
 
@@ -391,9 +402,7 @@ def main():
         if time.time() - t_start > 90:
             break
         lam = C_best
-        f_new, C_new, n_evals = dinkelbach_inner_mps(
-            f_best, lam, beta=beta, n_inner=500
-        )
+        f_new, C_new, n_evals = dinkelbach_inner_mps(f_best, lam, beta=beta, n_inner=500)
         if C_new > C_best and C_new < 1.0 and np.all(np.isfinite(f_new)):
             C_best = C_new
             f_best = f_new
@@ -410,24 +419,35 @@ def main():
     # -----------------------------------------------------------------------
     print("\n--- Phase 2: Perturbation search ---")
 
-    for rnd, (sigma, seed) in enumerate([
-        (0.01, 42), (0.005, 123), (0.02, 456),
-        (0.001, 789), (0.05, 1000), (0.003, 2000),
-        (0.008, 3000), (0.015, 4000),
-    ]):
+    for rnd, (sigma, seed) in enumerate(
+        [
+            (0.01, 42),
+            (0.005, 123),
+            (0.02, 456),
+            (0.001, 789),
+            (0.05, 1000),
+            (0.003, 2000),
+            (0.008, 3000),
+            (0.015, 4000),
+        ]
+    ):
         time_left = 480 - (time.time() - t_start)
         if time_left < 20:
             break
         rnd_time = min(60, time_left / max(1, 8 - rnd))
-        print(f"\n  Round {rnd+1} (sigma={sigma}, seed={seed}, {rnd_time:.0f}s):")
+        print(f"\n  Round {rnd + 1} (sigma={sigma}, seed={seed}, {rnd_time:.0f}s):")
         f_p, C_p = perturb_search(
-            f_best, n_trials=20000, time_limit=rnd_time,
-            seed=seed, sigma=sigma, verbose=True,
+            f_best,
+            n_trials=20000,
+            time_limit=rnd_time,
+            seed=seed,
+            sigma=sigma,
+            verbose=True,
         )
         if C_p > C_best:
             C_best = C_p
             f_best = f_p
-            print(f"  Round {rnd+1} improved: C={C_best:.13f}")
+            print(f"  Round {rnd + 1} improved: C={C_best:.13f}")
 
     dt2 = time.time() - t_start
     print(f"\n  Phase 2: C={C_best:.13f} ({dt2:.1f}s)")
@@ -440,8 +460,12 @@ def main():
         print(f"\n--- Phase 3: CPU float64 L-BFGS ({time_left:.0f}s) ---")
         betas_cpu = [1e5, 5e5, 1e6, 5e6]
         f_cpu, C_cpu = optimize_cpu_lbfgs(
-            f_best, betas=betas_cpu, n_outer=3, maxiter=300,
-            time_limit=time_left - 10, verbose=True,
+            f_best,
+            betas=betas_cpu,
+            n_outer=3,
+            maxiter=300,
+            time_limit=time_left - 10,
+            verbose=True,
         )
         if C_cpu > C_best:
             C_best = C_cpu
@@ -453,9 +477,9 @@ def main():
     # -----------------------------------------------------------------------
     # Final verification
     # -----------------------------------------------------------------------
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("Final Verification")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     arena_score = cpu_score_f64(f_best)
     fast_score = fast_evaluate(f_best)

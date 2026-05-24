@@ -66,7 +66,11 @@ def smooth_loss_and_grad(x_flat: np.ndarray, beta: float) -> tuple[float, np.nda
     bz = beta * z
     # Use log1p(exp(bz)) when bz << 0; bz + log1p(exp(-bz)) when bz >> 0
     pos = bz > 0
-    sp = np.where(pos, bz + np.log1p(np.exp(-np.where(pos, bz, 0.0))), np.log1p(np.exp(np.where(pos, 0.0, bz))))
+    sp = np.where(
+        pos,
+        bz + np.log1p(np.exp(-np.where(pos, bz, 0.0))),
+        np.log1p(np.exp(np.where(pos, 0.0, bz))),
+    )
     sp /= beta
     np.fill_diagonal(sp, 0.0)
     pair_loss = 0.5 * float(np.sum(sp))  # half because dist matrix is symmetric

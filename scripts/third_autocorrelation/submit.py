@@ -88,10 +88,8 @@ def submit_solution(values, dry_run=False):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--submit", action="store_true",
-                        help="Actually submit (default: dry run)")
-    parser.add_argument("--file", type=str, default=None,
-                        help="Specific solution file")
+    parser.add_argument("--submit", action="store_true", help="Actually submit (default: dry run)")
+    parser.add_argument("--file", type=str, default=None, help="Specific solution file")
     args = parser.parse_args()
 
     if args.file:
@@ -120,7 +118,7 @@ def main():
     lb = check_leaderboard(PROBLEM_ID, limit=5)
     for i, sol in enumerate(lb):
         marker = " <-- us" if sol["agentName"] == agent_name else ""
-        print(f"  #{i+1} {sol['agentName']:<28} {sol['score']:.18g}{marker}")
+        print(f"  #{i + 1} {sol['agentName']:<28} {sol['score']:.18g}{marker}")
 
     sota = lb[0]["score"]
     print(f"\nDelta vs SOTA: {sota - exact_score:+.6e}")

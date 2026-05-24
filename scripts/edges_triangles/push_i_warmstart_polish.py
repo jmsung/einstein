@@ -5,20 +5,21 @@ extracts more from each basin. Polish each competitor separately, then combine
 via multi-seed BH from the best.
 """
 
-import json
-import shutil
 import sys
-import time
 from pathlib import Path
 
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
-from push_g_bounded import lbfgs_polish_bounded, perturb_log_gaps, save_solution, true_score  # noqa: E402
+from push_g_bounded import (  # noqa: E402
+    lbfgs_polish_bounded,
+    perturb_log_gaps,
+    save_solution,
+    true_score,
+)
 
 RESULTS = Path("results/problem-13-edges-triangles")
 WARM_DIR = RESULTS / "warm-starts"
@@ -49,7 +50,7 @@ def main():
         # Deep polish
         polished, _ = lbfgs_polish_bounded(multi_xs, bi_xs, max_rounds=100)
         ps = true_score(bi_xs, polished)
-        print(f"  Polished: {ps:.14f}  delta={ps-init:+.3e}")
+        print(f"  Polished: {ps:.14f}  delta={ps - init:+.3e}")
 
         # BH from polished
         rng = np.random.default_rng(int(wf.stem.split("id")[-1][:3]) + 1)
@@ -67,13 +68,13 @@ def main():
                         wbest = pol.copy()
                 except Exception:
                     pass
-        print(f"  After BH: {wscore:.14f}  delta={wscore-ps:+.3e}")
+        print(f"  After BH: {wscore:.14f}  delta={wscore - ps:+.3e}")
 
         if wscore > best_score + 1e-13:
             best_multi = wbest.copy()
             best_bi = bi_xs.copy()
             best_score = wscore
-            print(f"  *** NEW OVERALL BEST ***")
+            print("  *** NEW OVERALL BEST ***")
 
     print(f"\nFinal best: {best_score:.14f}")
     print(f"Gain vs current: {best_score - current_best:+.3e}")

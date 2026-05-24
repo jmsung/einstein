@@ -22,10 +22,10 @@ import torch
 
 from einstein.first_autocorrelation.evaluator import verify_and_compute
 
-
 # ----------------------------------------------------------------------------
 # Fourier basis: v parameterized by T complex rfft coefficients
 # ----------------------------------------------------------------------------
+
 
 def v_from_coefs(c_re: torch.Tensor, c_im: torch.Tensor, n: int) -> torch.Tensor:
     """Reconstruct v (real length n) from its first T rfft coefficients.
@@ -56,6 +56,7 @@ def coefs_from_v(v: np.ndarray, T: int):
 # ----------------------------------------------------------------------------
 # Objective: smooth surrogate C(f) with f = exp(v)
 # ----------------------------------------------------------------------------
+
 
 def autoconv_fft(f: torch.Tensor) -> torch.Tensor:
     n = f.shape[-1]
@@ -95,6 +96,7 @@ def exact_C_from_coefs(c_re: torch.Tensor, c_im: torch.Tensor, n: int) -> float:
 # Main optimization
 # ----------------------------------------------------------------------------
 
+
 def optimize_fourier(
     warmstart: Path,
     T: int,
@@ -112,7 +114,7 @@ def optimize_fourier(
         d = json.load(fh)
     f_warm = np.array(d["values"], dtype=np.float64)
     n = len(f_warm)
-    print(f"Warmstart: {warmstart}  n={n}  T={T}  (DoF = {2*T})", flush=True)
+    print(f"Warmstart: {warmstart}  n={n}  T={T}  (DoF = {2 * T})", flush=True)
 
     v_warm = np.log(np.maximum(f_warm, floor))
     C_initial = float(verify_and_compute(f_warm.tolist()))
@@ -137,9 +139,13 @@ def optimize_fourier(
 
     for beta in betas:
         opt = torch.optim.LBFGS(
-            [c_re, c_im], lr=lr, max_iter=iters,
-            tolerance_grad=1e-14, tolerance_change=1e-18,
-            history_size=100, line_search_fn="strong_wolfe",
+            [c_re, c_im],
+            lr=lr,
+            max_iter=iters,
+            tolerance_grad=1e-14,
+            tolerance_change=1e-18,
+            history_size=100,
+            line_search_fn="strong_wolfe",
         )
 
         def closure():
@@ -153,7 +159,7 @@ def optimize_fourier(
         c_now = exact_C_from_coefs(c_re, c_im, n)
         print(
             f"  beta={beta:.0e}  C={c_now:.16f}  "
-            f"delta_best={best_C - c_now:+.3e}  ({time.time()-t0:.1f}s)",
+            f"delta_best={best_C - c_now:+.3e}  ({time.time() - t0:.1f}s)",
             flush=True,
         )
         if c_now < best_C:
@@ -163,11 +169,15 @@ def optimize_fourier(
 
     # Reconstruct best f
     with torch.no_grad():
-        best_v = v_from_coefs(
-            torch.tensor(best_c_re, dtype=torch.float64),
-            torch.tensor(best_c_im, dtype=torch.float64),
-            n,
-        ).cpu().numpy()
+        best_v = (
+            v_from_coefs(
+                torch.tensor(best_c_re, dtype=torch.float64),
+                torch.tensor(best_c_im, dtype=torch.float64),
+                n,
+            )
+            .cpu()
+            .numpy()
+        )
     best_f = np.exp(best_v).astype(np.float64)
     return best_f, best_C
 
@@ -175,8 +185,9 @@ def optimize_fourier(
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--warmstart", type=Path, required=True)
-    p.add_argument("--T", type=int, default=500,
-                   help="Fourier bandwidth (first T rfft coefficients)")
+    p.add_argument(
+        "--T", type=int, default=500, help="Fourier bandwidth (first T rfft coefficients)"
+    )
     p.add_argument("--betas", type=str, default="1e6,1e7,1e8,1e9,1e10,1e11")
     p.add_argument("--iters", type=int, default=1500)
     p.add_argument("--lr", type=float, default=1.0)
@@ -188,23 +199,32 @@ def main():
 
     betas = [float(b) for b in args.betas.split(",")]
     best_f, best_C = optimize_fourier(
-        args.warmstart, args.T, betas, args.iters, args.lr,
-        args.seed, args.noise, args.floor,
+        args.warmstart,
+        args.T,
+        betas,
+        args.iters,
+        args.lr,
+        args.seed,
+        args.noise,
+        args.floor,
     )
 
-    print(f"\n=== FINAL ===", flush=True)
+    print("\n=== FINAL ===", flush=True)
     print(f"Best C = {best_C:.16f}")
 
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         with open(args.out, "w") as fh:
-            json.dump({
-                "values": best_f.tolist(),
-                "score": best_C,
-                "n": len(best_f),
-                "T": args.T,
-                "warmstart": str(args.warmstart),
-            }, fh)
+            json.dump(
+                {
+                    "values": best_f.tolist(),
+                    "score": best_C,
+                    "n": len(best_f),
+                    "T": args.T,
+                    "warmstart": str(args.warmstart),
+                },
+                fh,
+            )
         print(f"Saved: {args.out}")
 
 

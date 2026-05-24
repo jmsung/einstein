@@ -35,10 +35,9 @@ def test_arena_score_matches_leaderboard(sol_path: Path) -> None:
     pts = data["data"]["points"]
     claimed = data["score"]
     ours = arena_score(pts)
-    assert ours == claimed, (
-        f"{sol_path.name}: arena_score={ours!r} vs claimed={claimed!r}, "
-        f"delta={ours - claimed:.3e}"
-    )
+    assert (
+        ours == claimed
+    ), f"{sol_path.name}: arena_score={ours!r} vs claimed={claimed!r}, delta={ours - claimed:.3e}"
 
 
 def test_fast_score_matches_arena_on_top_solution() -> None:
@@ -57,10 +56,9 @@ def test_top_solution_has_many_active_triples() -> None:
     data = json.loads(paths[0].read_text())
     pts = data["data"]["points"]
     active = active_triples(pts, rel_tol=1e-9)
-    assert len(active) >= 10, (
-        f"top solution should equioscillate with 10+ active triples, "
-        f"got {len(active)}"
-    )
+    assert (
+        len(active) >= 10
+    ), f"top solution should equioscillate with 10+ active triples, got {len(active)}"
 
 
 def test_in_triangle_accepts_top_solution() -> None:
@@ -80,6 +78,7 @@ def test_min_triangle_area_consistency() -> None:
     pts = data["data"]["points"]
     area, triple = min_triangle_area(pts)
     import math
+
     assert area / (math.sqrt(3) / 4) == arena_score(pts)
     i, j, k = triple
     assert 0 <= i < j < k < 11

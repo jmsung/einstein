@@ -25,17 +25,15 @@ as the optimization variable.
 """
 
 import sys
+
 sys.path.insert(0, "src")
 
 import json
 import time
-import numpy as np
 from pathlib import Path
-from scipy.signal import fftconvolve
-from scipy.optimize import minimize as scipy_minimize
 
-from einstein.erdos.fast import fast_evaluate
-from einstein.erdos.evaluator import evaluate as exact_evaluate
+import numpy as np
+from scipy.signal import fftconvolve
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 
@@ -74,7 +72,7 @@ def analyze_solution(h, label=""):
 
     # Autocorrelation
     corr = fftconvolve(h_norm, h_norm[::-1], mode="full")
-    autocorr = corr[n-1:]  # lags 0 to n-1
+    autocorr = corr[n - 1 :]  # lags 0 to n-1
 
     # Cross-correlation with 1-h
     cross = fftconvolve(h_norm, (1.0 - h_norm)[::-1], mode="full")
@@ -93,7 +91,7 @@ def analyze_solution(h, label=""):
     print(f"  Autocorr range: [{autocorr.min():.6f}, {autocorr.max():.6f}]")
     print(f"  Autocorr std: {autocorr[1:].std():.6f}")
     print(f"  Power spectrum range: [{power[1:].min():.2f}, {power[1:].max():.2f}]")
-    print(f"  Power spectrum CV: {power[1:].std()/power[1:].mean():.4f}")
+    print(f"  Power spectrum CV: {power[1:].std() / power[1:].mean():.4f}")
     print(f"  Active lags (equioscillation): {active_lags}/{len(cross)}")
 
     return score, autocorr, power
@@ -109,6 +107,7 @@ def spectral_optimizer(n=600, n_iters=10000, lr=0.01, time_limit=300, seed=0):
     The phases control the time-domain shape of h.
     """
     import torch
+
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     dtype = torch.float32
     torch.manual_seed(seed)
@@ -194,8 +193,9 @@ def spectral_optimizer(n=600, n_iters=10000, lr=0.01, time_limit=300, seed=0):
                 best_h = h_np.copy()
 
         if (trial + 1) % 5 == 0:
-            print(f"  trial {trial+1}: trial_best={trial_best:.10f}, "
-                  f"global_best={best_score:.10f}")
+            print(
+                f"  trial {trial + 1}: trial_best={trial_best:.10f}, global_best={best_score:.10f}"
+            )
 
     return best_h, best_score
 
@@ -212,6 +212,7 @@ def gradient_masking_optimizer(h_init, n_iters=50000, time_limit=300, seed=0):
     to a new (lower) lag.
     """
     import torch
+
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     dtype = torch.float32
     torch.manual_seed(seed)
@@ -299,9 +300,8 @@ def main():
     # 1. Spectral optimizer
     print("\n--- Spectral optimizer ---")
     t0 = time.time()
-    h1, s1 = spectral_optimizer(n=600, n_iters=10000, lr=0.01,
-                                 time_limit=300, seed=42)
-    print(f"  Spectral: {s1:.13f} ({time.time()-t0:.0f}s)")
+    h1, s1 = spectral_optimizer(n=600, n_iters=10000, lr=0.01, time_limit=300, seed=42)
+    print(f"  Spectral: {s1:.13f} ({time.time() - t0:.0f}s)")
     results["spectral"] = (h1, s1)
     if h1 is not None:
         analyze_solution(h1, "Spectral")
@@ -309,18 +309,16 @@ def main():
     # 2. Gradient masking
     print("\n--- Gradient masking optimizer ---")
     t0 = time.time()
-    h2, s2 = gradient_masking_optimizer(h_sota, n_iters=50000,
-                                         time_limit=300, seed=42)
-    print(f"  Grad mask: {s2:.13f} ({time.time()-t0:.0f}s)")
+    h2, s2 = gradient_masking_optimizer(h_sota, n_iters=50000, time_limit=300, seed=42)
+    print(f"  Grad mask: {s2:.13f} ({time.time() - t0:.0f}s)")
     results["grad_mask"] = (h2, s2)
 
     # 3. Spectral at different n
     print("\n--- Spectral at different n ---")
     for n in [300, 400, 500, 800]:
         t0 = time.time()
-        h3, s3 = spectral_optimizer(n=n, n_iters=5000, lr=0.01,
-                                     time_limit=90, seed=42)
-        print(f"  Spectral n={n}: {s3:.13f} ({time.time()-t0:.0f}s)")
+        h3, s3 = spectral_optimizer(n=n, n_iters=5000, lr=0.01, time_limit=90, seed=42)
+        print(f"  Spectral n={n}: {s3:.13f} ({time.time() - t0:.0f}s)")
         results[f"spectral_n{n}"] = (h3, s3)
 
     # Summary

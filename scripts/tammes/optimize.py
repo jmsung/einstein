@@ -25,8 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from check_submission import check_leaderboard  # noqa: E402
 
 from einstein.tammes.evaluator import evaluate  # noqa: E402
-from einstein.tammes.polish import slsqp_polish, normalize, min_dist  # noqa: E402
-
+from einstein.tammes.polish import min_dist, normalize, slsqp_polish  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RESULTS_DIR = REPO_ROOT / "results" / "problem-11-tammes"
@@ -45,8 +44,9 @@ def live_rank(score: float) -> str:
     return f"rank {projected} (of {len(lb)} visible)"
 
 
-def iterated_polish(P: np.ndarray, n_iters: int, perturb_sigma: float,
-                    seed: int, verbose: bool = False) -> np.ndarray:
+def iterated_polish(
+    P: np.ndarray, n_iters: int, perturb_sigma: float, seed: int, verbose: bool = False
+) -> np.ndarray:
     """Run the SLSQP polish ``n_iters`` times, with a tiny tangent-space
     perturbation between iterations to break symmetric stagnation.
     Returns the configuration with the highest observed min distance.
@@ -93,9 +93,12 @@ def _resolve_seed(source: str) -> Path:
 
 def main():
     parser = argparse.ArgumentParser(description="Tammes (n=50) optimizer")
-    parser.add_argument("--source", type=str, required=True,
-                        help="Seed JSON (absolute path, or filename under "
-                             "$EINSTEIN_TAMMES_SEEDS)")
+    parser.add_argument(
+        "--source",
+        type=str,
+        required=True,
+        help="Seed JSON (absolute path, or filename under $EINSTEIN_TAMMES_SEEDS)",
+    )
     parser.add_argument("--polish-iters", type=int, default=30)
     parser.add_argument("--perturb-sigma", type=float, default=1e-13)
     parser.add_argument("--seed", type=int, default=0)

@@ -31,6 +31,7 @@ def fetch_min_improvement(problem_id: int) -> float:
             return float(p["minImprovement"])
     raise RuntimeError(f"problem_id {problem_id} not found in /api/problems")
 
+
 RESULTS_DIR = Path("results/problem-11-tammes")
 PROBLEM_ID = 11
 
@@ -67,7 +68,7 @@ def main():
     print("\nLive leaderboard top 5:")
     for i, e in enumerate(lb[:5]):
         marker = " ← us" if e["agentName"] == load_agent_name() else ""
-        print(f"  #{i+1} {e['agentName'][:25]:25s} {e['score']:.16f}{marker}")
+        print(f"  #{i + 1} {e['agentName'][:25]:25s} {e['score']:.16f}{marker}")
 
     print()
     print("Pre-submission checklist:")
@@ -84,7 +85,9 @@ def main():
     equal = sum(1 for e in sorted_lb if e["score"] == best_score)
     projected_rank = higher + 1 + equal  # ties: we go after older equals
     c3 = projected_rank <= 3
-    print(f"  [{'x' if c3 else ' '}] 3. Projected rank top 3 (rank {projected_rank}, score {best_score:.13f})")
+    print(
+        f"  [{'x' if c3 else ' '}] 3. Projected rank top 3 (rank {projected_rank}, score {best_score:.13f})"
+    )
 
     # minImprovement check (vs our previous best, if any) — fetched from API per CLAUDE.md
     agent_name = load_agent_name()
@@ -94,7 +97,9 @@ def main():
     if our_prev is not None:
         delta = best_score - our_prev
         min_imp_ok = delta >= min_imp
-        print(f"  [{'x' if min_imp_ok else ' '}] 4. minImprovement (Δ={delta:+.3e} vs prev {our_prev:.13f}, threshold {min_imp:.0e})")
+        print(
+            f"  [{'x' if min_imp_ok else ' '}] 4. minImprovement (Δ={delta:+.3e} vs prev {our_prev:.13f}, threshold {min_imp:.0e})"
+        )
     else:
         print(f"  [x] 4. No previous submission — minImprovement N/A (threshold {min_imp:.0e})")
 
@@ -110,7 +115,9 @@ def main():
     print("All checks PASS.")
 
     if dry_run:
-        print(f"\nDRY RUN: would submit (problem={PROBLEM_ID}, score={best_score:.16f}, projected rank {projected_rank})")
+        print(
+            f"\nDRY RUN: would submit (problem={PROBLEM_ID}, score={best_score:.16f}, projected rank {projected_rank})"
+        )
         return
     if not do_submit:
         print("\nNot submitting (use --submit to actually submit).")

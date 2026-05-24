@@ -9,7 +9,7 @@ eliminating most Python overhead while keeping the code readable.
 """
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 import torch
@@ -92,9 +92,7 @@ class ParallelTemperingSA:
         print(f"Initial: {initial_score:.15f}")
 
         # Temperature ladder
-        temps = torch.tensor(
-            np.geomspace(cfg.t_min, cfg.t_max, R), device=device, dtype=dtype
-        )
+        temps = torch.tensor(np.geomspace(cfg.t_min, cfg.t_max, R), device=device, dtype=dtype)
         print(f"R={R}, K={K}, scale={cfg.scale:.0e}, T=[{temps[0]:.1e}..{temps[-1]:.1e}]")
 
         # Replicas
@@ -146,7 +144,9 @@ class ParallelTemperingSA:
 
                 # Metropolis acceptance
                 accept_prob = torch.exp((-deltas / temps).clamp(max=0))
-                accept_mask = (deltas < 0) | (torch.rand(R, device=device, dtype=dtype) < accept_prob)
+                accept_mask = (deltas < 0) | (
+                    torch.rand(R, device=device, dtype=dtype) < accept_prob
+                )
 
                 losses += torch.where(accept_mask, deltas, torch.zeros_like(deltas))
                 step_acc += accept_mask.sum().item()
@@ -180,8 +180,8 @@ class ParallelTemperingSA:
                 pps = total_perts / elapsed
 
                 print(
-                    f"  step {step+1:>8,d} | {elapsed:.0f}s | {pps:.0f} p/s | "
-                    f"BEST={exact:.15f} (Δ={initial_score-exact:.2e}) | "
+                    f"  step {step + 1:>8,d} | {elapsed:.0f}s | {pps:.0f} p/s | "
+                    f"BEST={exact:.15f} (Δ={initial_score - exact:.2e}) | "
                     f"acc={accept_rate:.2f}% | swap={swap_rate:.1f}%"
                 )
                 for r in [0, R // 4, R // 2, 3 * R // 4, R - 1]:

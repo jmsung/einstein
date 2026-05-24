@@ -10,8 +10,6 @@ Strategies:
 Runs many seeds (60+) with all 5 strategies. Uses bounded L-BFGS as local minimizer.
 """
 
-import json
-import shutil
 import sys
 import time
 from pathlib import Path
@@ -19,7 +17,6 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
@@ -50,10 +47,10 @@ def perturb_block_shuffle(multi_xs, win_size, rng):
     start = rng.integers(1, m - win_size - 1)
     gaps = np.diff(np.concatenate([[X_LO], multi_xs, [X_HI]]))
     # Shuffle the gaps in window [start, start+win_size]
-    window_gaps = gaps[start:start + win_size].copy()
+    window_gaps = gaps[start : start + win_size].copy()
     rng.shuffle(window_gaps)
     new_gaps = gaps.copy()
-    new_gaps[start:start + win_size] = window_gaps
+    new_gaps[start : start + win_size] = window_gaps
     new_multi = X_LO + np.cumsum(new_gaps[:-1])
     return np.sort(np.clip(new_multi, X_LO + 1e-14, X_HI - 1e-14))
 
@@ -61,7 +58,7 @@ def perturb_block_shuffle(multi_xs, win_size, rng):
 def perturb_scallop_redistribute(multi_xs, scallop_k, rng, noise=0.3):
     """Randomly redistribute points within a specific scallop."""
     k = scallop_k
-    lo, hi = 1 - 1/k + 1e-10, 1 - 1/(k+1) - 1e-10
+    lo, hi = 1 - 1 / k + 1e-10, 1 - 1 / (k + 1) - 1e-10
     mask = (multi_xs >= lo) & (multi_xs <= hi)
     n_in = mask.sum()
     if n_in < 2:
@@ -90,15 +87,19 @@ def perturb_adjacent_pair_swap_or_replace(multi_xs, n_swaps, rng):
     result = multi_xs.copy()
     for _ in range(n_swaps):
         i = rng.integers(0, len(result) - 1)
-        mid = (result[i] + result[i+1]) / 2
-        spread = (result[i+1] - result[i]) * 0.4
+        mid = (result[i] + result[i + 1]) / 2
+        spread = (result[i + 1] - result[i]) * 0.4
         result[i] = mid - spread
-        result[i+1] = mid + spread
+        result[i + 1] = mid + spread
     return np.sort(np.clip(result, X_LO + 1e-14, X_HI - 1e-14))
 
 
 def try_perturbation(
-    multi, bi_xs, strategy: str, params: dict, rng,
+    multi,
+    bi_xs,
+    strategy: str,
+    params: dict,
+    rng,
 ) -> tuple[np.ndarray, float] | None:
     if strategy == "log_gap":
         pert = perturb_log_gaps(multi, params["noise"], rng)
@@ -131,7 +132,7 @@ def main():
     # Initial polish
     polished, _ = lbfgs_polish_bounded(multi_xs, bi_xs, max_rounds=60)
     psc = true_score(bi_xs, polished)
-    print(f"Polish : {psc:.14f}  delta={psc-init_score:+.2e}")
+    print(f"Polish : {psc:.14f}  delta={psc - init_score:+.2e}")
     if psc > best_score:
         best_multi = polished.copy()
         best_score = psc
@@ -176,7 +177,9 @@ def main():
                 best_score = sc
                 n_improvements += 1
                 improvements.append((strategy, params, sc))
-                print(f"  seed={seed:2d} {strategy:<15} {params}: {sc:.14f} (+{sc-init_score:.3e})")
+                print(
+                    f"  seed={seed:2d} {strategy:<15} {params}: {sc:.14f} (+{sc - init_score:.3e})"
+                )
         else:
             continue
         break
@@ -190,6 +193,7 @@ def main():
     # Strategy effectiveness
     if improvements:
         from collections import Counter
+
         strat_counts = Counter(s for s, _, _ in improvements)
         print("\nStrategy win counts:")
         for s, c in strat_counts.most_common():

@@ -28,7 +28,6 @@ os.environ["PYTHONUNBUFFERED"] = "1"
 
 import numpy as np
 import torch
-from scipy.signal import fftconvolve
 
 sys.path.insert(0, "src")
 from einstein.erdos.evaluator import evaluate as exact_evaluate
@@ -67,7 +66,7 @@ def correlation(a: np.ndarray, b: np.ndarray) -> float:
     """Pearson correlation between two vectors."""
     a_c = a - a.mean()
     b_c = b - b.mean()
-    denom = np.sqrt((a_c ** 2).sum() * (b_c ** 2).sum())
+    denom = np.sqrt((a_c**2).sum() * (b_c**2).sum())
     if denom < 1e-15:
         return 0.0
     return float((a_c * b_c).sum() / denom)
@@ -94,9 +93,13 @@ def generate_sota_proxy() -> np.ndarray:
     return project(h)
 
 
-def quick_adam_polish(h_init: np.ndarray, n_iters: int = 5000,
-                      lr: float = 0.005, batch_size: int = 1,
-                      time_limit: float = 30.0) -> tuple[np.ndarray, float]:
+def quick_adam_polish(
+    h_init: np.ndarray,
+    n_iters: int = 5000,
+    lr: float = 0.005,
+    batch_size: int = 1,
+    time_limit: float = 30.0,
+) -> tuple[np.ndarray, float]:
     """Polish a single solution with batched Adam (torch).
 
     Returns (best_h_numpy, best_score).
@@ -178,9 +181,9 @@ def quick_adam_polish(h_init: np.ndarray, n_iters: int = 5000,
     return best_h, verified
 
 
-def batched_adam_polish(h_inits: list[np.ndarray], n_iters: int = 10000,
-                        lr: float = 0.005, time_limit: float = 120.0
-                        ) -> list[tuple[np.ndarray, float]]:
+def batched_adam_polish(
+    h_inits: list[np.ndarray], n_iters: int = 10000, lr: float = 0.005, time_limit: float = 120.0
+) -> list[tuple[np.ndarray, float]]:
     """Polish multiple solutions simultaneously with batched Adam.
 
     Args:
@@ -250,16 +253,17 @@ def batched_adam_polish(h_inits: list[np.ndarray], n_iters: int = 10000,
     return results
 
 
-def register_basin(h: np.ndarray, score: float, method: str,
-                   ref_h: np.ndarray | None = None):
+def register_basin(h: np.ndarray, score: float, method: str, ref_h: np.ndarray | None = None):
     """Register a discovered basin, computing correlation with reference."""
     corr = correlation(h, ref_h) if ref_h is not None else 0.0
-    basins.append({
-        "score": score,
-        "h": h.copy(),
-        "correlation_with_ref": corr,
-        "method": method,
-    })
+    basins.append(
+        {
+            "score": score,
+            "h": h.copy(),
+            "correlation_with_ref": corr,
+            "method": method,
+        }
+    )
 
 
 def save_best():
@@ -291,7 +295,7 @@ def print_basin_summary(ref_h: np.ndarray | None = None):
     for i, b in enumerate(sorted_basins[:20]):
         corr_str = f"corr={b['correlation_with_ref']:.3f}" if ref_h is not None else ""
         beat = " *** BEATS SOTA ***" if b["score"] < SOTA_SCORE else ""
-        print(f"  #{i+1}: C={b['score']:.10f} {corr_str} [{b['method']}]{beat}")
+        print(f"  #{i + 1}: C={b['score']:.10f} {corr_str} [{b['method']}]{beat}")
     if len(sorted_basins) > 20:
         print(f"  ... and {len(sorted_basins) - 20} more")
     print(f"{'=' * 70}")
@@ -300,6 +304,7 @@ def print_basin_summary(ref_h: np.ndarray | None = None):
 # ===========================================================================
 # Method 1: Basin Hopping (large perturbation + polish)
 # ===========================================================================
+
 
 def method1_basin_hopping(ref_h: np.ndarray, time_limit: float = 1200.0):
     """Basin hopping: large perturbation from reference, then Adam polish.
@@ -338,9 +343,9 @@ def method1_basin_hopping(ref_h: np.ndarray, time_limit: float = 1200.0):
             block_len = rng.integers(N // 20, N // 4)
             i1 = rng.integers(N - block_len)
             i2 = rng.integers(N - block_len)
-            perturbed[i1:i1 + block_len], perturbed[i2:i2 + block_len] = (
-                perturbed[i2:i2 + block_len].copy(),
-                perturbed[i1:i1 + block_len].copy(),
+            perturbed[i1 : i1 + block_len], perturbed[i2 : i2 + block_len] = (
+                perturbed[i2 : i2 + block_len].copy(),
+                perturbed[i1 : i1 + block_len].copy(),
             )
             perturbed += sigma * 0.3 * rng.standard_normal(N)
         elif strategy == 2:
@@ -352,7 +357,7 @@ def method1_basin_hopping(ref_h: np.ndarray, time_limit: float = 1200.0):
             perturbed = ref_h.copy()
             seg_len = rng.integers(N // 10, N // 3)
             start = rng.integers(N - seg_len)
-            perturbed[start:start + seg_len] = perturbed[start:start + seg_len][::-1]
+            perturbed[start : start + seg_len] = perturbed[start : start + seg_len][::-1]
             perturbed += sigma * 0.3 * rng.standard_normal(N)
 
         perturbed = project(perturbed)
@@ -365,15 +370,18 @@ def method1_basin_hopping(ref_h: np.ndarray, time_limit: float = 1200.0):
         if len(batch_candidates) >= batch_size or (remaining < 60 and batch_candidates):
             polish_time = min(remaining * 0.7, 30.0 * len(batch_candidates))
             results = batched_adam_polish(
-                batch_candidates, n_iters=8000, lr=0.005,
+                batch_candidates,
+                n_iters=8000,
+                lr=0.005,
                 time_limit=polish_time,
             )
             for (h_pol, score), meta in zip(results, batch_meta):
                 register_basin(h_pol, score, f"M1:{meta}", ref_h)
                 corr = correlation(h_pol, ref_h)
                 if score < SOTA_SCORE:
-                    print(f"  *** HOP {n_hops}: BEATS SOTA! C={score:.10f}, "
-                          f"corr={corr:.3f} [{meta}]")
+                    print(
+                        f"  *** HOP {n_hops}: BEATS SOTA! C={score:.10f}, corr={corr:.3f} [{meta}]"
+                    )
                 elif n_hops <= 5 or score < SOTA_SCORE + 0.005:
                     print(f"  hop {n_hops}: C={score:.10f}, corr={corr:.3f} [{meta}]")
 
@@ -393,8 +401,10 @@ def method1_basin_hopping(ref_h: np.ndarray, time_limit: float = 1200.0):
 # Method 2: Population-based search (diverse cold starts)
 # ===========================================================================
 
-def generate_diverse_starts(n_pop: int, rng: np.random.Generator,
-                            ref_h: np.ndarray) -> list[np.ndarray]:
+
+def generate_diverse_starts(
+    n_pop: int, rng: np.random.Generator, ref_h: np.ndarray
+) -> list[np.ndarray]:
     """Generate diverse starting points using different constructions."""
     starts = []
     x = np.linspace(0, 2, N, endpoint=False)
@@ -423,7 +433,7 @@ def generate_diverse_starts(n_pop: int, rng: np.random.Generator,
     # 5. Step function variants
     for frac in np.linspace(0.3, 0.7, n_pop // 10):
         h = np.zeros(N)
-        h[:int(N * frac)] = 1.0
+        h[: int(N * frac)] = 1.0
         # Smooth edges
         edge = N // 20
         for i in range(edge):
@@ -498,12 +508,15 @@ def method2_population(ref_h: np.ndarray, time_limit: float = 1200.0):
             print(f"  Time running low ({remaining:.0f}s), stopping early")
             break
 
-        batch = population[batch_start:batch_start + batch_sz]
+        batch = population[batch_start : batch_start + batch_sz]
         actual_bs = len(batch)
         polish_time = min(remaining * 0.6, 60.0)
 
         results = batched_adam_polish(
-            batch, n_iters=15000, lr=0.005, time_limit=polish_time,
+            batch,
+            n_iters=15000,
+            lr=0.005,
+            time_limit=polish_time,
         )
 
         for i, (h_pol, score) in enumerate(results):
@@ -513,17 +526,16 @@ def method2_population(ref_h: np.ndarray, time_limit: float = 1200.0):
             register_basin(h_pol, score, f"M2:pop{idx}", ref_h)
 
             if score < SOTA_SCORE:
-                print(f"  *** POP {idx}: BEATS SOTA! C={score:.10f}, "
-                      f"corr={corr:.3f}")
+                print(f"  *** POP {idx}: BEATS SOTA! C={score:.10f}, corr={corr:.3f}")
             elif score < SOTA_SCORE + 0.01:
-                print(f"  pop {idx}: C={score:.10f} (init {init_s:.6f}), "
-                      f"corr={corr:.3f}")
+                print(f"  pop {idx}: C={score:.10f} (init {init_s:.6f}), corr={corr:.3f}")
 
         n_processed += actual_bs
         elapsed = time.time() - t0
         best_so_far = min(basins, key=lambda b: b["score"])["score"] if basins else float("inf")
-        print(f"  [{elapsed:.0f}s] processed={n_processed}/{len(population)}, "
-              f"best={best_so_far:.10f}")
+        print(
+            f"  [{elapsed:.0f}s] processed={n_processed}/{len(population)}, best={best_so_far:.10f}"
+        )
 
     print(f"  Method 2 done: {n_processed} candidates in {time.time() - t0:.0f}s")
     save_best()
@@ -532,6 +544,7 @@ def method2_population(ref_h: np.ndarray, time_limit: float = 1200.0):
 # ===========================================================================
 # Method 3: Simulated Annealing with large structural moves
 # ===========================================================================
+
 
 def method3_simulated_annealing(ref_h: np.ndarray, time_limit: float = 1200.0):
     """Simulated annealing with large structural moves."""
@@ -571,8 +584,10 @@ def method3_simulated_annealing(ref_h: np.ndarray, time_limit: float = 1200.0):
         accepts = 0
         improves = 0
 
-        print(f"\n  SA run {sp_idx + 1}/{len(starting_points)}: "
-              f"start C={current_score:.10f}, time budget={sa_time:.0f}s")
+        print(
+            f"\n  SA run {sp_idx + 1}/{len(starting_points)}: "
+            f"start C={current_score:.10f}, time budget={sa_time:.0f}s"
+        )
 
         sa_t0 = time.time()
         for it in range(n_iters):
@@ -598,9 +613,9 @@ def method3_simulated_annealing(ref_h: np.ndarray, time_limit: float = 1200.0):
                 i1 = rng.integers(N - block_len)
                 i2 = rng.integers(N - block_len)
                 h_new = h.copy()
-                h_new[i1:i1 + block_len], h_new[i2:i2 + block_len] = (
-                    h[i2:i2 + block_len].copy(),
-                    h[i1:i1 + block_len].copy(),
+                h_new[i1 : i1 + block_len], h_new[i2 : i2 + block_len] = (
+                    h[i2 : i2 + block_len].copy(),
+                    h[i1 : i1 + block_len].copy(),
                 )
             elif move_type == 2:
                 # Circular shift of a subsection
@@ -608,28 +623,26 @@ def method3_simulated_annealing(ref_h: np.ndarray, time_limit: float = 1200.0):
                 start = rng.integers(N - seg_len)
                 shift = rng.integers(1, seg_len)
                 h_new = h.copy()
-                h_new[start:start + seg_len] = np.roll(
-                    h[start:start + seg_len], shift
-                )
+                h_new[start : start + seg_len] = np.roll(h[start : start + seg_len], shift)
             elif move_type == 3:
                 # Reverse a subsection
                 seg_len = rng.integers(N // 10, N // 2)
                 start = rng.integers(N - seg_len)
                 h_new = h.copy()
-                h_new[start:start + seg_len] = h[start:start + seg_len][::-1]
+                h_new[start : start + seg_len] = h[start : start + seg_len][::-1]
             elif move_type == 4:
                 # Scale a subsection up/down (balance with complement)
                 seg_len = rng.integers(N // 10, N // 3)
                 start = rng.integers(N - seg_len)
                 scale = rng.uniform(0.8, 1.2)
                 h_new = h.copy()
-                old_sum = h_new[start:start + seg_len].sum()
-                h_new[start:start + seg_len] *= scale
-                new_sum = h_new[start:start + seg_len].sum()
+                old_sum = h_new[start : start + seg_len].sum()
+                h_new[start : start + seg_len] *= scale
+                new_sum = h_new[start : start + seg_len].sum()
                 # Distribute difference across the rest
                 diff = new_sum - old_sum
                 rest_mask = np.ones(N, dtype=bool)
-                rest_mask[start:start + seg_len] = False
+                rest_mask[start : start + seg_len] = False
                 rest_count = rest_mask.sum()
                 if rest_count > 0:
                     h_new[rest_mask] -= diff / rest_count
@@ -665,17 +678,22 @@ def method3_simulated_annealing(ref_h: np.ndarray, time_limit: float = 1200.0):
 
             if (it + 1) % 100_000 == 0:
                 elapsed = time.time() - sa_t0
-                print(f"    iter {it+1}: best={best_score:.10f}, "
-                      f"current={current_score:.10f}, T={T:.6f}, "
-                      f"accepts={accepts}, improves={improves}, "
-                      f"time={elapsed:.0f}s")
+                print(
+                    f"    iter {it + 1}: best={best_score:.10f}, "
+                    f"current={current_score:.10f}, T={T:.6f}, "
+                    f"accepts={accepts}, improves={improves}, "
+                    f"time={elapsed:.0f}s"
+                )
 
         # Polish best with quick Adam
         remaining_sa = sa_time - (time.time() - sa_t0)
         if remaining_sa > 10:
             print(f"  Polishing SA best (C={best_score:.10f}) with Adam...")
             polished_h, polished_score = quick_adam_polish(
-                best_h, n_iters=5000, lr=0.003, batch_size=4,
+                best_h,
+                n_iters=5000,
+                lr=0.003,
+                batch_size=4,
                 time_limit=min(remaining_sa - 5, 30.0),
             )
             if polished_score < best_score:
@@ -687,8 +705,7 @@ def method3_simulated_annealing(ref_h: np.ndarray, time_limit: float = 1200.0):
         register_basin(best_h, best_score, f"M3:SA_run{sp_idx}", ref_h)
 
         if best_score < SOTA_SCORE:
-            print(f"  *** SA RUN {sp_idx}: BEATS SOTA! C={best_score:.10f}, "
-                  f"corr={corr:.3f}")
+            print(f"  *** SA RUN {sp_idx}: BEATS SOTA! C={best_score:.10f}, corr={corr:.3f}")
         else:
             print(f"  SA run {sp_idx} best: C={best_score:.10f}, corr={corr:.3f}")
 
@@ -696,14 +713,14 @@ def method3_simulated_annealing(ref_h: np.ndarray, time_limit: float = 1200.0):
             overall_best_score = best_score
             overall_best_h = best_h.copy()
 
-    print(f"\n  Method 3 done: best={overall_best_score:.10f}, "
-          f"time={time.time() - t0:.0f}s")
+    print(f"\n  Method 3 done: best={overall_best_score:.10f}, time={time.time() - t0:.0f}s")
     save_best()
 
 
 # ===========================================================================
 # Main
 # ===========================================================================
+
 
 def main():
     print("=" * 70)
@@ -721,7 +738,10 @@ def main():
 
     # Polish reference with Adam
     ref_h, ref_score = quick_adam_polish(
-        ref_h_init, n_iters=15000, lr=0.008, batch_size=32,
+        ref_h_init,
+        n_iters=15000,
+        lr=0.008,
+        batch_size=32,
         time_limit=120.0,
     )
     print(f"  Polished reference: C={ref_score:.10f}")
@@ -751,7 +771,7 @@ def main():
         best = min(basins, key=lambda b: b["score"])
         exact_score = exact_evaluate({"values": best["h"].tolist()})
         fast_score = fast_evaluate(best["h"])
-        print(f"\nFinal verification:")
+        print("\nFinal verification:")
         print(f"  Fast:  {fast_score:.13f}")
         print(f"  Exact: {exact_score:.13f}")
         print(f"  Match: {abs(fast_score - exact_score) < 1e-10}")

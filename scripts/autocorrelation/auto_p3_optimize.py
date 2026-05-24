@@ -28,9 +28,7 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 # Load solutions
 SOTA_400K = np.load("/tmp/sota_400k.npy")
 ORIG_1600K = np.load(
-    os.path.expanduser(
-        "~/projects/einstein/cb/results/problem-3-autocorrelation/best_1600k.npy"
-    )
+    os.path.expanduser("~/projects/einstein/cb/results/problem-3-autocorrelation/best_1600k.npy")
 )
 
 ARENA_SOTA = 0.9626433187626762
@@ -273,8 +271,7 @@ def perturbation_search(f_init, n_trials, noise_scale, time_limit, tag="perturb"
             (1e6, 200, 0.0002),
         ]
         w_opt, score = adam_optimize(
-            w, quick_schedule, min(30, time_limit * 0.3 / max(n_trials, 1)),
-            tag=f"{tag}_t{trial}"
+            w, quick_schedule, min(30, time_limit * 0.3 / max(n_trials, 1)), tag=f"{tag}_t{trial}"
         )
 
         if score > best_score:
@@ -347,13 +344,26 @@ ADAM_SCHEDULE_EXTENDED = [
     (1e10, 2000, 0.000001),
 ]
 
-LBFGS_BETAS_DEEP = [
-    1e4, 3e4, 1e5, 3e5, 1e6, 3e6, 1e7, 3e7, 1e8, 3e8, 1e9, 3e9, 1e10
-]
+LBFGS_BETAS_DEEP = [1e4, 3e4, 1e5, 3e5, 1e6, 3e6, 1e7, 3e7, 1e8, 3e8, 1e9, 3e9, 1e10]
 
 LBFGS_BETAS_ULTRA = [
-    1e4, 3e4, 1e5, 3e5, 1e6, 3e6, 1e7, 3e7, 1e8, 3e8, 1e9, 3e9,
-    1e10, 3e10, 1e11, 3e11, 1e12
+    1e4,
+    3e4,
+    1e5,
+    3e5,
+    1e6,
+    3e6,
+    1e7,
+    3e7,
+    1e8,
+    3e8,
+    1e9,
+    3e9,
+    1e10,
+    3e10,
+    1e11,
+    3e11,
+    1e12,
 ]
 
 
@@ -361,7 +371,7 @@ LBFGS_BETAS_ULTRA = [
 #  MAIN CAMPAIGN
 # ══════════════════════════════════════════════════════════════════════
 def main():
-    log(f"Starting Auto P3 Optimization Campaign")
+    log("Starting Auto P3 Optimization Campaign")
     log(f"SOTA: {ARENA_SOTA:.16f}, Target: {TARGET:.16f}")
 
     # Verify starting scores
@@ -383,8 +393,12 @@ def main():
     # A1: Extended L-BFGS Dinkelbach at ultra-high beta
     log("  A1: L-BFGS Dinkelbach at 1.6M (ultra-high beta)")
     w_a1, score_a1 = lbfgs_dinkelbach(
-        w_1600k, LBFGS_BETAS_ULTRA, outer_per_beta=5, maxiter=200,
-        time_limit=900, tag="A1_lbfgs_1600k"
+        w_1600k,
+        LBFGS_BETAS_ULTRA,
+        outer_per_beta=5,
+        maxiter=200,
+        time_limit=900,
+        tag="A1_lbfgs_1600k",
     )
     log(f"  A1 result: {score_a1:.16f}")
 
@@ -445,9 +459,7 @@ def main():
     f_600k = upsample(SOTA_400K, 600000)
     log(f"  C1 init (upsample 400k): C={fast_evaluate(f_600k):.16f}")
     w_c1 = np.sqrt(f_600k + 1e-30)
-    w_c1_opt, score_c1 = adam_optimize(
-        w_c1, ADAM_SCHEDULE_DEEP, time_limit=600, tag="C1_600k"
-    )
+    w_c1_opt, score_c1 = adam_optimize(w_c1, ADAM_SCHEDULE_DEEP, time_limit=600, tag="C1_600k")
     w_c1_ref, score_c1_ref = lbfgs_dinkelbach(
         w_c1_opt, LBFGS_BETAS_DEEP, 5, 200, 300, tag="C1_600k_lbfgs"
     )
@@ -472,9 +484,7 @@ def main():
 
     # D1: Direct L-BFGS on SOTA
     w_400k = np.sqrt(SOTA_400K + 1e-30)
-    w_d1, score_d1 = lbfgs_dinkelbach(
-        w_400k, LBFGS_BETAS_ULTRA, 5, 200, 600, tag="D1_400k_lbfgs"
-    )
+    w_d1, score_d1 = lbfgs_dinkelbach(w_400k, LBFGS_BETAS_ULTRA, 5, 200, 600, tag="D1_400k_lbfgs")
     log(f"  D1 result: {score_d1:.16f}")
 
     # D2: Transplant 1.6M → 400k with different thresholds
@@ -483,12 +493,10 @@ def main():
         s0 = fast_evaluate(f_tp)
         w_tp = np.sqrt(f_tp + 1e-30)
         w_tp_opt, s_opt = adam_optimize(
-            w_tp, ADAM_SCHEDULE_DEEP[:6], time_limit=120,
-            tag=f"D2_tp_t{thresh:.0e}"
+            w_tp, ADAM_SCHEDULE_DEEP[:6], time_limit=120, tag=f"D2_tp_t{thresh:.0e}"
         )
         w_tp_ref, s_ref = lbfgs_dinkelbach(
-            w_tp_opt, LBFGS_BETAS_DEEP[:8], 3, 100, 60,
-            tag=f"D2_tp_t{thresh:.0e}_lbfgs"
+            w_tp_opt, LBFGS_BETAS_DEEP[:8], 3, 100, 60, tag=f"D2_tp_t{thresh:.0e}_lbfgs"
         )
         best_s = max(s_opt, s_ref)
         log(f"  D2 threshold={thresh:.0e}: init={s0:.8f} → final={best_s:.16f}")
@@ -504,8 +512,11 @@ def main():
             break
         log(f"  E: noise={noise_level}")
         f_e, score_e = perturbation_search(
-            ORIG_1600K, n_trials=5, noise_scale=noise_level,
-            time_limit=min(300, remaining / 5), tag=f"E_perturb_{noise_level}"
+            ORIG_1600K,
+            n_trials=5,
+            noise_scale=noise_level,
+            time_limit=min(300, remaining / 5),
+            tag=f"E_perturb_{noise_level}",
         )
         log(f"  E noise={noise_level}: {score_e:.16f}")
 

@@ -21,7 +21,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.spatial import ConvexHull
 
-from .evaluator import _TRIPLES, arena_score, all_triangle_areas
+from .evaluator import _TRIPLES, arena_score
 
 N = 14
 _I, _J, _K = _TRIPLES[:, 0], _TRIPLES[:, 1], _TRIPLES[:, 2]
@@ -93,9 +93,7 @@ def polish_slsqp(
 
     def gauge(x: np.ndarray) -> np.ndarray:
         pts = x[:28].reshape(N, 2)
-        return np.concatenate(
-            [pts[i0] - fixed[0], pts[i1] - fixed[1], pts[i2] - fixed[2]]
-        )
+        return np.concatenate([pts[i0] - fixed[0], pts[i1] - fixed[1], pts[i2] - fixed[2]])
 
     def hull_eq(x: np.ndarray) -> float:
         pts = x[:28].reshape(N, 2)

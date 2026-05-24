@@ -11,24 +11,35 @@ Covers:
 import json
 import pathlib
 
-import pytest
 import numpy as np
+import pytest
+
 from einstein.uncertainty.fast import fast_evaluate
-from einstein.uncertainty.verifier import evaluate
 from einstein.uncertainty.hybrid import hybrid_evaluate
+from einstein.uncertainty.verifier import evaluate
 
 _BEST_ROOTS_FILE = (
     pathlib.Path(__file__).parent.parent.parent
-    / "results" / "problem-9-uncertainty" / "best_roots.json"
+    / "results"
+    / "problem-9-uncertainty"
+    / "best_roots.json"
 )
 _best_solution = json.loads(_BEST_ROOTS_FILE.read_text()) if _BEST_ROOTS_FILE.exists() else None
 
 # reference's best k=13 roots
 K13_ROOTS = [
-    3.1427440085666496, 4.469993893132148, 6.078689469782297,
-    32.637646271046336, 38.265477818082566, 41.06153063739393,
-    43.09262298321874, 50.81816373872074, 58.61770809389174,
-    96.07661117430976, 111.48735817427675, 118.74229251036576,
+    3.1427440085666496,
+    4.469993893132148,
+    6.078689469782297,
+    32.637646271046336,
+    38.265477818082566,
+    41.06153063739393,
+    43.09262298321874,
+    50.81816373872074,
+    58.61770809389174,
+    96.07661117430976,
+    111.48735817427675,
+    118.74229251036576,
     141.09580664199572,
 ]
 K13_EXPECTED = 0.3188545891623888
@@ -100,9 +111,9 @@ class TestSmallPerturbation:
         perturbed = [r + 1e-6 for r in K13_ROOTS]
         base = fast_evaluate(K13_ROOTS)
         pert = fast_evaluate(perturbed)
-        assert abs(base - pert) < 1e-3, (
-            f"Tiny perturbation caused huge score change: {base} -> {pert}"
-        )
+        assert (
+            abs(base - pert) < 1e-3
+        ), f"Tiny perturbation caused huge score change: {base} -> {pert}"
 
     def test_moderate_perturbation_bounded(self):
         """A 0.01 perturbation should keep score in a reasonable range."""
@@ -122,84 +133,100 @@ class TestFarSignChangeDetection:
 
     # Roots that produce a sign change at x≈379 (exact score ~60.39)
     BAD_ROOTS_379 = [
-        3.083047493448433, 4.416656406356701, 6.018832161240981,
-        31.104059990061298, 37.42450798127864, 40.80492484176367,
-        43.795017697454135, 51.17408187934483, 57.53059307210773,
-        98.28406622635097, 112.91477635879563, 122.8960346051581,
+        3.083047493448433,
+        4.416656406356701,
+        6.018832161240981,
+        31.104059990061298,
+        37.42450798127864,
+        40.80492484176367,
+        43.795017697454135,
+        51.17408187934483,
+        57.53059307210773,
+        98.28406622635097,
+        112.91477635879563,
+        122.8960346051581,
         138.8354968850486,
     ]
 
     # Roots that produce a sign change at x≈800 (exact score ~127.32)
     BAD_ROOTS_800 = [
-        3.0990662488297024, 4.571698076498697, 6.119654524614413,
-        32.59826988003972, 38.17893050770866, 41.00361693543455,
-        43.04116652476279, 50.86610973791498, 58.91363714696459,
-        96.40389395044992, 112.66963085494003, 120.23750985866153,
+        3.0990662488297024,
+        4.571698076498697,
+        6.119654524614413,
+        32.59826988003972,
+        38.17893050770866,
+        41.00361693543455,
+        43.04116652476279,
+        50.86610973791498,
+        58.91363714696459,
+        96.40389395044992,
+        112.66963085494003,
+        120.23750985866153,
         141.55186753553797,
     ]
 
     # Roots that produce a sign change at x≈9600 (exact score ~1528)
     BAD_ROOTS_9600 = [
-        3.083047493448433, 4.571698076498697, 6.119654524614413,
-        32.59826988003972, 38.17893050770866, 41.00361693543455,
-        43.04116652476279, 50.86610973791498, 58.91363714696459,
-        96.40389395044992, 112.66963085494003, 120.23750985866153,
+        3.083047493448433,
+        4.571698076498697,
+        6.119654524614413,
+        32.59826988003972,
+        38.17893050770866,
+        41.00361693543455,
+        43.04116652476279,
+        50.86610973791498,
+        58.91363714696459,
+        96.40389395044992,
+        112.66963085494003,
+        120.23750985866153,
         141.55186753553797,
     ]
 
     def test_detects_far_sign_change_at_379(self):
         score = fast_evaluate(self.BAD_ROOTS_379)
-        assert score > 10.0, (
-            f"Failed to detect far sign change: score={score:.4f}, expected >10"
-        )
+        assert score > 10.0, f"Failed to detect far sign change: score={score:.4f}, expected >10"
 
     def test_detects_far_sign_change_at_800(self):
         score = fast_evaluate(self.BAD_ROOTS_800)
-        assert score > 10.0, (
-            f"Failed to detect far sign change: score={score:.4f}, expected >10"
-        )
+        assert score > 10.0, f"Failed to detect far sign change: score={score:.4f}, expected >10"
 
     def test_detects_far_sign_change_at_9600(self):
         score = fast_evaluate(self.BAD_ROOTS_9600)
-        assert score > 10.0, (
-            f"Failed to detect very far sign change: score={score:.4f}, expected >10"
-        )
+        assert (
+            score > 10.0
+        ), f"Failed to detect very far sign change: score={score:.4f}, expected >10"
 
     def test_good_roots_unaffected(self):
         """reference roots should NOT trigger false positives."""
         score = fast_evaluate(K13_ROOTS)
-        assert abs(score - K13_EXPECTED) < 1e-6, (
-            f"Good roots wrongly penalized: score={score}, expected {K13_EXPECTED}"
-        )
+        assert (
+            abs(score - K13_EXPECTED) < 1e-6
+        ), f"Good roots wrongly penalized: score={score}, expected {K13_EXPECTED}"
 
 
-@pytest.mark.skipif(_best_solution is None, reason="results/problem-9-uncertainty/best_roots.json not found")
+@pytest.mark.skipif(
+    _best_solution is None, reason="results/problem-9-uncertainty/best_roots.json not found"
+)
 class TestBestSolution:
     """Validate our submitted #1 solution (loaded from results file)."""
 
     def test_best_score_beats_sota(self):
         roots = _best_solution["roots"]
         score = fast_evaluate(roots)
-        assert score < K13_EXPECTED, (
-            f"Best solution {score} should beat reference {K13_EXPECTED}"
-        )
+        assert score < K13_EXPECTED, f"Best solution {score} should beat reference {K13_EXPECTED}"
 
     def test_best_score_accuracy(self):
         roots = _best_solution["roots"]
         expected = _best_solution["score"]
         score = fast_evaluate(roots)
-        assert abs(score - expected) < 1e-6, (
-            f"Best solution score {score} != expected {expected}"
-        )
+        assert abs(score - expected) < 1e-6, f"Best solution score {score} != expected {expected}"
 
     @pytest.mark.slow
     def test_best_fast_matches_exact(self):
         roots = _best_solution["roots"]
         fast_score = fast_evaluate(roots)
         exact_score = evaluate({"laguerre_double_roots": roots})
-        assert abs(fast_score - exact_score) < 1e-6, (
-            f"fast={fast_score}, exact={exact_score}"
-        )
+        assert abs(fast_score - exact_score) < 1e-6, f"fast={fast_score}, exact={exact_score}"
 
 
 class TestHybridEvaluate:
@@ -241,14 +268,10 @@ class TestFastVsExactVerifier:
     def test_k6_fast_matches_exact(self):
         fast_score = fast_evaluate(K6_ROOTS)
         exact_score = evaluate({"laguerre_double_roots": K6_ROOTS})
-        assert abs(fast_score - exact_score) < 1e-6, (
-            f"fast={fast_score}, exact={exact_score}"
-        )
+        assert abs(fast_score - exact_score) < 1e-6, f"fast={fast_score}, exact={exact_score}"
 
     @pytest.mark.slow
     def test_k13_fast_matches_exact(self):
         fast_score = fast_evaluate(K13_ROOTS)
         exact_score = evaluate({"laguerre_double_roots": K13_ROOTS})
-        assert abs(fast_score - exact_score) < 1e-6, (
-            f"fast={fast_score}, exact={exact_score}"
-        )
+        assert abs(fast_score - exact_score) < 1e-6, f"fast={fast_score}, exact={exact_score}"

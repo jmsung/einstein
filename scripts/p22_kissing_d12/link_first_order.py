@@ -116,7 +116,9 @@ def main() -> int:
     W = core[link_idx]
     W_tangent = project_tangent(v0, W)
     norms = np.linalg.norm(W_tangent, axis=1)
-    print(f"tangent norms: min={norms.min():.6f} max={norms.max():.6f}  (expect sqrt(3)/2 = {np.sqrt(3)/2:.6f})")
+    print(
+        f"tangent norms: min={norms.min():.6f} max={norms.max():.6f}  (expect sqrt(3)/2 = {np.sqrt(3) / 2:.6f})"
+    )
 
     # Is the tangent link antipodally symmetric?
     # For each w_i, check if -w_i is in the set (matching some w_j)

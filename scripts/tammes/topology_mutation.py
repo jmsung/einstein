@@ -39,7 +39,6 @@ from einstein.tammes.polish import (  # noqa: E402
     slsqp_polish,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RESULTS_DIR = REPO_ROOT / "results" / "problem-11-tammes"
 
@@ -117,16 +116,30 @@ def run_trial(
 
 def main():
     parser = argparse.ArgumentParser(description="Tammes (n=50) topology-mutation search")
-    parser.add_argument("--source", type=str, required=True,
-                        help="Path to seed JSON (e.g. solution-best.json)")
+    parser.add_argument(
+        "--source", type=str, required=True, help="Path to seed JSON (e.g. solution-best.json)"
+    )
     parser.add_argument("--n-trials", type=int, default=200)
-    parser.add_argument("--ks", type=int, nargs="+", default=[1, 3, 5, 10],
-                        help="Vertex-perturbation counts to sweep")
-    parser.add_argument("--sigmas", type=float, nargs="+",
-                        default=[1e-2, 5e-2, 1e-1, 2e-1],
-                        help="Perturbation magnitudes to sweep")
-    parser.add_argument("--polish-iters", type=int, default=5,
-                        help="Inner polish iterations per trial (with 1e-13 jitter)")
+    parser.add_argument(
+        "--ks",
+        type=int,
+        nargs="+",
+        default=[1, 3, 5, 10],
+        help="Vertex-perturbation counts to sweep",
+    )
+    parser.add_argument(
+        "--sigmas",
+        type=float,
+        nargs="+",
+        default=[1e-2, 5e-2, 1e-1, 2e-1],
+        help="Perturbation magnitudes to sweep",
+    )
+    parser.add_argument(
+        "--polish-iters",
+        type=int,
+        default=5,
+        help="Inner polish iterations per trial (with 1e-13 jitter)",
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", type=str, default=None)
     args = parser.parse_args()
@@ -141,13 +154,17 @@ def main():
 
     print(f"Source: {src}")
     print(f"Seed score: {seed_score:.16f}")
-    print(f"Seed contact graph: {len(ref_pairs)} pairs at tol=1e-6, "
-          f"sig={ref_sig}, deg_hist={dict(Counter(ref_deg))}")
+    print(
+        f"Seed contact graph: {len(ref_pairs)} pairs at tol=1e-6, "
+        f"sig={ref_sig}, deg_hist={dict(Counter(ref_deg))}"
+    )
     print()
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = Path(args.out) if args.out else (
-        RESULTS_DIR / f"topology-mutation-trials-{args.seed}.jsonl"
+    out_path = (
+        Path(args.out)
+        if args.out
+        else (RESULTS_DIR / f"topology-mutation-trials-{args.seed}.jsonl")
     )
 
     rng = np.random.default_rng(args.seed)
@@ -165,8 +182,11 @@ def main():
                 for t in range(trials_per_combo):
                     n_done += 1
                     score, sig, pairs, deg = run_trial(
-                        P_seed, k=k, sigma=sigma,
-                        polish_iters=args.polish_iters, rng=rng,
+                        P_seed,
+                        k=k,
+                        sigma=sigma,
+                        polish_iters=args.polish_iters,
+                        rng=rng,
                     )
                     rec = {
                         "trial": n_done,
@@ -202,15 +222,15 @@ def main():
     print(f"Distinct contact-graph signatures observed: {len(sig_count)}")
     print(f"Distinct degree-sequence classes observed: {len(deg_count)}")
     print(f"Novel-topology trials: {sum(1 for s in sig_count if s != ref_sig)}")
-    print(f"Novel-isomorphism-class trials: "
-          f"{sum(c for d, c in deg_count.items() if d != ref_deg)}")
+    print(f"Novel-isomorphism-class trials: {sum(c for d, c in deg_count.items() if d != ref_deg)}")
     print()
     print("Top-10 distinct sigs by best score:")
     for sig, best in sorted(best_score_by_sig.items(), key=lambda x: -x[1])[:10]:
         delta_vs_seed = best - seed_score
         marker = "  (REF)" if sig == ref_sig else ""
-        print(f"  {sig}  best={best:.16f}  Δ_seed={delta_vs_seed:+.3e}  "
-              f"hits={sig_count[sig]}{marker}")
+        print(
+            f"  {sig}  best={best:.16f}  Δ_seed={delta_vs_seed:+.3e}  hits={sig_count[sig]}{marker}"
+        )
     print()
     print(f"Wrote per-trial log: {out_path}")
     if novel_better:

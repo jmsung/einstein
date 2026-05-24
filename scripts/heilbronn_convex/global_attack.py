@@ -20,9 +20,8 @@ from pathlib import Path
 
 import numpy as np
 from scipy.optimize import differential_evolution, dual_annealing
-from scipy.spatial import ConvexHull
 
-from einstein.heilbronn_convex import arena_score, fast_score, active_triples, hull_vertex_indices
+from einstein.heilbronn_convex import active_triples, arena_score, fast_score, hull_vertex_indices
 from einstein.heilbronn_convex.optimizer import polish_slsqp, random_convex_init
 
 RESULTS_DIR = Path("results/problem-16-heilbronn-convex")
@@ -208,10 +207,12 @@ def main():
             at = active_triples(pts, rel_tol=1e-9)
             hv = hull_vertex_indices(pts)
             delta = score - ARENA_BEST
-            print(f"\n*** NEW BEST! {score:.20f}  delta={delta:+.3e}  "
-                  f"hull={len(hv)}+{14-len(hv)}  active={len(at)}  phase={phase}")
+            print(
+                f"\n*** NEW BEST! {score:.20f}  delta={delta:+.3e}  "
+                f"hull={len(hv)}+{14 - len(hv)}  active={len(at)}  phase={phase}"
+            )
             if score > SUBMIT_THRESHOLD:
-                print(f"*** ABOVE SUBMIT THRESHOLD! ***")
+                print("*** ABOVE SUBMIT THRESHOLD! ***")
                 # Save immediately
                 out = {"points": pts.tolist(), "score": score, "phase": phase}
                 Path("/tmp/heilbronn_candidate.json").write_text(json.dumps(out, indent=2))
@@ -222,23 +223,23 @@ def main():
     phase = "DE"
     phase_stats[phase] = 0
     budget_de = min(args.time * 0.3, 600)  # 30% of budget or 10 min max
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Phase 1: Differential Evolution ({budget_de:.0f}s budget)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     de_seeds = rng.integers(0, 2**31, size=20)
     for i, de_seed in enumerate(de_seeds):
         if time.time() - start > budget_de:
             break
-        pts_de, score_de = run_differential_evolution(
-            seed=int(de_seed), maxiter=1000, popsize=50
-        )
+        pts_de, score_de = run_differential_evolution(seed=int(de_seed), maxiter=1000, popsize=50)
         polished, score_pol = polish_slsqp(pts_de, max_iter=500)
         record(polished, score_pol, f"DE-{i}")
         phase_stats[phase] = i + 1
         if (i + 1) % 2 == 0:
             elapsed = time.time() - start
-            print(f"  DE round {i+1}: raw={score_de:.10f} polished={score_pol:.16f}  [{elapsed:.0f}s]")
+            print(
+                f"  DE round {i + 1}: raw={score_de:.10f} polished={score_pol:.16f}  [{elapsed:.0f}s]"
+            )
 
     # ============================================================
     # Phase 2: Dual Annealing (simulated annealing + local search)
@@ -246,9 +247,9 @@ def main():
     phase = "DA"
     phase_stats[phase] = 0
     budget_da = min(args.time * 0.2, 400)
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Phase 2: Dual Annealing ({budget_da:.0f}s budget)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     da_seeds = rng.integers(0, 2**31, size=10)
     for i, da_seed in enumerate(da_seeds):
@@ -259,7 +260,9 @@ def main():
         record(polished, score_pol, f"DA-{i}")
         phase_stats[phase] = i + 1
         elapsed = time.time() - start
-        print(f"  DA round {i+1}: raw={score_da:.10f} polished={score_pol:.16f}  [{elapsed:.0f}s]")
+        print(
+            f"  DA round {i + 1}: raw={score_da:.10f} polished={score_pol:.16f}  [{elapsed:.0f}s]"
+        )
 
     # ============================================================
     # Phase 3: Non-standard hull structures (9+5, 11+3, 8+6, etc.)
@@ -267,9 +270,9 @@ def main():
     phase = "non-std-hull"
     phase_stats[phase] = 0
     budget_hull = min(args.time * 0.15, 300)
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Phase 3: Non-standard hull structures ({budget_hull:.0f}s budget)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     hull_sizes = [7, 8, 9, 11, 12, 13, 14]
     trial_count = 0
@@ -296,9 +299,9 @@ def main():
     phase = "crossover"
     phase_stats[phase] = 0
     budget_xo = min(args.time * 0.1, 200)
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Phase 4: Crossover between basins ({budget_xo:.0f}s budget)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     xo_count = 0
     top_solutions = [(pts, sc) for _, (pts, sc) in solutions.items()]
@@ -329,9 +332,9 @@ def main():
     phase = "massive-random"
     phase_stats[phase] = 0
     remaining = args.time - (time.time() - start)
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Phase 5: Massive random multistart ({remaining:.0f}s remaining)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     shapes = ["disk", "square", "10p4"]
     random_count = 0
@@ -344,23 +347,25 @@ def main():
         if random_count % 500 == 0:
             elapsed = time.time() - start
             n_basins = len(discovered_basins)
-            print(f"  [{random_count:6d}] {elapsed:.0f}s  basins={n_basins}  best={best_score:.16f}")
+            print(
+                f"  [{random_count:6d}] {elapsed:.0f}s  basins={n_basins}  best={best_score:.16f}"
+            )
     phase_stats[phase] = random_count
 
     # ============================================================
     # Summary
     # ============================================================
     elapsed = time.time() - start
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"SUMMARY after {elapsed:.1f}s")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Best score: {best_score:.20f}")
     print(f"Arena #1:   {ARENA_BEST:.20f}")
     print(f"Threshold:  {SUBMIT_THRESHOLD:.20f}")
     if best_score > ARENA_BEST:
         print(f"Delta vs arena #1: {best_score - ARENA_BEST:+.3e}")
     if best_score > SUBMIT_THRESHOLD:
-        print(f"*** ABOVE SUBMIT THRESHOLD! CANDIDATE SAVED TO /tmp/heilbronn_candidate.json ***")
+        print("*** ABOVE SUBMIT THRESHOLD! CANDIDATE SAVED TO /tmp/heilbronn_candidate.json ***")
     else:
         print(f"Gap to threshold: {SUBMIT_THRESHOLD - best_score:.3e}")
     print(f"\nPhase stats: {phase_stats}")
@@ -368,11 +373,11 @@ def main():
 
     # Top 10 basins
     sorted_basins = sorted(discovered_basins.values(), key=lambda x: -x[0])[:10]
-    print(f"\nTop 10 basins:")
+    print("\nTop 10 basins:")
     for i, (sc, pts, ph) in enumerate(sorted_basins):
         hv = hull_vertex_indices(pts)
         at = active_triples(pts, rel_tol=1e-9)
-        print(f"  #{i+1}: {sc:.16f}  hull={len(hv)}+{14-len(hv)}  active={len(at)}  phase={ph}")
+        print(f"  #{i + 1}: {sc:.16f}  hull={len(hv)}+{14 - len(hv)}  active={len(at)}  phase={ph}")
 
     # Save results
     out = {
@@ -382,9 +387,13 @@ def main():
         "submit_threshold": SUBMIT_THRESHOLD,
         "above_threshold": best_score > SUBMIT_THRESHOLD,
         "basins_top10": [
-            {"score": sc, "points": pts.tolist(), "phase": ph,
-             "n_hull": len(hull_vertex_indices(pts)),
-             "active_triples": len(active_triples(pts, rel_tol=1e-9))}
+            {
+                "score": sc,
+                "points": pts.tolist(),
+                "phase": ph,
+                "n_hull": len(hull_vertex_indices(pts)),
+                "active_triples": len(active_triples(pts, rel_tol=1e-9)),
+            }
             for sc, pts, ph in sorted_basins
         ],
         "stats": phase_stats,

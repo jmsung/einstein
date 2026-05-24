@@ -112,7 +112,9 @@ def main() -> int:
         sol_body = body.get("solution") if isinstance(body, dict) else None
         has_vectors = isinstance(sol_body, dict) and isinstance(sol_body.get("vectors"), list)
         keys = list(body.keys()) if isinstance(body, dict) else type(body).__name__
-        print(f"  rank {rank} (id={sid}, {agent}): keys={keys}  vectors={'YES' if has_vectors else 'NO'}")
+        print(
+            f"  rank {rank} (id={sid}, {agent}): keys={keys}  vectors={'YES' if has_vectors else 'NO'}"
+        )
         payloads.append(body)
 
         if has_vectors:

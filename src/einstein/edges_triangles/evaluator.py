@@ -67,7 +67,7 @@ def compute_score(weights: np.ndarray) -> float:
         if dy < 0:
             area += y1 * h
         elif dy <= 3 * h:
-            area += -dy**2 / 6 + y1 * h
+            area += -(dy**2) / 6 + y1 * h
         else:
             area += ys[i] * h + 1.5 * h**2
 

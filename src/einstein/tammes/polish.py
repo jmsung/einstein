@@ -36,11 +36,7 @@ def find_active_pairs(P: np.ndarray, tol: float = 1e-9) -> tuple[list[tuple[int,
     cos_vals = np.clip(gram[iu_i, iu_j], -1.0, 1.0)
     dists = np.sqrt(2.0 * (1.0 - cos_vals))
     dmin = float(dists.min())
-    active = [
-        (int(iu_i[k]), int(iu_j[k]))
-        for k in range(len(dists))
-        if dists[k] - dmin < tol
-    ]
+    active = [(int(iu_i[k]), int(iu_j[k])) for k in range(len(dists)) if dists[k] - dmin < tol]
     return active, dmin
 
 
@@ -78,7 +74,8 @@ def slsqp_polish(
         return g
 
     cons = []
-    for (i, j) in active:
+    for i, j in active:
+
         def cf(x, i=i, j=j):
             P_, d = unpack(x)
             diff = P_[i] - P_[j]
@@ -96,6 +93,7 @@ def slsqp_polish(
         cons.append({"type": "ineq", "fun": cf, "jac": cj})
 
     for i in range(n):
+
         def sf(x, i=i):
             P_, _ = unpack(x)
             return float(P_[i] @ P_[i] - 1.0)

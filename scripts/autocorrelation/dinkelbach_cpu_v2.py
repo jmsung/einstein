@@ -334,9 +334,9 @@ def main():
     overall_best = {}
 
     for n in [2000, 2500, 3000]:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Optimizing n={n}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         n_start = time.time()
         n_time = min(TIME_LIMIT - (time.time() - t_global), 90)
@@ -399,14 +399,11 @@ def main():
             w_cand = np.sqrt(cand_f + 1e-30)
 
             # Deep Adam
-            w_deep, score_deep = adam_optimize(
-                w_cand, n, SCHEDULE_DEEP, t_limit * 0.75
-            )
+            w_deep, score_deep = adam_optimize(w_cand, n, SCHEDULE_DEEP, t_limit * 0.75)
 
             # L-BFGS refinement
             w_ref, score_ref = lbfgs_refine(
-                w_deep, n, [10000, 100000, 1000000], 30, 500,
-                max(t_limit * 0.25, 1)
+                w_deep, n, [10000, 100000, 1000000], 30, 500, max(t_limit * 0.25, 1)
             )
 
             deep_score = max(score_deep, score_ref)
@@ -418,7 +415,7 @@ def main():
                 nnz = np.count_nonzero(best_f > 1e-10)
                 print(
                     f"    Deep #{i} ({cand_name}): C={deep_score:.8f} nnz={nnz} "
-                    f"*** BEST ({time.time()-n_start:.1f}s)"
+                    f"*** BEST ({time.time() - n_start:.1f}s)"
                 )
 
         # ----- Phase 3: Greedy expansion + final refinement (20% of time) -----
@@ -437,9 +434,7 @@ def main():
             remaining = n_time - (time.time() - n_start)
             if remaining > 5:
                 w_final = np.sqrt(best_f + 1e-30)
-                w_opt, score_opt = adam_optimize(
-                    w_final, n, SCHEDULE_DEEP, remaining * 0.7
-                )
+                w_opt, score_opt = adam_optimize(w_final, n, SCHEDULE_DEEP, remaining * 0.7)
                 if score_opt > best_score:
                     best_score = score_opt
                     best_f = (w_opt * w_opt).copy()
@@ -448,8 +443,7 @@ def main():
                 remaining2 = n_time - (time.time() - n_start)
                 if remaining2 > 2:
                     w_pol, score_pol = lbfgs_refine(
-                        w_opt, n, [100000, 1000000, 10000000], 20, 500,
-                        max(remaining2, 1)
+                        w_opt, n, [100000, 1000000, 10000000], 20, 500, max(remaining2, 1)
                     )
                     if score_pol > best_score:
                         best_score = score_pol
@@ -481,9 +475,9 @@ def main():
 
     # Summary
     total_time = time.time() - t_global
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Summary")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     for n_val, (f, score) in overall_best.items():
         nnz = np.count_nonzero(f > 1e-10)
         print(f"  n={n_val}: C={score:.10f} nnz={nnz}")

@@ -139,7 +139,7 @@ def polish_round(
             print(
                 f"  [{label} {scale:.0e}] iter={n_iter:>9,d} "
                 f"best={best_total:.15e} "
-                f"impr={n_imp} ({n_imp/n_iter*100:.2f}%) {now-t0:.0f}s",
+                f"impr={n_imp} ({n_imp / n_iter * 100:.2f}%) {now - t0:.0f}s",
                 flush=True,
             )
 

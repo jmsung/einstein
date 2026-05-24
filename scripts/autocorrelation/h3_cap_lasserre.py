@@ -21,15 +21,13 @@ from __future__ import annotations
 
 import sys
 import time
-from itertools import combinations_with_replacement
-from math import comb
 
 sys.path.insert(0, "src")
 
-import numpy as np
 
 try:
     import cvxpy as cp
+
     HAVE_CVXPY = True
 except ImportError:
     HAVE_CVXPY = False
@@ -81,8 +79,9 @@ def build_moment_matrix(y_vars: dict, mons: list, idx_map: dict) -> cp.Expressio
     return cp.vstack(rows)
 
 
-def build_localizing_matrix(y_vars: dict, poly_coeffs: dict, mons: list,
-                             idx_map: dict) -> cp.Expression:
+def build_localizing_matrix(
+    y_vars: dict, poly_coeffs: dict, mons: list, idx_map: dict
+) -> cp.Expression:
     """For polynomial constraint p(x) = sum_alpha poly_coeffs[alpha] * x^alpha >= 0,
     build the localizing matrix L[i,j] = sum_alpha poly_coeffs[alpha] * y[mons[i] + mons[j] + alpha].
 
@@ -104,9 +103,9 @@ def build_localizing_matrix(y_vars: dict, poly_coeffs: dict, mons: list,
     return cp.vstack(rows)
 
 
-def solve_lasserre_level2(lam: float, T: int, level: int = 2,
-                           solver: str = "CLARABEL",
-                           verbose: bool = False) -> tuple[float, dict]:
+def solve_lasserre_level2(
+    lam: float, T: int, level: int = 2, solver: str = "CLARABEL", verbose: bool = False
+) -> tuple[float, dict]:
     """Solve the Lasserre level-l relaxation of:
 
         max  M(F) - lam * C(F)
@@ -131,8 +130,10 @@ def solve_lasserre_level2(lam: float, T: int, level: int = 2,
     moms_full_set = set(moms_full)
     mons_l, idx_l = moment_matrix_indices(n, level)
     K = len(mons_l)
-    print(f"  Lasserre level-{level} at T={T} (n={n}): "
-          f"moment matrix {K}x{K}, {len(moms_full)} moments")
+    print(
+        f"  Lasserre level-{level} at T={T} (n={n}): "
+        f"moment matrix {K}x{K}, {len(moms_full)} moments"
+    )
 
     # Decision variables
     y_dict = {alpha: cp.Variable() for alpha in moms_full}
@@ -204,15 +205,21 @@ def solve_lasserre_level2(lam: float, T: int, level: int = 2,
         return -1.0, {"status": "error", "msg": str(e_inner)}
     elapsed = time.time() - t0
 
-    info = {"status": prob.status, "elapsed": elapsed,
-            "n_moments": len(moms_full), "moment_matrix_size": K}
+    info = {
+        "status": prob.status,
+        "elapsed": elapsed,
+        "n_moments": len(moms_full),
+        "moment_matrix_size": K,
+    }
     if prob.status in ("optimal", "optimal_inaccurate"):
-        info.update({
-            "M_value": float(M_expr.value),
-            "C_value": float(C.value),
-            "S_implied": float(M_expr.value) / max(float(C.value), 1e-12),
-            "g_lambda": float(prob.value),
-        })
+        info.update(
+            {
+                "M_value": float(M_expr.value),
+                "C_value": float(C.value),
+                "S_implied": float(M_expr.value) / max(float(C.value), 1e-12),
+                "g_lambda": float(prob.value),
+            }
+        )
     return prob.value if prob.value is not None else float("nan"), info
 
 
@@ -231,12 +238,16 @@ def main():
     lam_lo, lam_hi = 0.5, 1.5
     g_lo, info_lo = solve_lasserre_level2(lam_lo, T=4, level=2)
     g_hi, info_hi = solve_lasserre_level2(lam_hi, T=4, level=2)
-    print(f"  g({lam_lo}) = {g_lo:.4e}  ({info_lo['status']}, {info_lo.get('elapsed',0):.1f}s)")
-    if 'C_value' in info_lo:
-        print(f"    M={info_lo['M_value']:.6f}  C={info_lo['C_value']:.6f}  S={info_lo['S_implied']:.6f}")
-    print(f"  g({lam_hi}) = {g_hi:.4e}  ({info_hi['status']}, {info_hi.get('elapsed',0):.1f}s)")
-    if 'C_value' in info_hi:
-        print(f"    M={info_hi['M_value']:.6f}  C={info_hi['C_value']:.6f}  S={info_hi['S_implied']:.6f}")
+    print(f"  g({lam_lo}) = {g_lo:.4e}  ({info_lo['status']}, {info_lo.get('elapsed', 0):.1f}s)")
+    if "C_value" in info_lo:
+        print(
+            f"    M={info_lo['M_value']:.6f}  C={info_lo['C_value']:.6f}  S={info_lo['S_implied']:.6f}"
+        )
+    print(f"  g({lam_hi}) = {g_hi:.4e}  ({info_hi['status']}, {info_hi.get('elapsed', 0):.1f}s)")
+    if "C_value" in info_hi:
+        print(
+            f"    M={info_hi['M_value']:.6f}  C={info_hi['C_value']:.6f}  S={info_hi['S_implied']:.6f}"
+        )
 
     # Bisect
     history = [(lam_lo, g_lo), (lam_hi, g_hi)]
@@ -247,7 +258,7 @@ def main():
             lam_mid = 0.5 * (lam_lo + lam_hi)
             g_mid, info_mid = solve_lasserre_level2(lam_mid, T=4, level=2)
             history.append((lam_mid, g_mid))
-            s_str = f"S={info_mid['S_implied']:.4f}" if 'S_implied' in info_mid else ''
+            s_str = f"S={info_mid['S_implied']:.4f}" if "S_implied" in info_mid else ""
             print(f"  g({lam_mid:.6f}) = {g_mid:.4e}  ({info_mid['status']})  {s_str}")
             if g_mid > 0:
                 lam_lo = lam_mid
@@ -256,16 +267,16 @@ def main():
         print(f"  T=4 UB: {lam_hi:.6f}")
     else:
         print(f"  Bisection bounds invalid: g_lo={g_lo}, g_hi={g_hi}")
-        print(f"  T=4 UB:  inconclusive")
+        print("  T=4 UB:  inconclusive")
 
     print()
     print("=" * 76)
     print("Comparison:")
-    print(f"  v4 (Toeplitz-Caratheodory only):  1.000")
-    if 'C_value' in info_lo and lam_hi != float('inf'):
+    print("  v4 (Toeplitz-Caratheodory only):  1.000")
+    if "C_value" in info_lo and lam_hi != float("inf"):
         print(f"  Lasserre level-2 (this script): {lam_hi:.6f}")
-    print(f"  Empirical lower bound:          0.96272")
-    print(f"  Trivial Cauchy-Schwarz:         1.0")
+    print("  Empirical lower bound:          0.96272")
+    print("  Trivial Cauchy-Schwarz:         1.0")
     print("=" * 76)
 
 

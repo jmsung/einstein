@@ -9,6 +9,7 @@ varied noise scales, beta schedules, and history sizes.
 
 Also try: direct scipy L-BFGS-B on the exact max objective with subgradient.
 """
+
 from __future__ import annotations
 
 import json
@@ -51,9 +52,13 @@ def surrogate_vsq(v: torch.Tensor, beta: float) -> torch.Tensor:
     return smooth_max(ratios, beta)
 
 
-def lbfgs_vsq(v_init: np.ndarray, betas: list[float],
-              max_iter: int = 2000, lr: float = 1.0,
-              history_size: int = 200) -> tuple[np.ndarray, float]:
+def lbfgs_vsq(
+    v_init: np.ndarray,
+    betas: list[float],
+    max_iter: int = 2000,
+    lr: float = 1.0,
+    history_size: int = 200,
+) -> tuple[np.ndarray, float]:
     """Run v^2 L-BFGS cascade, return (f, score)."""
     v = torch.tensor(v_init.copy(), dtype=torch.float64, requires_grad=True)
     best_c = float("inf")
@@ -61,9 +66,13 @@ def lbfgs_vsq(v_init: np.ndarray, betas: list[float],
 
     for beta in betas:
         opt = torch.optim.LBFGS(
-            [v], lr=lr, max_iter=max_iter,
-            tolerance_grad=1e-15, tolerance_change=1e-20,
-            history_size=history_size, line_search_fn="strong_wolfe",
+            [v],
+            lr=lr,
+            max_iter=max_iter,
+            tolerance_grad=1e-15,
+            tolerance_change=1e-20,
+            history_size=history_size,
+            line_search_fn="strong_wolfe",
         )
 
         def closure():
@@ -124,10 +133,18 @@ def scipy_lbfgsb(f_init: np.ndarray, maxiter: int = 5000) -> tuple[np.ndarray, f
 
     bounds = [(0.0, None)] * n
     result = scipy_minimize(
-        objective_and_grad, f_init.copy(), method='L-BFGS-B',
-        jac=True, bounds=bounds,
-        options={'maxiter': maxiter, 'maxfun': maxiter * 2, 'ftol': 1e-20,
-                 'gtol': 1e-15, 'maxcor': 100},
+        objective_and_grad,
+        f_init.copy(),
+        method="L-BFGS-B",
+        jac=True,
+        bounds=bounds,
+        options={
+            "maxiter": maxiter,
+            "maxfun": maxiter * 2,
+            "ftol": 1e-20,
+            "gtol": 1e-15,
+            "maxcor": 100,
+        },
     )
 
     f_opt = np.maximum(result.x, 0.0)
@@ -137,8 +154,9 @@ def scipy_lbfgsb(f_init: np.ndarray, maxiter: int = 5000) -> tuple[np.ndarray, f
     return best_f, best_c
 
 
-def gradient_polish(f_init: np.ndarray, max_iters: int = 10000,
-                    lr0: float = 1e-6) -> tuple[np.ndarray, float]:
+def gradient_polish(
+    f_init: np.ndarray, max_iters: int = 10000, lr0: float = 1e-6
+) -> tuple[np.ndarray, float]:
     """Extended gradient descent with adaptive step size."""
     f = f_init.astype(np.float64).copy()
     n = len(f)
@@ -229,9 +247,9 @@ def main():
         return False
 
     # ── Strategy A: Massive seed search at n=90k ─────────────────────────
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Strategy A: Diverse seed search at n=90k from 30k base")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     f_90k = np.repeat(f_30k, 3)
     c_90k = exact_score(f_90k)
@@ -240,18 +258,24 @@ def main():
     # Define diverse configurations
     configs = [
         # (noise_scale, betas, history_size, max_iter, label)
-        (0.0,   [1e6]*3 + [1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13],      300, 3000, "ultra-low-beta"),
-        (1e-5,  [1e6]*3 + [1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13],      300, 3000, "tiny-noise"),
-        (3e-5,  [1e6]*3 + [1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13],      300, 3000, "small-noise"),
-        (1e-4,  [1e6]*3 + [1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13],      300, 3000, "med-noise"),
-        (3e-4,  [5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 1e9, 1e10, 1e11, 1e12], 250, 2500, "large-noise"),
-        (1e-3,  [5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 1e9, 1e10, 1e11, 1e12], 250, 2500, "xlarge-noise"),
-        (0.0,   [1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 1e9, 1e10, 1e11], 200, 2000, "very-low-beta"),
-        (5e-5,  [1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 1e9, 1e10, 1e11], 300, 3000, "very-low-beta-noisy"),
-        (0.0,   [1e6]*5 + [1e7]*3 + [1e8, 1e9, 1e10, 1e11, 1e12],      300, 3000, "ext-low-beta"),
-        (2e-5,  [1e6]*5 + [1e7]*3 + [1e8, 1e9, 1e10, 1e11, 1e12],      300, 3000, "ext-low-noisy"),
-        (0.0,   [1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14],    400, 4000, "high-hist"),
-        (1e-5,  [1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14],    400, 4000, "high-hist-noisy"),
+        (0.0, [1e6] * 3 + [1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13], 300, 3000, "ultra-low-beta"),
+        (1e-5, [1e6] * 3 + [1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13], 300, 3000, "tiny-noise"),
+        (3e-5, [1e6] * 3 + [1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13], 300, 3000, "small-noise"),
+        (1e-4, [1e6] * 3 + [1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13], 300, 3000, "med-noise"),
+        (3e-4, [5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 1e9, 1e10, 1e11, 1e12], 250, 2500, "large-noise"),
+        (1e-3, [5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 1e9, 1e10, 1e11, 1e12], 250, 2500, "xlarge-noise"),
+        (0.0, [1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 1e9, 1e10, 1e11], 200, 2000, "very-low-beta"),
+        (
+            5e-5,
+            [1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 1e9, 1e10, 1e11],
+            300,
+            3000,
+            "very-low-beta-noisy",
+        ),
+        (0.0, [1e6] * 5 + [1e7] * 3 + [1e8, 1e9, 1e10, 1e11, 1e12], 300, 3000, "ext-low-beta"),
+        (2e-5, [1e6] * 5 + [1e7] * 3 + [1e8, 1e9, 1e10, 1e11, 1e12], 300, 3000, "ext-low-noisy"),
+        (0.0, [1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14], 400, 4000, "high-hist"),
+        (1e-5, [1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14], 400, 4000, "high-hist-noisy"),
     ]
 
     for ci, (noise, betas, hist, iters, label) in enumerate(configs):
@@ -265,8 +289,11 @@ def main():
         if noise > 0:
             v0 = v0 + rng.normal(scale=noise, size=v0.shape)
 
-        print(f"\n  Config {ci}/{len(configs)}: {label} (noise={noise:.1e}, "
-              f"hist={hist}, iters={iters})", flush=True)
+        print(
+            f"\n  Config {ci}/{len(configs)}: {label} (noise={noise:.1e}, "
+            f"hist={hist}, iters={iters})",
+            flush=True,
+        )
         t0 = time.time()
         f_new, c_new = lbfgs_vsq(v0, betas, max_iter=iters, history_size=hist)
         dt = time.time() - t0
@@ -276,9 +303,9 @@ def main():
     # ── Strategy B: scipy L-BFGS-B on exact objective ────────────────────
     elapsed = time.time() - t_start
     if elapsed < 10800:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("Strategy B: scipy L-BFGS-B on exact objective")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Try on OrganonAgent
         print("  From OrganonAgent:", flush=True)
@@ -300,9 +327,9 @@ def main():
     # ── Strategy C: Extended gradient polish ──────────────────────────────
     elapsed = time.time() - t_start
     if elapsed < 10800:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("Strategy C: Extended gradient polish")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Polish the global best
         print(f"  From current best (C={global_best_c:.18f}):", flush=True)
@@ -314,15 +341,15 @@ def main():
 
     # ── Summary ──────────────────────────────────────────────────────────
     elapsed = time.time() - t_start
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("BASIN SEARCH COMPLETE")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"OrganonAgent #1: {c_org:.18f}")
     print(f"Our best:        {global_best_c:.18f}")
     delta = c_org - global_best_c
     print(f"Delta:           {delta:+.6e}")
     print(f"Beats #1:        {'YES' if global_best_c < target else 'NO'}")
-    print(f"Total time:      {elapsed/60:.1f} min")
+    print(f"Total time:      {elapsed / 60:.1f} min")
 
     save_sol(global_best_f, global_best_c, "basin-final")
 

@@ -10,6 +10,7 @@ import pathlib
 
 import numpy as np
 import pytest
+
 from einstein.hexagon import (
     evaluate,
     hexagon_vertices,
@@ -18,8 +19,7 @@ from einstein.hexagon import (
 )
 
 _SOLUTION_FILE = (
-    pathlib.Path(__file__).parent.parent.parent
-    / "results" / "problem-17-hexagon" / "solution.json"
+    pathlib.Path(__file__).parent.parent.parent / "results" / "problem-17-hexagon" / "solution.json"
 )
 _solution = json.loads(_SOLUTION_FILE.read_text()) if _SOLUTION_FILE.exists() else None
 
@@ -220,7 +220,9 @@ class TestEvaluateScoring:
         score = evaluate(data)
         assert score > 100  # large penalty
 
-    @pytest.mark.skipif(_solution is None, reason="results/problem-17-hexagon/solution.json not found")
+    @pytest.mark.skipif(
+        _solution is None, reason="results/problem-17-hexagon/solution.json not found"
+    )
     def test_sota_solution_valid(self):
         """Known solution should return its outer_side_length."""
         score = evaluate(_solution)
@@ -230,7 +232,9 @@ class TestEvaluateScoring:
 class TestEvaluateProperties:
     """Mathematical properties of the scoring function."""
 
-    @pytest.mark.skipif(_solution is None, reason="results/problem-17-hexagon/solution.json not found")
+    @pytest.mark.skipif(
+        _solution is None, reason="results/problem-17-hexagon/solution.json not found"
+    )
     def test_deterministic(self):
         s1 = evaluate(_solution)
         s2 = evaluate(_solution)

@@ -18,9 +18,8 @@ Companion to:
 - wiki/concepts/bose-chowla-construction.md
 - wiki/findings/dead-end-p19-bose-chowla.md (this cycle's deliverable)
 """
-from __future__ import annotations
 
-import sys
+from __future__ import annotations
 
 import numpy as np
 
@@ -28,7 +27,7 @@ import numpy as np
 def is_prime(n: int) -> bool:
     if n < 2:
         return False
-    for p in range(2, int(n ** 0.5) + 1):
+    for p in range(2, int(n**0.5) + 1):
         if n % p == 0:
             return False
     return True
@@ -195,8 +194,10 @@ def main():
             B = bose_chowla_set(q)
             ok, dist = is_sidon(B, modulus=q * q - 1)
             cB = contiguous_prefix(B)
-            print(f"  q={q:>3}, |B|={len(B):>3}, modulus={q*q-1:>5}, "
-                  f"sidon={'✓' if ok else '✗'}, distinct_diffs={dist}, c(B)={cB}")
+            print(
+                f"  q={q:>3}, |B|={len(B):>3}, modulus={q * q - 1:>5}, "
+                f"sidon={'✓' if ok else '✗'}, distinct_diffs={dist}, c(B)={cB}"
+            )
         except Exception as e:
             print(f"  q={q}: failed — {e}")
 
@@ -218,10 +219,14 @@ def main():
             # If A = Bose-Chowla atom, k_total = |A|·4 = 4·{|B|}, v_pred = 6·8011 + c(A)
             k_total = 4 * len(B)
             v_pred = 6 * 8011 + cB
-            score_pred = k_total ** 2 / v_pred if v_pred > 0 else float("inf")
-            v_needed_to_beat = int(np.ceil(k_total ** 2 / 2.6390274695)) + 1
-            print(f"    if used as P19 atom: k={k_total}, predicted v={v_pred}, score={score_pred:.6f}")
-            print(f"    score-target at k={k_total}: v >= {v_needed_to_beat} (need c(A) >= {v_needed_to_beat - 48066})")
+            score_pred = k_total**2 / v_pred if v_pred > 0 else float("inf")
+            v_needed_to_beat = int(np.ceil(k_total**2 / 2.6390274695)) + 1
+            print(
+                f"    if used as P19 atom: k={k_total}, predicted v={v_pred}, score={score_pred:.6f}"
+            )
+            print(
+                f"    score-target at k={k_total}: v >= {v_needed_to_beat} (need c(A) >= {v_needed_to_beat - 48066})"
+            )
             print()
         except Exception as e:
             print(f"  q={q}: failed — {e}")

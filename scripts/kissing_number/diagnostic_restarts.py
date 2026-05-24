@@ -157,9 +157,9 @@ def main():
     results = []
 
     for scale in perturbation_scales:
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"Perturbation scale: {scale:.0e}")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         for trial in range(n_restarts_per_scale):
             seed = int(rng.integers(100000))
@@ -168,7 +168,7 @@ def main():
             # Perturb
             perturbed = perturb_solution(sota, scale, trial_rng)
             initial_loss = overlap_loss_fast(perturbed)
-            print(f"\n  Trial {trial+1}/{n_restarts_per_scale} (seed={seed})")
+            print(f"\n  Trial {trial + 1}/{n_restarts_per_scale} (seed={seed})")
             print(f"  After perturbation: {initial_loss:.10f}")
 
             # Optimize
@@ -188,29 +188,33 @@ def main():
             print(f"  Delta:     {exact - sota_score:.2e}")
             print(f"  Gram dist: {gram_dist:.6f}")
 
-            results.append({
-                "scale": scale,
-                "trial": trial,
-                "seed": seed,
-                "initial": initial_loss,
-                "final": exact,
-                "delta_vs_sota": exact - sota_score,
-                "gram_dist": gram_dist,
-                "time": elapsed,
-            })
+            results.append(
+                {
+                    "scale": scale,
+                    "trial": trial,
+                    "seed": seed,
+                    "initial": initial_loss,
+                    "final": exact,
+                    "delta_vs_sota": exact - sota_score,
+                    "gram_dist": gram_dist,
+                    "time": elapsed,
+                }
+            )
 
     # Summary
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("SUMMARY")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print(f"SOTA: {sota_score:.15f}")
     print()
-    print(f"{'Scale':>8} {'Trial':>5} {'Final Score':>18} {'Delta vs SOTA':>14} {'Gram Dist':>10} {'Same Basin?':>12}")
+    print(
+        f"{'Scale':>8} {'Trial':>5} {'Final Score':>18} {'Delta vs SOTA':>14} {'Gram Dist':>10} {'Same Basin?':>12}"
+    )
     print("-" * 75)
     for r in results:
         same_basin = "YES" if abs(r["delta_vs_sota"]) < 1e-6 else "NO (different!)"
         print(
-            f"{r['scale']:>8.0e} {r['trial']+1:>5} {r['final']:>18.15f} "
+            f"{r['scale']:>8.0e} {r['trial'] + 1:>5} {r['final']:>18.15f} "
             f"{r['delta_vs_sota']:>14.2e} {r['gram_dist']:>10.4f} {same_basin:>12}"
         )
 
@@ -219,7 +223,9 @@ def main():
     any_better = any(r["delta_vs_sota"] < -1e-6 for r in results)
     print()
     if all_same:
-        print("VERDICT: All restarts converge to the SAME basin. Landscape is likely SINGLE-FUNNELED.")
+        print(
+            "VERDICT: All restarts converge to the SAME basin. Landscape is likely SINGLE-FUNNELED."
+        )
         print("         Micro-perturbation refinement is the only viable approach.")
     elif any_better:
         best = min(results, key=lambda r: r["final"])

@@ -9,6 +9,7 @@ improvements to both results/ and results/polish-trail/.
 
 Usage: uv run python scripts/uncertainty/k15_parallel_cma.py [--workers N]
 """
+
 import argparse
 import json
 import os
@@ -23,6 +24,7 @@ os.environ.setdefault("MKL_NUM_THREADS", "1")
 sys.path.insert(0, "src")
 
 import multiprocessing as mp
+
 import numpy as np
 
 from einstein.uncertainty.fast import fast_evaluate
@@ -71,6 +73,7 @@ def make_obj(dps=30):
     NOTE: dps must be >= 30 for k>=15 — Laguerre matrix is too ill-conditioned
     otherwise (gives inf for valid configurations).
     """
+
     def obj(gaps):
         gaps = np.asarray(gaps, dtype=float)
         repaired = np.maximum(gaps, 0.05)

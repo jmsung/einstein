@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 from scipy.signal import fftconvolve
 
-from einstein.autocorrelation.fast import fast_evaluate, diagnose
+from einstein.autocorrelation.fast import diagnose, fast_evaluate
 
 RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
@@ -42,8 +42,9 @@ def save_result(f, score, tag=""):
     print(f"  Saved to {fname}")
 
 
-def gerchberg_saxton(n, n_iter=500, target_type="flat_spectrum", seed=42,
-                     alpha=0.5, beta_anneal=True):
+def gerchberg_saxton(
+    n, n_iter=500, target_type="flat_spectrum", seed=42, alpha=0.5, beta_anneal=True
+):
     """Alternating projections between non-negativity and spectral target.
 
     Args:
@@ -84,7 +85,11 @@ def gerchberg_saxton(n, n_iter=500, target_type="flat_spectrum", seed=42,
             freqs = np.arange(len(f_hat))
             width = 0.3  # fraction of bandwidth
             sinc_target = np.sinc(freqs * width / len(f_hat))
-            target_mag = np.sqrt(np.abs(sinc_target)) * np.mean(f_mag) / max(np.mean(np.sqrt(np.abs(sinc_target))), 1e-30)
+            target_mag = (
+                np.sqrt(np.abs(sinc_target))
+                * np.mean(f_mag)
+                / max(np.mean(np.sqrt(np.abs(sinc_target))), 1e-30)
+            )
             new_mag = (1 - alpha) * f_mag + alpha * target_mag
 
         elif target_type == "soft_clip":
@@ -108,7 +113,7 @@ def gerchberg_saxton(n, n_iter=500, target_type="flat_spectrum", seed=42,
                 target_mag = np.interp(
                     np.linspace(0, 1, len(f_mag)),
                     np.linspace(0, 1, len(target_mag_full)),
-                    target_mag_full
+                    target_mag_full,
                 )
                 # Normalize
                 target_mag *= np.sum(f_mag) / max(np.sum(target_mag), 1e-30)
@@ -141,13 +146,12 @@ def gerchberg_saxton(n, n_iter=500, target_type="flat_spectrum", seed=42,
     return best_f, best_score
 
 
-def hybrid_gs_adam(n, n_gs=200, n_adam=3000, seed=42, device='cpu'):
+def hybrid_gs_adam(n, n_gs=200, n_adam=3000, seed=42, device="cpu"):
     """Gerchberg-Saxton for initialization, then Adam for refinement."""
     import torch
 
     # Phase 1: GS to find structure
-    f, score_gs = gerchberg_saxton(n, n_iter=n_gs, target_type="soft_clip",
-                                    seed=seed, alpha=0.3)
+    f, score_gs = gerchberg_saxton(n, n_iter=n_gs, target_type="soft_clip", seed=seed, alpha=0.3)
     print(f"    GS init: C={score_gs:.8f}")
 
     # Phase 2: Adam refinement
@@ -201,7 +205,8 @@ def main():
     print("=" * 60)
 
     import torch
-    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
 
     results = []
 
@@ -211,8 +216,7 @@ def main():
         for target in ["flat_spectrum", "plateau_autoconv", "soft_clip"]:
             best_s = 0
             for seed in range(10):
-                f, s = gerchberg_saxton(n, n_iter=300, target_type=target,
-                                        seed=seed, alpha=0.3)
+                f, s = gerchberg_saxton(n, n_iter=300, target_type=target, seed=seed, alpha=0.3)
                 if s > best_s:
                     best_s = s
                     best_f_gs = f.copy()
@@ -220,7 +224,7 @@ def main():
             results.append((f"gs_{target}_n{n}", best_s, best_f_gs))
 
     # Hybrid: GS init + Adam refinement
-    print(f"\n--- Hybrid GS+Adam ---")
+    print("\n--- Hybrid GS+Adam ---")
     for n in [768, 2000]:
         best_hybrid_s = 0
         best_hybrid_f = None
@@ -235,7 +239,7 @@ def main():
 
     # Compare all
     results.sort(key=lambda x: x[1], reverse=True)
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("Results ranking:")
     for name, score, _ in results[:10]:
         print(f"  {score:.8f}  {name}")

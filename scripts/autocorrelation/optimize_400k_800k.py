@@ -10,6 +10,7 @@ Target: C > 0.96274 (to beat SOTA + minImprovement)
 """
 
 import sys
+
 sys.path.insert(0, "src")
 
 import json
@@ -32,7 +33,7 @@ def transplant(f_source, target_n, active_threshold=0.0):
     """Average-pool source solution to target_n."""
     if active_threshold > 0:
         nz = np.nonzero(f_source > active_threshold)[0]
-        f_active = f_source[nz[0]:nz[-1]+1]
+        f_active = f_source[nz[0] : nz[-1] + 1]
     else:
         f_active = f_source
 
@@ -80,7 +81,7 @@ def dinkelbach_obj_grad(w, lam, beta, n):
     dphi_dc = dn_dc - lam * dd_dc
 
     dphi_df = 2.0 * fftconvolve(dphi_dc, f[::-1], mode="full")
-    dphi_df = dphi_df[n - 1: 2 * n - 1]
+    dphi_df = dphi_df[n - 1 : 2 * n - 1]
 
     dobj_dw = -dphi_df * 2.0 * w
     scale = max(abs(numer), 1e-30)
@@ -155,9 +156,9 @@ def save_solution(f, score, tag):
 
 def optimize_transplant(f_source, target_n, tag, threshold=0.0, time_budget=1800):
     """Full pipeline: transplant → Dinkelbach refinement."""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Optimizing: {tag} (n={target_n}, threshold={threshold})")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     f_init = transplant(f_source, target_n, active_threshold=threshold)
     init_score = fast_evaluate(f_init)
@@ -170,7 +171,9 @@ def optimize_transplant(f_source, target_n, tag, threshold=0.0, time_budget=1800
     beta_schedule = [1e4, 5e4, 1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8]
 
     w_opt, best_score = lbfgs_refine(
-        w, n, beta_schedule,
+        w,
+        n,
+        beta_schedule,
         outer_per_beta=5,
         maxiter=1000,
         time_limit=time_budget,
@@ -187,9 +190,9 @@ def optimize_transplant(f_source, target_n, tag, threshold=0.0, time_budget=1800
 
 def optimize_warmstart(f_start, tag, time_budget=1800):
     """Refine an existing solution with Dinkelbach."""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Warm-start refinement: {tag} (n={len(f_start)})")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     init_score = fast_evaluate(f_start)
     print(f"  Starting score: C={init_score:.16f}")
@@ -201,7 +204,9 @@ def optimize_warmstart(f_start, tag, time_budget=1800):
     beta_schedule = [1e6, 5e6, 1e7, 5e7, 1e8, 5e8, 1e9, 5e9, 1e10]
 
     w_opt, best_score = lbfgs_refine(
-        w, n, beta_schedule,
+        w,
+        n,
+        beta_schedule,
         outer_per_beta=5,
         maxiter=1000,
         time_limit=time_budget,
@@ -221,7 +226,9 @@ def main():
     TIME_LIMIT = 3 * 3600  # 3 hours total
 
     # Load source solutions
-    f_1600k = np.load("/Users/jmsung/projects/einstein/cb/results/problem-3-autocorrelation/best_1600k.npy")
+    f_1600k = np.load(
+        "/Users/jmsung/projects/einstein/cb/results/problem-3-autocorrelation/best_1600k.npy"
+    )
     print(f"1.6M source: C={fast_evaluate(f_1600k):.16f}")
 
     sota_400k_path = RESULTS_DIR / "sota_400k.npy"
@@ -239,7 +246,10 @@ def main():
             print(f"Skipping {tag} (insufficient time)")
             break
         f_opt, score = optimize_transplant(
-            f_1600k, 400000, tag, threshold=threshold,
+            f_1600k,
+            400000,
+            tag,
+            threshold=threshold,
             time_budget=min(1800, remaining * 0.25),
         )
         results[tag] = (f_opt, score)
@@ -248,7 +258,10 @@ def main():
     remaining = TIME_LIMIT - (time.time() - t_global)
     if remaining > 600:
         f_opt, score = optimize_transplant(
-            f_1600k, 800000, "800k_full", threshold=0.0,
+            f_1600k,
+            800000,
+            "800k_full",
+            threshold=0.0,
             time_budget=min(2400, remaining * 0.3),
         )
         results["800k_full"] = (f_opt, score)
@@ -257,7 +270,8 @@ def main():
     remaining = TIME_LIMIT - (time.time() - t_global)
     if f_sota_400k is not None and remaining > 300:
         f_opt, score = optimize_warmstart(
-            f_sota_400k, "400k_warmstart",
+            f_sota_400k,
+            "400k_warmstart",
             time_budget=min(1800, remaining * 0.3),
         )
         results["400k_warmstart"] = (f_opt, score)
@@ -270,15 +284,16 @@ def main():
         x_800k = np.linspace(0, 1, 800000)
         f_800k_up = np.interp(x_800k, x_400k, f_sota_400k)
         f_opt, score = optimize_warmstart(
-            f_800k_up, "800k_upsample_sota",
+            f_800k_up,
+            "800k_upsample_sota",
             time_budget=min(2400, remaining * 0.4),
         )
         results["800k_upsample_sota"] = (f_opt, score)
 
     # Summary
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("SUMMARY")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     best_tag = None
     best_score = 0.0
     for tag, (f, score) in sorted(results.items(), key=lambda x: -x[1][1]):

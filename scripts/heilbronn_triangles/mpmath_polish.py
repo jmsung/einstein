@@ -34,9 +34,7 @@ import numpy as np
 # Ensure we can import the einstein package
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 from einstein.heilbronn_triangles import (  # noqa: E402
-    EQ_TRI_AREA,
     arena_score,
-    fast_score,
 )
 
 SQRT3 = mp.sqrt(3)
@@ -58,23 +56,12 @@ def detect_edge(p, tol=1e-9):
 
 def mp_tri_area(p1, p2, p3):
     """mpmath triangle area via cross product."""
-    return (
-        abs(
-            p1[0] * (p2[1] - p3[1])
-            + p2[0] * (p3[1] - p1[1])
-            + p3[0] * (p1[1] - p2[1])
-        )
-        / 2
-    )
+    return abs(p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2
 
 
 def mp_signed_area(p1, p2, p3):
     """mpmath signed cross-product (NOT divided by 2, no abs)."""
-    return (
-        p1[0] * (p2[1] - p3[1])
-        + p2[0] * (p3[1] - p1[1])
-        + p3[0] * (p1[1] - p2[1])
-    ) / 2
+    return (p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1])) / 2
 
 
 def build_reduced_system(points_mp, edge_labels, active_triples):
@@ -109,15 +96,14 @@ def build_reduced_system(points_mp, edge_labels, active_triples):
             var0.append(y)
     # t = current min area
     t_init = min(
-        mp_tri_area(points_mp[i], points_mp[j], points_mp[k])
-        for i, j, k in active_triples
+        mp_tri_area(points_mp[i], points_mp[j], points_mp[k]) for i, j, k in active_triples
     )
     var0.append(t_init)
 
     def to_points(var):
         pts = [None] * N
         k = 0
-        for (idx, lab) in slots:
+        for idx, lab in slots:
             if lab == "B":
                 pts[idx] = (var[k], mp.mpf(0))
                 k += 1
@@ -137,7 +123,7 @@ def build_reduced_system(points_mp, edge_labels, active_triples):
         t = var[-1]
         # For each active triple, the signed area must equal ±t depending on orientation
         res = []
-        for (i, j, k) in active_triples:
+        for i, j, k in active_triples:
             sa = mp_signed_area(pts[i], pts[j], pts[k])
             # Use |sa| = t but branch continuously using sign at init
             res.append(abs(sa) - t)
@@ -150,7 +136,7 @@ def orient_residuals(points_mp, active_triples):
     """Pre-compute signs of active triples so we can use signed_area directly
     without abs() (which isn't smooth for Newton)."""
     signs = {}
-    for (i, j, k) in active_triples:
+    for i, j, k in active_triples:
         sa = mp_signed_area(points_mp[i], points_mp[j], points_mp[k])
         signs[(i, j, k)] = 1 if sa > 0 else -1
     return signs
@@ -175,6 +161,7 @@ def run_newton(warm_start_path: Path, dps: int = 60, max_iter: int = 40, verbose
 
     # Active triples at rel_tol 1e-9 (from float64 eval)
     from einstein.heilbronn_triangles import active_triples as _active
+
     active = _active(pts_f64, rel_tol=1e-9)
     if verbose:
         print(f"Active triples ({len(active)}):")
@@ -197,17 +184,14 @@ def run_newton(warm_start_path: Path, dps: int = 60, max_iter: int = 40, verbose
         else:  # "I"
             var0.append(x)
             var0.append(y)
-    t_init = min(
-        mp_tri_area(points_mp[i], points_mp[j], points_mp[k])
-        for i, j, k in active
-    )
+    t_init = min(mp_tri_area(points_mp[i], points_mp[j], points_mp[k]) for i, j, k in active)
     var0.append(t_init)
     n_vars = len(var0)
 
     def to_points(var):
         pts = [None] * N
         k = 0
-        for (idx, lab) in slots:
+        for idx, lab in slots:
             if lab == "B":
                 pts[idx] = (var[k], mp.mpf(0))
                 k += 1
@@ -226,7 +210,7 @@ def run_newton(warm_start_path: Path, dps: int = 60, max_iter: int = 40, verbose
         pts = to_points(var)
         t = var[-1]
         res = []
-        for (i, j, k) in active:
+        for i, j, k in active:
             sa = mp_signed_area(pts[i], pts[j], pts[k])
             res.append(signs[(i, j, k)] * sa - t)
         return res
@@ -243,13 +227,17 @@ def run_newton(warm_start_path: Path, dps: int = 60, max_iter: int = 40, verbose
         solver = "newton_square"
     elif n_eq > n_vars:
         if verbose:
-            print(f"Overdetermined (rows={n_eq} > cols={n_vars}) — "
-                  "using Gauss-Newton via pseudo-inverse")
+            print(
+                f"Overdetermined (rows={n_eq} > cols={n_vars}) — "
+                "using Gauss-Newton via pseudo-inverse"
+            )
         solver = "gauss_newton"
     else:
         if verbose:
-            print(f"Underdetermined (rows={n_eq} < cols={n_vars}) — "
-                  "using LS step with extra maximize-t direction")
+            print(
+                f"Underdetermined (rows={n_eq} < cols={n_vars}) — "
+                "using LS step with extra maximize-t direction"
+            )
         solver = "maximize_t"
 
     # Compute Jacobian via mpmath finite differences
@@ -299,9 +287,7 @@ def run_newton(warm_start_path: Path, dps: int = 60, max_iter: int = 40, verbose
 
     # Extract final points
     pts_final = to_points(var)
-    pts_np = np.array(
-        [[float(px), float(py)] for (px, py) in pts_final], dtype=np.float64
-    )
+    pts_np = np.array([[float(px), float(py)] for (px, py) in pts_final], dtype=np.float64)
 
     # True min area at full precision
     min_area_mp = min(
@@ -312,7 +298,7 @@ def run_newton(warm_start_path: Path, dps: int = 60, max_iter: int = 40, verbose
     true_score_f64 = float(true_score_mp)
 
     if verbose:
-        print(f"\n=== RESULTS ===")
+        print("\n=== RESULTS ===")
         print(f"Claimed (CHRONOS #1): {claimed!r}")
         print(f"mpmath true score (at {dps} dps): {mp.nstr(true_score_mp, 25)}")
         print(f"True math score rounded to float64: {true_score_f64!r}")

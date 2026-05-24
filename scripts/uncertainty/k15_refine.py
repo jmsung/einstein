@@ -5,6 +5,7 @@ positions, and runs deep CMA-ES + a few hillclimb rounds on each in parallel.
 
 Usage: uv run python scripts/uncertainty/k15_refine.py [--workers N]
 """
+
 import argparse
 import json
 import os
@@ -18,6 +19,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 sys.path.insert(0, "src")
 
 import multiprocessing as mp
+
 import numpy as np
 
 from einstein.uncertainty.fast import fast_evaluate
@@ -79,7 +81,8 @@ def cma_polish(gaps0, sigma, fevals, seed):
 
     obj = make_obj()
     es = cma.CMAEvolutionStrategy(
-        gaps0, sigma,
+        gaps0,
+        sigma,
         {"maxfevals": fevals, "verbose": -9, "tolx": 1e-12, "seed": seed, "popsize": 14},
     )
     es.optimize(obj)

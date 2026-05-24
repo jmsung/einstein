@@ -72,7 +72,9 @@ def best_u_min_S(core: np.ndarray, v0: np.ndarray) -> np.ndarray:
     result of ~8.03).
     """
     dots = core @ v0
-    link_idx = np.where((np.abs(dots - 0.5) < 1e-9) & (np.linalg.norm(core - v0, axis=1) > 1e-12))[0]
+    link_idx = np.where((np.abs(dots - 0.5) < 1e-9) & (np.linalg.norm(core - v0, axis=1) > 1e-12))[
+        0
+    ]
     W = core[link_idx]
     Wt = W - (W @ v0)[:, None] * v0[None, :]
     rng = np.random.default_rng(20260425)
@@ -108,9 +110,12 @@ def score_with_filler(core: np.ndarray, v: np.ndarray) -> float:
     return overlap_loss(full)
 
 
-def find_delta_for_target(core: np.ndarray, v0: np.ndarray, u: np.ndarray, target: float) -> tuple[float, float]:
+def find_delta_for_target(
+    core: np.ndarray, v0: np.ndarray, u: np.ndarray, target: float
+) -> tuple[float, float]:
     """Binary search δ ∈ (1e-12, 0.5) for filler = (cos δ) v0 + (sin δ) u
     such that score is closest to target."""
+
     def filler(delta):
         f = np.cos(delta) * v0 + np.sin(delta) * u
         return f / np.linalg.norm(f)
@@ -125,7 +130,10 @@ def find_delta_for_target(core: np.ndarray, v0: np.ndarray, u: np.ndarray, targe
     for d in deltas:
         sc = s(d)
         scores.append((d, sc))
-        print(f"    δ={d:.2e}  score={sc:.15f}  rank3_window=({TARGET_RANK3_LO:.6e},{TARGET_RANK3_HI:.6e})", flush=True)
+        print(
+            f"    δ={d:.2e}  score={sc:.15f}  rank3_window=({TARGET_RANK3_LO:.6e},{TARGET_RANK3_HI:.6e})",
+            flush=True,
+        )
 
     # Pick the δ closest to target that lands in window
     best_delta = None
@@ -169,9 +177,13 @@ def main():
     print("\nStep 1: Compute best escape direction u (minimize S(u) over 60°-link)")
     t0 = time.time()
     u, min_S = best_u_min_S(core, v0)
-    print(f"  done in {time.time()-t0:.1f}s.  min S(u) = {min_S:.6f}  (expected ~8.03)", flush=True)
+    print(
+        f"  done in {time.time() - t0:.1f}s.  min S(u) = {min_S:.6f}  (expected ~8.03)", flush=True
+    )
 
-    print(f"\nStep 2: Tune δ so that filler = cos(δ)·v_0 + sin(δ)·u  scores in ({TARGET_RANK3_LO}, {TARGET_RANK3_HI})")
+    print(
+        f"\nStep 2: Tune δ so that filler = cos(δ)·v_0 + sin(δ)·u  scores in ({TARGET_RANK3_LO}, {TARGET_RANK3_HI})"
+    )
     delta, score_arena = find_delta_for_target(core, v0, u, args.target)
     print(f"\n  Selected δ = {delta:.6e},  arena-path score = {score_arena!r}", flush=True)
 
@@ -187,18 +199,22 @@ def main():
     print(f"  [1] overlap_loss (arena path, diff-based pdist):     {s_arena!r}")
     print(f"  [2] overlap_loss_fast (dot-product path):            {s_dot!r}")
     print(f"      delta arena-vs-dot:                               {s_arena - s_dot:+.6e}")
-    print(f"  Running mpmath at 50 dps...", flush=True)
+    print("  Running mpmath at 50 dps...", flush=True)
     t0 = time.time()
     s_mp50 = overlap_loss_mpmath(full, dps=50)
-    print(f"  [3] overlap_loss_mpmath(dps=50):                      {s_mp50!r}  ({time.time()-t0:.1f}s)")
+    print(
+        f"  [3] overlap_loss_mpmath(dps=50):                      {s_mp50!r}  ({time.time() - t0:.1f}s)"
+    )
     t0 = time.time()
     s_mp100 = overlap_loss_mpmath(full, dps=100)
-    print(f"  [4] overlap_loss_mpmath(dps=100):                     {s_mp100!r}  ({time.time()-t0:.1f}s)")
+    print(
+        f"  [4] overlap_loss_mpmath(dps=100):                     {s_mp100!r}  ({time.time() - t0:.1f}s)"
+    )
     print(f"      delta mpmath50-vs-mpmath100:                      {s_mp50 - s_mp100:+.6e}")
     print(f"      delta arena-vs-mpmath50:                          {s_arena - s_mp50:+.6e}")
 
     # Window check
-    print(f"\nStep 4: Rank-3 window verification")
+    print("\nStep 4: Rank-3 window verification")
     print(f"  silver (Organon):  {SILVER_SCORE!r}")
     print(f"  candidate (arena): {s_arena!r}")
     print(f"  bronze (CHRONOS):  {BRONZE_SCORE!r}")
@@ -217,6 +233,7 @@ def main():
 
     # exact_check
     from einstein.p22_kissing_d12.evaluator import exact_check
+
     ec = exact_check(full)
     print(f"  exact_check (integer-Z fast path): {ec}  (must be False — has near-duplicate)")
 

@@ -7,6 +7,7 @@ verifies any improvements with the hybrid evaluator.
 Usage:
     uv run python scripts/uncertainty/k15_climb.py [--workers N] [--nm-iter N]
 """
+
 import argparse
 import json
 import os

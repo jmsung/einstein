@@ -18,7 +18,7 @@ import cma
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
+from einstein.edges_triangles.evaluator import compute_score  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
@@ -114,21 +114,25 @@ def main():
         if gen_best_score > best_score + 1e-14:
             best_score = gen_best_score
             best_multi = log_gaps_to_multi(solutions[best_idx], x_lo, x_hi)
-            print(f"  gen {gen:3d}: {best_score:.14f} (+{best_score-init_score:.2e}) NEW BEST")
+            print(f"  gen {gen:3d}: {best_score:.14f} (+{best_score - init_score:.2e}) NEW BEST")
             # Polish with L-BFGS
             try:
-                pol_multi, pol_torch_score = lbfgs_polish(best_multi, bi_xs, x_lo, x_hi, max_rounds=20)
+                pol_multi, pol_torch_score = lbfgs_polish(
+                    best_multi, bi_xs, x_lo, x_hi, max_rounds=20
+                )
                 pol_true = true_score(bi_xs, pol_multi)
                 if pol_true > best_score:
                     best_score = pol_true
                     best_multi = pol_multi
-                    print(f"            L-BFGS polish: {pol_true:.14f} (+{pol_true-init_score:.2e})")
+                    print(
+                        f"            L-BFGS polish: {pol_true:.14f} (+{pol_true - init_score:.2e})"
+                    )
             except Exception as e:
                 print(f"            L-BFGS polish failed: {e}")
         elif gen % 10 == 0:
             print(f"  gen {gen:3d}: best so far {best_score:.14f}  (sigma={es.sigma:.2e})")
 
-    print(f"\nCMA-ES done. {gen} generations, {time.time()-t0:.0f}s")
+    print(f"\nCMA-ES done. {gen} generations, {time.time() - t0:.0f}s")
     print(f"Initial: {init_score:.14f}")
     print(f"Final  : {best_score:.14f}")
     print(f"Gain   : {best_score - init_score:+.2e}")

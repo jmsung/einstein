@@ -36,7 +36,7 @@ def seg_area(y0, y1, h):
     if dy < 0:
         return y1 * h
     elif dy <= 3 * h:
-        return -dy**2 / 6 + y1 * h
+        return -(dy**2) / 6 + y1 * h
     else:
         return y0 * h + 1.5 * h**2
 
@@ -176,8 +176,7 @@ def reinsertion_sweep(xs, ys, cand_xs, cand_ys, verbose=True):
             n_improved += 1
             if verbose and n_improved <= 5:
                 new_score = total_score(full_xs[1:-1], full_ys[1:-1])
-                print(f"  point {point_idx}: gain={best_gain:.2e} "
-                      f"score={new_score:.16f}")
+                print(f"  point {point_idx}: gain={best_gain:.2e} score={new_score:.16f}")
 
     # Extract inner points
     new_xs = full_xs[1:-1].copy()
@@ -194,9 +193,12 @@ def optimized_reinsertion(xs, ys, cand_xs, cand_ys, max_sweeps=50):
 
     for sweep in range(max_sweeps):
         xs_new, ys_new, score_new, n_improved = reinsertion_sweep(
-            best_xs, best_ys, cand_xs, cand_ys, verbose=(sweep == 0))
-        print(f"Sweep {sweep}: score={score_new:.16f} improved={n_improved} "
-              f"Δ={score_new - best_score:.2e}")
+            best_xs, best_ys, cand_xs, cand_ys, verbose=(sweep == 0)
+        )
+        print(
+            f"Sweep {sweep}: score={score_new:.16f} improved={n_improved} "
+            f"Δ={score_new - best_score:.2e}"
+        )
 
         if score_new > best_score:
             best_score = score_new
@@ -252,10 +254,9 @@ def main():
 
     # Run reinsertion optimization
     print("\n=== Reinsertion optimization ===")
-    best_xs, best_ys, best_score = optimized_reinsertion(
-        xs, ys, cand_xs, cand_ys, max_sweeps=20)
+    best_xs, best_ys, best_score = optimized_reinsertion(xs, ys, cand_xs, cand_ys, max_sweeps=20)
 
-    print(f"\n=== RESULT ===")
+    print("\n=== RESULT ===")
     print(f"Baseline:  {baseline:.16f}")
     print(f"Best:      {best_score:.16f}")
     print(f"Δ:         {best_score - baseline:.2e}")

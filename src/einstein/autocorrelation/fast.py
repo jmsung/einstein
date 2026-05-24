@@ -116,7 +116,9 @@ def diagnose(values: np.ndarray | list[float]) -> dict:
         "conv_length": len(conv),
         "conv_max": float(c_max),
         "conv_mean": float(np.mean(conv)),
-        "conv_std_over_mean": float(np.std(conv) / np.mean(conv)) if np.mean(conv) > 0 else float("inf"),
+        "conv_std_over_mean": float(np.std(conv) / np.mean(conv))
+        if np.mean(conv) > 0
+        else float("inf"),
         "flatness_0.1pct": int(near_max_01),
         "flatness_1pct": int(near_max_1),
         "flatness_10pct": int(near_max_10),

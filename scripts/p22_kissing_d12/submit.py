@@ -98,49 +98,55 @@ def run_checklist(submit_path: Path) -> dict:
     vectors = np.array(cand["vectors"], dtype=np.float64)
     print(f"    shape: {vectors.shape}")
     assert vectors.shape == (841, 12), f"WRONG SHAPE: {vectors.shape}"
-    print(f"    ✓ shape OK")
+    print("    ✓ shape OK")
 
     # 2. Score via three independent paths
-    print(f"\n[2] Triple-verify candidate score:")
+    print("\n[2] Triple-verify candidate score:")
     s_arena = overlap_loss(vectors)
     s_dot = overlap_loss_fast(vectors)
     print(f"    [a] overlap_loss (arena diff-based):  {s_arena!r}")
     print(f"    [b] overlap_loss_fast (dot-based):    {s_dot!r}")
     print(f"        delta:                              {s_arena - s_dot:+.6e}")
-    print(f"    [c] overlap_loss_mpmath @ 50 dps...", end="", flush=True)
+    print("    [c] overlap_loss_mpmath @ 50 dps...", end="", flush=True)
     t0 = time.time()
     s_mp = overlap_loss_mpmath(vectors, dps=50)
-    print(f"  {s_mp!r}  ({time.time()-t0:.1f}s)")
+    print(f"  {s_mp!r}  ({time.time() - t0:.1f}s)")
     print(f"        delta arena−mpmath: {s_arena - s_mp:+.6e}")
 
     # 3. Verify CHRONOS SOTA still scores 2.0 in our evaluator
-    print(f"\n[3] Verify evaluator parity against CHRONOS public SOTA (must = 2.0)")
+    print("\n[3] Verify evaluator parity against CHRONOS public SOTA (must = 2.0)")
     chronos_data = json.loads(CHRONOS_PATH.read_text())
     chronos_v = np.array(chronos_data["vectors"], dtype=np.float64)
     chronos_score = overlap_loss(chronos_v)
     print(f"    CHRONOS SOTA local score: {chronos_score!r}")
     assert abs(chronos_score - 2.0) < 1e-12, "EVALUATOR DRIFT — DO NOT SUBMIT"
-    print(f"    ✓ evaluator parity OK")
+    print("    ✓ evaluator parity OK")
 
     # 4. Sanity: not byte-identical to CHRONOS
     same = np.allclose(vectors, chronos_v, atol=1e-15)
-    print(f"\n[4] Payload-uniqueness check:")
+    print("\n[4] Payload-uniqueness check:")
     print(f"    byte-identical to CHRONOS:   {same}  (must be False)")
     assert not same, "PAYLOAD IS A COPY OF CHRONOS — would be rejected"
-    print(f"    ✓ candidate is structurally distinct from CHRONOS")
+    print("    ✓ candidate is structurally distinct from CHRONOS")
 
     # 5. Live leaderboard
-    print(f"\n[5] Live leaderboard (refresh):")
+    print("\n[5] Live leaderboard (refresh):")
     lb = check_leaderboard(PROBLEM_ID, limit=10)
     print(f"    {'#':>2} {'agent':<28} {'score':<25} {'id':>8}")
     for i, sol in enumerate(lb, 1):
         sc = sol.get("score")
         sc_str = f"{sc:.15f}" if isinstance(sc, (int, float)) else str(sc)
-        marker = " <<< proposed slot" if (i == 3 and isinstance(sc, (int, float)) and s_arena < sc) else ""
-        print(f"    {i:>2} {sol.get('agentName', '?'):<28} {sc_str:<25} {sol.get('id', -1):>8}{marker}")
+        marker = (
+            " <<< proposed slot"
+            if (i == 3 and isinstance(sc, (int, float)) and s_arena < sc)
+            else ""
+        )
+        print(
+            f"    {i:>2} {sol.get('agentName', '?'):<28} {sc_str:<25} {sol.get('id', -1):>8}{marker}"
+        )
 
     # 6. minImprovement live
-    print(f"\n[6] Live minImprovement check:")
+    print("\n[6] Live minImprovement check:")
     mi = fetch_min_improvement()
     print(f"    minImprovement = {mi}")
 
@@ -154,7 +160,7 @@ def run_checklist(submit_path: Path) -> dict:
     print(f"\n[7] Predicted rank for our score {candidate_score!r}: #{rank}")
 
     # 8. Window check
-    print(f"\n[8] Rank-3 window check (target):")
+    print("\n[8] Rank-3 window check (target):")
     silver = lb[1]["score"] if len(lb) > 1 else None
     bronze = lb[2]["score"] if len(lb) > 2 else None
     print(f"    silver: {silver!r}")
@@ -185,14 +191,14 @@ def main():
     cand_path = Path(args.candidate)
     if not cand_path.exists():
         print(f"ERROR: candidate not found at {cand_path}")
-        print(f"Run: uv run python scripts/p22_kissing_d12/build_rank3_squeeze.py")
+        print("Run: uv run python scripts/p22_kissing_d12/build_rank3_squeeze.py")
         sys.exit(1)
 
     ctx = run_checklist(cand_path)
 
     print("\n" + "=" * 70)
-    print(f"PROPOSED SUBMISSION:")
-    print(f"  problem:        P22 (Kissing Number d=12)")
+    print("PROPOSED SUBMISSION:")
+    print("  problem:        P22 (Kissing Number d=12)")
     print(f"  candidate:      {cand_path}")
     print(f"  arena score:    {ctx['candidate_score_arena']!r}")
     print(f"  mpmath score:   {ctx['candidate_score_mpmath']!r}")

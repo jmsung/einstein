@@ -8,13 +8,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
 
-from einstein.circles_rectangle.evaluator import N_CIRCLES, evaluate_verbose
+from einstein.circles_rectangle.evaluator import N_CIRCLES
 from einstein.circles_rectangle.polish import polish
 
 CAPYBARA = 2.3658323759185156
@@ -72,7 +71,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--n-random", type=int, default=30)
     parser.add_argument("--seed-offset", type=int, default=0)
-    parser.add_argument("--out", type=str, default="results/problem-17-circles-rectangle/multistart.jsonl")
+    parser.add_argument(
+        "--out", type=str, default="results/problem-17-circles-rectangle/multistart.jsonl"
+    )
     args = parser.parse_args()
 
     out_path = Path(args.out)
@@ -134,17 +135,19 @@ def main():
 
         print(f"[{idx:3d}] {name:<25} score={score:.13f} Δcap={delta:+.3e}{marker}")
 
-        log.append({
-            "idx": idx,
-            "name": name,
-            "score": score,
-            "delta_cap": delta,
-            "perim": info["perimeter"],
-            "circles": polished.tolist(),
-        })
+        log.append(
+            {
+                "idx": idx,
+                "name": name,
+                "score": score,
+                "delta_cap": delta,
+                "perim": info["perimeter"],
+                "circles": polished.tolist(),
+            }
+        )
 
     print()
-    print(f"Best: idx={best_idx}  score={best_score:.13f}  (Δcap={best_score-CAPYBARA:+.3e})")
+    print(f"Best: idx={best_idx}  score={best_score:.13f}  (Δcap={best_score - CAPYBARA:+.3e})")
     print(f"Total time: {time.time() - t0:.1f}s")
 
     # Save all

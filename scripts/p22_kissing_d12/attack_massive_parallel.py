@@ -67,7 +67,9 @@ def batch_score_filler_gpu(core_t: torch.Tensor, V_t: torch.Tensor) -> torch.Ten
     return pen.sum(dim=1)
 
 
-def filler_rgd_cpu(core: np.ndarray, v0: np.ndarray, steps: int, lr: float) -> tuple[np.ndarray, float]:
+def filler_rgd_cpu(
+    core: np.ndarray, v0: np.ndarray, steps: int, lr: float
+) -> tuple[np.ndarray, float]:
     """Refine in float64 with exact Riemannian GD."""
     v = v0 / np.linalg.norm(v0)
     best_v = v.copy()
@@ -104,7 +106,11 @@ def main():
     ap.add_argument("--seed", type=int, default=20260425)
     args = ap.parse_args()
 
-    device = "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
+    device = (
+        "mps"
+        if torch.backends.mps.is_available()
+        else ("cuda" if torch.cuda.is_available() else "cpu")
+    )
     print(f"Device: {device}", flush=True)
     dtype_gpu = torch.float32  # MPS performance
 
@@ -140,7 +146,10 @@ def main():
             best_now = top_scores.min().item()
             elapsed = time.time() - t0
             rate = (b + 1) * args.batch / elapsed
-            print(f"  batch {b+1}/{n_batches}  best={best_now:.6f}  rate={rate/1e6:.2f}M/s  ({elapsed:.1f}s)", flush=True)
+            print(
+                f"  batch {b + 1}/{n_batches}  best={best_now:.6f}  rate={rate / 1e6:.2f}M/s  ({elapsed:.1f}s)",
+                flush=True,
+            )
 
     # Copy top-K to CPU for refinement
     top_scores_cpu = top_scores.cpu().numpy().astype(np.float64)
@@ -149,7 +158,10 @@ def main():
     order = np.argsort(top_scores_cpu)
     top_scores_cpu = top_scores_cpu[order]
     top_vecs_cpu = top_vecs_cpu[order]
-    print(f"\nPhase 1 done. Top-{top_k} GPU scores range: [{top_scores_cpu[0]:.6f}, {top_scores_cpu[-1]:.6f}]", flush=True)
+    print(
+        f"\nPhase 1 done. Top-{top_k} GPU scores range: [{top_scores_cpu[0]:.6f}, {top_scores_cpu[-1]:.6f}]",
+        flush=True,
+    )
 
     # Phase 2: refine with CPU float64 RGD
     print(f"\nPhase 2 (CPU float64): refine top-{top_k} with exact RGD", flush=True)
@@ -167,16 +179,21 @@ def main():
             best_overall_s = s_opt
             best_overall_v = v_opt
             best_overall_source = f"rank{i}_gpu_score{top_scores_cpu[i]:.6f}"
-            print(f"  refine[{i}]  initial={top_scores_cpu[i]:.6f}  refined={s_opt:.15f}  *** NEW BEST ***", flush=True)
+            print(
+                f"  refine[{i}]  initial={top_scores_cpu[i]:.6f}  refined={s_opt:.15f}  *** NEW BEST ***",
+                flush=True,
+            )
         if i < 10 or i % 50 == 0:
-            print(f"  refine[{i}]  initial={top_scores_cpu[i]:.6f}  refined={s_opt:.9f}", flush=True)
+            print(
+                f"  refine[{i}]  initial={top_scores_cpu[i]:.6f}  refined={s_opt:.9f}", flush=True
+            )
 
     elapsed_refine = time.time() - t1
     print(f"\nPhase 2 done in {elapsed_refine:.1f}s", flush=True)
 
     # Summary
     refined.sort(key=lambda x: x[0])
-    print(f"\n=== Top 20 refined scores ===")
+    print("\n=== Top 20 refined scores ===")
     for k, (s, _) in enumerate(refined[:20]):
         print(f"  {k:2d}:  {s:.15f}")
 
@@ -185,7 +202,7 @@ def main():
     print(f"Improvement over 2.0: {2.0 - best_overall_s:+.6e}")
 
     if best_overall_v is not None and best_overall_s < 2.0:
-        print(f"\n*** FOUND SUB-2.0 CONFIGURATION ***")
+        print("\n*** FOUND SUB-2.0 CONFIGURATION ***")
         vectors_out = np.vstack([core_np, best_overall_v[None, :]])
         out = {
             "method": "massive_parallel_gpu_search",

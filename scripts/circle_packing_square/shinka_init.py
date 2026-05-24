@@ -53,8 +53,7 @@ def shinka_init() -> np.ndarray:
     r_inner = 0.23
     for k in range(6):
         angle = k * GOLDEN_ANGLE
-        centers[9 + k] = [0.5 + r_inner * math.cos(angle),
-                          0.5 + r_inner * math.sin(angle)]
+        centers[9 + k] = [0.5 + r_inner * math.cos(angle), 0.5 + r_inner * math.sin(angle)]
         radii[9 + k] = 0.07
 
     # 15-25: 11 outer ring at radius 0.48 * 1.003 (with offset)
@@ -86,9 +85,9 @@ def ring_rotate(circles: np.ndarray, ring_idx, angle: float) -> np.ndarray:
 
 def worker(args):
     seed, mode, n_iters = args
-    import scipy.optimize as opt
     import numpy as np
-    from einstein.circle_packing_square import N_CIRCLES, evaluate
+
+    from einstein.circle_packing_square import evaluate
     from einstein.circle_packing_square.polish import polish
 
     rng = np.random.default_rng(seed)
@@ -140,7 +139,9 @@ def worker(args):
                 # Quick polish
                 p_cur = cand
                 for slack in (1e-4, 1e-6, 1e-8, 1e-10):
-                    p_cur, _ = polish(p_cur, method="SLSQP", ftol=1e-14, maxiter=600, overlap_slack=slack)
+                    p_cur, _ = polish(
+                        p_cur, method="SLSQP", ftol=1e-14, maxiter=600, overlap_slack=slack
+                    )
                 cand_score = evaluate({"circles": p_cur.tolist()}, tol=1e-9)
             except Exception:
                 continue
@@ -189,7 +190,9 @@ def worker(args):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--mode", choices=["spiral_jitter", "shinka_sa", "spiral_only"], default="shinka_sa")
+    p.add_argument(
+        "--mode", choices=["spiral_jitter", "shinka_sa", "spiral_only"], default="shinka_sa"
+    )
     p.add_argument("--n-trials", type=int, default=20)
     p.add_argument("--n-iters", type=int, default=100)
     p.add_argument("--workers", type=int, default=None)
@@ -202,7 +205,7 @@ def main():
 
     # Print init
     init = shinka_init()
-    print(f"Init sum_r: {init[:,2].sum():.6f}")
+    print(f"Init sum_r: {init[:, 2].sum():.6f}")
 
     tasks = [(args.seed_base + i, args.mode, args.n_iters) for i in range(args.n_trials)]
 
@@ -222,16 +225,25 @@ def main():
                 best_score = score
                 best_c = circles
                 elapsed = time.time() - t0
-                marker = " <<< above AE!" if score > AE else f" (vs AE {score-AE:+.3e})"
-                print(f"  seed={seed} score={score:.16f}{marker} ({elapsed:.1f}s, {n_done}/{args.n_trials})", flush=True)
+                marker = " <<< above AE!" if score > AE else f" (vs AE {score - AE:+.3e})"
+                print(
+                    f"  seed={seed} score={score:.16f}{marker} ({elapsed:.1f}s, {n_done}/{args.n_trials})",
+                    flush=True,
+                )
 
-    print(f"\nFinal: best={best_score:.16f}  vs AE: {best_score-AE:+.3e}  ({time.time()-t0:.1f}s)")
+    print(
+        f"\nFinal: best={best_score:.16f}  vs AE: {best_score - AE:+.3e}  ({time.time() - t0:.1f}s)"
+    )
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "best_score": best_score,
-            "best_circles": best_c,
-        }, f, indent=2)
+        json.dump(
+            {
+                "best_score": best_score,
+                "best_circles": best_c,
+            },
+            f,
+            indent=2,
+        )
 
 
 if __name__ == "__main__":

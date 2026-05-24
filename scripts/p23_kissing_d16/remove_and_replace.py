@@ -34,7 +34,7 @@ def smooth_score(params: np.ndarray, core_centers: np.ndarray, beta: float) -> f
 
     # f1 vs core
     diff1 = c1[None, :] - core_centers
-    dist1 = np.sqrt((diff1 ** 2).sum(axis=1) + 1e-30)
+    dist1 = np.sqrt((diff1**2).sum(axis=1) + 1e-30)
     h1 = 2.0 - dist1
     bh1 = beta * h1
     sp1 = np.where(bh1 > 30, bh1, np.log1p(np.exp(np.minimum(bh1, 30))))
@@ -42,7 +42,7 @@ def smooth_score(params: np.ndarray, core_centers: np.ndarray, beta: float) -> f
 
     # f2 vs core
     diff2 = c2[None, :] - core_centers
-    dist2 = np.sqrt((diff2 ** 2).sum(axis=1) + 1e-30)
+    dist2 = np.sqrt((diff2**2).sum(axis=1) + 1e-30)
     h2 = 2.0 - dist2
     bh2 = beta * h2
     sp2 = np.where(bh2 > 30, bh2, np.log1p(np.exp(np.minimum(bh2, 30))))
@@ -50,18 +50,27 @@ def smooth_score(params: np.ndarray, core_centers: np.ndarray, beta: float) -> f
 
     # f1 vs f2
     diff12 = c1 - c2
-    d12 = np.sqrt((diff12 ** 2).sum() + 1e-30)
+    d12 = np.sqrt((diff12**2).sum() + 1e-30)
     h12 = 2.0 - d12
     bh12 = beta * h12
-    sp12 = max(bh12, np.log1p(np.exp(min(bh12, 30)))) / beta if bh12 > 30 else float(np.log1p(np.exp(bh12)) / beta)
+    sp12 = (
+        max(bh12, np.log1p(np.exp(min(bh12, 30)))) / beta
+        if bh12 > 30
+        else float(np.log1p(np.exp(bh12)) / beta)
+    )
 
     return float(s1 + s2 + sp12)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--drop", type=int, nargs="+", default=[0, 32, 2272],
-                        help="Indices of BW16 vectors to try dropping (one at a time)")
+    parser.add_argument(
+        "--drop",
+        type=int,
+        nargs="+",
+        default=[0, 32, 2272],
+        help="Indices of BW16 vectors to try dropping (one at a time)",
+    )
     parser.add_argument("--n-starts", type=int, default=30)
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
@@ -88,8 +97,13 @@ def main() -> None:
             params = np.concatenate([init1, init2])
 
             for beta in (10, 50, 200, 1000):
-                res = minimize(smooth_score, params, args=(core_centers, beta),
-                               method="L-BFGS-B", options={"maxiter": 100, "ftol": 1e-15})
+                res = minimize(
+                    smooth_score,
+                    params,
+                    args=(core_centers, beta),
+                    method="L-BFGS-B",
+                    options={"maxiter": 100, "ftol": 1e-15},
+                )
                 params = res.x
 
             f1 = params[:16] / np.linalg.norm(params[:16])

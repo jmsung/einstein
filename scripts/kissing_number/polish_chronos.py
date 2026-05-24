@@ -98,14 +98,12 @@ def polish_round(
         if (it + 1) % 200_000 == 0:
             elapsed = time.time() - t0
             print(
-                f"  [{label} {scale:.0e}] {it+1:>8,d} | best={best:.15f} "
-                f"impr={improvements} ({improvements/(it+1)*100:.2f}%) {elapsed:.0f}s",
+                f"  [{label} {scale:.0e}] {it + 1:>8,d} | best={best:.15f} "
+                f"impr={improvements} ({improvements / (it + 1) * 100:.2f}%) {elapsed:.0f}s",
                 flush=True,
             )
         if time.time() - t0 > time_limit_s:
-            print(
-                f"  [{label} {scale:.0e}] time-limit at {it+1:,} iters", flush=True
-            )
+            print(f"  [{label} {scale:.0e}] time-limit at {it + 1:,} iters", flush=True)
             break
     return best_u, best, improvements
 

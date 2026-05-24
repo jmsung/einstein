@@ -10,9 +10,7 @@ Score = outer_side_length + penalty_per_violation * num_violations.
 import numpy as np
 
 
-def hexagon_vertices(
-    cx: float, cy: float, angle_deg: float, side: float = 1.0
-) -> np.ndarray:
+def hexagon_vertices(cx: float, cy: float, angle_deg: float, side: float = 1.0) -> np.ndarray:
     """Compute 6 vertices of a regular hexagon.
 
     Args:
@@ -63,9 +61,7 @@ def polygons_overlap(verts_a: np.ndarray, verts_b: np.ndarray) -> bool:
     return True
 
 
-def polygon_contained(
-    inner: np.ndarray, outer: np.ndarray, tol: float = 0.0
-) -> bool:
+def polygon_contained(inner: np.ndarray, outer: np.ndarray, tol: float = 0.0) -> bool:
     """Check if inner polygon is fully contained within outer convex polygon.
 
     Uses the half-plane test: inner is contained iff every inner vertex is on
@@ -121,9 +117,7 @@ def evaluate(data: dict, penalty: float = 1000.0) -> float:
         inner_verts.append(hexagon_vertices(cx, cy, angle, side=1.0))
 
     # Compute outer hexagon vertices
-    outer_verts = hexagon_vertices(
-        outer_center[0], outer_center[1], outer_angle, side=outer_side
-    )
+    outer_verts = hexagon_vertices(outer_center[0], outer_center[1], outer_angle, side=outer_side)
 
     violations = 0
 

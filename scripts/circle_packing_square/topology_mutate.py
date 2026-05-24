@@ -26,8 +26,8 @@ import numpy as np
 
 def worker(args):
     seed, base_circles, edge_to_drop, edge_to_add, sigma = args
-    import math
     import numpy as np
+
     from einstein.circle_packing_square import N_CIRCLES, evaluate
     from einstein.circle_packing_square.polish import polish
 
@@ -94,8 +94,9 @@ def get_active_pairs(circles, eps=1e-7):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--base", type=str, default="results-temp/p14_top.json",
-                   help="warm-start solution(s) JSON")
+    p.add_argument(
+        "--base", type=str, default="results-temp/p14_top.json", help="warm-start solution(s) JSON"
+    )
     p.add_argument("--n-trials", type=int, default=400)
     p.add_argument("--workers", type=int, default=None)
     p.add_argument("--sigma", type=float, default=0.02)
@@ -116,7 +117,7 @@ def main():
         base = np.array(data["circles"], dtype=np.float64)
     else:
         raise ValueError("Unknown base file format")
-    print(f"Base sum_r: {base[:,2].sum():.13f}")
+    print(f"Base sum_r: {base[:, 2].sum():.13f}")
 
     active = get_active_pairs(base, eps=1e-7)
     print(f"Active pair contacts: {len(active)}")
@@ -157,20 +158,32 @@ def main():
                 history.append({"trial": seed, "score": score})
                 elapsed = time.time() - t0
                 marker = " <<< above AE!" if score > AE + 1e-12 else ""
-                print(f"  seed={seed:5d} NEW BEST {score:.16f}  d_AE={score-AE:+.2e}  ({elapsed:.1f}s){marker}", flush=True)
+                print(
+                    f"  seed={seed:5d} NEW BEST {score:.16f}  d_AE={score - AE:+.2e}  ({elapsed:.1f}s){marker}",
+                    flush=True,
+                )
             elif n_done % 50 == 0:
                 elapsed = time.time() - t0
-                print(f"  ...{n_done}/{args.n_trials}, best={best_score:.16f}, fail={n_failed}, {elapsed:.1f}s", flush=True)
+                print(
+                    f"  ...{n_done}/{args.n_trials}, best={best_score:.16f}, fail={n_failed}, {elapsed:.1f}s",
+                    flush=True,
+                )
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with open(args.output, "w") as f:
-        json.dump({
-            "n_trials": args.n_trials,
-            "best_score": best_score,
-            "best_circles": best_circles,
-            "history": history,
-        }, f, indent=2)
-    print(f"\nFinal: best={best_score:.16f}  ({time.time()-t0:.1f}s, fail={n_failed}/{args.n_trials})")
+        json.dump(
+            {
+                "n_trials": args.n_trials,
+                "best_score": best_score,
+                "best_circles": best_circles,
+                "history": history,
+            },
+            f,
+            indent=2,
+        )
+    print(
+        f"\nFinal: best={best_score:.16f}  ({time.time() - t0:.1f}s, fail={n_failed}/{args.n_trials})"
+    )
 
 
 if __name__ == "__main__":

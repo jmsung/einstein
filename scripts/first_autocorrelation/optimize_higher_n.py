@@ -6,6 +6,7 @@ what worked going from 30k→90k (improvement of 1.23e-6).
 
 Uses v^2 parameterization with aggressive low-beta L-BFGS exploration.
 """
+
 from __future__ import annotations
 
 import json
@@ -57,9 +58,14 @@ def surrogate_exp(v: torch.Tensor, beta: float) -> torch.Tensor:
     return smooth_max(ratios, beta)
 
 
-def lbfgs_run(v_init: np.ndarray, betas: list[float], param_type: str = "vsq",
-              max_iter: int = 2000, lr: float = 1.0,
-              history_size: int = 200) -> tuple[np.ndarray, float]:
+def lbfgs_run(
+    v_init: np.ndarray,
+    betas: list[float],
+    param_type: str = "vsq",
+    max_iter: int = 2000,
+    lr: float = 1.0,
+    history_size: int = 200,
+) -> tuple[np.ndarray, float]:
     """Run L-BFGS cascade. param_type: 'vsq' for f=v^2, 'exp' for f=exp(v)."""
     v = torch.tensor(v_init.copy(), dtype=torch.float64, requires_grad=True)
     best_c = float("inf")
@@ -69,9 +75,13 @@ def lbfgs_run(v_init: np.ndarray, betas: list[float], param_type: str = "vsq",
 
     for beta in betas:
         opt = torch.optim.LBFGS(
-            [v], lr=lr, max_iter=max_iter,
-            tolerance_grad=1e-15, tolerance_change=1e-20,
-            history_size=history_size, line_search_fn="strong_wolfe",
+            [v],
+            lr=lr,
+            max_iter=max_iter,
+            tolerance_grad=1e-15,
+            tolerance_change=1e-20,
+            history_size=history_size,
+            line_search_fn="strong_wolfe",
         )
 
         def closure():
@@ -148,9 +158,9 @@ def main():
         if elapsed > 10800:  # 3h limit
             break
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Strategy: block-repeat {n_org} → {n_target} (×{mult}), then v^2 L-BFGS")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         f_up = np.repeat(f_org, mult)
         c_up = exact_score(f_up)
@@ -181,12 +191,13 @@ def main():
                 betas = [1e5, 5e5, 1e6, 5e6, 1e7, 1e8, 1e9, 1e10, 1e11]
                 hist, iters = 200, 2000
 
-            print(f"\n  Seed {seed}: n={n_target}, noise={noise:.1e}, "
-                  f"hist={hist}, iters={iters}", flush=True)
+            print(
+                f"\n  Seed {seed}: n={n_target}, noise={noise:.1e}, hist={hist}, iters={iters}",
+                flush=True,
+            )
 
             t0 = time.time()
-            f_new, c_new = lbfgs_run(v0, betas, param_type="vsq",
-                                      max_iter=iters, history_size=hist)
+            f_new, c_new = lbfgs_run(v0, betas, param_type="vsq", max_iter=iters, history_size=hist)
             dt = time.time() - t0
             print(f"  => C={c_new:.18f} ({dt:.0f}s)", flush=True)
             update_best(f_new, c_new, f"n{n_target}-vsq-s{seed}")
@@ -195,9 +206,9 @@ def main():
     if f_30k is not None:
         elapsed = time.time() - t_start
         if elapsed < 10800:
-            print(f"\n{'='*60}")
-            print(f"Strategy: 30k→180k (×6), then v^2 L-BFGS")
-            print(f"{'='*60}")
+            print(f"\n{'=' * 60}")
+            print("Strategy: 30k→180k (×6), then v^2 L-BFGS")
+            print(f"{'=' * 60}")
 
             f_up = np.repeat(f_30k, 6)
             c_up = exact_score(f_up)
@@ -215,8 +226,9 @@ def main():
                 betas = [1e6, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13]
                 print(f"\n  Seed {seed}: n=180000 from 30k base", flush=True)
                 t0 = time.time()
-                f_new, c_new = lbfgs_run(v0, betas, param_type="vsq",
-                                          max_iter=3000, history_size=300)
+                f_new, c_new = lbfgs_run(
+                    v0, betas, param_type="vsq", max_iter=3000, history_size=300
+                )
                 dt = time.time() - t0
                 print(f"  => C={c_new:.18f} ({dt:.0f}s)", flush=True)
                 update_best(f_new, c_new, f"n180k-from30k-s{seed}")
@@ -224,9 +236,9 @@ def main():
     # ── Strategy 3: exp(v) at 180k from OrganonAgent ─────────────────────
     elapsed = time.time() - t_start
     if elapsed < 10800:
-        print(f"\n{'='*60}")
-        print(f"Strategy: exp(v) L-BFGS at n=180k from OrganonAgent")
-        print(f"{'='*60}")
+        print(f"\n{'=' * 60}")
+        print("Strategy: exp(v) L-BFGS at n=180k from OrganonAgent")
+        print(f"{'=' * 60}")
 
         f_up = np.repeat(f_org, 2)
         for seed in range(3):
@@ -241,26 +253,26 @@ def main():
             betas = [1e6, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13]
             print(f"\n  Seed {seed}: exp(v) at n=180000", flush=True)
             t0 = time.time()
-            f_new, c_new = lbfgs_run(v0, betas, param_type="exp",
-                                      max_iter=2000, history_size=200)
+            f_new, c_new = lbfgs_run(v0, betas, param_type="exp", max_iter=2000, history_size=200)
             dt = time.time() - t0
             print(f"  => C={c_new:.18f} ({dt:.0f}s)", flush=True)
             update_best(f_new, c_new, f"n180k-exp-s{seed}")
 
     # ── Summary ──────────────────────────────────────────────────────────
     elapsed = time.time() - t_start
-    print(f"\n{'='*60}")
-    print(f"HIGHER-N OPTIMIZATION COMPLETE")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("HIGHER-N OPTIMIZATION COMPLETE")
+    print(f"{'=' * 60}")
     print(f"OrganonAgent #1: {c_org:.18f}")
     print(f"Our best:        {global_best_c:.18f}")
     print(f"Delta:           {c_org - global_best_c:+.6e}")
     beat = global_best_c < target
     print(f"BEATS #1:        {'YES' if beat else 'NO'}")
-    print(f"Total time:      {elapsed/60:.1f} min")
+    print(f"Total time:      {elapsed / 60:.1f} min")
 
-    save_solution(global_best_f, global_best_c,
-                 RESULTS / "higher-n-best.json", tag="higher-n-final")
+    save_solution(
+        global_best_f, global_best_c, RESULTS / "higher-n-best.json", tag="higher-n-final"
+    )
 
 
 if __name__ == "__main__":

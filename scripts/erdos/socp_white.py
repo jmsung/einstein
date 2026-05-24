@@ -25,8 +25,8 @@ from scipy.optimize import minimize as scipy_minimize
 from scipy.signal import fftconvolve
 
 sys.path.insert(0, "src")
-from einstein.erdos.fast import fast_evaluate
 from einstein.erdos.evaluator import compute_upper_bound
+from einstein.erdos.fast import fast_evaluate
 
 warnings.filterwarnings("ignore")
 
@@ -45,6 +45,7 @@ TIME_LIMIT = 1500  # 25 minutes total (leave margin from 30)
 # ---------------------------------------------------------------------------
 # Core utilities
 # ---------------------------------------------------------------------------
+
 
 def normalize(h: np.ndarray) -> np.ndarray:
     """Project h onto [0,1] with sum = n/2."""
@@ -140,6 +141,7 @@ def load_sota() -> np.ndarray:
 # Approach 1: Cosine parameterization h(x) = clip(0.5 + sum a_k cos(...), 0, 1)
 # ---------------------------------------------------------------------------
 
+
 def cosine_to_h(coeffs: np.ndarray, n: int) -> np.ndarray:
     """Build h(x) = 0.5 + sum_{k=1}^{K} a_k * cos(2*pi*k*x/2) on [0,2).
 
@@ -156,8 +158,7 @@ def cosine_to_h(coeffs: np.ndarray, n: int) -> np.ndarray:
     return normalize(h)
 
 
-def cosine_objective(coeffs: np.ndarray, n: int, beta: float,
-                     white_penalty: float = 0.0) -> float:
+def cosine_objective(coeffs: np.ndarray, n: int, beta: float, white_penalty: float = 0.0) -> float:
     """Objective: LogSumExp smooth max + optional White constraint penalty."""
     h = cosine_to_h(coeffs, n)
     corr = correlation_profile(h)
@@ -179,8 +180,8 @@ def cosine_objective_with_white(coeffs: np.ndarray, n: int, beta: float) -> floa
     # White constraint: even Fourier coefficients of overlap <= 0
     fft_corr = np.fft.rfft(corr)
     even_violations = np.maximum(0, fft_corr[::2].real)
-    penalty = float(np.sum(even_violations ** 2))
-    obj += 10.0 * penalty / (n ** 2)
+    penalty = float(np.sum(even_violations**2))
+    obj += 10.0 * penalty / (n**2)
 
     return obj
 
@@ -220,7 +221,7 @@ def approach_1_cosine_param(time_limit: float = 400.0) -> tuple[np.ndarray | Non
         if best_coeffs is not None:
             prev_K = len(best_coeffs)
             x0_warm = np.zeros(K)
-            x0_warm[:min(K, prev_K)] = best_coeffs[:min(K, prev_K)]
+            x0_warm[: min(K, prev_K)] = best_coeffs[: min(K, prev_K)]
             inits.insert(0, ("warm_prev", x0_warm))
 
         # Beta annealing schedule: start smooth, end sharp
@@ -300,6 +301,7 @@ def approach_1_cosine_param(time_limit: float = 400.0) -> tuple[np.ndarray | Non
 # ---------------------------------------------------------------------------
 # Approach 2: Warm-start from SOTA, optimize in Fourier space
 # ---------------------------------------------------------------------------
+
 
 def extract_fourier_coeffs(h: np.ndarray, K: int) -> np.ndarray:
     """Extract cosine Fourier coefficients from h by least-squares projection.
@@ -441,6 +443,7 @@ def approach_2_warmstart(time_limit: float = 400.0) -> tuple[np.ndarray | None, 
 # Approach 3: Direct optimization on h values with White-projected gradient
 # ---------------------------------------------------------------------------
 
+
 def gradient_wrt_max_lag(h: np.ndarray) -> np.ndarray:
     """Compute gradient of max overlap C w.r.t. h at the argmax lag."""
     n = len(h)
@@ -453,7 +456,7 @@ def gradient_wrt_max_lag(h: np.ndarray) -> np.ndarray:
         j_minus_lag = j - lag
         j_plus_lag = j + lag
         if 0 <= j_minus_lag < n:
-            grad[j] += (1.0 - h[j_minus_lag])
+            grad[j] += 1.0 - h[j_minus_lag]
         if 0 <= j_plus_lag < n:
             grad[j] -= h[j_plus_lag]
     return grad * 2.0 / n
@@ -507,9 +510,9 @@ def project_white(h: np.ndarray, strength: float = 0.1) -> np.ndarray:
     return normalize(h_new)
 
 
-def approach_3_direct_white(time_limit: float = 400.0,
-                            warm_h: np.ndarray | None = None
-                            ) -> tuple[np.ndarray | None, float]:
+def approach_3_direct_white(
+    time_limit: float = 400.0, warm_h: np.ndarray | None = None
+) -> tuple[np.ndarray | None, float]:
     """Approach 3: Direct gradient descent with White constraint projection."""
     print("\n" + "=" * 70)
     print("APPROACH 3: Direct gradient + White projection")
@@ -580,8 +583,10 @@ def approach_3_direct_white(time_limit: float = 400.0,
 
                 if (it + 1) % 10000 == 0:
                     wv = white_constraint_violation(h)
-                    print(f"    iter {it+1}: C={score:.13f} lr={lr:.2e} "
-                          f"white_viol={wv:.6f} best={best_score:.13f}")
+                    print(
+                        f"    iter {it + 1}: C={score:.13f} lr={lr:.2e} "
+                        f"white_viol={wv:.6f} best={best_score:.13f}"
+                    )
 
         final = fast_eval(h)
         if final < best_score:
@@ -598,9 +603,10 @@ def approach_3_direct_white(time_limit: float = 400.0,
 # Approach 4: Multi-scale + aggressive local polishing
 # ---------------------------------------------------------------------------
 
-def approach_4_multiscale(time_limit: float = 300.0,
-                          warm_h: np.ndarray | None = None
-                          ) -> tuple[np.ndarray | None, float]:
+
+def approach_4_multiscale(
+    time_limit: float = 300.0, warm_h: np.ndarray | None = None
+) -> tuple[np.ndarray | None, float]:
     """Approach 4: Multi-resolution + local polishing."""
     print("\n" + "=" * 70)
     print("APPROACH 4: Multi-resolution + local polishing")
@@ -732,8 +738,9 @@ def approach_4_multiscale(time_limit: float = 300.0,
                     h[idx] = old
 
                 if (trial + 1) % 500_000 == 0:
-                    print(f"    polish iter {trial+1}: C = {current_best:.13f} "
-                          f"improved={improved}")
+                    print(
+                        f"    polish iter {trial + 1}: C = {current_best:.13f} improved={improved}"
+                    )
 
             print(f"  Polish done: C = {current_best:.13f}, improved={improved}")
 
@@ -746,9 +753,10 @@ def approach_4_multiscale(time_limit: float = 300.0,
 # Approach 5: Hybrid — Fourier warm-start + SLSQP + direct polishing
 # ---------------------------------------------------------------------------
 
-def approach_5_hybrid(time_limit: float = 300.0,
-                      warm_h: np.ndarray | None = None
-                      ) -> tuple[np.ndarray | None, float]:
+
+def approach_5_hybrid(
+    time_limit: float = 300.0, warm_h: np.ndarray | None = None
+) -> tuple[np.ndarray | None, float]:
     """Approach 5: Combine Fourier parameterization with direct optimization.
 
     1. Start from best Fourier parameterization
@@ -868,7 +876,7 @@ def approach_5_hybrid(time_limit: float = 300.0,
                 h[idx] = old
 
             if (trial + 1) % 1_000_000 == 0:
-                print(f"    polish {trial+1}: C = {current_best:.13f} imp={improved}")
+                print(f"    polish {trial + 1}: C = {current_best:.13f} imp={improved}")
 
         print(f"  Polish: C = {current_best:.13f}, improved={improved}")
 
@@ -880,6 +888,7 @@ def approach_5_hybrid(time_limit: float = 300.0,
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     print("=" * 70)
@@ -936,8 +945,7 @@ def main():
 
     # ===== Approach 3: Direct + White projection =====
     remaining = max(0, TIME_LIMIT - (time.time() - t_global))
-    h3, s3 = approach_3_direct_white(time_limit=min(remaining * 0.35, 400),
-                                      warm_h=global_best_h)
+    h3, s3 = approach_3_direct_white(time_limit=min(remaining * 0.35, 400), warm_h=global_best_h)
     results["3_direct_white"] = s3
     if h3 is not None and s3 < global_best_score:
         global_best_score = s3
@@ -947,8 +955,7 @@ def main():
     # ===== Approach 5: Hybrid =====
     remaining = max(0, TIME_LIMIT - (time.time() - t_global))
     if remaining > 60:
-        h5, s5 = approach_5_hybrid(time_limit=min(remaining * 0.5, 400),
-                                    warm_h=global_best_h)
+        h5, s5 = approach_5_hybrid(time_limit=min(remaining * 0.5, 400), warm_h=global_best_h)
         results["5_hybrid"] = s5
         if h5 is not None and s5 < global_best_score:
             global_best_score = s5
@@ -958,8 +965,7 @@ def main():
     # ===== Approach 4: Multi-scale + polish (uses remaining time) =====
     remaining = max(0, TIME_LIMIT - (time.time() - t_global))
     if remaining > 60:
-        h4, s4 = approach_4_multiscale(time_limit=remaining - 30,
-                                        warm_h=global_best_h)
+        h4, s4 = approach_4_multiscale(time_limit=remaining - 30, warm_h=global_best_h)
         results["4_multiscale_polish"] = s4
         if h4 is not None and s4 < global_best_score:
             global_best_score = s4
@@ -983,11 +989,11 @@ def main():
         if exact_score < SOTA_SCORE:
             print(f"\n  *** IMPROVEMENT FOUND: {SOTA_SCORE - exact_score:.2e} ***")
             if exact_score < TARGET_SCORE:
-                print(f"  *** MEETS TARGET (need >= 1e-6 improvement) ***")
+                print("  *** MEETS TARGET (need >= 1e-6 improvement) ***")
             else:
-                print(f"  *** Does NOT meet 1e-6 target yet ***")
+                print("  *** Does NOT meet 1e-6 target yet ***")
         else:
-            print(f"\n  No improvement over SOTA.")
+            print("\n  No improvement over SOTA.")
 
         # Save
         output = {
@@ -1017,7 +1023,7 @@ def main():
         print("\n  No valid solution found.")
 
     total_time = time.time() - t_global
-    print(f"  Total time: {total_time:.0f}s ({total_time/60:.1f}min)")
+    print(f"  Total time: {total_time:.0f}s ({total_time / 60:.1f}min)")
     print("=" * 70)
 
 

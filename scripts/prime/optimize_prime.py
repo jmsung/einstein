@@ -98,7 +98,11 @@ def solve_cutting_plane(
         b = np.full(len(active_ns), 1.0 - margin, dtype=np.float64)
 
         result = linprog(
-            c_obj, A_ub=A, b_ub=b, bounds=bounds, method="highs",
+            c_obj,
+            A_ub=A,
+            b_ub=b,
+            bounds=bounds,
+            method="highs",
             options={"time_limit": 300, "primal_feasibility_tolerance": 1e-9},
         )
         t_solve = time.time() - t0
@@ -159,6 +163,7 @@ def solve_cutting_plane(
 
 def evaluate_mc(pf: dict[int, float], n_samples: int = 10_000_000, seed: int = 42) -> float:
     from einstein.prime import evaluate
+
     sol = {"partial_function": {str(k): v for k, v in pf.items()}}
     return evaluate(sol, n_samples=n_samples, seed=seed)
 
@@ -169,9 +174,9 @@ def main():
     best_overall_score = 0
 
     for N in [1000, 1500, 2000, 2500, 3000, 4000, 5000]:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"N={N}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         pf, score = solve_cutting_plane(N, margin=1e-6, verbose=True)
 
@@ -181,6 +186,7 @@ def main():
 
         # Score check
         from einstein.prime import compute_score_only
+
         s_analytical = compute_score_only(pf)
 
         # Quick MC
@@ -208,7 +214,7 @@ def main():
                 print(f"  *** New best: {s_full:.8f} ***")
 
     # Summary
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Best score: {best_overall_score:.8f}")
 
 

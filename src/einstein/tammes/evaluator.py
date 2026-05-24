@@ -20,9 +20,10 @@ def evaluate(data: dict) -> float:
     distances below 1e-12 are clamped (here: norms below 1e-12 are clamped).
     """
     vectors = np.array(data["vectors"], dtype=np.float64)
-    assert vectors.shape == (N_VECTORS, DIMENSION), (
-        f"Expected ({N_VECTORS}, {DIMENSION}), got {vectors.shape}"
-    )
+    assert vectors.shape == (
+        N_VECTORS,
+        DIMENSION,
+    ), f"Expected ({N_VECTORS}, {DIMENSION}), got {vectors.shape}"
     norms = np.linalg.norm(vectors, axis=1, keepdims=True)
     norms[norms < 1e-12] = 1e-12
     vectors = vectors / norms

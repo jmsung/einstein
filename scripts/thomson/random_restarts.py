@@ -29,10 +29,11 @@ TIME_LIMIT_DEFAULT = 5  # minutes
 # Energy & gradient (Cartesian, vectorized)
 # ---------------------------------------------------------------------------
 
+
 def coulomb_energy(pts: np.ndarray) -> float:
     """Coulomb energy for n points on the unit sphere."""
     diff = pts[:, None, :] - pts[None, :, :]
-    dist_sq = np.sum(diff ** 2, axis=-1)
+    dist_sq = np.sum(diff**2, axis=-1)
     idx_i, idx_j = np.triu_indices(N, k=1)
     dists = np.sqrt(dist_sq[idx_i, idx_j])
     dists = np.maximum(dists, 1e-12)
@@ -61,7 +62,7 @@ def coulomb_energy_and_grad_spherical(params: np.ndarray) -> tuple[float, np.nda
 
     # Pairwise differences and distances
     diff = pts[:, None, :] - pts[None, :, :]  # (N, N, 3)
-    dist_sq = np.sum(diff ** 2, axis=-1)  # (N, N)
+    dist_sq = np.sum(diff**2, axis=-1)  # (N, N)
     dist_sq = np.maximum(dist_sq, 1e-24)
     dist = np.sqrt(dist_sq)  # (N, N)
 
@@ -85,10 +86,7 @@ def coulomb_energy_and_grad_spherical(params: np.ndarray) -> tuple[float, np.nda
         + grad_cart[:, 1] * cos_theta * sin_phi
         - grad_cart[:, 2] * sin_theta
     )
-    grad_phi = (
-        grad_cart[:, 0] * (-sin_theta * sin_phi)
-        + grad_cart[:, 1] * (sin_theta * cos_phi)
-    )
+    grad_phi = grad_cart[:, 0] * (-sin_theta * sin_phi) + grad_cart[:, 1] * (sin_theta * cos_phi)
 
     grad = np.concatenate([grad_theta, grad_phi])
     return energy, grad
@@ -97,6 +95,7 @@ def coulomb_energy_and_grad_spherical(params: np.ndarray) -> tuple[float, np.nda
 # ---------------------------------------------------------------------------
 # Random initial configuration
 # ---------------------------------------------------------------------------
+
 
 def random_sphere_points(n: int, rng: np.random.Generator) -> np.ndarray:
     """Generate n random unit sphere points (uniform via Gaussian projection)."""
@@ -129,6 +128,7 @@ def spherical_to_cartesian(params: np.ndarray) -> np.ndarray:
 # Single restart
 # ---------------------------------------------------------------------------
 
+
 def run_one_restart(rng: np.random.Generator, maxiter: int = 2000) -> tuple[float, np.ndarray]:
     """Run one random restart: random init -> L-BFGS optimization."""
     pts = random_sphere_points(N, rng)
@@ -155,6 +155,7 @@ def run_one_restart(rng: np.random.Generator, maxiter: int = 2000) -> tuple[floa
 # Campaign
 # ---------------------------------------------------------------------------
 
+
 def save_solution(pts: np.ndarray, energy: float, restart_id: int) -> Path:
     """Save a solution to JSON."""
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -171,12 +172,19 @@ def save_solution(pts: np.ndarray, energy: float, restart_id: int) -> Path:
 
 def main():
     parser = argparse.ArgumentParser(description="Random restart campaign for Thomson n=282")
-    parser.add_argument("--minutes", type=float, default=TIME_LIMIT_DEFAULT,
-                        help="Time limit in minutes (default: 5)")
-    parser.add_argument("--maxiter", type=int, default=2000,
-                        help="Max L-BFGS iterations per restart (default: 2000)")
-    parser.add_argument("--seed", type=int, default=42,
-                        help="Base random seed (default: 42)")
+    parser.add_argument(
+        "--minutes",
+        type=float,
+        default=TIME_LIMIT_DEFAULT,
+        help="Time limit in minutes (default: 5)",
+    )
+    parser.add_argument(
+        "--maxiter",
+        type=int,
+        default=2000,
+        help="Max L-BFGS iterations per restart (default: 2000)",
+    )
+    parser.add_argument("--seed", type=int, default=42, help="Base random seed (default: 42)")
     args = parser.parse_args()
 
     time_limit = args.minutes * 60
@@ -266,7 +274,7 @@ def main():
     sorted_e = np.sort(energies_arr)
     for i, e in enumerate(sorted_e[:10]):
         gap = e - SOTA_ENERGY
-        print(f"  {i+1:3d}. E = {e:15.6f}  (gap = {gap:+.6f})")
+        print(f"  {i + 1:3d}. E = {e:15.6f}  (gap = {gap:+.6f})")
 
     print()
     print("SUMMARY STATISTICS:")
@@ -299,7 +307,7 @@ def main():
     for i, b in enumerate(basins):
         gap = b["center"] - SOTA_ENERGY
         print(
-            f"  Basin {i+1:3d}: E ~ {b['center']:12.4f} | "
+            f"  Basin {i + 1:3d}: E ~ {b['center']:12.4f} | "
             f"count = {b['count']:4d} | "
             f"range = [{b['min']:.4f}, {b['max']:.4f}] | "
             f"gap = {gap:+.4f}"

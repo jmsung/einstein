@@ -39,17 +39,18 @@ import time
 
 sys.path.insert(0, "src")
 
-import numpy as np
 
 try:
     import cvxpy as cp
+
     HAVE_CVXPY = True
 except ImportError:
     HAVE_CVXPY = False
 
 
-def solve_g_lambda_v4(lam: float, T: int = 8, solver: str = "SCS",
-                      verbose: bool = False) -> tuple[float, dict]:
+def solve_g_lambda_v4(
+    lam: float, T: int = 8, solver: str = "SCS", verbose: bool = False
+) -> tuple[float, dict]:
     """Solve $g_{up}(\\lambda) = \\sup_{F} (M^{up}(F) - \\lambda C(F))$
     with proper Toeplitz-Carathéodory sup-norm SOS constraint.
 
@@ -89,8 +90,7 @@ def solve_g_lambda_v4(lam: float, T: int = 8, solver: str = "SCS",
 
     # SOC lift: y_k >= hat_F[k]^2
     for k in range(T + 1):
-        constraints.append(cp.bmat([[y[k], hat_F[k]],
-                                     [hat_F[k], 1]]) >> 0)
+        constraints.append(cp.bmat([[y[k], hat_F[k]], [hat_F[k], 1]]) >> 0)
 
     # Toeplitz-Carathéodory for sup-norm:
     # P_C(x) = C - 2 y_0 - 4 sum_{k>=1} y_k cos(pi k x) >= 0 on torus
@@ -128,20 +128,22 @@ def solve_g_lambda_v4(lam: float, T: int = 8, solver: str = "SCS",
 
     info = {"status": prob.status, "elapsed": elapsed}
     if prob.status in ("optimal", "optimal_inaccurate"):
-        info.update({
-            "M_up": float(M_up.value),
-            "C": float(C.value),
-            "S_implied": float(M_up.value) / max(float(C.value), 1e-12),
-            "g_lambda_value": float(prob.value),
-            "y": y.value,
-            "hat_F": hat_F.value,
-        })
+        info.update(
+            {
+                "M_up": float(M_up.value),
+                "C": float(C.value),
+                "S_implied": float(M_up.value) / max(float(C.value), 1e-12),
+                "g_lambda_value": float(prob.value),
+                "y": y.value,
+                "hat_F": hat_F.value,
+            }
+        )
     return prob.value if prob.value is not None else float("nan"), info
 
 
-def upper_bound_bisect_v4(T: int = 8, solver: str = "SCS",
-                          lam_lo: float = 0.5, lam_hi: float = 1.0,
-                          tol: float = 1e-3) -> dict:
+def upper_bound_bisect_v4(
+    T: int = 8, solver: str = "SCS", lam_lo: float = 0.5, lam_hi: float = 1.0, tol: float = 1e-3
+) -> dict:
     """Bisect on lambda to find smallest lambda with $g(\\lambda) \\leq 0$.
 
     Returns dict with keys 'upper_bound', 'history'.
@@ -149,10 +151,14 @@ def upper_bound_bisect_v4(T: int = 8, solver: str = "SCS",
     print(f"v4 bisection at T={T}, range [{lam_lo}, {lam_hi}], tol={tol}")
     g_lo, info_lo = solve_g_lambda_v4(lam_lo, T, solver)
     g_hi, info_hi = solve_g_lambda_v4(lam_hi, T, solver)
-    print(f"  g({lam_lo:.4f}) = {g_lo:.4e}  ({info_lo['status']}, {info_lo.get('elapsed', 0):.1f}s)")
+    print(
+        f"  g({lam_lo:.4f}) = {g_lo:.4e}  ({info_lo['status']}, {info_lo.get('elapsed', 0):.1f}s)"
+    )
     if "C" in info_lo:
         print(f"    C={info_lo['C']:.4f}  M_up={info_lo['M_up']:.4f}  S={info_lo['S_implied']:.4f}")
-    print(f"  g({lam_hi:.4f}) = {g_hi:.4e}  ({info_hi['status']}, {info_hi.get('elapsed', 0):.1f}s)")
+    print(
+        f"  g({lam_hi:.4f}) = {g_hi:.4e}  ({info_hi['status']}, {info_hi.get('elapsed', 0):.1f}s)"
+    )
     if "C" in info_hi:
         print(f"    C={info_hi['C']:.4f}  M_up={info_hi['M_up']:.4f}  S={info_hi['S_implied']:.4f}")
 
@@ -160,7 +166,7 @@ def upper_bound_bisect_v4(T: int = 8, solver: str = "SCS",
         print(f"  g(lo) <= 0 already. UB <= {lam_lo}")
         return {"upper_bound": lam_lo, "history": [(lam_lo, g_lo), (lam_hi, g_hi)]}
     if g_hi > 0:
-        print(f"  g(hi) > 0. Need higher lam_hi.")
+        print("  g(hi) > 0. Need higher lam_hi.")
         return {"upper_bound": float("inf"), "history": [(lam_lo, g_lo), (lam_hi, g_hi)]}
 
     history = [(lam_lo, g_lo), (lam_hi, g_hi)]
@@ -219,8 +225,8 @@ def main():
     print(f"  T=4 UB:  {r4['upper_bound']:.6f}")
     print(f"  T=8 UB:  {r8['upper_bound']:.6f}")
     print(f"  T=16 UB: {r16['upper_bound']:.6f}")
-    print(f"  Empirical lower bound:  0.96272 (arena leaders)")
-    print(f"  Trivial Cauchy-Schwarz: 1.0")
+    print("  Empirical lower bound:  0.96272 (arena leaders)")
+    print("  Trivial Cauchy-Schwarz: 1.0")
     if r16["upper_bound"] != float("inf") and r16["upper_bound"] < 1.0:
         gap = r16["upper_bound"] - 0.96272
         print(f"  T=16 UB gap to empirical: {gap:+.6f}")

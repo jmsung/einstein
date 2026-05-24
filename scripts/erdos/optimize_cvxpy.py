@@ -20,7 +20,6 @@ from scipy.signal import fftconvolve
 
 sys.path.insert(0, "src")
 from einstein.erdos.fast import fast_evaluate
-from einstein.erdos.evaluator import evaluate as exact_evaluate
 
 RESULTS_DIR = Path("results/problem-1-erdos-overlap")
 ARENA_SOTA = 0.3808703105862199
@@ -85,7 +84,7 @@ def approach_cutting_plane(n: int = 600, max_iters: int = 100):
                 ip = i + s
                 im = i - s
                 if 0 <= ip < n:
-                    g += (1.0 - h_curr[ip])
+                    g += 1.0 - h_curr[ip]
                 if 0 <= im < n:
                     g -= h_curr[im]
                 grad[i] = g * 2.0 / n

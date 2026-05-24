@@ -166,7 +166,7 @@ def main():
             exact = overlap_loss_exact(best_vecs)
             swap_rate = swaps_accepted / max(1, swaps_attempted) * 100
 
-            print(f"\n  iter {it+1:>10,d} | {elapsed:.0f}s")
+            print(f"\n  iter {it + 1:>10,d} | {elapsed:.0f}s")
             print(f"  BEST exact: {exact:.15f} (delta={initial - exact:.2e})")
             print(f"  Swap rate: {swap_rate:.1f}%")
             for r in range(N_REP):
@@ -182,11 +182,11 @@ def main():
             swaps_accepted = 0
 
     final = overlap_loss_exact(best_vecs)
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Final:   {final:.15f}")
     print(f"Start:   {initial:.15f}")
     print(f"Delta:   {initial - final:.2e}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     if final < initial:
         save_solution(best_vecs, final, "best")

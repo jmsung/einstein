@@ -9,6 +9,7 @@ import time
 
 import numpy as np
 import pytest
+
 from einstein.flat_poly import (
     compute_score,
     crt_tensor,
@@ -183,22 +184,16 @@ class TestArenaMatch:
         coeffs = rng.choice([-1, 1], size=70).tolist()
         ours = evaluate({"coefficients": coeffs})
         arena = _arena_verify(coeffs)
-        assert ours == pytest.approx(arena, rel=1e-6), (
-            f"seed={seed}: ours={ours}, arena={arena}"
-        )
+        assert ours == pytest.approx(arena, rel=1e-6), f"seed={seed}: ours={ours}, arena={arena}"
 
     def test_all_ones_match(self):
         coeffs = [1] * 70
-        assert evaluate({"coefficients": coeffs}) == pytest.approx(
-            _arena_verify(coeffs), rel=1e-6
-        )
+        assert evaluate({"coefficients": coeffs}) == pytest.approx(_arena_verify(coeffs), rel=1e-6)
 
     def test_asymmetric_match(self):
         """Asymmetric polynomial — verifies coefficient ordering."""
         coeffs = [1] * 35 + [-1] * 35
-        assert evaluate({"coefficients": coeffs}) == pytest.approx(
-            _arena_verify(coeffs), rel=1e-6
-        )
+        assert evaluate({"coefficients": coeffs}) == pytest.approx(_arena_verify(coeffs), rel=1e-6)
 
     def test_compute_score_matches_evaluate(self):
         """Direct call to compute_score matches evaluate wrapper."""
@@ -334,9 +329,9 @@ class TestBaselineScores:
             compute_score(turyn()[::-1]),
         ]
         best_structured = min(structured_scores)
-        assert best_structured < avg_random, (
-            f"Best structured {best_structured:.4f} >= avg random {avg_random:.4f}"
-        )
+        assert (
+            best_structured < avg_random
+        ), f"Best structured {best_structured:.4f} >= avg random {avg_random:.4f}"
 
 
 class TestNovelConstructions:
@@ -391,9 +386,7 @@ class TestFastScore:
             descending = ascending[::-1]
             exact = compute_score(descending)
             fast = fast_score(ascending, n_points=1_000_000)
-            assert fast == pytest.approx(exact, rel=1e-4), (
-                f"fast={fast}, exact={exact}"
-            )
+            assert fast == pytest.approx(exact, rel=1e-4), f"fast={fast}, exact={exact}"
 
     def test_various_n_points(self):
         """Should work at different evaluation resolutions."""
@@ -433,7 +426,9 @@ class TestSimulatedAnnealing:
         init = rng.choice([-1, 1], size=70).tolist()
         init_score = fast_score(init)
         best_coeffs, best_score = simulated_annealing(
-            init, n_iters=10_000, seed=42,
+            init,
+            n_iters=10_000,
+            seed=42,
         )
         assert best_score < init_score
 
@@ -442,7 +437,9 @@ class TestSimulatedAnnealing:
         init = turyn(shift=22)
         init_score = fast_score(init)
         best_coeffs, best_score = simulated_annealing(
-            init, n_iters=200_000, seed=7,
+            init,
+            n_iters=200_000,
+            seed=7,
         )
         assert best_score < init_score
 
@@ -471,14 +468,13 @@ class TestGeneticAlgorithm:
         """GA should improve over random population."""
         rng = np.random.default_rng(42)
         # Average random score
-        random_scores = [
-            fast_score(rng.choice([-1, 1], size=70).tolist())
-            for _ in range(20)
-        ]
+        random_scores = [fast_score(rng.choice([-1, 1], size=70).tolist()) for _ in range(20)]
         avg_random = np.mean(random_scores)
 
         best_coeffs, best_score = genetic_algorithm(
-            pop_size=50, n_gens=30, seed=42,
+            pop_size=50,
+            n_gens=30,
+            seed=42,
         )
         assert best_score < avg_random
 
@@ -486,7 +482,10 @@ class TestGeneticAlgorithm:
         """GA with warm start from constructions should work."""
         warm = [turyn(shift=22), rudin_shapiro()]
         best_coeffs, best_score = genetic_algorithm(
-            pop_size=50, n_gens=20, warm_start=warm, seed=42,
+            pop_size=50,
+            n_gens=20,
+            warm_start=warm,
+            seed=42,
         )
         assert best_score > 0
         assert len(best_coeffs) == 70
@@ -494,7 +493,9 @@ class TestGeneticAlgorithm:
     def test_output_valid(self):
         """Output must be 70 ±1 values."""
         best_coeffs, _ = genetic_algorithm(
-            pop_size=20, n_gens=10, seed=0,
+            pop_size=20,
+            n_gens=10,
+            seed=0,
         )
         assert len(best_coeffs) == 70
         assert all(c in (-1, 1) for c in best_coeffs)
@@ -512,7 +513,10 @@ class TestTabuSearch:
         init = rng.choice([-1, 1], size=70).tolist()
         init_score = fast_score(init, n_points=4096)
         best_coeffs, best_score = tabu_search(
-            init, max_iter=500, n_eval_points=4096, seed=42,
+            init,
+            max_iter=500,
+            n_eval_points=4096,
+            seed=42,
         )
         assert best_score < init_score
 
@@ -538,10 +542,16 @@ class TestTabuSearch:
         rng = np.random.default_rng(42)
         init = rng.choice([-1, 1], size=70).tolist()
         _, tabu_score = tabu_search(
-            init, max_iter=200, n_eval_points=4096, seed=42,
+            init,
+            max_iter=200,
+            n_eval_points=4096,
+            seed=42,
         )
         _, sa_score = simulated_annealing(
-            init, n_iters=14_000, n_eval_points=4096, seed=42,
+            init,
+            n_iters=14_000,
+            n_eval_points=4096,
+            seed=42,
         )
         assert tabu_score <= sa_score
 
@@ -556,13 +566,15 @@ class TestMemeticTabuSearch:
         """MTS should improve over random population."""
         rng = np.random.default_rng(42)
         random_scores = [
-            fast_score(rng.choice([-1, 1], size=70).tolist(), n_points=4096)
-            for _ in range(20)
+            fast_score(rng.choice([-1, 1], size=70).tolist(), n_points=4096) for _ in range(20)
         ]
         avg_random = np.mean(random_scores)
         best_coeffs, best_score = memetic_tabu_search(
-            pop_size=20, n_rounds=10, max_iter_per_round=200,
-            n_eval_points=4096, seed=42,
+            pop_size=20,
+            n_rounds=10,
+            max_iter_per_round=200,
+            n_eval_points=4096,
+            seed=42,
         )
         assert best_score < avg_random
 
@@ -570,8 +582,11 @@ class TestMemeticTabuSearch:
         """MTS with warm start should work."""
         warm = [turyn(shift=22)]
         best_coeffs, best_score = memetic_tabu_search(
-            pop_size=20, n_rounds=5, max_iter_per_round=100,
-            warm_start=warm, seed=42,
+            pop_size=20,
+            n_rounds=5,
+            max_iter_per_round=100,
+            warm_start=warm,
+            seed=42,
         )
         assert best_score > 0
         assert len(best_coeffs) == 70
@@ -579,7 +594,10 @@ class TestMemeticTabuSearch:
     def test_output_valid(self):
         """Output must be 70 ±1 values."""
         best_coeffs, _ = memetic_tabu_search(
-            pop_size=10, n_rounds=3, max_iter_per_round=50, seed=0,
+            pop_size=10,
+            n_rounds=3,
+            max_iter_per_round=50,
+            seed=0,
         )
         assert len(best_coeffs) == 70
         assert all(c in (-1, 1) for c in best_coeffs)

@@ -10,7 +10,6 @@ Usage:
 """
 
 import json
-import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -25,10 +24,12 @@ def load_api_key():
 def try_submit(problem_id, solution_data, label):
     """Attempt a submission and report the result."""
     creds = load_api_key()
-    payload = json.dumps({
-        "problem_id": problem_id,
-        "solution": solution_data,
-    }).encode()
+    payload = json.dumps(
+        {
+            "problem_id": problem_id,
+            "solution": solution_data,
+        }
+    ).encode()
     req = urllib.request.Request(
         "https://einsteinarena.com/api/solutions",
         data=payload,

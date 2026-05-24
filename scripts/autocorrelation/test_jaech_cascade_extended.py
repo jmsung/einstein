@@ -23,10 +23,9 @@ sys.path.insert(0, "scripts/autocorrelation")
 
 import numpy as np
 import torch
+from adam_peak_flatten import adam_optimize, compute_C_batch, upscale_linear
 
 from einstein.autocorrelation.fast import fast_evaluate
-from adam_peak_flatten import adam_optimize, upscale_linear, compute_C_batch
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RESULTS_DIR = REPO_ROOT / "results" / "problem-3-autocorrelation"
@@ -38,11 +37,12 @@ def trim_zeros(f: np.ndarray, tol: float = 1e-8) -> np.ndarray:
     nz = np.nonzero(f > tol)[0]
     if len(nz) == 0:
         return f
-    return f[nz[0]:nz[-1] + 1]
+    return f[nz[0] : nz[-1] + 1]
 
 
-def refine_upscaled(f_up: np.ndarray, n_iters: int, lr: float, device: str,
-                    time_limit: float) -> tuple[np.ndarray, float]:
+def refine_upscaled(
+    f_up: np.ndarray, n_iters: int, lr: float, device: str, time_limit: float
+) -> tuple[np.ndarray, float]:
     """Refine an upscaled solution with single-trajectory Adam at lr."""
     h = torch.tensor(f_up, dtype=torch.float32, device=device).unsqueeze(0)
     h.requires_grad_(True)
@@ -69,7 +69,7 @@ def refine_upscaled(f_up: np.ndarray, n_iters: int, lr: float, device: str,
             if cur_score > best_score:
                 best_score = cur_score
                 best_f = np.maximum(cur, 0).copy()
-            print(f"      refine iter {t+1}: C={cur_score:.8f} best={best_score:.8f}")
+            print(f"      refine iter {t + 1}: C={cur_score:.8f} best={best_score:.8f}")
 
     return best_f, best_score
 
@@ -78,8 +78,8 @@ def main():
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     print("=" * 70)
     print(f"Jaech extended cascade test — device={device}")
-    print(f"  Cascade: 768 → 3072 → 12288 → 49152 → 196608 → 400000")
-    print(f"  Time budget per stage: ~5 min, total ~30 min")
+    print("  Cascade: 768 → 3072 → 12288 → 49152 → 196608 → 400000")
+    print("  Time budget per stage: ~5 min, total ~30 min")
     print("=" * 70)
 
     t_global = time.time()
@@ -88,13 +88,19 @@ def main():
     n_start = 768
     print(f"\n--- Stage 1: n={n_start} (Adam exploration + exploitation) ---")
     f, score = adam_optimize(
-        n_start, batch_size=128, n_explore=4000, n_exploit=4000,
-        lr_explore=3e-2, lr_exploit=5e-3, device=device,
-        seed=42, time_limit=300,
+        n_start,
+        batch_size=128,
+        n_explore=4000,
+        n_exploit=4000,
+        lr_explore=3e-2,
+        lr_exploit=5e-3,
+        device=device,
+        seed=42,
+        time_limit=300,
     )
     f = trim_zeros(f)
     score = fast_evaluate(np.maximum(f, 0))
-    print(f"  Stage 1 done: n={len(f)} C={score:.10f}  ({int(time.time()-t_global)}s)")
+    print(f"  Stage 1 done: n={len(f)} C={score:.10f}  ({int(time.time() - t_global)}s)")
     track = [(len(f), score)]
 
     # Stages 2-6: upsampling cascade past 50k
@@ -122,7 +128,7 @@ def main():
         score = fast_evaluate(np.maximum(f, 0))
         f = trim_zeros(f)
         score = fast_evaluate(np.maximum(f, 0))
-        print(f"  Stage done: n={len(f)} C={score:.10f}  ({int(time.time()-t_global)}s)")
+        print(f"  Stage done: n={len(f)} C={score:.10f}  ({int(time.time() - t_global)}s)")
         track.append((len(f), score))
 
     # Save the final result
@@ -139,20 +145,20 @@ def main():
         json.dump(out, fh)
     print()
     print("=" * 70)
-    print(f"FINAL: n={len(f)} C={score:.10f} ({int(time.time()-t_global)}s total)")
-    print(f"Track: " + " → ".join(f"({n},{s:.6f})" for n, s in track))
+    print(f"FINAL: n={len(f)} C={score:.10f} ({int(time.time() - t_global)}s total)")
+    print("Track: " + " → ".join(f"({n},{s:.6f})" for n, s in track))
     print()
-    print(f"Comparison to strategy.md ceilings:")
-    print(f"  From-scratch ceiling (Adam only): 0.908")
-    print(f"  Warmstart SOTA 400k (Dinkelbach): 0.96264")
-    print(f"  Submission gate (#1 + minImp):    0.9627433")
+    print("Comparison to strategy.md ceilings:")
+    print("  From-scratch ceiling (Adam only): 0.908")
+    print("  Warmstart SOTA 400k (Dinkelbach): 0.96264")
+    print("  Submission gate (#1 + minImp):    0.9627433")
     print()
     if score > 0.91:
-        print(f">>> BREAKTHROUGH: extended cascade EXCEEDED from-scratch ceiling.")
-        print(f">>> Worth scaling to n=1.6M+ on GPU.")
+        print(">>> BREAKTHROUGH: extended cascade EXCEEDED from-scratch ceiling.")
+        print(">>> Worth scaling to n=1.6M+ on GPU.")
     else:
         print(f"--- Cascade tops at {score:.6f}, within from-scratch family. ---")
-        print(f"--- Confirms 0.908 from-scratch ceiling is structural. ---")
+        print("--- Confirms 0.908 from-scratch ceiling is structural. ---")
     print(f"Saved: {out_path}")
     print("=" * 70)
 

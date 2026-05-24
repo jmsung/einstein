@@ -88,7 +88,7 @@ def main():
 
     # Rank edges by score
     order = np.argsort(scores)
-    print(f"\n=== Midpoint scores (best = lowest) ===", flush=True)
+    print("\n=== Midpoint scores (best = lowest) ===", flush=True)
     print(f"min:  {scores.min():.10f}")
     print(f"10%:  {np.percentile(scores, 10):.10f}")
     print(f"50%:  {np.percentile(scores, 50):.10f}")
@@ -100,7 +100,7 @@ def main():
     if below_2 > 0:
         print(f"\n*** {below_2} MIDPOINTS SCORE BELOW 2.0! ***", flush=True)
 
-    print(f"\nTop 20 lowest:", flush=True)
+    print("\nTop 20 lowest:", flush=True)
     for k in order[:20]:
         i, j = edges_i[k], edges_j[k]
         # Count active pairs

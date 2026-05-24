@@ -18,10 +18,10 @@ an improvement candidate.
 Cost: ~1033 y × ~90 x = 93k swaps to test. Each c() computation is O(|A|²)
 ≈ 8000 ops. Total ~750M ops. Should run in ~30s on M5.
 """
+
 from __future__ import annotations
 
 import json
-from itertools import combinations
 from pathlib import Path
 
 import numpy as np
@@ -73,7 +73,9 @@ def main():
     y_min = max_sota + 1
     y_max = LAM - 1
     print(f"  Extended y range: [{y_min}, {y_max}] = {y_max - y_min + 1} candidates")
-    print(f"  (prior 1-swap exhaustive tested y ∈ [0, 7000]; this extends by {y_max - 7000} new y values)")
+    print(
+        f"  (prior 1-swap exhaustive tested y ∈ [0, 7000]; this extends by {y_max - 7000} new y values)"
+    )
     print()
 
     n_swaps_tested = 0
@@ -117,22 +119,24 @@ def main():
         print(f"\n  Best atom A': max(A')={max_A_best}, c(A')={best_c_val}")
         print(f"  Bridging condition: c(A') ≥ λ − max(A') − 1 = {LAM - max_A_best - 1}")
         if best_c_val >= LAM - max_A_best - 1:
-            print(f"  ✓ Bridging holds")
+            print("  ✓ Bridging holds")
         else:
-            print(f"  ✗ Bridging FAILS — formula doesn't apply, v will collapse")
+            print("  ✗ Bridging FAILS — formula doesn't apply, v will collapse")
         print(f"  Predicted v(B_new) = L·λ + c(A') = {L}·{LAM} + {best_c_val} = {v_pred}")
         if v_pred > 49109:
-            score = 360 ** 2 / v_pred
+            score = 360**2 / v_pred
             print(f"  Predicted score: 360²/{v_pred} = {score:.10f}")
-            print(f"  SOTA score:      2.6390274695")
+            print("  SOTA score:      2.6390274695")
             print(f"  Δ score:         {score - 2.6390274695:+.6e}")
             if score < 2.6390274695:
-                print(f"  *** PREDICTED IMPROVEMENT — needs triple-verify ***")
+                print("  *** PREDICTED IMPROVEMENT — needs triple-verify ***")
     else:
         print("  ✗ NO HITS — extended-span 1-swap finds no atom with c(A) > 1043.")
-        print(f"  This refines the prior negative (1-swap [0, 7000]) to [0, 8010].")
-        print(f"  Implication: the SOTA atom basin is rigid even in the extended-span design space.")
-        print(f"  Cycle 4 candidate: 2-swap with extended y, OR pivot to a different cross-pollination thread.")
+        print("  This refines the prior negative (1-swap [0, 7000]) to [0, 8010].")
+        print("  Implication: the SOTA atom basin is rigid even in the extended-span design space.")
+        print(
+            "  Cycle 4 candidate: 2-swap with extended y, OR pivot to a different cross-pollination thread."
+        )
 
 
 if __name__ == "__main__":

@@ -8,14 +8,12 @@ each with bounded L-BFGS, and keeps the best. The smooth E-L prediction
 h_- = h_+ is tested as a control.
 """
 
-import json
 import sys
 from pathlib import Path
 
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
-from einstein.edges_triangles.evaluator import compute_score, turan_row  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from push_d_torch_lbfgs import load_xs_from_solution  # noqa: E402
