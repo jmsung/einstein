@@ -100,6 +100,45 @@ def is_sentinel_present(sentinel_path: Path) -> bool:
     return sentinel_path.is_file()
 
 
+def write_sentinel(sentinel_path: Path, *, reason: str, cycle_id: int | None = None) -> Path:
+    """Drop the regression-detect sentinel at `sentinel_path` (Goal 7.8c).
+
+    The next cycle's `precheck()` will see it and skip until a human
+    removes the file. Idempotent: re-writing rewrites the body but never
+    raises on an existing file.
+
+    Returns the path written.
+    """
+    sentinel_path.parent.mkdir(parents=True, exist_ok=True)
+    cycle_blurb = f"cycle_id={cycle_id}\n" if cycle_id is not None else ""
+    body = (
+        "# Inner-agent disabled by regression-detect\n"
+        f"timestamp: {dt.datetime.now().isoformat(timespec='seconds')}\n"
+        f"{cycle_blurb}"
+        f"reason: {reason}\n"
+        "\n"
+        "Remove this file (`rm`) to re-enable the autonomous loop.\n"
+        "Review cycle-log + recent commits before doing so — the sentinel\n"
+        "fired because cycle_runner.sh detected a hard regression\n"
+        "(typically wiki_lint exiting non-zero).\n"
+    )
+    sentinel_path.write_text(body)
+    return sentinel_path
+
+
+def clear_sentinel(sentinel_path: Path) -> bool:
+    """Remove the sentinel if present. Returns True iff a file was removed.
+
+    Used by the human via `rm` directly; this Python entry point exists
+    for tests + scripted recovery.
+    """
+    try:
+        sentinel_path.unlink()
+        return True
+    except FileNotFoundError:
+        return False
+
+
 def is_reachable(url: str, timeout_s: int = DEFAULT_REACHABILITY_TIMEOUT_S) -> bool:
     """HEAD `url` with `timeout_s` seconds; True iff the request succeeds.
 
@@ -357,3 +396,66 @@ def precheck(
             )
 
     return GateDecision("proceed", llm_enabled=True)
+
+
+# ---------------- CLI (Goal 7.8) ----------------
+
+
+def _cli(argv: list[str] | None = None) -> int:
+    """Shell-callable entry point for sentinel + budget operations.
+
+    Usage:
+        uv run python docs/tools/inner_agent_gates.py write-sentinel <path> --reason "..."
+        uv run python docs/tools/inner_agent_gates.py clear-sentinel <path>
+        uv run python docs/tools/inner_agent_gates.py budget <path>
+
+    Designed for `cycle_runner.sh` (write-sentinel) and the human
+    operator (clear-sentinel, budget).
+    """
+    import argparse
+
+    p = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    ps = sub.add_parser("write-sentinel", help="Drop the regression-detect sentinel.")
+    ps.add_argument("path", type=Path)
+    ps.add_argument(
+        "--reason", required=True, help="One-line reason recorded in the sentinel body."
+    )
+    ps.add_argument("--cycle-id", type=int, default=None)
+
+    pc = sub.add_parser("clear-sentinel", help="Remove the regression-detect sentinel.")
+    pc.add_argument("path", type=Path)
+
+    pb = sub.add_parser("budget", help="Print today's budget row from the ledger.")
+    pb.add_argument("path", type=Path)
+
+    args = p.parse_args(argv)
+
+    if args.cmd == "write-sentinel":
+        result_path = write_sentinel(
+            args.path,
+            reason=args.reason,
+            cycle_id=args.cycle_id,
+        )
+        print(str(result_path))
+        return 0
+
+    if args.cmd == "clear-sentinel":
+        removed = clear_sentinel(args.path)
+        print("removed" if removed else "not-present")
+        return 0 if removed else 1
+
+    if args.cmd == "budget":
+        row = read_today_total(args.path)
+        print(
+            f"date={row.date} input={row.input} output={row.output} "
+            f"total={row.total} cycles={row.cycles}"
+        )
+        return 0
+
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(_cli())

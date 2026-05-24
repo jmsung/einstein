@@ -41,6 +41,94 @@ def test_sentinel_present(tmp_path: Path):
     assert iag.is_sentinel_present(s)
 
 
+def test_write_sentinel_creates_file_with_reason(tmp_path: Path):
+    s = tmp_path / "mb" / ".inner-agent-disabled"
+    result = iag.write_sentinel(s, reason="wiki_lint exit 2", cycle_id=47)
+    assert result == s
+    assert s.is_file()
+    body = s.read_text()
+    assert "reason: wiki_lint exit 2" in body
+    assert "cycle_id=47" in body
+    assert "Remove this file" in body
+    # Idempotent — rewriting works
+    iag.write_sentinel(s, reason="newer reason")
+    assert "newer reason" in s.read_text()
+
+
+def test_write_sentinel_omits_cycle_id_when_unspecified(tmp_path: Path):
+    s = tmp_path / "mb" / ".inner-agent-disabled"
+    iag.write_sentinel(s, reason="no cycle context")
+    assert "cycle_id=" not in s.read_text()
+
+
+def test_clear_sentinel_removes_existing(tmp_path: Path):
+    s = tmp_path / ".inner-agent-disabled"
+    s.write_text("disabled\n")
+    assert iag.clear_sentinel(s) is True
+    assert not s.exists()
+
+
+def test_clear_sentinel_idempotent_on_missing(tmp_path: Path):
+    assert iag.clear_sentinel(tmp_path / "missing") is False
+
+
+# ---------------- CLI ----------------
+
+
+def test_cli_write_sentinel(tmp_path: Path, capsys):
+    s = tmp_path / "mb" / ".inner-agent-disabled"
+    rc = iag._cli(
+        [
+            "write-sentinel",
+            str(s),
+            "--reason",
+            "wiki_lint exit 2",
+            "--cycle-id",
+            "47",
+        ]
+    )
+    assert rc == 0
+    out = capsys.readouterr().out.strip()
+    assert out == str(s)
+    body = s.read_text()
+    assert "wiki_lint exit 2" in body
+    assert "cycle_id=47" in body
+
+
+def test_cli_clear_sentinel_removes(tmp_path: Path, capsys):
+    s = tmp_path / ".inner-agent-disabled"
+    s.write_text("x\n")
+    rc = iag._cli(["clear-sentinel", str(s)])
+    assert rc == 0
+    assert "removed" in capsys.readouterr().out
+    assert not s.exists()
+
+
+def test_cli_clear_sentinel_missing_exits_1(tmp_path: Path, capsys):
+    rc = iag._cli(["clear-sentinel", str(tmp_path / "no-such")])
+    assert rc == 1
+    assert "not-present" in capsys.readouterr().out
+
+
+def test_cli_budget_prints_today_row(tmp_path: Path, capsys):
+    budget = tmp_path / "budget.md"
+    iag.record_token_usage(
+        budget,
+        input_tokens=100,
+        output_tokens=20,
+        today=dt.date(2026, 5, 24),
+    )
+    rc = iag._cli(["budget", str(budget)])
+    assert rc == 0
+    out = capsys.readouterr().out
+    # today (real today) is likely different from 2026-05-24, so we won't
+    # assert on the date; just on the schema.
+    assert "date=" in out
+    assert "input=" in out
+    assert "total=" in out
+    assert "cycles=" in out
+
+
 # ---------------- reachability ----------------
 
 
