@@ -380,6 +380,49 @@ def test_run_shadow_cleanup_can_be_disabled(tmp_path: Path) -> None:
     assert result.cleaned_up is False
 
 
+def test_default_cycle_runner_returns_partial_rows_on_timeout(tmp_path: Path, monkeypatch) -> None:
+    """Regression: if autonomous_loop subprocess hits the timeout, the runner
+    must still return whatever cycle-log rows were appended before the kill.
+
+    Without this fix, a single slow arm crashes the whole shadow run via
+    uncaught TimeoutExpired, and the cleanup=True finally-block deletes all
+    in-flight cycle-log work.
+    """
+    import subprocess as _sp
+
+    from einstein.meta_loop.shadow import default_cycle_runner
+
+    # Arm worktree with a pre-existing cycle-log having one row + one row
+    # written "during" the (fake) run we'll then have time out.
+    cycle_log = tmp_path / "docs" / "agent" / "cycle-log.md"
+    cycle_log.parent.mkdir(parents=True)
+    cycle_log.write_text(
+        "# Cycle log\n\n## Cycles\n\n"
+        "| # | problem | start → end | hours | compute | wiki cites | findings+ | "
+        "concepts+ | mix | outcome | notes | cites_src |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+        "| 100 | P-old | 1 → 1 | 0.1 | local-cpu | 0 | 0 | 0 | a:1/h:0/hyb:0 | no-change | smoke | 0 |\n"
+    )
+
+    def fake_run(*args, **kwargs):
+        # Simulate: subprocess wrote one new row to the cycle-log before
+        # being killed by timeout.
+        with cycle_log.open("a") as f:
+            f.write(
+                "| 101 | P-new | 1 → 1 | 0.1 | local-cpu | 0 | 0 | 0 | "
+                "a:1/h:0/hyb:0 | no-change | partial | 2 |\n"
+            )
+        raise _sp.TimeoutExpired(cmd=args[0], timeout=kwargs.get("timeout", 0))
+
+    monkeypatch.setattr(_sp, "run", fake_run)
+
+    rows = default_cycle_runner(tmp_path, 10, timeout_seconds=5)
+
+    # The pre-existing row (#100) must be filtered out; only the new row (#101) returned.
+    assert len(rows) == 1
+    assert rows[0].cycle_id == 101
+
+
 def test_shadow_log_row_format(tmp_path: Path) -> None:
     """Verify the appended row matches the documented schema."""
     p = _proposal(ptype=ProposalType.NEW_QUESTION.value)

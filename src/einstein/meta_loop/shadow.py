@@ -345,7 +345,15 @@ CycleRunner = Callable[[Path, int], list[diagnose.CycleRow]]
 """run_n_cycles(arm_path, n) -> list of CycleRow rows produced."""
 
 
-def default_cycle_runner(arm_path: Path, n: int) -> list[diagnose.CycleRow]:
+DEFAULT_CYCLE_RUNNER_TIMEOUT_SECONDS = 14400  # 4h — fits N=10 at observed ~12 min/cycle
+
+
+def default_cycle_runner(
+    arm_path: Path,
+    n: int,
+    *,
+    timeout_seconds: int = DEFAULT_CYCLE_RUNNER_TIMEOUT_SECONDS,
+) -> list[diagnose.CycleRow]:
     """Shell out to scripts/autonomous_loop.py inside the arm worktree.
 
     Captures the cycle-log rows that get APPENDED during this run by
@@ -353,32 +361,44 @@ def default_cycle_runner(arm_path: Path, n: int) -> list[diagnose.CycleRow]:
 
     Heavy: each cycle is an LLM call. Real use is operator-initiated;
     unit tests stub this.
+
+    On `subprocess.TimeoutExpired`: subprocess is killed, but we still parse
+    whatever rows the autonomous_loop appended before being killed and return
+    them. Without this, a single slow arm crashes the whole shadow run + we
+    lose all in-flight work to the `cleanup=True` finally-block.
     """
     cycle_log = arm_path / "docs" / "agent" / "cycle-log.md"
     rows_before = diagnose.parse_cycle_log(cycle_log)
     before_ids = {r.cycle_id for r in rows_before}
 
-    proc = subprocess.run(
-        [
-            "uv",
-            "run",
-            "python",
-            "scripts/autonomous_loop.py",
-            "--max-problems",
-            str(n),
-        ],
-        cwd=arm_path,
-        capture_output=True,
-        text=True,
-        timeout=3600,  # 1 hour cap for N cycles
-        check=False,
-    )
-    if proc.returncode != 0:
+    try:
+        proc = subprocess.run(
+            [
+                "uv",
+                "run",
+                "python",
+                "scripts/autonomous_loop.py",
+                "--max-problems",
+                str(n),
+            ],
+            cwd=arm_path,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            check=False,
+        )
+        if proc.returncode != 0:
+            log.warning(
+                "autonomous_loop in %s exited %d; stderr: %s",
+                arm_path,
+                proc.returncode,
+                proc.stderr[-500:],
+            )
+    except subprocess.TimeoutExpired:
         log.warning(
-            "autonomous_loop in %s exited %d; stderr: %s",
+            "autonomous_loop in %s timed out after %ds; returning partial rows",
             arm_path,
-            proc.returncode,
-            proc.stderr[-500:],
+            timeout_seconds,
         )
 
     rows_after = diagnose.parse_cycle_log(cycle_log)
