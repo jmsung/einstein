@@ -27,7 +27,8 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO / "src"))
 
-from einstein.meta_loop import diagnose, propose  # noqa: E402
+from einstein.meta_loop import diagnose, propose, review  # noqa: E402
+from einstein.meta_loop.proposals import ProposalStore  # noqa: E402
 
 # When running from a worktree (cb-<branch>/), `.mb` is a symlink to ../mb.
 # `_REPO/.mb` resolves to the shared private workspace either way.
@@ -155,10 +156,9 @@ def main(argv: list[str] | None = None) -> int:
 
     _add_diagnose(sub)
     _add_propose(sub)
+    _add_review(sub)
 
-    # Stubs for forward-declared subcommands so `--help` lists them and so
-    # an agent doesn't accidentally believe they exist yet.
-    sub.add_parser("review", help="(Goal 4) human-review CLI; not yet implemented")
+    # Stub for forward-declared shadow subcommand.
     sub.add_parser("shadow", help="(Goal 5) shadow A/B harness; not yet implemented")
 
     args = parser.parse_args(argv)
@@ -166,10 +166,55 @@ def main(argv: list[str] | None = None) -> int:
     handlers = {
         "diagnose": _cmd_diagnose,
         "propose": _cmd_propose,
-        "review": _stub("review"),
+        "review": _cmd_review,
         "shadow": _stub("shadow"),
     }
     return handlers[args.cmd](args)
+
+
+def _add_review(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser(
+        "review",
+        help="human-review CLI: list pending proposals; accept/reject/skip",
+    )
+    p.add_argument(
+        "--proposals-root",
+        type=Path,
+        default=_DEFAULT_MB / "proposals",
+    )
+    p.add_argument(
+        "--repo-root",
+        type=Path,
+        default=_REPO,
+        help="repo root for git apply (defaults to cb worktree root)",
+    )
+    p.add_argument(
+        "--list",
+        action="store_true",
+        help="list pending proposals and exit (no interactive review)",
+    )
+
+
+def _cmd_review(args: argparse.Namespace) -> int:
+    store = ProposalStore(args.proposals_root)
+    if args.list:
+        print(review.list_pending(store), end="")
+        return 0
+    summary = review.review_pending(store, repo_root=args.repo_root)
+    print(
+        f"\nmeta-loop review — "
+        f"{len(summary.accepted)} accepted, "
+        f"{len(summary.rejected)} rejected, "
+        f"{len(summary.skipped)} skipped, "
+        f"{len(summary.errored)} errored"
+    )
+    for o in summary.accepted:
+        print(
+            f"  ✓ {o.proposal.id} → applied (commit {o.commit_sha[:10] if o.commit_sha else '?'})"
+        )
+    for o in summary.errored:
+        print(f"  ! {o.proposal.id} → {o.error}", file=sys.stderr)
+    return 0 if not summary.errored else 1
 
 
 if __name__ == "__main__":
