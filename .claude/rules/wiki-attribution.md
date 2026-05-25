@@ -38,7 +38,7 @@ cites: [<paths>]            # mandatory if making non-trivial claims
 - `docs/wiki/home.md` — narrative front door, human-curated
 - `docs/wiki/personas/_synthesis.md` — meta-page, human-curated
 - `mb/notes/*` — personal jots, human-only
-- `mb/log.md` — private ops history, human-only
+- `mb/logs/ops.md` — private ops history, human-only
 
 The agent CAN write all other wiki pages directly with mandatory attribution. The honesty layer is the receipt.
 
