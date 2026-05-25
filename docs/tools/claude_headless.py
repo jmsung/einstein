@@ -168,9 +168,15 @@ def run(
     cmd: list[str] = [claude_bin, "-p", "--model", model]
 
     if allowed_tools:
-        # The CLI accepts space-separated values after --allowedTools.
-        cmd.append("--allowedTools")
-        cmd.extend(allowed_tools)
+        # Pass as a single comma-joined arg. Even comma-form is necessary
+        # but not sufficient — `--allowedTools` is variadic (`<tools...>`
+        # in commander.js) and consumes ALL following positionals up to
+        # the next flag, INCLUDING the prompt. Comma-join + the `--`
+        # separator below (inserted before the prompt) makes the boundary
+        # explicit and the prompt unambiguous. Without both, `claude -p`
+        # exits 1 with "Input must be provided either through stdin or as
+        # a prompt argument".
+        cmd.extend(["--allowedTools", ",".join(allowed_tools)])
     if output_format != "text":
         cmd.extend(["--output-format", output_format])
     if json_schema:
@@ -191,7 +197,10 @@ def run(
     if extra_args:
         cmd.extend(extra_args)
 
-    cmd.append(prompt)
+    # `--` makes the prompt unambiguous: any preceding variadic flag (e.g.
+    # `--allowedTools <tools...>`) stops eating positionals here. Cheap
+    # insurance that costs nothing when no variadic flag is present.
+    cmd.extend(["--", prompt])
 
     log.debug(
         "claude_headless: %s ... (prompt %d chars, timeout %ds)",

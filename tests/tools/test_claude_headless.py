@@ -30,7 +30,8 @@ def test_run_builds_minimal_cmd_for_text_output():
     assert cmd[0] == "claude"
     assert cmd[1] == "-p"
     assert "--model" in cmd and "claude-opus-4-7[1m]" in cmd
-    assert cmd[-1] == "PROMPT"  # prompt is the last positional arg
+    # `-- PROMPT` at the tail: `--` stops variadic-flag consumption
+    assert cmd[-2:] == ["--", "PROMPT"]
     # No optional flags absent inputs
     assert "--output-format" not in cmd
     assert "--allowedTools" not in cmd
@@ -59,9 +60,13 @@ def test_run_threads_optional_flags():
         )
 
     cmd = mock_run.call_args[0][0]
-    # tool allow-list passed as space-separated args (not comma-joined)
+    # tool allow-list passed as a single comma-joined arg so commander.js's
+    # variadic `<tools...>` doesn't eat the prompt — see claude_headless.py.
     i = cmd.index("--allowedTools")
-    assert cmd[i + 1 : i + 5] == ["Read", "Grep", "Bash(qmd:*)", "Task"]
+    assert cmd[i + 1] == "Read,Grep,Bash(qmd:*),Task"
+    # And the prompt must still be the last positional, bracketed by `--`
+    # so the variadic --allowedTools doesn't eat it.
+    assert cmd[-2:] == ["--", "PROMPT"]
     assert "--output-format" in cmd and "json" in cmd
     assert "--json-schema" in cmd and schema in cmd
     assert "--max-budget-usd" in cmd and "0.5" in cmd
