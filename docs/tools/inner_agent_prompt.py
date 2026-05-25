@@ -129,14 +129,22 @@ def _cycle_rows_for(cycle_log: Path, problem_prefix: str, n: int = 10) -> list[C
 
 
 TOOL_ALLOWLIST = """- Read, Grep
+- Write                                                — create new wiki/mb files (SCOPED, see below)
 - Bash(qmd:*)                                          — wiki search (use FIRST)
 - Bash(gap_search.py:*)                                — arxiv candidate search
 - Bash(uv run python -m einstein.optimizer_dispatch:*) — run a per-problem optimizer
 - Task                                                 — dispatch council subagents (e.g. Tao, Cohn, Razborov)
 
-Wiki / mb writes are blocked at the harness level for this cycle (Goal 7.6
-enables them). Surface intended writes in the JSON `wiki_writes` field
-instead; the orchestrator will create them after schema validation."""
+**Write scope** — restrict to these two trees per `wiki-attribution.md`:
+  - `docs/wiki/findings/` — new finding pages (including `dead-end-<slug>.md`)
+  - `docs/wiki/questions/` — new gap questions
+  - `docs/wiki/concepts/` — only if a concept is genuinely missing (rare)
+  - `mb/problems/<id>-<slug>/experiment-log.md` — append per-attempt notes
+
+Every wiki page MUST include the `author: agent` frontmatter field. The
+orchestrator's git-status delta (Goal 7.6) captures every file you write
+for human review. Whatever you Write, ALSO list in the JSON `wiki_writes`
+field so the cycle-log notes column reflects it."""
 
 
 # ---------------- main render ----------------

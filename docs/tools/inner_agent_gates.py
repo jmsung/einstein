@@ -291,6 +291,9 @@ def record_token_usage(
     parallel writers — the autonomous_loop's O_EXCL lockfile already
     serializes cycles so this is safe in practice.
     """
+    # Diagnostic — see who is calling this so phantom double-counts can be
+    # traced. Logs at INFO so the cycle's stderr captures it.
+    log.info("record_token_usage: path=%s in=%d out=%d", budget_path, input_tokens, output_tokens)
     iso = _today_iso(today)
     rows: dict[str, BudgetRow]
     if budget_path.is_file():

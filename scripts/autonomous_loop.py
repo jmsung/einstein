@@ -382,11 +382,17 @@ def _try_llm_path(
         return None
 
     # Tool allow-list reflects what the agent actually needs to run the
-    # math-solving-protocol per `.claude/rules/`. No Write to wiki/mb at
-    # this layer — those land via git tracked by the audit (Goal 7.6).
+    # math-solving-protocol per `.claude/rules/`. Write is allowed so the
+    # agent can create findings / questions / dead-end pages under
+    # docs/wiki/ + mb/ per wiki-attribution (author: agent). Scope is
+    # enforced by --add-dir (cwd is cb worktree; we add the sibling mb so
+    # those writes land too). The prompt instructs the agent to restrict
+    # writes to docs/wiki/* and mb/* paths; the 7.6 git-status audit
+    # captures every actual write for human review.
     allowed_tools = [
         "Read",
         "Grep",
+        "Write",
         "Bash(qmd:*)",
         "Bash(gap_search.py:*)",
         "Bash(uv run python -m einstein.optimizer_dispatch:*)",
@@ -398,6 +404,7 @@ def _try_llm_path(
             prompt,
             allowed_tools=allowed_tools,
             timeout_seconds=timeout_seconds,
+            add_dirs=[DEFAULT_MB_DIR],
         )
     except Exception as e:
         log.warning("claude_headless raised unexpectedly: %s — falling back", e)
@@ -829,6 +836,9 @@ def _run_one_cycle(
     )
 
     snapshot_before = _snapshot_wiki_mb_paths(repo_root) if not dry_run else set()
+    log.info(
+        "audit snapshot_before: %d paths %s", len(snapshot_before), sorted(snapshot_before)[:5]
+    )
 
     result = inner_attempt(
         problem,
@@ -862,6 +872,12 @@ def _run_one_cycle(
     # Compute the wiki/mb delta and augment notes (Goal 7.6).
     snapshot_after = _snapshot_wiki_mb_paths(repo_root)
     wiki_writes = sorted(snapshot_after - snapshot_before)
+    log.info(
+        "audit snapshot_after: %d paths; delta=%d %s",
+        len(snapshot_after),
+        len(wiki_writes),
+        wiki_writes[:5],
+    )
     if wiki_writes:
         suffix = _format_wiki_writes_note(wiki_writes)
         # Avoid double-suffix if the result was already augmented (shouldn't
