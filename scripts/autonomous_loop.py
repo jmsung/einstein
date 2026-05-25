@@ -48,7 +48,7 @@ DEFAULT_LOCKFILE = _REPO / ".autonomous-loop.lock"
 # lives one level up. See `mb/active/feat-autonomous-loop.md` operational
 # decisions for the layout contract.
 DEFAULT_MB_DIR = _REPO.parent / "mb"
-DEFAULT_BUDGET_PATH = DEFAULT_MB_DIR / "inner-agent-budget.md"
+DEFAULT_BUDGET_PATH = DEFAULT_MB_DIR / "logs" / "inner-agent-budget.md"
 DEFAULT_SENTINEL_PATH = DEFAULT_MB_DIR / ".inner-agent-disabled"
 
 # Local imports — strategy_picker + inner_agent_gates live in docs/tools/
@@ -268,7 +268,7 @@ def _call_auto_submit(
     ("improved-and-submitted") if the gate chain accepted, else None.
 
     Triple-verify is hardcoded `passed=False` — per-problem verifiers land
-    separately. The audit row in `mb/auto-submit-log.md` records every
+    separately. The audit row in `mb/logs/auto-submit.md` records every
     decision regardless of acceptance.
 
     On `submitted=True`, fires a macOS notification (Goal 7.8c). The
@@ -1285,7 +1285,7 @@ def main(argv: list[str] | None = None) -> int:
         "--budget-path",
         type=Path,
         default=DEFAULT_BUDGET_PATH,
-        help="Path to mb/inner-agent-budget.md — daily token "
+        help="Path to mb/logs/inner-agent-budget.md — daily token "
         "ledger consumed by the gate precheck (Goal 7.5).",
     )
     parser.add_argument(

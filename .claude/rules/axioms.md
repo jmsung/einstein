@@ -56,10 +56,10 @@ Auto-submit gates (all must pass):
 
 1. **Strict improvement over current arena #1 SOTA** — fetched live via `check_submission.check_leaderboard(problem_id)`. Our score must beat the arena leader by ≥ per-problem `minImprovement` (default 1e-8). Beating only our own prior best is NOT sufficient.
 2. **Triple-verify passes** (per A1) — all 3 evaluators agree within tolerance. Any 2-way disagreement → no submit, write a finding.
-3. **1-hour throttle per problem** — `mb/auto-submit-log.md` is the source of truth; reject if last auto-submit for this problem_id < 1h ago.
+3. **1-hour throttle per problem** — `mb/logs/auto-submit.md` is the source of truth; reject if last auto-submit for this problem_id < 1h ago.
 4. **Daily cap** — default 5 auto-submissions/day across all problems. Configurable via env.
 5. **Kill switch** — `EINSTEIN_AUTO_SUBMIT=0` disables all auto-submission. Default-on for the autonomous loop; set to 0 to revert to human-approved-only.
-6. **Audit log mandatory** — every decision (submit / reject + reason) appended to `mb/auto-submit-log.md`. Human reviews weekly.
+6. **Audit log mandatory** — every decision (submit / reject + reason) appended to `mb/logs/auto-submit.md`. Human reviews weekly.
 
 Non-auto cases — still requires human approval:
 - Polish that doesn't beat arena #1 (e.g. rank-#2 / #3 squeeze for points)

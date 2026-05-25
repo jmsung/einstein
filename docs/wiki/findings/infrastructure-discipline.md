@@ -93,7 +93,7 @@ The pattern: when the cycle hits an execution blocker, the gap-detect step produ
 
 Branch `feat/autonomous-loop` Goal 7.7 (2026-05-24): the autonomous loop's inner agent is implemented as `claude -p` invoked as a subprocess from `docs/tools/cycle_runner.sh`, which itself runs inside a parent Claude Code session (during interactive development) and also under launchd (in production). The concern at design time was recursion / context-pollution / billing entanglement: would the inner `claude -p` somehow see the outer session's context, or get rate-limited under the outer session's budget, or recurse indefinitely?
 
-**Observed behaviour**: no recursion issues. The inner `claude -p` is a fresh process with its own context window, its own auth (same API key, different session token), its own per-cycle budget (tracked in `mb/inner-agent-budget.md`). The outer session sees only the subprocess's stdout / stderr / exit code, exactly like any other shell command. Tool allow-list is enforced inside the inner process — outer Claude's tools are not inherited.
+**Observed behaviour**: no recursion issues. The inner `claude -p` is a fresh process with its own context window, its own auth (same API key, different session token), its own per-cycle budget (tracked in `mb/logs/inner-agent-budget.md`). The outer session sees only the subprocess's stdout / stderr / exit code, exactly like any other shell command. Tool allow-list is enforced inside the inner process — outer Claude's tools are not inherited.
 
 **Mechanism**: `claude -p` is implemented as a single-shot CLI that constructs its own conversation from argv + stdin and exits. It does not look at the parent process's TTY, env, or open file descriptors for state. Each invocation is independent.
 
