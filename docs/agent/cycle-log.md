@@ -11,7 +11,7 @@ Every problem-attempt cycle gets one row. Failures count. Cherry-picking is forb
 | `start_score` | best score we held entering the cycle (or `none` for first attempt) |
 | `end_score` | best score after the cycle |
 | `hours` | wall-clock spent on the cycle (rough; cap at 100h) |
-| `compute` | local-cpu / local-mps / modal / mixed |
+| `compute` | local-cpu / local-mps / modal / mixed / local-cpu+llm / none-strategy-only / none-placeholder (autonomous_loop scaffold rows) |
 | `wiki_citations` | # of wiki/ pages we cited during the cycle |
 | `findings_added` | # of new wiki/findings/ pages produced |
 | `concepts_added` | # of new wiki/concepts/ pages produced |

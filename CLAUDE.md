@@ -16,7 +16,7 @@ This repo is the public artifact. It has three layers, each with its own contrac
 
 ## Goal
 
-**Generalized math wisdom**, not arena rank. The agent solves problems, learns from failure, and writes back to the wiki. Each cycle compounds. Submission is a wisdom-verification tool, not a goal — minimum 6 hours between submissions per problem; user-approved each time. **No external posts** — all knowledge stays on this repo + wiki.
+**Generalized math wisdom**, not arena rank. The agent solves problems, learns from failure, and writes back to the wiki. Each cycle compounds. Submission is a wisdom-verification tool, not a goal — the autonomous loop may auto-submit new arena records that pass the 6-gate chain in [`.claude/rules/axioms.md`](.claude/rules/axioms.md) (strict-improvement over arena #1, triple-verify, 1-hour throttle, daily cap, kill switch, audit log); all other cases still require human approval. **No external posts** — all knowledge stays on this repo + wiki.
 
 See [`mb/completed/js-refactor-wiki-bootstrap.md`](../mb/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `docs/wiki/home.md`).
 
@@ -53,7 +53,7 @@ Every score must be verified three ways before trusting: fast local evaluator, e
 ### Submission discipline
 - Submit ONLY when a result represents a qualitative new claim (novel basin, new approach, milestone, suspected verifier mismatch) — not every iteration
 - Local triple-verify is the closed loop; submission is the second-rate signal that catches local↔arena drift
-- User explicitly approves each submission
+- Auto-submit is allowed for **new arena records** that pass all 6 gates in [`.claude/rules/axioms.md`](.claude/rules/axioms.md) (revised 2026-05-24); every other submission still requires human approval. Audit trail in `mb/auto-submit-log.md`.
 - Floor: **1 hour** between submissions on the same problem (avoid rapid-fire)
 - Practical cadence: 1–3 submits per problem per week, sometimes zero
 - No external posts (arena threads / blog / social) — wiki is the publication channel

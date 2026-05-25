@@ -20,6 +20,17 @@ loop described in [`mb/active/feat-autonomous-loop.md`](../../../mb/active/feat-
 | [`calibrate.sh`](calibrate.sh) | Device-agnostic recalibration wrapper: runs `scripts/local_benchmark.py`, prints drift vs prior, prints sample router invocations. |
 | [`cycle_runner.sh`](cycle_runner.sh) | Per-cycle discipline wrapper. Run after every cycle: `refresh_qmd` → `wiki_graph --file-questions` → `gap_search` → promotion-log check. |
 | [`monitor.py`](monitor.py) | Read-only progress dashboard. Parses `docs/agent/cycle-log.md` and prints totals, outcomes, recent cycles. |
+| [`claude_headless.py`](claude_headless.py) | Shared wrapper for non-interactive Claude Code invocations. Used by the inner-agent inside each cycle. |
+| [`inner_agent_prompt.py`](inner_agent_prompt.py) | Builds the inner-agent prompt template (problem context + wiki excerpts + budget). |
+| [`inner_agent_output.py`](inner_agent_output.py) | Structured-output schema + validator for inner-agent responses (Goal 7.3). |
+| [`inner_agent_gates.py`](inner_agent_gates.py) | Pre-cycle resource gates: kill switch (`EINSTEIN_INNER_AGENT=0`), sentinel file (`mb/.inner-agent-disabled`), daily budget. |
+| [`inner_agent_budget.py`](inner_agent_budget.py) | CLI + library for the daily token-budget ledger (`mb/inner-agent-budget.md`). |
+| [`notify_milestone.py`](notify_milestone.py) | macOS notification helper — fires a banner when `auto_submit` accepts a new arena record. |
+| [`distill_paper.py`](distill_paper.py) | Distill a single `docs/raw/<id>.pdf` (or arxiv URL) into a `docs/source/<id>.md` LLM-distillation. |
+| [`llm_distill.py`](llm_distill.py) | Lower-level LLM distillation primitive used by `distill_paper` + `seed_ingest` apply step. |
+| [`select_top.py`](select_top.py) | Pick the top-N candidates from a `*-candidates.json` (used inside the seed-ingest pipeline). |
+| [`seed-authors.yaml`](seed-authors.yaml) | Author-list seed for `seed_ingest propose` (broad-stroke literature sweep). |
+| [`wiki_lint.py`](wiki_lint.py) | Wiki health lint — cite hygiene, broken refs, orphans, attribution. Hard fails drop the inner-agent sentinel via `cycle_runner.sh`. |
 
 The top-level orchestrator lives one directory up at
 [`scripts/autonomous_loop.py`](../../scripts/autonomous_loop.py) — see
