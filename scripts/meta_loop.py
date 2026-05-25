@@ -27,7 +27,7 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO / "src"))
 
-from einstein.meta_loop import diagnose, propose, review  # noqa: E402
+from einstein.meta_loop import diagnose, propose, review, shadow  # noqa: E402
 from einstein.meta_loop.proposals import ProposalStore  # noqa: E402
 
 # When running from a worktree (cb-<branch>/), `.mb` is a symlink to ../mb.
@@ -157,9 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_diagnose(sub)
     _add_propose(sub)
     _add_review(sub)
-
-    # Stub for forward-declared shadow subcommand.
-    sub.add_parser("shadow", help="(Goal 5) shadow A/B harness; not yet implemented")
+    _add_shadow(sub)
 
     args = parser.parse_args(argv)
 
@@ -167,7 +165,7 @@ def main(argv: list[str] | None = None) -> int:
         "diagnose": _cmd_diagnose,
         "propose": _cmd_propose,
         "review": _cmd_review,
-        "shadow": _stub("shadow"),
+        "shadow": _cmd_shadow,
     }
     return handlers[args.cmd](args)
 
@@ -193,6 +191,82 @@ def _add_review(sub: argparse._SubParsersAction) -> None:
         action="store_true",
         help="list pending proposals and exit (no interactive review)",
     )
+
+
+def _add_shadow(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser(
+        "shadow",
+        help="run shadow A/B harness on one pending proposal (Goal 5)",
+    )
+    p.add_argument(
+        "proposal_id",
+        help="id of a proposal in mb/proposals/pending/",
+    )
+    p.add_argument(
+        "--proposals-root",
+        type=Path,
+        default=_DEFAULT_MB / "proposals",
+    )
+    p.add_argument(
+        "--n-cycles",
+        type=int,
+        default=10,
+        help="cycles to run in each arm (default 10)",
+    )
+    p.add_argument(
+        "--repo-root",
+        type=Path,
+        default=_REPO,
+    )
+    p.add_argument(
+        "--shadow-log",
+        type=Path,
+        default=_DEFAULT_MB / "logs" / "meta-shadow-runs.md",
+    )
+    p.add_argument(
+        "--no-cleanup",
+        action="store_true",
+        help="keep the cb-shadow-<id>-{A,B} worktrees after the run",
+    )
+
+
+def _cmd_shadow(args: argparse.Namespace) -> int:
+    store = ProposalStore(args.proposals_root)
+    pending = {p.id: p for p in store.list_pending()}
+    if args.proposal_id not in pending:
+        print(
+            f"meta-loop shadow — no pending proposal with id={args.proposal_id!r}",
+            file=sys.stderr,
+        )
+        return 2
+    proposal = pending[args.proposal_id]
+    result = shadow.run_shadow(
+        proposal,
+        repo_root=args.repo_root,
+        n_cycles=args.n_cycles,
+        cycle_runner=shadow.default_cycle_runner,
+        shadow_log=args.shadow_log,
+        cleanup=not args.no_cleanup,
+    )
+    if result.error:
+        print(f"meta-loop shadow — failed: {result.error}", file=sys.stderr)
+        return 1
+    print(
+        f"meta-loop shadow — proposal={result.proposal_id} "
+        f"n_cycles={result.n_cycles} a_wins={result.a_wins}"
+    )
+    if result.delta:
+        d = result.delta
+        print(
+            f"  A: cycles={d.arm_a.cycles} findings={d.arm_a.findings_added} "
+            f"concepts={d.arm_a.concepts_added} score_chg={d.arm_a.score_changed_cycles}"
+        )
+        print(
+            f"  B: cycles={d.arm_b.cycles} findings={d.arm_b.findings_added} "
+            f"concepts={d.arm_b.concepts_added} score_chg={d.arm_b.score_changed_cycles}"
+        )
+        print(f"  Δfindings/cycle={d.findings_delta:.3f}")
+    return 0
 
 
 def _cmd_review(args: argparse.Namespace) -> int:
