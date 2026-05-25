@@ -16,11 +16,26 @@
 
 14:
   slug: circle-packing-square
-  default: newton_max
+  # Default is `slsqp_polish` (strict tol=0). `newton_max` is kept available
+  # but NOT default — its argparse defaults (`--pair-gap=-9e-10`) are the
+  # arena-tolerance-band exploit explicitly rejected after the 2026-04-09
+  # false-breakthrough 500-pt penalty. See dead-end-newton-max-strict-tol-
+  # lockout-p14.md (cycle 51 of the autonomous loop). When invoking
+  # newton_max here we force `--pair-gap 0` so even an explicit pick stays
+  # strict-tol-safe per axiom A1.
+  default: slsqp_polish
   optimizers:
+    slsqp_polish:
+      script: scripts/circle_packing_square/slsqp_polish.py
+      cli_args: []
+      timeout_seconds: 300
+      result_file: results/circle_packing_square/slsqp_polish_result.json
+      result_parser: json_score_payload
     newton_max:
       script: scripts/circle_packing_square/newton_max.py
-      cli_args: []
+      # `--pair-gap 0` forces strict-disjoint (axiom A1). Without this, the
+      # script defaults to `--pair-gap=-9e-10` (arena-tolerance exploit).
+      cli_args: ["--pair-gap", "0"]
       timeout_seconds: 1800
       result_file: results/circle_packing_square/newton_max_result.json
       result_parser: json_score_payload
