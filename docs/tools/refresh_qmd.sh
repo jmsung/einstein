@@ -17,8 +17,16 @@
 
 set -euo pipefail
 
+# Disable Metal/GPU backend for node-llama-cpp.
+# On macOS 26.4 + Apple clang 21 + node-llama-cpp 3.18.1, `qmd query` exits
+# with `Abort trap: 6` (the documented Darwin Metal finalizer abort).
+# CPU fallback is fast enough for our corpus (≤20s for a full hybrid
+# query+rerank on ~1700 docs); embed is one-shot and unaffected.
+# See: docs/wiki/findings/qmd-metal-embed-fix.md
+export QMD_FORCE_CPU=1
+
 if ! command -v qmd >/dev/null 2>&1; then
-  echo "error: qmd not on PATH. install via 'npm install -g @tobi/qmd' or equivalent." >&2
+  echo "error: qmd not on PATH. install via 'npm install -g @tobilu/qmd' or equivalent." >&2
   exit 1
 fi
 
