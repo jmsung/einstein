@@ -81,6 +81,42 @@ Edit the plist before reinstalling — common adjustments:
 | `mb/.inner-agent-disabled` | Skips the visit entirely | `touch mb/.inner-agent-disabled` |
 | Bootout | Stop scheduling cycles | `launchctl bootout …` (above) |
 
+## Meta-loop (Goal 6 of `js/feat/meta-loop`)
+
+A second plist, `com.einstein.meta-loop.plist`, runs the meta-loop's
+agentic proposer once a day (default 04:00 local). It's deliberately
+*much* less frequent than the inner loop — the meta-loop only needs
+new cycle artifacts to chew on, and those accumulate overnight.
+
+Install:
+
+```bash
+PROJECT_ROOT="$(pwd)"
+sed "s|__PROJECT_ROOT__|$PROJECT_ROOT|g" docs/ops/com.einstein.meta-loop.plist \
+  > "$HOME/Library/LaunchAgents/com.einstein.meta-loop.plist"
+launchctl bootstrap "gui/$UID" "$HOME/Library/LaunchAgents/com.einstein.meta-loop.plist"
+launchctl enable    "gui/$UID/com.einstein.meta-loop"
+```
+
+The meta-loop has its own kill switch: `EINSTEIN_META_LOOP=0` rejects
+every proposal at the gate chain (audit row still written). Separate
+from `EINSTEIN_INNER_AGENT` so you can pause one without the other.
+
+Outputs:
+
+- **Diagnostic** — `mb/logs/meta-loop-report.md` (refreshed on every run)
+- **Pending proposals** — `mb/proposals/pending/<id>.md`
+- **Audit log** — `mb/logs/meta-proposals.md`
+- **Token budget** — `mb/logs/meta-loop-budget.md`
+- **Shadow runs** — `mb/logs/meta-shadow-runs.md` (operator-initiated; not from the daily plist)
+
+Review pending proposals each morning:
+
+```bash
+uv run python scripts/meta_loop.py review --list      # quick triage
+uv run python scripts/meta_loop.py review             # interactive
+```
+
 ## Non-macOS
 
 `launchd` is macOS-only. For Linux, use `systemd --user` timers or `cron`.
