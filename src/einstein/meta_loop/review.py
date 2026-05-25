@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -334,8 +333,3 @@ __all__ = [
     "reject_proposal",
     "review_pending",
 ]
-
-
-# Silence unused-import for shutil — kept available for future "stash & revert"
-# use cases in revert flow. Not used today.
-_ = shutil

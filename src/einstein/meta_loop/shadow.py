@@ -31,7 +31,7 @@ import datetime as dt
 import logging
 import shutil
 import subprocess
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
@@ -57,9 +57,7 @@ class WorktreeSpec:
             raise ValueError(f"arm must be 'A' or 'B', got {self.arm!r}")
 
 
-def make_arms(
-    proposal: Proposal, *, worktree_parent: Path, base_branch: str = "HEAD"
-) -> tuple[WorktreeSpec, WorktreeSpec]:
+def make_arms(proposal: Proposal, *, worktree_parent: Path) -> tuple[WorktreeSpec, WorktreeSpec]:
     """Build the two arm specs. Branch names embed the proposal id."""
     a = WorktreeSpec(
         arm="A",
@@ -482,7 +480,3 @@ __all__ = [
     "run_shadow",
     "setup_worktree",
 ]
-
-
-# Keep asdict importable for callers; not used internally.
-_ = asdict
