@@ -24,7 +24,7 @@ loop described in [`mb/active/feat-autonomous-loop.md`](../../../mb/active/feat-
 | [`inner_agent_prompt.py`](inner_agent_prompt.py) | Builds the inner-agent prompt template (problem context + wiki excerpts + budget). |
 | [`inner_agent_output.py`](inner_agent_output.py) | Structured-output schema + validator for inner-agent responses (Goal 7.3). |
 | [`inner_agent_gates.py`](inner_agent_gates.py) | Pre-cycle resource gates: kill switch (`EINSTEIN_INNER_AGENT=0`), sentinel file (`mb/.inner-agent-disabled`), daily budget. |
-| [`inner_agent_budget.py`](inner_agent_budget.py) | CLI + library for the daily token-budget ledger (`mb/inner-agent-budget.md`). |
+| [`inner_agent_budget.py`](inner_agent_budget.py) | CLI + library for the daily token-budget ledger (`mb/logs/inner-agent-budget.md`). |
 | [`notify_milestone.py`](notify_milestone.py) | macOS notification helper — fires a banner when `auto_submit` accepts a new arena record. |
 | [`distill_paper.py`](distill_paper.py) | Distill a single `docs/raw/<id>.pdf` (or arxiv URL) into a `docs/source/<id>.md` LLM-distillation. |
 | [`llm_distill.py`](llm_distill.py) | Lower-level LLM distillation primitive used by `distill_paper` + `seed_ingest` apply step. |

@@ -53,7 +53,7 @@ Every score must be verified three ways before trusting: fast local evaluator, e
 ### Submission discipline
 - Submit ONLY when a result represents a qualitative new claim (novel basin, new approach, milestone, suspected verifier mismatch) — not every iteration
 - Local triple-verify is the closed loop; submission is the second-rate signal that catches local↔arena drift
-- Auto-submit is allowed for **new arena records** that pass all 6 gates in [`.claude/rules/axioms.md`](.claude/rules/axioms.md) (revised 2026-05-24); every other submission still requires human approval. Audit trail in `mb/auto-submit-log.md`.
+- Auto-submit is allowed for **new arena records** that pass all 6 gates in [`.claude/rules/axioms.md`](.claude/rules/axioms.md) (revised 2026-05-24); every other submission still requires human approval. Audit trail in `mb/logs/auto-submit.md`.
 - Floor: **1 hour** between submissions on the same problem (avoid rapid-fire)
 - Practical cadence: 1–3 submits per problem per week, sometimes zero
 - No external posts (arena threads / blog / social) — wiki is the publication channel

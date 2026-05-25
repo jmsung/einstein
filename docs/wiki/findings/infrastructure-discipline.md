@@ -93,8 +93,25 @@ The pattern: when the cycle hits an execution blocker, the gap-detect step produ
 
 Branch `feat/autonomous-loop` Goal 7.7 (2026-05-24): the autonomous loop's inner agent is implemented as `claude -p` invoked as a subprocess from `docs/tools/cycle_runner.sh`, which itself runs inside a parent Claude Code session (during interactive development) and also under launchd (in production). The concern at design time was recursion / context-pollution / billing entanglement: would the inner `claude -p` somehow see the outer session's context, or get rate-limited under the outer session's budget, or recurse indefinitely?
 
-**Observed behaviour**: no recursion issues. The inner `claude -p` is a fresh process with its own context window, its own auth (same API key, different session token), its own per-cycle budget (tracked in `mb/inner-agent-budget.md`). The outer session sees only the subprocess's stdout / stderr / exit code, exactly like any other shell command. Tool allow-list is enforced inside the inner process — outer Claude's tools are not inherited.
+**Observed behaviour**: no recursion issues. The inner `claude -p` is a fresh process with its own context window, its own auth (same API key, different session token), its own per-cycle budget (tracked in `mb/logs/inner-agent-budget.md`). The outer session sees only the subprocess's stdout / stderr / exit code, exactly like any other shell command. Tool allow-list is enforced inside the inner process — outer Claude's tools are not inherited.
 
 **Mechanism**: `claude -p` is implemented as a single-shot CLI that constructs its own conversation from argv + stdin and exits. It does not look at the parent process's TTY, env, or open file descriptors for state. Each invocation is independent.
 
 **Rule**: agents that need to spawn other agents can use `claude -p` as a subprocess without special recursion-fence engineering. The only cross-process state is what you pass on argv / stdin / file. Budget tracking is the caller's responsibility (record input/output tokens after each call into a ledger file — see `inner_agent_budget.py`). This is the recommended pattern for any "agent-of-agents" workflow in this repo.
+
+## #106: Path refactors of append-only ledgers need an end-to-end gate-chain dry-run, not just unit tests {#lesson-106}
+
+Branch `js/test/autonomous-loop-dry-run` (2026-05-24, paired with refactor `0088e7d` consolidating `mb/auto-submit-log.md` + `mb/inner-agent-budget.md` under `mb/logs/` (dropping the `-log` suffix on the audit file in the move)): unit tests on `_REPO.parent / "mb" / "logs" / "..."` would have caught a simple path typo, but not the more interesting questions — does the parser still recognize the existing rows? Does the audit-log header get re-created cleanly when missing? Does the throttle-window math still read timestamps with timezone correctly across the file boundary?
+
+The validation harness here used **direct synthetic invocations of `auto_submit.try_submit`** with controlled inputs to exercise each gate independently, plus one real autonomous_loop cycle to exercise the path-resolution code paths under live conditions:
+
+- Gate 1 (kill switch, `EINSTEIN_AUTO_SUBMIT=0`) — synthetic call with `(problem_id=99, score=42)` confirmed audit row at the new path.
+- Gate 2 (triple-verify) — `triple_verify={passed: False}` produces the right rejection reason.
+- Gate 3 (daily-cap) — isolated tempdir audit log with one fake `submitted` row + `daily_cap=1` confirmed parser counts submitted-only rows and trips the gate.
+- Gate 4 (throttle) — same fake row + `throttle_minutes=60` confirmed timestamp-with-tz arithmetic.
+- Gate 5 (no-improvement) — fake `leaderboard_fetcher` returning `99.0` for `score=10` produces the right delta.
+- Gate 6 (POST + audit) — deferred to a separately-authorized live session.
+
+**Rule**: any refactor that moves a file holding append-only state (ledgers, audit logs, budget files) must include a synthetic end-to-end exercise of every consumer of that state, not just a unit-test of the new path string. The full chain — path resolution → parser → gate logic → header creation → audit-row write — is what compounds across cycles. Drop any one of those and the next cycle silently breaks.
+
+**Corollary**: when auto-mode (or a human reviewer) refuses to run the "real" live test on a dry-run branch, do not skip the validation. Substitute direct calls to the public API with controlled inputs that exercise the same code paths without the risky side effect (no real POST, no real arena fetch). This was the move here when `unset EINSTEIN_AUTO_SUBMIT` was correctly denied — passing `leaderboard_fetcher=lambda pid: 99.0` exercises gate-5 just as faithfully and cannot accidentally submit anything.

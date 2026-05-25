@@ -15,24 +15,23 @@ Gate order (fail-fast — cheapest checks first):
                             by ≥ min_improvement. Not just beating our own
                             prior best — must be a real new arena record.
   6. POST + audit log    — call arena_submit.submit_solution; record outcome
-                            in mb/auto-submit-log.md regardless of HTTP result.
+                            in mb/logs/auto-submit.md regardless of HTTP result.
 
 Every decision (submit / reject) appends one row to the audit log so the
 human can review weekly. No silent rejections.
 """
+
 from __future__ import annotations
 
 import datetime as dt
 import json
 import logging
 import os
-import re
-import sys
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable
 
 # Sibling import — arena_submit is the POST layer (A1)
 from . import arena_submit
@@ -41,7 +40,7 @@ log = logging.getLogger("auto_submit")
 
 _REPO = Path(__file__).resolve().parents[2]
 # mb is the private workspace sibling of cb; audit log lives there
-DEFAULT_AUDIT_LOG = _REPO.parent / "mb" / "auto-submit-log.md"
+DEFAULT_AUDIT_LOG = _REPO.parent / "mb" / "logs" / "auto-submit.md"
 DEFAULT_MIN_IMPROVEMENT = 1e-8
 DEFAULT_THROTTLE_MINUTES = 60
 DEFAULT_DAILY_CAP = 5
@@ -59,6 +58,7 @@ AUDIT_LOG_HEADER = (
 @dataclass
 class AutoSubmitResult:
     """Outcome of one try_submit call."""
+
     submitted: bool
     problem_id: int
     score: float | None = None
@@ -80,11 +80,18 @@ def _ensure_audit_header(audit_log: Path) -> None:
     audit_log.write_text("# auto-submit audit log\n\n" + AUDIT_LOG_HEADER)
 
 
-def _append_audit_row(audit_log: Path, *, timestamp: dt.datetime, problem_id: int,
-                      score: float | None, decision: str, reason: str,
-                      http_status: int | None = None,
-                      arena_id: str | None = None) -> None:
-    """Append one row to mb/auto-submit-log.md."""
+def _append_audit_row(
+    audit_log: Path,
+    *,
+    timestamp: dt.datetime,
+    problem_id: int,
+    score: float | None,
+    decision: str,
+    reason: str,
+    http_status: int | None = None,
+    arena_id: str | None = None,
+) -> None:
+    """Append one row to mb/logs/auto-submit.md."""
     _ensure_audit_header(audit_log)
     score_s = f"{score:.14g}" if isinstance(score, (int, float)) else "—"
     status_s = str(http_status) if http_status is not None else "—"
@@ -131,8 +138,7 @@ def _parse_audit_log(audit_log: Path) -> list[dict]:
 # ---------------- arena #1 SOTA fetcher ----------------
 
 
-def _fetch_arena_top1_score(problem_id: int, *,
-                            timeout: int = 15) -> float | None:
+def _fetch_arena_top1_score(problem_id: int, *, timeout: int = 15) -> float | None:
     """Query /api/solutions/best?problem_id=N&limit=1 and return the top score.
 
     Returns None on network failure / unexpected shape — caller treats that
@@ -200,29 +206,46 @@ def try_submit(
     if now.tzinfo is None:
         now = now.replace(tzinfo=dt.timezone.utc)
 
-    def _record(*, submitted: bool, gate: str | None, reason: str,
-                submission: arena_submit.SubmissionResult | None = None,
-                arena_top1: float | None = None) -> AutoSubmitResult:
+    def _record(
+        *,
+        submitted: bool,
+        gate: str | None,
+        reason: str,
+        submission: arena_submit.SubmissionResult | None = None,
+        arena_top1: float | None = None,
+    ) -> AutoSubmitResult:
         http_status = submission.http_status if submission else None
         arena_id = None
         if submission and submission.arena_response:
             arena_id = submission.arena_response.get("id")
         decision = "submitted" if submitted else "rejected"
         _append_audit_row(
-            log_path, timestamp=now, problem_id=problem_id, score=score,
-            decision=decision, reason=f"{gate or 'ok'}: {reason}" if gate else reason,
-            http_status=http_status, arena_id=arena_id,
+            log_path,
+            timestamp=now,
+            problem_id=problem_id,
+            score=score,
+            decision=decision,
+            reason=f"{gate or 'ok'}: {reason}" if gate else reason,
+            http_status=http_status,
+            arena_id=arena_id,
         )
         return AutoSubmitResult(
-            submitted=submitted, problem_id=problem_id, score=score,
-            rejected_at_gate=gate, reason=reason,
-            submission=submission, arena_top1_score=arena_top1,
+            submitted=submitted,
+            problem_id=problem_id,
+            score=score,
+            rejected_at_gate=gate,
+            reason=reason,
+            submission=submission,
+            arena_top1_score=arena_top1,
         )
 
     # --- Gate 1: kill switch -----------------------------------------------
     if os.environ.get(KILL_SWITCH_ENV) == "0":
-        return _record(submitted=False, gate="kill-switch",
-                       reason=f"{KILL_SWITCH_ENV}=0 — auto-submit disabled")
+        return _record(
+            submitted=False,
+            gate="kill-switch",
+            reason=f"{KILL_SWITCH_ENV}=0 — auto-submit disabled",
+        )
 
     # --- Gate 2: triple-verify ---------------------------------------------
     if not triple_verify or not triple_verify.get("passed"):
@@ -240,29 +263,39 @@ def try_submit(
     today_utc = now.date()
     today_count = sum(1 for r in submitted_rows if r["timestamp"].date() == today_utc)
     if today_count >= daily_cap:
-        return _record(submitted=False, gate="daily-cap",
-                       reason=f"{today_count} submits already today (cap={daily_cap})")
+        return _record(
+            submitted=False,
+            gate="daily-cap",
+            reason=f"{today_count} submits already today (cap={daily_cap})",
+        )
 
     # --- Gate 4: per-problem throttle --------------------------------------
     throttle_delta = dt.timedelta(minutes=throttle_minutes)
     recent_for_problem = [
-        r for r in submitted_rows
+        r
+        for r in submitted_rows
         if r["problem_id"] == problem_id and (now - r["timestamp"]) < throttle_delta
     ]
     if recent_for_problem:
         last_ts = max(r["timestamp"] for r in recent_for_problem)
         mins_since = int((now - last_ts).total_seconds() / 60)
-        return _record(submitted=False, gate="throttle",
-                       reason=f"P{problem_id} last submitted {mins_since}min ago "
-                              f"(throttle={throttle_minutes}min)")
+        return _record(
+            submitted=False,
+            gate="throttle",
+            reason=f"P{problem_id} last submitted {mins_since}min ago "
+            f"(throttle={throttle_minutes}min)",
+        )
 
     # --- Gate 5: arena #1 SOTA improvement ---------------------------------
     if arena_top1_score is None:
         fetcher = leaderboard_fetcher or _fetch_arena_top1_score
         arena_top1_score = fetcher(problem_id)
     if arena_top1_score is None:
-        return _record(submitted=False, gate="leaderboard-unavailable",
-                       reason="could not fetch arena #1 score — refusing to submit blind")
+        return _record(
+            submitted=False,
+            gate="leaderboard-unavailable",
+            reason="could not fetch arena #1 score — refusing to submit blind",
+        )
     if minimize:
         beats = arena_top1_score - score >= min_improvement
         delta = arena_top1_score - score
@@ -270,26 +303,40 @@ def try_submit(
         beats = score - arena_top1_score >= min_improvement
         delta = score - arena_top1_score
     if not beats:
-        return _record(submitted=False, gate="no-improvement",
-                       reason=f"score={score:.14g} vs arena #1={arena_top1_score:.14g} "
-                              f"(delta={delta:.3g}, need ≥{min_improvement:g})",
-                       arena_top1=arena_top1_score)
+        return _record(
+            submitted=False,
+            gate="no-improvement",
+            reason=f"score={score:.14g} vs arena #1={arena_top1_score:.14g} "
+            f"(delta={delta:.3g}, need ≥{min_improvement:g})",
+            arena_top1=arena_top1_score,
+        )
 
     # --- Gate 6: POST + audit ----------------------------------------------
     if dry_run:
-        return _record(submitted=False, gate="dry-run",
-                       reason=f"all gates passed, would POST (delta={delta:.3g})",
-                       arena_top1=arena_top1_score)
+        return _record(
+            submitted=False,
+            gate="dry-run",
+            reason=f"all gates passed, would POST (delta={delta:.3g})",
+            arena_top1=arena_top1_score,
+        )
 
     submit_fn = submitter or arena_submit.submit_solution
     sub = submit_fn(problem_id, payload, expected_score=score)
 
     if not sub.ok:
-        return _record(submitted=False, gate="post-failed",
-                       reason=f"submit_solution failed: {sub.error}",
-                       submission=sub, arena_top1=arena_top1_score)
+        return _record(
+            submitted=False,
+            gate="post-failed",
+            reason=f"submit_solution failed: {sub.error}",
+            submission=sub,
+            arena_top1=arena_top1_score,
+        )
 
-    return _record(submitted=True, gate=None,
-                   reason=f"new arena record: {score:.14g} beats #1={arena_top1_score:.14g} "
-                          f"by {delta:.3g}",
-                   submission=sub, arena_top1=arena_top1_score)
+    return _record(
+        submitted=True,
+        gate=None,
+        reason=f"new arena record: {score:.14g} beats #1={arena_top1_score:.14g} "
+        f"by {delta:.3g}",
+        submission=sub,
+        arena_top1=arena_top1_score,
+    )

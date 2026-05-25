@@ -5,7 +5,7 @@ Goal 7.8d. Thin wrapper over `inner_agent_gates`'s budget API so operators
 can ask "where's today at?" or "reset today's row" without launching a
 Python REPL.
 
-The ledger itself is `mb/inner-agent-budget.md` — markdown that humans can
+The ledger itself is `mb/logs/inner-agent-budget.md` — markdown that humans can
 read directly. This CLI is for ergonomic shell use:
 
     uv run python docs/tools/inner_agent_budget.py show           # today only
@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[2]
-DEFAULT_BUDGET_PATH = _REPO.parent / "mb" / "inner-agent-budget.md"
+DEFAULT_BUDGET_PATH = _REPO.parent / "mb" / "logs" / "inner-agent-budget.md"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import inner_agent_gates as iag  # noqa: E402

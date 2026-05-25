@@ -7,7 +7,7 @@ any single failure short-circuits the cycle into a skip with a reason.
 
   1. Kill switch off            — env `EINSTEIN_INNER_AGENT != "0"`
   2. No regression sentinel     — `mb/.inner-agent-disabled` missing
-  3. Daily token budget not hit — today's row in `mb/inner-agent-budget.md`
+  3. Daily token budget not hit — today's row in `mb/logs/inner-agent-budget.md`
                                   under cap
   4. Network reachable          — HEAD on arxiv + arena under 5s
   5. a local workstation not throttling      — `pmset -g therm` shows
