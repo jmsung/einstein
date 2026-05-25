@@ -101,7 +101,7 @@ Branch `feat/autonomous-loop` Goal 7.7 (2026-05-24): the autonomous loop's inner
 
 ## #106: Path refactors of append-only ledgers need an end-to-end gate-chain dry-run, not just unit tests {#lesson-106}
 
-Branch `js/test/autonomous-loop-dry-run` (2026-05-24, paired with refactor `0088e7d` consolidating `mb/auto-submit.md` + `mb/inner-agent-budget.md` under `mb/logs/`): unit tests on `_REPO.parent / "mb" / "logs" / "..."` would have caught a simple path typo, but not the more interesting questions — does the parser still recognize the existing rows? Does the audit-log header get re-created cleanly when missing? Does the throttle-window math still read timestamps with timezone correctly across the file boundary?
+Branch `js/test/autonomous-loop-dry-run` (2026-05-24, paired with refactor `0088e7d` consolidating `mb/auto-submit-log.md` + `mb/inner-agent-budget.md` under `mb/logs/` (dropping the `-log` suffix on the audit file in the move)): unit tests on `_REPO.parent / "mb" / "logs" / "..."` would have caught a simple path typo, but not the more interesting questions — does the parser still recognize the existing rows? Does the audit-log header get re-created cleanly when missing? Does the throttle-window math still read timestamps with timezone correctly across the file boundary?
 
 The validation harness here used **direct synthetic invocations of `auto_submit.try_submit`** with controlled inputs to exercise each gate independently, plus one real autonomous_loop cycle to exercise the path-resolution code paths under live conditions:
 
