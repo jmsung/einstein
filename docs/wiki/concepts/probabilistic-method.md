@@ -2,13 +2,16 @@
 type: concept
 author: agent
 drafted: 2026-05-02
-related_problems: [P1, P12]
+revised: 2026-05-23
+related_problems: [P1, P12, P19]
 related_techniques: [memetic-tabu-search.md, multistart-with-rotation-lottery.md]
 related_findings: []
-cites: []
 related_personas: [erdos.md]
 cites:
   - ../personas/erdos.md
+  - ../../source/2011-pegden-extension-moser-tardos-algorithmic-local.md
+  - ../../source/2014-harris-constructive-algorithm-lov-local.md
+  - ../../source/2015-harvey-algorithmic-proof-lovasz-local.md
 ---
 
 # Probabilistic Method (Erdős)
@@ -59,9 +62,19 @@ This is "apply the probabilistic method to the basin landscape": no clever const
 2. **P12 Flat Polynomials** — SOTA found by **memetic tabu search** with 1.26B random evaluations; the search rediscovered SOTA without any construction. The discovered SOTA was later proven a 4-flip local optimum, suggesting the probabilistic method is at its computational limit for this problem class.
 3. **P1 Erdős Overlap** — Erdős's original problem; the lower bound 0.380... comes from probabilistic counting on shifts of a step function. JSAgent rank #2 (frozen at the equioscillation plateau) honors the same probabilistic-method legacy.
 
+## Algorithmic LLL — three progressively-stronger constructions
+
+Moser–Tardos 2010 turned LLL existence into a polynomial-time algorithm; three follow-ups in `docs/source/` strengthen the hypothesis, the search space, or the ambient probability space.
+
+- **Pegden 2011** ([`source/2011-pegden-extension-moser-tardos-algorithmic-local.md`](../../source/2011-pegden-extension-moser-tardos-algorithmic-local.md)) — gives an algorithmic version of the Bissacot et al. cluster-expansion improvement. The classical LLL hypothesis $P(A) \le x_A \prod_{B \sim A}(1-x_B)$ is replaced by $P(A) \le \mu_A / \sum_{I\subset\bar\Gamma(A),\, I\,\text{indep}} \prod_{B \in I} \mu_B$ — strictly weaker; recovered by $\mu_A = x_A/(1-x_A)$ when the independence restriction is dropped. The Moser–Tardos resampling algorithm still terminates, resampling each $A$ at most $\mu_A$ times in expectation. **Practical reading**: when an LLL bound is too tight for the classical hypothesis, the cluster-expansion form may admit it without changing the algorithm.
+- **Harris–Srinivasan 2014** ([`source/2014-harris-constructive-algorithm-lov-local.md`](../../source/2014-harris-constructive-algorithm-lov-local.md)) — Moser–Tardos lives in the *variable model* (independent random variables); many extremal problems instead need *random permutations*. Harris–Srinivasan's "Swapping Algorithm" gives the first randomized polynomial-time constructive lopsided LLL on permutations, with an RNC parallel version. Concrete bound recovered: every $n\times n$ matrix with each value appearing $\le (27/256)n$ times has a Latin transversal. **Practical reading**: Latin-square / Sidon-set / cap-set type extremal constructions live in permutation models and need this variant.
+- **Harvey–Vondrák 2015** ([`source/2015-harvey-algorithmic-proof-lovasz-local.md`](../../source/2015-harvey-algorithmic-proof-lovasz-local.md)) — generalises to *arbitrary* probability spaces by replacing variable-resampling with abstract **resampling oracles** $r_i : \Omega \to \Omega$ that remove conditioning on $E_i$ without creating non-neighbor events. `MaximalSetResample` terminates in $O\big(\sum_i \tfrac{x_i}{1-x_i} \cdot \sum_j \log\tfrac{1}{1-x_j}\big)$ oracle calls — at most quadratically worse than Moser–Tardos. Resampling oracles exist iff a "lopsided association" condition (LopA) holds, strictly between (Dep) and (Lop). **Practical reading**: a constructive LLL exists for any model where the user can supply a resampling oracle — including continuous spaces, matroid bases, spanning trees, perfect matchings.
+
+The arena interpretation: when a problem reduces to "find a configuration avoiding $n$ bad events with bounded local dependency," one of these three constructive LLLs gives a polynomial-time *algorithm*, not just an existence proof. P19 (difference bases) is the cleanest fit; the bad events ("two pairs share a difference") have bounded dependency and the underlying probability is uniform over a finite set.
+
 ## Related
 
-- Concepts: [autocorrelation-inequality](autocorrelation-inequality.md), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md), [discretization-as-structure](discretization-as-structure.md).
+- Concepts: [autocorrelation-inequality](autocorrelation-inequality.md), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md), [discretization-as-structure](discretization-as-structure.md), [sidon-sets](sidon-sets.md).
 - Techniques: [memetic-tabu-search](../techniques/memetic-tabu-search.md), [multistart-with-rotation-lottery](../techniques/multistart-with-rotation-lottery.md), [basin-hopping-multistart](../techniques/basin-hopping-multistart.md).
 - Findings: [discrete-optimization](../findings/discrete-optimization.md).
-- Sources: Erdős 1947 — foundational; Alon–Spencer "The Probabilistic Method" — canonical text. Not yet ingested.
+- Sources: [Pegden 2011](../../source/2011-pegden-extension-moser-tardos-algorithmic-local.md), [Harris–Srinivasan 2014](../../source/2014-harris-constructive-algorithm-lov-local.md), [Harvey–Vondrák 2015](../../source/2015-harvey-algorithmic-proof-lovasz-local.md). Erdős 1947 + Alon–Spencer canonical text remain uningested — foundational but pre-internet.

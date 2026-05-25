@@ -6,11 +6,11 @@ related_problems: [P1, P2, P3, P4]
 related_techniques: [larger-n-cascade.md, dinkelbach-fractional-programming.md, remez-equioscillation-diagnostic.md]
 related_findings: [equioscillation-escape.md, optimizer-recipes.md]
 cites:
-  - ../source/2010-matolcsi-autoconvolution.md
-  - ../source/2017-cloninger-autoconvolution-sidon.md
-  - ../source/2025-jaech-autoconvolution.md
-  - ../source/2026-rechnitzer-autoconvolution-digits.md
-  - ../source/2025-boyer-autoconvolution.md
+  - ../../source/2010-matolcsi-autoconvolution.md
+  - ../../source/2017-cloninger-autoconvolution-sidon.md
+  - ../../source/2025-jaech-autoconvolution.md
+  - ../../source/2026-rechnitzer-autoconvolution-digits.md
+  - ../../source/2025-boyer-autoconvolution.md
   - ../personas/hilbert.md
   - ../personas/riemann.md
   - ../personas/tao.md

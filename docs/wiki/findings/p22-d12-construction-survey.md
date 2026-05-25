@@ -5,16 +5,11 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - problem-22-kissing-d12/strategy.md
-  - problem-22-kissing-d12/literature.md
-  - problem-22-kissing-d12/implementation-recipes.md
-  - ../source/1971-leech-sphere-packing.md
-  - ../source/2024-delaat-kissing-sdp.md
-  - ../source/2022-ganzhinov-symmetric-lines.md
-  - ../source/cohn-kissing-numbers.md
+  - ../../source/1971-leech-sphere-packing.md
+  - ../../source/2024-delaat-kissing-sdp.md
+  - ../../source/2022-ganzhinov-symmetric-lines.md
+  - ../../source/cohn-kissing-numbers.md
 ---
-
-[[../home]] | [[../index]]
 
 # Kissing Number d=12 — Construction Landscape Survey
 

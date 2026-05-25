@@ -5,7 +5,6 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - knowledge.yaml
 ---
 
 # Infrastructure & Publication Discipline
@@ -58,3 +57,44 @@ Branch `js/chore/ci-precommit` (2026-05-24): added GitHub Actions test workflow 
 4. **Pre-commit `--all-files` needs two converging runs** when both `end-of-file-fixer` and `ruff-format` are enabled — the first run's EOF fix touches pyproject.toml, which triggers ruff-format on the second run. Document this in onboarding to prevent "I ran pre-commit, why is it dirty?" confusion.
 
 **General rule**: introduce CI + lint + format gates as **early as possible** when agent-co-authoring starts, with the minimum rule set (E/F/I) that catches real bugs without forcing a big-bang cleanup. The cost of landing this branch is a fraction of the cost of debugging silent regressions across the next 10 agent branches. Bundling pyright/mypy or dependabot in the same branch dilutes the signal; ship one quality dimension per chore branch (`js/chore/typecheck`, `js/chore/dependabot` separately).
+
+## #102: `claude -p --allowedTools` is variadic — comma-join values and use `--` before the prompt {#lesson-102}
+
+Branch `feat/autonomous-loop` Goal 7.2 (2026-05-24): the headless wrapper around `claude -p` initially built the argv as `["claude", "-p", "--allowedTools", "Read", "Grep", "Bash(qmd:*)", prompt]`. Symptom: every subprocess invocation reported "tool not allowed: <first words of prompt>" — the prompt itself was being consumed as an additional tool name. Root cause: `--allowedTools` is declared variadic in commander.js (the CLI parser used by `claude -p`), so it greedily eats every following positional until the next flag. Space-separated values + a bare positional prompt = the prompt joins the tool list.
+
+**Fix (two parts, both required):**
+
+1. **Comma-join values into a single argv token**: `--allowedTools Read,Grep,Bash(qmd:*),Task` (one argv, comma-delimited).
+2. **Use `--` separator** before the prompt: `claude -p --allowedTools Read,Grep,... -- "<prompt>"`. The `--` ends option parsing so the prompt cannot be mis-parsed as a flag value even if commander adds new variadic flags later.
+
+**Rule**: any CLI built on commander.js (Anthropic's `claude`, many Node CLIs) needs comma-join + `--` separator for any flag that takes lists. Test by inspecting the parsed argv inside the subprocess, not by trusting the help text. Add a regression test that asserts a benign prompt containing recognisable words (e.g. `"hello world"`) does not appear in the disallowed-tool error.
+
+## #103: `git status --untracked-files=all` is mandatory for any newly-created-directory audit {#lesson-103}
+
+Branch `feat/autonomous-loop` Goal 7.6 (2026-05-24): the wiki/mb write audit takes a snapshot of `git status --porcelain` before and after each `claude -p` cycle, diffs them, and notes the per-cycle file deltas into `docs/agent/cycle-log.md`. The first implementation used the bare `git status --porcelain` (which defaults to `--untracked-files=normal`). Symptom: cycles that created an entire new directory (e.g. `docs/wiki/questions/2026-05-24-p14-newton-tol/`) showed up in the delta as a single entry `?? docs/wiki/questions/2026-05-24-p14-newton-tol/` — the individual files inside were invisible to the audit, and the cycle-log notes column reported "1 new path" when the cycle had actually written 4 files.
+
+Root cause: `--untracked-files=normal` collapses an untracked directory into one porcelain line for performance. Audits need file-level granularity → `--untracked-files=all` (expands every untracked file).
+
+**Fix**: always use `git status --porcelain --untracked-files=all` for any delta-audit between two points in time. Tradeoff is wall-clock (slightly slower on huge untracked trees) for completeness.
+
+**Rule**: any agent-side audit / hygiene check that needs per-file granularity on a freshly-created tree MUST pass `--untracked-files=all` (or equivalently `-uall`, but spelled out for clarity). Document this in the audit tool's docstring; otherwise the next maintainer "simplifies" it back to default and silently breaks the audit.
+
+## #104: Agent cycles produce wisdom even when execution is blocked — structural diagnosis is the deliverable {#lesson-104}
+
+Branch `feat/autonomous-loop` cycle 51 on P14 (2026-05-24): the inner agent could not execute `scripts/circle_packing_square/newton_max.py` because (a) the warm-start file `results-temp/p14_top.json` did not exist in the worktree, and (b) the manifest's empty `cli_args: []` left the optimizer running with `--pair-gap=-9e-10` defaults, which are strict-tol-unsafe for the P14 arena verifier. The cycle could not produce a score. **But the cycle still produced wisdom**: a finding (`dead-end-newton-max-strict-tol-lockout-p14.md`) diagnosing the structural blocker and proposing a concrete wire-fix — which became PR #101.
+
+The pattern: when the cycle hits an execution blocker, the gap-detect step produces a finding *about the blocker*, not a finding about the math problem. The finding is just as valuable — it removes the blocker for every future cycle on the same problem, *and* often for a class of problems sharing the same manifest pattern.
+
+**Rule**: do not measure inner-cycle success by "score improved." Measure it by "did this cycle produce a wiki page that the next cycle can stand on." Execution-blocked cycles that write structural findings count as full cycles in the cycle-log. The autonomous-loop's `outcome:` field already supports this (`outcome: new-finding-no-improvement`), but the *evaluator of the loop* (the human reading metrics) has to internalize that this outcome is not failure — it's the loop working as designed.
+
+**Corollary**: per-problem manifest entries (`optimizer_manifest.yaml`) should be stress-tested by the autonomous loop itself, not by hand-curation. The first cycle on a newly-added problem will surface manifest holes the maintainer didn't anticipate; treat that as the manifest's QA pass.
+
+## #105: `claude -p` subprocess from inside Claude Code is safe — no recursion fence needed {#lesson-105}
+
+Branch `feat/autonomous-loop` Goal 7.7 (2026-05-24): the autonomous loop's inner agent is implemented as `claude -p` invoked as a subprocess from `docs/tools/cycle_runner.sh`, which itself runs inside a parent Claude Code session (during interactive development) and also under launchd (in production). The concern at design time was recursion / context-pollution / billing entanglement: would the inner `claude -p` somehow see the outer session's context, or get rate-limited under the outer session's budget, or recurse indefinitely?
+
+**Observed behaviour**: no recursion issues. The inner `claude -p` is a fresh process with its own context window, its own auth (same API key, different session token), its own per-cycle budget (tracked in `mb/inner-agent-budget.md`). The outer session sees only the subprocess's stdout / stderr / exit code, exactly like any other shell command. Tool allow-list is enforced inside the inner process — outer Claude's tools are not inherited.
+
+**Mechanism**: `claude -p` is implemented as a single-shot CLI that constructs its own conversation from argv + stdin and exits. It does not look at the parent process's TTY, env, or open file descriptors for state. Each invocation is independent.
+
+**Rule**: agents that need to spawn other agents can use `claude -p` as a subprocess without special recursion-fence engineering. The only cross-process state is what you pass on argv / stdin / file. Budget tracking is the caller's responsibility (record input/output tokens after each call into a ledger file — see `inner_agent_budget.py`). This is the recommended pattern for any "agent-of-agents" workflow in this repo.

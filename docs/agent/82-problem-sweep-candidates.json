@@ -1,0 +1,350 @@
+{
+  "generated_at": "2026-05-23",
+  "concepts": [
+    {
+      "kind": "problem-sweep",
+      "problem_id": 1,
+      "problem_slug": "erdos-overlap",
+      "query": "(all:\"log-sum-exp smoothing\" OR all:\"smoothed maximum approximation\" OR all:\"basin hopping global optimization\" OR all:\"multistart nonconvex\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 10,
+      "problem_slug": "thomson-n282",
+      "query": "(all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"fundamental domain symmetry sphere packing\" OR all:\"symmetry reduction nonlinear optimization\" OR all:\"basin hopping global optimization\" OR all:\"multistart nonconvex\" OR all:\"multiprecision arithmetic optimization\" OR all:\"high precision floating point\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "Potentialities of Nonsmooth Optimization",
+          "authors": "Vsevolod Ivanov Ivanov",
+          "year": "2013",
+          "abs_url": "http://arxiv.org/abs/1311.2367v1",
+          "summary": "In this paper, we show that higher-order optimality conditions can be obtain for arbitrary nonsmooth function. We introduce a new higher-order directional derivative and higher-order subdifferential of Hadamard type of a given proper extended real function. This derivative is con...",
+          "slug": "2013-ivanov-potentialities-nonsmooth-optimization",
+          "approved": null,
+          "relevance": 0.0453
+        },
+        {
+          "title": "Higher-order optimality conditions with an arbitrary non-differentiable function",
+          "authors": "Vsevolod I. Ivanov",
+          "year": "2015",
+          "abs_url": "http://arxiv.org/abs/1511.09438v2",
+          "summary": "In this paper, we introduce a new higher-order directional derivative and higher-order subdifferential of Hadamard type of a given proper extended real function. This derivative is harmonized with the classical higher-order Fr\u00e9chet directional derivative in the sense that both de...",
+          "slug": "2015-ivanov-higher-order-optimality-conditions-arbitrary",
+          "approved": true,
+          "relevance": 0.068,
+          "auto_approved": true
+        },
+        {
+          "title": "Equilibrium stresses and rigidity for infinite tensegrities and frameworks",
+          "authors": "Stephen Power",
+          "year": "2022",
+          "abs_url": "http://arxiv.org/abs/2207.14369v3",
+          "summary": "Asymptotic equilibrium stresses are defined for countably infinite tensegrities and generalisations of the Roth-Whiteley characterisation of first-order rigidity are obtained. Generalisations of prestress stability and second order rigidity are given for countably infinite bar-jo...",
+          "slug": "2022-power-equilibrium-stresses-rigidity-infinite",
+          "approved": true,
+          "relevance": 0.1067,
+          "auto_approved": true
+        },
+        {
+          "title": "When Chaos Meets Computers",
+          "authors": "Shujun Li",
+          "year": "2004",
+          "abs_url": "http://arxiv.org/abs/nlin/0405038v3",
+          "summary": "This paper focuses on an interesting phenomenon when chaos meets computers. It is found that digital computers are absolutely incapable of showing true long-time dynamics of some chaotic systems, including the tent map, the Bernoulli shift map and their analogues, even in a high-...",
+          "slug": "2004-li-when-chaos-meets-computers",
+          "approved": null,
+          "relevance": 0.0113
+        },
+        {
+          "title": "Second-Order Optimality Conditions in Cone-Constrained Vector Optimization with Arbitrary Nondifferentiable Functions",
+          "authors": "Vsevolod I. Ivanov",
+          "year": "2014",
+          "abs_url": "http://arxiv.org/abs/1411.4382v1",
+          "summary": "In this paper, we introduce a new second-order directional derivative and a second-order subdifferential of Hadamard type for an arbitrary nondifferentiable function. We derive several second-order optimality conditions for a local and a global minimum and an isolated local minim...",
+          "slug": "2014-ivanov-second-order-optimality-conditions-cone-constrai",
+          "approved": true,
+          "relevance": 0.102,
+          "auto_approved": true
+        },
+        {
+          "title": "Wanted: Floating-Point Add Round-off Error instruction",
+          "authors": "Marat Dukhan, Richard Vuduc, Jason Riedy",
+          "year": "2016",
+          "abs_url": "http://arxiv.org/abs/1603.00491v1",
+          "summary": "We propose a new instruction (FPADDRE) that computes the round-off error in floating-point addition. We explain how this instruction benefits high-precision arithmetic operations in applications where double precision is not sufficient. Performance estimates on Intel Haswell, Int...",
+          "slug": "2016-dukhan-wanted-floating-point-add-round-off",
+          "approved": true,
+          "relevance": 0.102,
+          "auto_approved": true
+        }
+      ]
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 11,
+      "problem_slug": "tammes-n50",
+      "query": "(all:\"contact graph rigidity\" OR all:\"infinitesimal rigidity disk packing\" OR all:\"high precision optimization sphere packing\" OR all:\"multiprecision arithmetic numerical\" OR all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"sequential quadratic programming active set\" OR all:\"SQP nonlinear programming\" OR all:\"multiprecision arithmetic optimization\" OR all:\"high precision floating point\" OR all:\"warm start nonlinear optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "On Convergence Lemma and Convergence Stability for Piecewise Analytic Functions",
+          "authors": "Xiaotie Deng, Hanyu Li, Ningyuan Li",
+          "year": "2022",
+          "abs_url": "http://arxiv.org/abs/2204.01643v3",
+          "summary": "In this work, a convergence lemma for function $f$ being finite compositions of analytic mappings and the maximum operator is proved. The lemma shows that the set of $\u03b4$-stationary points near an isolated local minimum point $x^*$ is shrinking to $x^*$ as $\u03b4\\to 0$. It is a natura...",
+          "slug": "2022-deng-convergence-lemma-convergence-stability",
+          "approved": true,
+          "relevance": 0.0989,
+          "auto_approved": true
+        }
+      ]
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 12,
+      "problem_slug": "flat-polynomials",
+      "query": "(all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"probabilistic method Erdos\" OR all:\"Lovasz local lemma\" OR all:\"memetic algorithm combinatorial optimization\" OR all:\"tabu search flat polynomial\" OR all:\"basin hopping global optimization\" OR all:\"multistart nonconvex\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "Extensions of the Algorithmic Lovasz Local Lemma",
+          "authors": "Vladimir Kolmogorov",
+          "year": "2019",
+          "abs_url": "http://arxiv.org/abs/1910.01552v3",
+          "summary": "We consider recent formulations of the algorithmic Lovasz Local Lemma by Achlioptas-Iliopoulos-Kolmogorov [2] and by Achlioptas-Iliopoulos-Sinclair [3]. These papers analyze a random walk algorithm for finding objects that avoid undesired \"bad events\" (or \"flaws\"), and prove that...",
+          "slug": "2019-kolmogorov-extensions-algorithmic-lovasz-local",
+          "approved": true,
+          "relevance": 0.1308,
+          "auto_approved": true
+        },
+        {
+          "title": "Beyond the Lovasz Local Lemma: Point to Set Correlations and Their Algorithmic Applications",
+          "authors": "Dimitris Achlioptas, Fotis Iliopoulos, Alistair Sinclair",
+          "year": "2018",
+          "abs_url": "http://arxiv.org/abs/1805.02026v4",
+          "summary": "Following the groundbreaking algorithm of Moser and Tardos for the Lovasz Local Lemma (LLL), there has been a plethora of results analyzing local search algorithms for various constraint satisfaction problems. The algorithms considered fall into two broad categories: resampling a...",
+          "slug": "2018-achlioptas-beyond-lovasz-local-lemma",
+          "approved": true,
+          "relevance": 0.1417,
+          "auto_approved": true
+        },
+        {
+          "title": "The repulsive lattice gas, the independent-set polynomial, and the Lov\u00e1sz local lemma",
+          "authors": "Alexander D. Scott, Alan D. Sokal",
+          "year": "2003",
+          "abs_url": "http://arxiv.org/abs/cond-mat/0309352v2",
+          "summary": "We elucidate the close connection between the repulsive lattice gas in equilibrium statistical mechanics and the Lovasz local lemma in probabilistic combinatorics. We show that the conclusion of the Lovasz local lemma holds for dependency graph G and probabilities {p_x} if and on...",
+          "slug": "2003-scott-repulsive-lattice-gas-independent-set",
+          "approved": true,
+          "relevance": 0.109,
+          "auto_approved": true
+        },
+        {
+          "title": "Kolmogorov complexity, Lovasz local lemma and critical exponents",
+          "authors": "Andrey Rumyantsev",
+          "year": "2010",
+          "abs_url": "http://arxiv.org/abs/1009.4995v1",
+          "summary": "D. Krieger and J. Shallit have proved that every real number greater than 1 is a critical exponent of some sequence. We show how this result can be derived from some general statements about sequences whose subsequences have (almost) maximal Kolmogorov complexity. In this way one...",
+          "slug": "2010-rumyantsev-kolmogorov-complexity-lovasz-local",
+          "approved": true,
+          "relevance": 0.0654,
+          "auto_approved": true
+        },
+        {
+          "title": "Infinite computable version of Lovasz Local Lemma",
+          "authors": "Andrey Rumyantsev",
+          "year": "2010",
+          "abs_url": "http://arxiv.org/abs/1012.0557v1",
+          "summary": "Lov\u00e1sz Local Lemma (LLL) is a probabilistic tool that allows us to prove the existence of combinatorial objects in the cases when standard probabilistic argument does not work (there are many partly independent conditions).   LLL can be also used to prove the consistency of an in...",
+          "slug": "2010-rumyantsev-infinite-computable-version-lovasz",
+          "approved": true,
+          "relevance": 0.109,
+          "auto_approved": true
+        },
+        {
+          "title": "A new asymptotic enumeration technique: the Lovasz Local Lemma",
+          "authors": "Linyuan Lu, Laszlo A. Szekely",
+          "year": "2009",
+          "abs_url": "http://arxiv.org/abs/0905.3983v4",
+          "summary": "Our previous paper applied a lopsided version of the Lov\u00e1sz Local Lemma that allows negative dependency graphs to the space of random injections from an $m$-element set to an $n$-element set. Equivalently, the same story can be told about the space of random matchings in $K_{n,m}...",
+          "slug": "2009-lu-new-asymptotic-enumeration-technique",
+          "approved": true,
+          "relevance": 0.0872,
+          "auto_approved": true
+        }
+      ]
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 13,
+      "problem_slug": "edges-triangles",
+      "query": "(all:\"reparameterization optimization landscape\" OR all:\"change of variables nonconvex\" OR all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"L-BFGS bound constrained\" OR all:\"piecewise smooth nonlinear optimization\" OR all:\"basin hopping global optimization\" OR all:\"multistart nonconvex\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "A Constrained Optimization Approach for Constructing Rigid Bar Frameworks with Higher-order Rigidity",
+          "authors": "Xuenan Li, Christian D. Santangelo, Miranda Holmes-Cerfon",
+          "year": "2025",
+          "abs_url": "http://arxiv.org/abs/2509.23072v2",
+          "summary": "We present a systematic approach for constructing bar frameworks that are rigid but not first-order rigid, using constrained optimization. We show that prestress stable (but not first-order rigid) frameworks arise as the solution to a simple optimization problem, which asks to ma...",
+          "slug": "2025-li-constrained-optimization-approach-constructing",
+          "approved": true,
+          "relevance": 0.2667,
+          "auto_approved": true
+        }
+      ]
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 14,
+      "problem_slug": "circle-packing-square",
+      "query": "(all:\"high precision optimization sphere packing\" OR all:\"multiprecision arithmetic numerical\" OR all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"sequential quadratic programming active set\" OR all:\"SQP nonlinear programming\" OR all:\"multiprecision arithmetic optimization\" OR all:\"high precision floating point\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 15,
+      "problem_slug": "heilbronn-triangles",
+      "query": "(all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"fundamental domain symmetry sphere packing\" OR all:\"symmetry reduction nonlinear optimization\" OR all:\"sequential quadratic programming active set\" OR all:\"SQP nonlinear programming\" OR all:\"basin hopping global optimization\" OR all:\"multistart nonconvex\" OR all:\"CMA-ES\" OR all:\"covariance matrix adaptation evolution\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "CMA-ES for Discrete and Mixed-Variable Optimization on Sets of Points",
+          "authors": "Kento Uchida, Ryoki Hamano, Masahiro Nomura, Shota Saito, Shinichi Shirakawa",
+          "year": "2024",
+          "abs_url": "http://arxiv.org/abs/2408.13046v1",
+          "summary": "Discrete and mixed-variable optimization problems have appeared in several real-world applications. Most of the research on mixed-variable optimization considers a mixture of integer and continuous variables, and several integer handlings have been developed to inherit the optimi...",
+          "slug": "2024-uchida-cma-es-discrete-mixed-variable-optimization",
+          "approved": true,
+          "relevance": 0.1661,
+          "auto_approved": true
+        },
+        {
+          "title": "Identification of the Isotherm Function in Chromatography Using CMA-ES",
+          "authors": "Mohamed Jebalia, Anne Auger, Marc Schoenauer, Francois James, Marie Postel",
+          "year": "2007",
+          "abs_url": "http://arxiv.org/abs/0710.0322v1",
+          "summary": "This paper deals with the identification of the flux for a system of conservation laws in the specific example of analytic chromatography. The fundamental equations of chromatographic process are highly non linear. The state-of-the-art Evolution Strategy, CMA-ES (the Covariance M...",
+          "slug": "2007-jebalia-identification-isotherm-function-chromatography",
+          "approved": true,
+          "relevance": 0.0567,
+          "auto_approved": true
+        },
+        {
+          "title": "CMA-ES with Margin: Lower-Bounding Marginal Probability for Mixed-Integer Black-Box Optimization",
+          "authors": "Ryoki Hamano, Shota Saito, Masahiro Nomura, Shinichi Shirakawa",
+          "year": "2022",
+          "abs_url": "http://arxiv.org/abs/2205.13482v2",
+          "summary": "This study targets the mixed-integer black-box optimization (MI-BBO) problem where continuous and integer variables should be optimized simultaneously. The CMA-ES, our focus in this study, is a population-based stochastic search method that samples solution candidates from a mult...",
+          "slug": "2022-hamano-cma-es-margin-lower-bounding-marginal",
+          "approved": true,
+          "relevance": 0.1067,
+          "auto_approved": true
+        },
+        {
+          "title": "Uncrowded Hypervolume Improvement: COMO-CMA-ES and the Sofomore framework",
+          "authors": "Cheikh Tour\u00e9, Nikolaus Hansen, Anne Auger, Dimo Brockhoff",
+          "year": "2019",
+          "abs_url": "http://arxiv.org/abs/1904.08823v1",
+          "summary": "We present a framework to build a multiobjective algorithm from single-objective ones. This framework addresses the $p \\times n$-dimensional problem of finding p solutions in an n-dimensional search space, maximizing an indicator by dynamic subspace optimization. Each single-obje...",
+          "slug": "2019-tour-uncrowded-hypervolume-improvement-como-cma-es",
+          "approved": null,
+          "relevance": 0.0283
+        },
+        {
+          "title": "Marginal Probability-Based Integer Handling for CMA-ES Tackling Single-and Multi-Objective Mixed-Integer Black-Box Optimization",
+          "authors": "Ryoki Hamano, Shota Saito, Masahiro Nomura, Shinichi Shirakawa",
+          "year": "2022",
+          "abs_url": "http://arxiv.org/abs/2212.09260v2",
+          "summary": "This study targets the mixed-integer black-box optimization (MI-BBO) problem where continuous and integer variables should be optimized simultaneously. The CMA-ES, our focus in this study, is a population-based stochastic search method that samples solution candidates from a mult...",
+          "slug": "2022-hamano-marginal-probability-based-integer-handling",
+          "approved": true,
+          "relevance": 0.1067,
+          "auto_approved": true
+        },
+        {
+          "title": "Using CMA-ES for tuning coupled PID controllers within models of combustion engines",
+          "authors": "Katerina Henclova",
+          "year": "2016",
+          "abs_url": "http://arxiv.org/abs/1609.06741v4",
+          "summary": "Proportional integral derivative (PID) controllers are important and widely used tools in system control. Tuning of the controller gains is a laborious task, especially for complex systems such as combustion engines. To minimize the time of an engineer for tuning of the gains in ...",
+          "slug": "2016-henclova-using-cma-es-tuning-coupled",
+          "approved": null,
+          "relevance": 0.0189
+        }
+      ]
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 18,
+      "problem_slug": "circles-rectangle",
+      "query": "(all:\"high precision optimization sphere packing\" OR all:\"multiprecision arithmetic numerical\" OR all:\"sequential quadratic programming active set\" OR all:\"SQP nonlinear programming\" OR all:\"warm start nonlinear optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 19,
+      "problem_slug": "difference-bases",
+      "query": "(all:\"probabilistic method Erdos\" OR all:\"Lovasz local lemma\" OR all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"memetic algorithm combinatorial optimization\" OR all:\"tabu search flat polynomial\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 2,
+      "problem_slug": "first-autocorrelation",
+      "query": "(all:\"reparameterization optimization landscape\" OR all:\"change of variables nonconvex\" OR all:\"rank deficient parameterization\" OR all:\"Hessian degeneracy optimization\" OR all:\"log-sum-exp smoothing\" OR all:\"smoothed maximum approximation\" OR all:\"discretization refinement nonlinear\" OR all:\"mesh refinement optimal control\" OR all:\"cutting plane linear programming\" OR all:\"LP relaxation autocorrelation inequality\" OR all:\"L-BFGS bound constrained\" OR all:\"piecewise smooth nonlinear optimization\" OR all:\"warm start nonlinear optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": [
+        {
+          "title": "Condition numbers for the Moore-Penrose inverse and the least squares problem involving rank-structured matrices",
+          "authors": "Sk. Safique Ahmad, Pinki Khatun",
+          "year": "2023",
+          "abs_url": "http://arxiv.org/abs/2306.12177v3",
+          "summary": "Perturbation theory plays a crucial role in sensitivity analysis, which is extensively used to assess the robustness of numerical techniques. To quantify the relative sensitivity of any problem, it becomes essential to investigate structured condition numbers (CNs) via componentw...",
+          "slug": "2023-ahmad-condition-numbers-moore-penrose-inverse",
+          "approved": true,
+          "relevance": 0.0899,
+          "auto_approved": true
+        }
+      ]
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 22,
+      "problem_slug": "kissing-d12",
+      "query": "(all:\"kissing number hinge loss\" OR all:\"ReLU penalty sphere packing\" OR all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"sequential quadratic programming active set\" OR all:\"SQP nonlinear programming\" OR all:\"multiscale perturbation global optimization\" OR all:\"stochastic local search sphere packing\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 3,
+      "problem_slug": "autocorrelation",
+      "query": "(all:\"reparameterization optimization landscape\" OR all:\"change of variables nonconvex\" OR all:\"rank deficient parameterization\" OR all:\"Hessian degeneracy optimization\" OR all:\"discretization refinement nonlinear\" OR all:\"mesh refinement optimal control\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 4,
+      "problem_slug": "third-autocorrelation",
+      "query": "(all:\"log-sum-exp smoothing\" OR all:\"smoothed maximum approximation\" OR all:\"reparameterization optimization landscape\" OR all:\"change of variables nonconvex\" OR all:\"discretization refinement nonlinear\" OR all:\"mesh refinement optimal control\" OR all:\"multiscale perturbation global optimization\" OR all:\"stochastic local search sphere packing\" OR all:\"L-BFGS bound constrained\" OR all:\"piecewise smooth nonlinear optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 5,
+      "problem_slug": "min-distance-ratio",
+      "query": "(all:\"contact graph rigidity\" OR all:\"infinitesimal rigidity disk packing\" OR all:\"first-order rigidity\" OR all:\"isolated local minimum\" OR all:\"rigidity sphere packing\" OR all:\"high precision optimization sphere packing\" OR all:\"multiprecision arithmetic numerical\" OR all:\"sequential quadratic programming active set\" OR all:\"SQP nonlinear programming\" OR all:\"multiprecision arithmetic optimization\" OR all:\"high precision floating point\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 7,
+      "problem_slug": "prime-number-theorem",
+      "query": "(all:\"cutting plane linear programming\" OR all:\"LP relaxation autocorrelation inequality\" OR all:\"warm start nonlinear optimization\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    },
+    {
+      "kind": "problem-sweep",
+      "problem_id": 9,
+      "problem_slug": "uncertainty-principle",
+      "query": "(all:\"polynomial degree extremal uncertainty\" OR all:\"degrees of freedom Hermite\" OR all:\"reparameterization optimization landscape\" OR all:\"change of variables nonconvex\" OR all:\"polynomial degree augmentation optimization\" OR all:\"uncertainty principle Hermite Laguerre\" OR all:\"gap parameterization spectral\" OR all:\"CMA-ES\" OR all:\"covariance matrix adaptation evolution\" OR all:\"multiprecision arithmetic optimization\" OR all:\"high precision floating point\") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)",
+      "candidates": []
+    }
+  ]
+}

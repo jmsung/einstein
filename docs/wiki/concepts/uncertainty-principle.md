@@ -6,8 +6,8 @@ related_problems: [P9]
 related_techniques: [gap-space-parameterization.md, k-climbing.md]
 related_findings: [k-climbing.md]
 cites:
-  - ../source/2017-goncalves-hermite-uncertainty.md
-  - ../source/2019-cohn-uncertainty-d12.md
+  - ../../source/2017-goncalves-hermite-uncertainty.md
+  - ../../source/2019-cohn-uncertainty-d12.md
   - ../personas/hilbert.md
   - bourgain-clozel-kahane.md
 related_personas: [hilbert.md]

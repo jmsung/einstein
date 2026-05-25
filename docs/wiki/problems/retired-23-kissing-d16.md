@@ -1,0 +1,56 @@
+---
+type: problem
+author: agent
+drafted: 2026-05-02
+problem_id: 23
+arena_url: https://einsteinarena.com/problems/kissing-d16
+status: retired
+retired_at: 2026-05-23
+status_when_retired: open
+successor: 22-kissing-d12.md
+score_current: 2.0
+tier: C
+concepts_invoked: [kissing-number.md, sphere-packing.md, first-order-link-tangent-test.md]
+techniques_used: [first-order-link-tangent-test.md]
+findings_produced: []
+private_tracking: ../../mb/problems/23-kissing-d16/
+---
+
+> **⚠ Retired from arena 2026-05-23.** Kissing-number in dimension 16 (n=4321) is no longer hosted at `einsteinarena.com/problems/kissing-d16` (HTTP 404). The live successor (same problem family, different dimension) is **[Problem 22 — Kissing Number in Dimension 12](22-kissing-d12.md)** (n=841). The link-projection survey and Barnes-Wall $\Lambda_{16}$ SOTA archive remain useful for kissing-family work.
+
+# Problem 23 — Kissing Number in Dimension 16 (n=4321)  *(retired)*
+
+## Statement
+Place 4321 unit vectors in R^16; minimize the hinge-overlap score = sum_{i<j} max(0, 2 - ||c_i - c_j||). Score 0 would prove kappa(16) >= 4321.
+
+## Approach
+kappa(16) = 4320 is *proven* (Levenshtein 1979 plus Odlyzko-Sloane 1979 LP bound; achieved by Barnes-Wall BW_16 = Lambda_16). Hence at least one pair must overlap and score 0 is impossible. The SOTA construction uses the BW_16 lattice's 4320 minimal vectors plus one exact duplicate, giving score = 2.0. The link of any BW_16 minimal vector has 280 neighbors at 60 degrees; first-order link analysis applies. Methods explored: filler-only L-BFGS, link-projection SDP/LP relaxation. Submission would tie SOTA at score 2.0 (no points).
+
+## Result
+- **Score**: 2.0 (theoretical floor for any (4320 + duplicate) construction)
+- **Rank**: not yet submitted
+- **Date**: as of 2026-05-02
+- **Status**: open; structural confirmation only
+
+## Wisdom hook
+Proven kissing numbers (kappa(16) = 4320 via Levenshtein) reduce the problem to structural analysis — focus on confirming the known cap, not beating it.
+
+## Concepts invoked
+- [kissing-number.md](../concepts/kissing-number.md)
+- [sphere-packing.md](../concepts/sphere-packing.md)
+- [first-order-link-tangent-test.md](../concepts/first-order-link-tangent-test.md)
+
+## Techniques used
+- [first-order-link-tangent-test.md](../techniques/first-order-link-tangent-test.md)
+
+## Findings
+None yet.
+
+## References
+- Levenshtein (1979), kissing-number LP bound for d=16.
+- Odlyzko-Sloane (1979), independent proof.
+- Barnes-Wall lattice BW_16 = Lambda_16.
+- Conway and Sloane, "Sphere Packings, Lattices and Groups."
+
+## Private tracking
+For owner's reference: `mb/problems/23-kissing-d16/` contains the link-projection survey and the BW_16 SOTA archive. Not part of the public artifact.

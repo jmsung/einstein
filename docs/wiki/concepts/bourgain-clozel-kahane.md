@@ -11,8 +11,8 @@ cites:
   - cohn-elkies-bound.md
   - modular-forms-magic-function.md
   - lp-duality.md
-  - ../source/2017-goncalves-hermite-uncertainty.md
-  - ../source/2019-cohn-uncertainty-d12.md
+  - ../../source/2017-goncalves-hermite-uncertainty.md
+  - ../../source/2019-cohn-uncertainty-d12.md
 ---
 
 # Bourgain–Clozel–Kahane sign-uncertainty principle

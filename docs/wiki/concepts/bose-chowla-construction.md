@@ -11,7 +11,7 @@ cites:
   - lp-duality.md
   - kronecker-decomposition.md
   - ../personas/gauss.md
-  - ../source/2010-vinuesa-sidon-thesis.md
+  - ../../source/2010-vinuesa-sidon-thesis.md
 ---
 
 # Bose–Chowla Sidon-set construction

@@ -14,7 +14,9 @@ status: scaffold (full content in Goal 13)
 
 ## TL;DR
 
-Route every workload to its right home **before launching**. Local M5 Max (128GB, MPS float32) handles mpmath, sequential CPU optimizers, large multistart, and float32 batched ops at zero marginal cost. Modal A100/H100 (float64 CUDA, $/hr) is only for sustained float64 parallel workloads. Mismatching either way wastes wall-clock or money.
+Route every workload to its right home **before launching**. **As of 2026-05-24: Modal cloud GPU is not in use.** All workloads run on the local M5 Max (128GB unified, MPS float32 at ~14.9 TFLOPS) at zero marginal cost. The Modal column in the matrix below reflects forward-looking re-enable conditions, not current practice.
+
+Re-enable Modal only if a measured run on M5 Max shows the workload is genuinely precision-bound (requires f64 CUDA the M5 can't deliver) AND the speedup over local justifies the $/hr.
 
 This page documents the decision matrix today. The full automation tool (`tools/compute_router.py`) is **TBD** and will be implemented in Goal 13.
 

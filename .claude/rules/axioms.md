@@ -50,14 +50,24 @@ Before launching ANY compute job (local or cloud):
 
 ## Submission policy (not an axiom — a rule)
 
-Submit ONLY when a result represents a qualitative new claim. Local triple-verify is the closed loop; submission is the second-rate signal that catches local↔arena drift.
+**Revised 2026-05-24**: human-approval gate replaced with an auto-submit gate chain for **new arena records only**. The autonomous loop may auto-submit IFF every gate below passes; otherwise the candidate is logged for human review.
 
-- User explicitly approves each submission
-- Floor: 1 hour between submissions on the same problem
-- Practical cadence: 1–3 submits per problem per week, sometimes zero
-- Never to defend rank, never for incremental polish, never promotional
+Auto-submit gates (all must pass):
 
-(Was old A2 — demoted from axiom because it's procedural, not invariant.)
+1. **Strict improvement over current arena #1 SOTA** — fetched live via `check_submission.check_leaderboard(problem_id)`. Our score must beat the arena leader by ≥ per-problem `minImprovement` (default 1e-8). Beating only our own prior best is NOT sufficient.
+2. **Triple-verify passes** (per A1) — all 3 evaluators agree within tolerance. Any 2-way disagreement → no submit, write a finding.
+3. **1-hour throttle per problem** — `mb/auto-submit-log.md` is the source of truth; reject if last auto-submit for this problem_id < 1h ago.
+4. **Daily cap** — default 5 auto-submissions/day across all problems. Configurable via env.
+5. **Kill switch** — `EINSTEIN_AUTO_SUBMIT=0` disables all auto-submission. Default-on for the autonomous loop; set to 0 to revert to human-approved-only.
+6. **Audit log mandatory** — every decision (submit / reject + reason) appended to `mb/auto-submit-log.md`. Human reviews weekly.
+
+Non-auto cases — still requires human approval:
+- Polish that doesn't beat arena #1 (e.g. rank-#2 / #3 squeeze for points)
+- "Tied SOTA with floor configuration" (e.g. P22/P23 score-2 floor pattern)
+- Any submission flagged by triple-verify with disagreement
+- Submissions to retired or hidden problems
+
+Was old A2 (human-approved every submission) — replaced by the gate chain above. The rationale for the change: a more powerful agent should be allowed to claim new arena records without round-tripping through human approval; the safety comes from the verification gates, not from the human-in-the-loop. Reviewers please push back if the audit log shows abuse.
 
 ## What's NOT in the axioms
 

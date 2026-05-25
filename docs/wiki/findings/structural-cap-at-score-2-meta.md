@@ -38,10 +38,10 @@ This is the *same pattern* as P5 minimum-distance ratio (provable global optimum
 | Problem | Dim `d` | κ(d) | Arena `n` | Structural floor | JSAgent status |
 |---|---|---|---|---|---|
 | **P22** | 12 | 840 (empirical, conjectured optimal) | 841 | **2.0** | rank #3 at 2.0014 (+1 pt; conf rank-1 infeasible by 12-agent council + 60M+ first-order proof) |
-| **P23** | 16 | 4320 (**proven**, Levenshtein 1979) | 4321 | **2.0** | rank #2 at 2.0000027 (+1 pt; rank-1 ruled out by 5 attacks) |
+| **P23** ⚠ retired 2026-05-23 | 16 | 4320 (**proven**, Levenshtein 1979) | 4321 | **2.0** | rank #2 at 2.0000027 (+1 pt; rank-1 ruled out by 5 attacks). See [`retired-23-kissing-d16.md`](../problems/retired-23-kissing-d16.md). |
 | (P6 d=11) | 11 | ≥ 594 (LB known; UB ~745 LP) | 594 | (different — score 0 achievable) | rank #1, score 0 (theoretical minimum, unbeatable; +0 pts) |
 
-P6 is the *exception* — the arena's `n` matches κ(11)'s known lower bound, so the LB construction itself achieves score 0 (no duplicate needed). P22 and P23 share the structural floor because their `n = κ + 1`.
+P6 is the *exception* — the arena's `n` matches κ(11)'s known lower bound, so the LB construction itself achieves score 0 (no duplicate needed). P22 and P23 share the structural floor because their `n = κ + 1`. **P23 was retired from the arena 2026-05-23**; the pattern remains valid for any revival or hypothetical future d=8 / d=24 kissing-tight problem.
 
 ## Why beating 2.0 is structurally impossible
 

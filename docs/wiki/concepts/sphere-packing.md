@@ -6,12 +6,12 @@ related_problems: [P5, P6, P10, P11, P14, P17a, P17b, P22, P23]
 related_techniques: [slsqp-active-pair-polish.md, parallel-tempering-sa.md, mpmath-ulp-polish.md, basin-hopping-multistart.md]
 related_findings: [packing-techniques.md, basin-rigidity.md, float64-ceiling.md, sa-parallel-tempering.md]
 cites:
-  - ../source/1971-leech-sphere-packing.md
-  - ../source/1959-barnes-wall-lattice.md
-  - ../source/2024-cohn-li-kissing.md
-  - ../source/2024-delaat-kissing-sdp.md
-  - ../source/cohn-kissing-numbers.md
-  - ../source/friedman-packing-records.md
+  - ../../source/1971-leech-sphere-packing.md
+  - ../../source/1959-barnes-wall-lattice.md
+  - ../../source/2024-cohn-li-kissing.md
+  - ../../source/2024-delaat-kissing-sdp.md
+  - ../../source/cohn-kissing-numbers.md
+  - ../../source/friedman-packing-records.md
   - ../personas/archimedes.md
   - ../personas/cohn.md
   - ../personas/conway.md

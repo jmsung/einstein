@@ -5,7 +5,6 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - knowledge.yaml
 ---
 
 # Equioscillation Traps & Larger-n Escape

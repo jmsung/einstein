@@ -2,11 +2,16 @@
 type: technique
 author: agent
 drafted: 2026-05-02
-related_concepts: []
-related_problems: [P1, P9, P13]
+revised: 2026-05-23
+related_concepts: [parameterization-selection.md, basin-rigidity.md]
+related_problems: [P1, P9, P13, P15, P16]
 compute_profile: [local-cpu, modal-gpu]
 cost_estimate: "minutes (small pop) to GPU-hours (pop ≥ 256, sustained)"
 hit_rate: "TBD"
+cites:
+  - ../../source/2016-hansen-cma-evolution-strategy-tutorial.md
+  - ../../source/2014-loshchilov-maximum-likelihood-based-online-adaptation.md
+  - ../../source/2016-akimoto-quality-gain-analysis-weighted.md
 ---
 
 # CMA-ES with Warm-Start
@@ -77,10 +82,19 @@ All three converging in ~10 min total = strongest computational proof of local o
 - Local MPS: float32 only — useful for big-pop CMA where precision is not the bottleneck.
 - Modal A100/H100: pop ≥ 256, float64 needed → sustained parallel evaluation. Run benchmark first.
 
-## References
+## Theory anchors
+
+Three primary sources in `docs/source/` ground the heuristics above:
+
+- **Hansen 2016 — *The CMA Evolution Strategy: A Tutorial*** ([`source/2016-hansen-cma-evolution-strategy-tutorial.md`](../../source/2016-hansen-cma-evolution-strategy-tutorial.md)) — the canonical derivation. The covariance $C$ is a stochastic quasi-Newton approximation of $H^{-1}$ on convex quadratic $f_H = \tfrac12 x^T H x$, making CMA-ES *affine-invariant*. The updates split into a **rank-$\mu$** term (outer products $y_{i:\lambda} y_{i:\lambda}^T$ from selected offspring) and a **rank-one** term along the cumulated evolution path $p_c$; step-size $\sigma$ follows cumulative step-size adaptation (CSA), comparing $\|p_\sigma\|$ to $E\|\mathcal{N}(0,I)\|$. Defaults: $\lambda = 4 + \lfloor 3\ln n\rfloor$, $\mu = \lfloor\lambda/2\rfloor$, $w_i \propto \ln\tfrac{\lambda+1}{2} - \ln i$. **Sigma-collapse interpretation**: when $C$ converges to $H^{-1}$ near a strict local minimum, $p_c$ becomes uncorrelated and $\sigma$ exponentially shrinks under CSA — this is the *theoretical* basis for the "sigma → 1e-15 with no improvement = second-order local-optimal" diagnostic, not a heuristic.
+- **Akimoto–Auger–Hansen 2016** ([`source/2016-akimoto-quality-gain-analysis-weighted.md`](../../source/2016-akimoto-quality-gain-analysis-weighted.md)) — derives the finite-dimensional quality-gain bound for the weighted-recombination ES family on arbitrary convex quadratic $f(x) = \tfrac12(x-x^*)^T A (x-x^*)$. Two key takeaways: (a) optimal recombination weights $w_k^* \propto -E[N_{k:\lambda}]$ are **Hessian-independent** — the default expected-order-statistic weights are already optimal; (b) the optimal step-size scales with $\|\nabla f(m)\| / \mathrm{Tr}(A)$, so step-size collapse is informative about gradient-trace ratio, not just function value. Justifies trusting CMA-ES's default weights even on ill-conditioned arena landscapes.
+- **Loshchilov–Schoenauer–Sebag–Hansen 2014 — self-CMA-ES** ([`source/2014-loshchilov-maximum-likelihood-based-online-adaptation.md`](../../source/2014-loshchilov-maximum-likelihood-based-online-adaptation.md)) — the default learning rates $(c_1, c_\mu, c_c)$ are derived as fixed functions of $n$ and $\lambda$, but become substantially sub-optimal when $\lambda$ is enlarged (e.g. $\lambda = 100$, ~10× default). Self-CMA-ES runs an auxiliary CMA-ES on the hyper-parameter triple, using a rank-agreement surrogate for log-likelihood. Reports up to $1.5\times$ speedup on Sharp Ridge, matches default elsewhere on BBOB. **Arena reading**: when pop-size is bumped to 256+ for a hard problem (P15 / P16-class), the default learning rates leak performance — self-CMA-ES is worth a try before committing GPU hours.
+
+## See also
 
 - `wiki/findings/basin-rigidity.md` (lesson #96 — three-way local-optimality proof).
 - `wiki/findings/optimizer-recipes.md` (#67 — CMA-ES gap-space recipe).
 - knowledge.yaml strategy `cma_es`.
 - `wiki/techniques/gap-space-parameterization.md` (companion).
 - `mb/problems/1-erdos-overlap/strategy.md` (sigma collapse), `mb/problems/9-uncertainty-principle/strategy.md` (gap-space).
+- Concepts: [basin-rigidity](../concepts/basin-rigidity.md), [parameterization-selection](../concepts/parameterization-selection.md).
