@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-05-24 09:02 UTC*
+*Last updated: 2026-05-25 14:37 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -88,4 +88,4 @@ Compute is routed per workload — local a local workstation for sequential / fl
 
 MIT
 
-*Last updated: 2026-05-24*
+*Last updated: 2026-05-25*

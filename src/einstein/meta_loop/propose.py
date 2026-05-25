@@ -1,0 +1,333 @@
+"""meta_loop.propose — agentic proposer (Goal 2).
+
+Reads the diagnostic report + raw filesystem (cycle-log, findings, dead-ends),
+invokes an LLM proposer with filesystem-tool access, parses typed proposals
+back, writes them to `mb/proposals/pending/`.
+
+Per `docs/wiki/findings/meta-loop-design-from-literature.md`:
+- Filesystem-as-feedback (Meta-Harness): raw rows + raw markdown beat
+  summaries. The proposer reads the diagnostic AS WELL AS the raw files;
+  the report is a launchpad, not a substitute.
+- Change-manifest pattern (AHE): every proposal carries evidence_cycles,
+  expected_metric_delta, predicted_regressions.
+
+The LLM call (`_default_proposer`) shells out via `docs/tools/claude_headless`.
+For tests, callers can inject any `Callable[[ProposerInput], list[dict]]` —
+useful when we don't want to spend tokens validating control flow.
+
+Excluded proposal types (deliberate — see Goal 2 in the branch file):
+
+  - `code_edit`        deferred to Goal 5 (needs shadow A/B before promote)
+  - `meta_self_edit`   deferred to `js/feat/recursive-meta` (recursive case)
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+import json
+import logging
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable
+
+from . import diagnose, proposals
+from .proposals import (
+    Confidence,
+    Proposal,
+    ProposalStore,
+    ProposalType,
+    ProposalValidationError,
+    make_proposal_id,
+)
+
+log = logging.getLogger("meta_loop.propose")
+
+
+# ---------------- proposer-input contract ----------------
+
+
+@dataclass
+class ProposerInput:
+    """All the context handed to the proposer LLM call."""
+
+    report_text: str
+    cycle_log_path: Path
+    skill_library_path: Path
+    findings_dir: Path
+    questions_dir: Path
+    mb_logs_dir: Path
+    allowed_types: list[str] = field(default_factory=lambda: sorted(proposals.VALID_PROPOSAL_TYPES))
+
+
+@dataclass
+class ProposerOutput:
+    """Result of one propose() invocation."""
+
+    written: list[Path] = field(default_factory=list)
+    rejected_raw: list[dict] = field(default_factory=list)  # malformed candidates
+    proposer_error: str | None = None  # populated if the LLM call failed outright
+
+
+# ---------------- the default LLM-backed proposer ----------------
+
+
+_SYSTEM_PROMPT = """\
+You are the meta-loop proposer for the einstein math-agent repo.
+
+Your job: read the diagnostic report and the raw filesystem (cycle-log, recent
+findings, recent dead-ends, open questions), then emit 0-3 typed proposals
+that would improve the inner autonomous-loop. Quality > quantity. Emit
+nothing rather than fabricate.
+
+Rules (HARD constraints):
+
+- Allowed proposal types: rule_edit, manifest_tweak, queue_reorder, new_question.
+  Anything else is rejected by the gate chain.
+- `target_path` must satisfy the type's path policy (see prompt body).
+- Each proposal MUST cite at least one cycle_id in `evidence_cycles` UNLESS
+  it's a `new_question` proposal (which can stand on a finding/dead-end).
+- Each proposal MUST include at least one item in `predicted_regressions`
+  — even "none expected" is a valid prediction; absence is not. (AHE
+  self-attribution discipline.)
+- `proposed_diff` is a unified diff for edits; for `new_question`, the full
+  file body (the question markdown to create at `target_path`).
+
+Output protocol: a single fenced JSON code block whose content is a JSON
+array of zero or more proposal objects. The array may be empty.
+
+JSON schema per proposal:
+
+  {
+    "type": "rule_edit" | "manifest_tweak" | "queue_reorder" | "new_question",
+    "target_path": "<repo-relative path>",
+    "proposed_diff": "<unified diff or new-file body>",
+    "evidence_cycles": [<int>, ...],
+    "expected_metric_delta": {"<metric>": <float>, ...},
+    "predicted_regressions": ["<short prose>", ...],
+    "confidence": "low" | "medium" | "high",
+    "requires_shadow": <bool>,
+    "rationale": "<one paragraph>"
+  }
+
+`id` and `created_at` are assigned by the harness — do not include them.
+
+If you have nothing high-quality to propose, output `[]`. That is the correct
+honest answer most of the time.
+"""
+
+
+def _default_proposer(inp: ProposerInput) -> list[dict]:
+    """Shell out via `claude_headless` and parse the JSON array out.
+
+    Import is lazy so unit tests that inject a stub proposer don't pay the
+    import cost (and don't need claude_headless on path).
+    """
+    import importlib.util as _ilu
+    import sys as _sys
+
+    # docs/tools/claude_headless.py is the canonical wrapper. Add its dir
+    # to sys.path on first use (the script-style layout means it's not on
+    # the Python package path).
+    tools_dir = Path(inp.cycle_log_path).resolve().parents[1] / "tools"
+    if str(tools_dir) not in _sys.path:
+        _sys.path.insert(0, str(tools_dir))
+
+    spec = _ilu.find_spec("claude_headless")
+    if spec is None:
+        raise RuntimeError(
+            f"claude_headless not importable from {tools_dir} — "
+            "scripts/meta_loop.py propose requires docs/tools/claude_headless.py"
+        )
+    claude_headless = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(claude_headless)
+
+    prompt = _render_prompt(inp)
+    result = claude_headless.run(
+        prompt=prompt,
+        allowed_tools=["Read", "Grep", "Glob"],
+        output_format="text",
+        timeout_seconds=600,
+        add_dirs=[
+            inp.cycle_log_path.parent.parent,  # docs/
+            inp.mb_logs_dir.parent,  # mb/
+        ],
+    )
+    if not result.ok:
+        raise RuntimeError(
+            f"proposer LLM call failed: kind={result.error_kind} "
+            f"message={result.error_message!r}"
+        )
+    return _extract_json_array(result.stdout)
+
+
+def _render_prompt(inp: ProposerInput) -> str:
+    return (
+        _SYSTEM_PROMPT
+        + "\n\n--- DIAGNOSTIC REPORT ---\n"
+        + inp.report_text
+        + "\n\n--- FILESYSTEM ROOTS YOU MAY READ ---\n"
+        + f"cycle_log: {inp.cycle_log_path}\n"
+        + f"skill_library: {inp.skill_library_path}\n"
+        + f"findings_dir: {inp.findings_dir}\n"
+        + f"questions_dir: {inp.questions_dir}\n"
+        + f"mb_logs_dir: {inp.mb_logs_dir}\n"
+        + "\nUse Read/Grep/Glob to inspect raw rows + raw findings before "
+        + "emitting proposals.\n"
+    )
+
+
+# Matches a ```json … ``` fence with optional surrounding whitespace.
+_JSON_FENCE_RE = re.compile(r"```json\s*\n(.*?)\n```", re.DOTALL)
+
+
+def _extract_json_array(text: str) -> list[dict]:
+    """Pull the first JSON array out of a fenced code block.
+
+    Robust to the LLM emitting prose around the JSON. Returns [] if no fence
+    found OR if the parsed value isn't a list of dicts.
+    """
+    if not text:
+        return []
+    m = _JSON_FENCE_RE.search(text)
+    raw = m.group(1) if m else text
+    # Try the fenced block first, then fall back to the entire stdout (some
+    # models drop the fence when asked to be terse).
+    for candidate in [raw, text]:
+        try:
+            data = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, list) and all(isinstance(d, dict) for d in data):
+            return data
+    return []
+
+
+# ---------------- harness — wire diagnose → proposer → store ----------------
+
+
+_DEFAULT_REGRESSIONS_PER_TYPE: dict[str, list[str]] = {
+    # When the proposer forgets `predicted_regressions`, the harness backfills
+    # a minimal placeholder so the proposal validates. The audit log shows
+    # `predicted_regressions: ["(none stated)"]` so the reader sees it was
+    # asserted (with no specifics) — not silently absent.
+    ProposalType.RULE_EDIT.value: ["(none stated)"],
+    ProposalType.MANIFEST_TWEAK.value: ["(none stated)"],
+    ProposalType.QUEUE_REORDER.value: ["(none stated)"],
+    ProposalType.NEW_QUESTION.value: ["(none stated — read-only artifact)"],
+}
+
+
+def _requires_shadow_default(proposal_type: str) -> bool:
+    """Default per-type shadow-required flag. Proposer can override."""
+    # `new_question` is purely additive markdown — cannot regress the loop.
+    # `rule_edit` / `manifest_tweak` / `queue_reorder` can shift behavior;
+    # default to TRUE and let the proposer downgrade with justification.
+    return proposal_type != ProposalType.NEW_QUESTION.value
+
+
+def _coerce_raw(raw: dict, *, now: dt.datetime) -> Proposal:
+    """Build a Proposal from raw LLM-emitted dict. Raises on schema violation."""
+    ptype = raw.get("type", "")
+    target = raw.get("target_path", "")
+    proposed_diff = raw.get("proposed_diff", "")
+    evidence = list(raw.get("evidence_cycles", []) or [])
+    delta = {str(k): float(v) for k, v in (raw.get("expected_metric_delta") or {}).items()}
+    regressions = list(raw.get("predicted_regressions") or [])
+    if not regressions:
+        regressions = list(_DEFAULT_REGRESSIONS_PER_TYPE.get(ptype, ["(none stated)"]))
+    confidence = raw.get("confidence", Confidence.LOW.value)
+    requires_shadow = raw.get(
+        "requires_shadow",
+        _requires_shadow_default(ptype),
+    )
+    rationale = raw.get("rationale", "")
+
+    pid = make_proposal_id(proposal_type=ptype, target_path=target, now=now)
+    return Proposal(
+        id=pid,
+        type=ptype,
+        target_path=target,
+        proposed_diff=proposed_diff,
+        evidence_cycles=evidence,
+        expected_metric_delta=delta,
+        predicted_regressions=regressions,
+        confidence=confidence,
+        requires_shadow=bool(requires_shadow),
+        rationale=rationale,
+        created_at=now,
+    )
+
+
+def run(
+    *,
+    cycle_log: Path,
+    skill_library: Path,
+    findings_dir: Path,
+    questions_dir: Path,
+    mb_logs_dir: Path,
+    proposals_root: Path,
+    output: Path,
+    proposer: Callable[[ProposerInput], list[dict]] | None = None,
+    now: dt.datetime | None = None,
+) -> ProposerOutput:
+    """Generate a fresh diagnostic, invoke the proposer, write valid proposals.
+
+    Args:
+        proposer: injectable for tests; defaults to `_default_proposer` which
+            shells out to `claude -p`. The injected callable receives a
+            `ProposerInput` and returns a list of raw dict candidates.
+
+    Returns:
+        ProposerOutput — written paths + rejected-raw candidates + error.
+    """
+    now = now or dt.datetime.now(dt.timezone.utc)
+    proposer = proposer or _default_proposer
+
+    report = diagnose.run(
+        cycle_log=cycle_log,
+        skill_library=skill_library,
+        findings_dir=findings_dir,
+        questions_dir=questions_dir,
+        output=output,
+        now=now,
+    )
+    inp = ProposerInput(
+        report_text=report.render(),
+        cycle_log_path=cycle_log,
+        skill_library_path=skill_library,
+        findings_dir=findings_dir,
+        questions_dir=questions_dir,
+        mb_logs_dir=mb_logs_dir,
+    )
+    try:
+        raw_proposals = proposer(inp)
+    except Exception as e:  # broad — we want the harness to be honest about failure
+        log.warning("proposer failed: %s", e)
+        return ProposerOutput(proposer_error=str(e))
+
+    store = ProposalStore(proposals_root)
+    out = ProposerOutput()
+    for raw in raw_proposals:
+        try:
+            proposal = _coerce_raw(raw, now=now)
+        except (ProposalValidationError, KeyError, ValueError, TypeError) as e:
+            log.info("rejected raw proposal: %s; raw=%r", e, raw)
+            out.rejected_raw.append({"raw": raw, "error": str(e)})
+            continue
+        try:
+            path = store.write_pending(proposal)
+        except FileExistsError as e:
+            log.warning("id collision on %s — skipping (cause: %s)", proposal.id, e)
+            out.rejected_raw.append({"raw": raw, "error": str(e)})
+            continue
+        out.written.append(path)
+
+    return out
+
+
+__all__ = [
+    "ProposerInput",
+    "ProposerOutput",
+    "run",
+]
