@@ -6,10 +6,10 @@ related_problems: [P2, P3, P19]
 related_techniques: [bnb-exhaustive-w3.md, kronecker-search-decomposition.md]
 related_findings: []
 cites:
-  - ../source/2010-vinuesa-sidon-thesis.md
-  - ../source/2017-cloninger-autoconvolution-sidon.md
-  - ../source/2007-gyarmati-sums-differences.md
-  - ../source/2010-matolcsi-autoconvolution.md
+  - ../../source/2010-vinuesa-sidon-thesis.md
+  - ../../source/2017-cloninger-autoconvolution-sidon.md
+  - ../../source/2007-gyarmati-sums-differences.md
+  - ../../source/2010-matolcsi-autoconvolution.md
   - ../personas/erdos.md
   - ../personas/gauss.md
   - ../personas/ramanujan.md

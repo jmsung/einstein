@@ -6,8 +6,8 @@ related_problems: [P7]
 related_techniques: [lp-cutting-plane-warmstart.md]
 related_findings: [prime-number-theorem-lp.md, lp-solver-scaling.md]
 cites:
-  - ../source/2015-tao-sieve-theory-notes.md
-  - ../source/2025-lichtman-linear-sieve.md
+  - ../../source/2015-tao-sieve-theory-notes.md
+  - ../../source/2025-lichtman-linear-sieve.md
   - ../findings/prime-number-theorem-lp.md
 ---
 

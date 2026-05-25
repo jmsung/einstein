@@ -7,7 +7,7 @@ related_techniques: [larger-n-cascade.md, cross-resolution-basin-transfer.md]
 related_findings: [equioscillation-escape.md, optimizer-recipes.md]
 cites:
   - ../findings/equioscillation-escape.md
-  - ../source/2025-jaech-autoconvolution.md
+  - ../../source/2025-jaech-autoconvolution.md
   - ../personas/tao.md
 related_personas: [tao.md]
 ---

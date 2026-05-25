@@ -7,7 +7,7 @@ related_techniques: [dinkelbach-fractional-programming.md]
 related_findings: [optimizer-recipes.md]
 cites:
   - ../findings/optimizer-recipes.md
-  - ../source/2025-jaech-autoconvolution.md
+  - ../../source/2025-jaech-autoconvolution.md
   - ../personas/euler.md
 related_personas: [euler.md]
 ---

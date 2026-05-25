@@ -1,0 +1,40 @@
+# optimizer_manifest.yaml — per-problem optimizer dispatch entries.
+#
+# Read by src/einstein/optimizer_dispatch.py. Maps `problem_id` → available
+# optimizers + how to invoke them. Adding a new problem = adding one block
+# here. The optimizer script must accept the listed cli_args, write its
+# result to `result_file` in the parser's expected shape, and exit 0 on
+# success.
+#
+# Parser `json_score_payload`: result_file is JSON with required key
+# `score` (float) and optional `payload` (dict). Recommended for new
+# wirings — keeps the contract simple.
+#
+# Stub state (2026-05-24): only 2 example entries to exercise the dispatch
+# infrastructure. Other 15 live problems will be added incrementally as
+# their scripts are refactored to emit json_score_payload result files.
+
+14:
+  slug: circle-packing-square
+  default: newton_max
+  optimizers:
+    newton_max:
+      script: scripts/circle_packing_square/newton_max.py
+      cli_args: []
+      timeout_seconds: 1800
+      result_file: results/circle_packing_square/newton_max_result.json
+      result_parser: json_score_payload
+
+22:
+  slug: kissing-d12
+  default: stub_no_op
+  optimizers:
+    # Stub entry — wired only to test that strategy_picker output flows through
+    # dispatch. The actual P22 first-order link-tangent + squeeze recipe lives
+    # in scripts/p22_kissing_d12/ and needs a result-file emitter wrapper.
+    stub_no_op:
+      script: scripts/p22_kissing_d12/recon.py
+      cli_args: ["--dry-run"]
+      timeout_seconds: 60
+      result_file: results/p22_kissing_d12/recon_result.json
+      result_parser: json_score_payload

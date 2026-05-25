@@ -6,14 +6,14 @@ related_problems: [P6, P11, P22, P23]
 related_techniques: [first-order-link-tangent-test.md, parallel-tempering-sa.md, micro-perturbation-multiscale.md]
 related_findings: [hinge-overlap-rank3-squeeze.md, p22-d12-construction-survey.md, sa-parallel-tempering.md, perturbation-landscape.md, float64-ceiling.md]
 cites:
-  - ../source/1959-barnes-wall-lattice.md
-  - ../source/1971-leech-sphere-packing.md
-  - ../source/2008-musin-kissing-d4.md
-  - ../source/2012-boyvalenkov-kissing-survey.md
-  - ../source/2012-musin-tarasov-13spheres.md
-  - ../source/2024-cohn-li-kissing.md
-  - ../source/2024-delaat-kissing-sdp.md
-  - ../source/cohn-kissing-numbers.md
+  - ../../source/1959-barnes-wall-lattice.md
+  - ../../source/1971-leech-sphere-packing.md
+  - ../../source/2008-musin-kissing-d4.md
+  - ../../source/2012-boyvalenkov-kissing-survey.md
+  - ../../source/2012-musin-tarasov-13spheres.md
+  - ../../source/2024-cohn-li-kissing.md
+  - ../../source/2024-delaat-kissing-sdp.md
+  - ../../source/cohn-kissing-numbers.md
   - ../personas/cohn.md
   - ../personas/conway.md
   - ../personas/viazovska.md

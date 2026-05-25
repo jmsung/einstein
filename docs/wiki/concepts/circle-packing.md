@@ -12,7 +12,7 @@ cites:
   - basin-rigidity.md
   - float64-ceiling.md
   - hardin-sloane.md
-  - ../source/friedman-packing-records.md
+  - ../../source/friedman-packing-records.md
 ---
 
 # Circle Packing (2D bounded-region packings)

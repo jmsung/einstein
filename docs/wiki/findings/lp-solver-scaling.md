@@ -5,8 +5,7 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - knowledge.yaml
-  - ../source/2015-tao-sieve-theory-notes.md
+  - ../../source/2015-tao-sieve-theory-notes.md
   - ../concepts/kolountzakis-matolcsi-bound.md
   - ../techniques/lp-cutting-plane-warmstart.md
 ---

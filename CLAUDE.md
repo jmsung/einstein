@@ -16,7 +16,7 @@ This repo is the public artifact. It has three layers, each with its own contrac
 
 ## Goal
 
-**Generalized math wisdom**, not arena rank. The agent solves problems, learns from failure, and writes back to the wiki. Each cycle compounds. Submission is a wisdom-verification tool, not a goal — minimum 6 hours between submissions per problem; user-approved each time. **No external posts** — all knowledge stays on this repo + wiki.
+**Generalized math wisdom**, not arena rank. The agent solves problems, learns from failure, and writes back to the wiki. Each cycle compounds. Submission is a wisdom-verification tool, not a goal — the autonomous loop may auto-submit new arena records that pass the 6-gate chain in [`.claude/rules/axioms.md`](.claude/rules/axioms.md) (strict-improvement over arena #1, triple-verify, 1-hour throttle, daily cap, kill switch, audit log); all other cases still require human approval. **No external posts** — all knowledge stays on this repo + wiki.
 
 See [`mb/completed/js-refactor-wiki-bootstrap.md`](../mb/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `docs/wiki/home.md`).
 
@@ -28,7 +28,7 @@ uv run pre-commit install              # enable lint + formatting on every commi
 uv run python -m pytest tests/ -v      # run all tests (also runs on CI)
 uv run ruff check .                    # lint manually
 uv run ...                             # run scripts
-modal run ...                          # GPU scripts (needs Modal account)
+modal run ...                          # (Modal currently not in use — local the local machine only)
 ```
 
 ## Code conventions
@@ -45,7 +45,7 @@ modal run ...                          # GPU scripts (needs Modal account)
 Two first-class environments. Always route the workload before launching — see `docs/wiki/techniques/compute-router.md` and `.claude/rules/compute-router.md`.
 
 - **Local a local workstation (high-memory)**: mpmath polish, sequential CPU optimizers (L-BFGS / NM / SLSQP), small basin-hopping, MPS float32 batch ops, large multistart with multiprocess
-- **Modal A100/H100**: sustained float64 GPU parallel (parallel tempering, CMA-ES large-pop float64), large LP/SDP that's RAM-bound
+- **Modal A100/H100 (NOT IN USE as of 2026-05-24)**: previously used for sustained float64 GPU parallel (parallel tempering, CMA-ES large-pop float64) and RAM-bound large LP/SDP. Currently the a local workstation's high-memory unified memory + MPS f32 () covers these workloads at zero marginal cost. Keep Modal scripts available — re-enable only if a specific workload genuinely needs float64-GPU sustained throughput.
 
 ### Triple-verify
 Every score must be verified three ways before trusting: fast local evaluator, exact reimplementation, cross-check vs analytical bound or different method. If any two disagree, the score is fake.
@@ -53,7 +53,7 @@ Every score must be verified three ways before trusting: fast local evaluator, e
 ### Submission discipline
 - Submit ONLY when a result represents a qualitative new claim (novel basin, new approach, milestone, suspected verifier mismatch) — not every iteration
 - Local triple-verify is the closed loop; submission is the second-rate signal that catches local↔arena drift
-- User explicitly approves each submission
+- Auto-submit is allowed for **new arena records** that pass all 6 gates in [`.claude/rules/axioms.md`](.claude/rules/axioms.md) (revised 2026-05-24); every other submission still requires human approval. Audit trail in `mb/auto-submit-log.md`.
 - Floor: **1 hour** between submissions on the same problem (avoid rapid-fire)
 - Practical cadence: 1–3 submits per problem per week, sometimes zero
 - No external posts (arena threads / blog / social) — wiki is the publication channel

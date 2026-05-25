@@ -12,8 +12,8 @@ cites:
   - cohn-elkies-bound.md
   - coxeter-todd-k12.md
   - modular-forms-magic-function.md
-  - ../source/1959-barnes-wall-lattice.md
-  - ../source/2024-cohn-li-kissing.md
+  - ../../source/1959-barnes-wall-lattice.md
+  - ../../source/2024-cohn-li-kissing.md
 ---
 
 # Barnes–Wall lattice family BW_n

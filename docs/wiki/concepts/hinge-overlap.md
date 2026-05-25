@@ -7,8 +7,8 @@ related_techniques: [first-order-link-tangent-test.md, parallel-tempering-sa.md,
 related_findings: [hinge-overlap-rank3-squeeze.md, sa-parallel-tempering.md, perturbation-landscape.md]
 cites:
   - ../findings/hinge-overlap-rank3-squeeze.md
-  - ../source/2024-cohn-li-kissing.md
-  - ../source/2024-delaat-kissing-sdp.md
+  - ../../source/2024-cohn-li-kissing.md
+  - ../../source/2024-delaat-kissing-sdp.md
 ---
 
 # Hinge-Overlap Loss

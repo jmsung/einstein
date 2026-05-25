@@ -1,8 +1,9 @@
 ---
 type: home
-author: human
+author: hybrid
 drafted: 2026-05-02
-status: seed
+updated: 2026-05-23
+status: live
 ---
 
 # einstein-wiki — math wisdom from a self-improving agent
@@ -27,22 +28,26 @@ The plan: the agent solves problems, fails, reflects, writes back to this wiki, 
 | [`findings/`](findings/) | specific Q→A pages with cites |
 | [`problems/`](problems/) | one short index page per arena problem + the inventory matrix |
 | [`questions/`](questions/) | open math questions awaiting research |
-| [`../source/`](../source/) | distilled summaries of papers, repos, blogs (1:1 with the gitignored `../raw/`) |
+| [`../source/`](../source/) | distilled summaries of papers, repos, blogs (1:1 with the gitignored `../raw/`) — see [`../source/INDEX.md`](../source/INDEX.md) for the browsable manifest of the **197-paper corpus** |
 | [`../.claude/rules/`](../.claude/rules/) | behavioral rules — the agent's policy layer |
+| [`../tools/`](../tools/) | autonomous-loop tooling — see [`../tools/README.md`](../tools/README.md) for the full index (concept_inventory, seed_ingest, pdf_to_md, calibrate, monitor, wiki_lint, strategy_picker, autonomous_loop) |
 
 ## How knowledge gets in
 
 ```
-external artifact → /wiki-ingest <url>
-                       ├──→ ../raw/<type>/<stem>.<ext>     (gitignored, local)
-                       └──→ ../source/<type>/<stem>.md     (in git, distilled)
+single artifact      → /wiki-ingest <url>           (human-gated, atomic raw/+source/)
+                       ├──→ ../raw/<stem>.pdf       (gitignored local cache)
+                       └──→ ../source/<stem>.md     (in-git distillation)
 
-questions / findings / concepts → /wiki-learn or /wiki-query --file-back
-                                  → wiki/<category>/<slug>.md
-                                    (frontmatter author: agent | human | hybrid)
+bulk arxiv ingest    → docs/tools/seed_ingest.py    (agent-driven, batch)
+                       propose / author-sweep / citation-crawl
+                       → candidates JSON → human-approve → apply (parallel + batch JVM)
+
+conversation insight → /wiki-learn                  (turns a session into wiki pages)
+question / finding   → wiki/<category>/<slug>.md    (frontmatter author: agent|human|hybrid)
 ```
 
-`raw/` is gitignored; `source/` is the canonical in-git record. Wiki pages are synthesized — by either human OR agent, with mandatory attribution and the same quality bar regardless of author.
+`raw/` is gitignored; `source/` is the canonical in-git record. Wiki pages are synthesized — by either human OR agent, with mandatory attribution and the same quality bar regardless of author. The agent reaches the wiki layer via the underlying tools (`qmd`, `wiki_graph`, `seed_ingest`, `wiki_lint`) — the `/wiki-*` skills sit on top for the human's interactive surface.
 
 ## How the agent solves a problem
 
@@ -75,4 +80,4 @@ The wiki, the rules, the agent code, and the cycle log together form a **legible
 
 ## Status
 
-Pilot — reborn 2026-05-02 from a private memory bank into this public artifact. Conventions provisional; will tighten as patterns clarify.
+Live as of 2026-05-23. Started 2026-05-02 from a private memory bank, scaled to a 197-paper source/ corpus + 180-page synthesis layer + autonomous orchestrator under `scripts/autonomous_loop.py` driving 22 cycles to date. The autonomous loop runs under `/loop` or cron via `docs/tools/cycle_runner.sh`; per-device compute calibrations live at `docs/agent/calibrations/<device-key>.json`. Conventions are still tightening — `docs/tools/wiki_lint.py` surfaces drift; `docs/source/INDEX.md` is the live paper manifest.

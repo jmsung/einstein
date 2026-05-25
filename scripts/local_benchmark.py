@@ -57,27 +57,61 @@ def cpu_multicore_matmul():
     return {"matmul_4096_seconds": dt, "gflops_estimate": (2 * n**3) / dt / 1e9}
 
 
+_MP_WORKER_N = 2048      # bigger matrix — make the math dominate pickle overhead
+_MP_WORKER_ITERS = 50    # 50 iters: serial workload ~5-10s, parallel should be ≤1s on multi-cores
+
+
+_BLAS_THREAD_ENV = {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+}
+
+
+def _mp_worker(_seed: int) -> float:
+    """Module-level worker — picklable for macOS spawn-mode mp.Pool.
+
+    BLAS thread caps must be set in the *parent* environment before this
+    process is spawned; setting them here is too late (numpy already
+    inherits whatever it sees at first import).
+    """
+    n = _MP_WORKER_N
+    a = np.random.randn(n, n)
+    b = np.random.randn(n, n)
+    for _ in range(_MP_WORKER_ITERS):
+        a = a @ b
+    return float(a.sum())
+
+
 def cpu_mp_scaling():
-    """Measure speedup of N parallel processes vs single."""
-    n = 1024
-    iters_per = 10
+    """Measure speedup of N parallel processes vs single.
 
-    def worker(_):
-        a = np.random.randn(n, n)
-        b = np.random.randn(n, n)
-        for _ in range(iters_per):
-            a = a @ b
-        return float(a.sum())
-
+    Each worker is constrained to 1 BLAS thread so we measure process-level
+    scaling, not thread oversubscription. Without this, 18 workers ×
+    Accelerate-using-all-cores would produce ≈1× speedup (thread contention).
+    """
     cores = mp.cpu_count()
     print(f"  cores reported: {cores}")
-    t0 = time.perf_counter()
-    with mp.Pool(processes=cores) as pool:
-        list(pool.map(worker, range(cores)))
-    dt_parallel = time.perf_counter() - t0
-    t0 = time.perf_counter()
-    [worker(0) for _ in range(cores)]
-    dt_serial = time.perf_counter() - t0
+    # Set BLAS thread caps in parent env BEFORE spawning. macOS spawn-mode
+    # inherits env at process start; setting these in-worker is too late.
+    saved_env = {k: os.environ.get(k) for k in _BLAS_THREAD_ENV}
+    os.environ.update(_BLAS_THREAD_ENV)
+    try:
+        ctx = mp.get_context("spawn")
+        t0 = time.perf_counter()
+        with ctx.Pool(processes=cores) as pool:
+            list(pool.map(_mp_worker, range(cores)))
+        dt_parallel = time.perf_counter() - t0
+        t0 = time.perf_counter()
+        [_mp_worker(0) for _ in range(cores)]
+        dt_serial = time.perf_counter() - t0
+    finally:
+        for k, v in saved_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
     speedup = dt_serial / dt_parallel if dt_parallel > 0 else 0
     print(f"  mp scaling: {dt_serial:.2f}s serial vs {dt_parallel:.2f}s parallel ({speedup:.1f}x)")
     return {
@@ -138,8 +172,10 @@ def mpmath_seq_throughput():
 
 
 def ram_headroom():
-    """How much float64 we can allocate."""
-    sizes_gb = [1, 4, 16, 32, 64]
+    """How much float64 we can allocate (one big contiguous array)."""
+    # On high-memory unified-memory a local workstation, test up through 96GB — leave headroom
+    # for the kernel + other processes. macOS will OOM-kill above ~100GB.
+    sizes_gb = [1, 4, 16, 32, 64, 96]
     headroom = {}
     for gb in sizes_gb:
         try:
@@ -154,8 +190,27 @@ def ram_headroom():
     return headroom
 
 
+def _fingerprint_device() -> dict:
+    """Capture the fields that compute_router uses to build the device key."""
+    # Lazy import to avoid pulling scripts/ onto sys.path eagerly
+    sys.path.insert(0, str(Path(__file__).parent))
+    import compute_router as cr
+    key = cr.device_key()
+    return {
+        "key": key,
+        "brand": cr._sysctl("machdep.cpu.brand_string") or platform.processor() or "unknown",
+        "cores": int(cr._sysctl("hw.ncpu") or "0"),
+        "memory_bytes": int(cr._sysctl("hw.memsize") or "0"),
+        "platform": platform.platform(),
+        "hostname": platform.node(),
+    }
+
+
 def main():
-    print("local_benchmark.py — a local workstation calibration")
+    print("local_benchmark.py — device calibration")
+    device = _fingerprint_device()
+    print(f"  device:   {device['key']}  ({device['brand']}, {device['cores']} cores, "
+          f"{device['memory_bytes'] // 1024**3} GB)")
     print(f"  python:   {sys.version.split()[0]}")
     print(f"  numpy:    {np.__version__}")
     print(f"  platform: {platform.platform()}")
@@ -163,6 +218,7 @@ def main():
     out: dict = {
         "version": 1,
         "timestamp": time.strftime("%Y-%m-%d"),
+        "device": device,
         "platform": platform.platform(),
         "python": sys.version.split()[0],
         "numpy": np.__version__,
@@ -181,7 +237,9 @@ def main():
     out["ram"] = ram_headroom()
     print()
 
-    out_path = Path(__file__).parent.parent / "docs" / "agent" / "local-calibration.json"
+    cal_dir = Path(__file__).parent.parent / "docs" / "agent" / "calibrations"
+    cal_dir.mkdir(parents=True, exist_ok=True)
+    out_path = cal_dir / f"{device['key']}.json"
     out_path.write_text(json.dumps(out, indent=2))
     print(f"calibration written to {out_path}")
 

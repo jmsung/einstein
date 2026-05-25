@@ -5,11 +5,9 @@ drafted: 2026-05-02
 level: 2
 source_type: agent_analysis
 cites:
-  - problem-7-prime-number-theorem/strategy.md
-  - problem-7-prime-number-theorem/literature.md
-  - ../source/2026-angdinata-ramanujan-tau-primes.md
-  - ../source/2025-lichtman-linear-sieve.md
-  - ../source/2015-tao-sieve-theory-notes.md
+  - ../../source/2026-angdinata-ramanujan-tau-primes.md
+  - ../../source/2025-lichtman-linear-sieve.md
+  - ../../source/2015-tao-sieve-theory-notes.md
 ---
 
 # Prime Number Theorem — LP Formulation Discovery

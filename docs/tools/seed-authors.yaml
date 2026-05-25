@@ -1,0 +1,135 @@
+# Hand-curated mathematician + agent-AI author list per domain.
+#
+# Drives `seed_ingest.py author-sweep`: each author becomes one arxiv
+# `au:"<name>"` query restricted to math.* categories. Top-N most recent
+# hits are kept, filtered by relevance against concept-search-terms.yaml
+# at apply time.
+#
+# Categories mirror the strategy_picker mapping (autocorrelation,
+# sphere-packing, packing, discrete-combinatorics, functional-inequality,
+# sieve, extremal-graph, agentic-harness). Authors may appear in multiple
+# categories — the dedup happens at the candidate level (by arxiv abs_url),
+# not the author level.
+#
+# Curated 2026-05-23 by reading the 64 existing source/ entries + the
+# .claude/rules/council-dispatch.md persona roster. Add new authors as
+# patterns emerge.
+
+autocorrelation:
+  # Sidon sets, autoconvolution inequality, flat polynomials
+  - "Mihail Kolountzakis"
+  - "Mate Matolcsi"
+  - "Greg Martin"      # autoconvolution + Sidon-set constructions
+  - "Stefan Steinerberger"
+  - "Javier Cilleruelo"
+  - "Imre Ruzsa"
+  - "Tom Sanders"
+  - "Andrew Granville"  # Sidon + additive combinatorics
+  - "Boris Bukh"
+
+sphere-packing:
+  # Cohn-Elkies framework, modular forms, lattices
+  - "Henry Cohn"
+  - "Maryna Viazovska"
+  - "Noam Elkies"
+  - "Felipe Goncalves"
+  - "Daniel Radchenko"
+  - "Danylo Radchenko"
+  - "Stephen Miller"
+  - "Abhinav Kumar"
+  - "Andriy Kanibolotskiy"
+  - "Nima Afkhami-Jeddi"
+
+kissing-number:
+  # Discrete geometry, LP bounds, semidefinite bounds
+  - "Peter Boyvalenkov"
+  - "Oleg Musin"
+  - "Christine Bachoc"
+  - "Frank Vallentin"
+  - "Vladimir Levenshtein"
+  - "Andriy Bondarenko"
+  - "Danylo Radchenko"  # also kissing
+  - "Michael Tarasov"
+
+geometric-packing:
+  # Hardin-Sloane circle packing, packings in 2D regions
+  - "Ronald Hardin"
+  - "Neil Sloane"
+  - "Patrick Fowler"
+  - "Eckard Specht"
+  - "Andras Friedl"
+  - "Andreas Friedrich"
+  - "Steve T. Davenport"
+
+extremal-graph:
+  # Razborov flag algebras, Reiher, Lovasz school
+  - "Alexander Razborov"
+  - "Christian Reiher"
+  - "Endre Szemeredi"
+  - "Laszlo Lovasz"
+  - "Yufei Zhao"
+  - "Jacob Fox"
+  - "Andrew Suk"
+  - "Hao Huang"
+  - "Wojciech Samotij"
+  - "Felix Joos"
+
+sieve-theory:
+  # Prime gaps, parity, additive number theory
+  - "James Maynard"
+  - "Terence Tao"
+  - "Ben Green"
+  - "Kannan Soundararajan"
+  - "Andrew Granville"   # also Sidon
+  - "Tristan Freiberg"
+  - "Dimitris Koukoulopoulos"
+
+discrete-combinatorics:
+  # Difference bases, Sidon, finite-field constructions
+  - "Joshua Cooper"
+  - "Tomas Bohman"
+  - "Marcel Boge"
+  - "Imre Ruzsa"        # also autocorrelation
+  - "Hoang Le Truong"
+  - "Tomasz Schoen"
+  - "Konrad Swanepoel"
+
+functional-inequality:
+  # Uncertainty principles, Bourgain-Clozel-Kahane
+  - "Felipe Goncalves"   # also sphere-packing
+  - "Joao Pedro Ramos"
+  - "Mateus Sousa"
+  - "Diogo Oliveira e Silva"
+  - "Friedrich Littmann"
+
+high-precision-numerical:
+  # Rigorous arithmetic, mpmath-class
+  - "Fredrik Johansson"
+  - "Andrew Rechnitzer"
+  - "David H. Bailey"
+  - "Warwick Tucker"
+  - "Sigal Gottlieb"
+  - "Jonathan M. Borwein"
+
+optimization-theory:
+  # LP/SDP for combinatorial optimization, bound-constrained NLP
+  - "Pablo A. Parrilo"
+  - "Nikhil Bansal"
+  - "Mark Braverman"
+  - "Etienne de Klerk"
+  - "Cristobal Guzman"
+
+agentic-harness:
+  # AI / LLM for math + autonomous research
+  - "Sebastien Bubeck"
+  - "Jonathan Frankle"
+  - "Andrej Karpathy"
+  - "Noam Brown"
+  - "Yannic Kilcher"     # community curator; check papers if any
+  - "Pengfei Liu"        # ASI-Evolve author
+  - "Tao Gui"            # AHE coauthor
+  - "Xuanjing Huang"     # AHE coauthor
+  - "Yu-Gang Jiang"      # AHE coauthor
+  - "Wenhu Chen"         # DCI coauthor
+  - "Jimmy Lin"          # DCI coauthor
+  - "Yejin Choi"

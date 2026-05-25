@@ -12,7 +12,7 @@ cites:
   - provable-floor-and-frozen-problems.md
   - symmetry-and-fundamental-domain.md
   - reduced-hessian.md
-  - ../source/2025-novikov-alphaevolve.md
+  - ../../source/2025-novikov-alphaevolve.md
 ---
 
 # Heilbronn-type extremal problems (and the over-determined active-constraint pattern)

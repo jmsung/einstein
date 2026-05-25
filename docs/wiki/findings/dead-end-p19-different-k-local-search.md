@@ -7,8 +7,8 @@ status: answered
 related_concepts: [kronecker-decomposition.md, sidon-sets.md, basin-rigidity.md, provable-floor-and-frozen-problems.md]
 related_techniques: [basin-hopping-multistart.md, slsqp-active-pair-polish.md]
 cites:
-  - ../source/2010-vinuesa-sidon-thesis.md
-  - ../source/2007-gyarmati-sums-differences.md
+  - ../../source/2010-vinuesa-sidon-thesis.md
+  - ../../source/2007-gyarmati-sums-differences.md
   - ../questions/2026-05-02-p19-kronecker-w4-existence.md
 ---
 

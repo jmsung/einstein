@@ -2,7 +2,8 @@
 type: concept
 author: agent
 drafted: 2026-05-02
-related_problems: [P5, P6, P11, P14, P15, P16]
+revised: 2026-05-23
+related_problems: [P5, P6, P11, P14, P15, P16, P22]
 related_techniques: [slsqp-active-pair-polish.md, mpmath-ulp-polish.md, basin-hopping-multistart.md]
 related_findings: [basin-rigidity.md, float64-ceiling.md, equioscillation-escape.md]
 cites:
@@ -10,6 +11,9 @@ cites:
   - ../findings/float64-ceiling.md
   - ../personas/poincare.md
   - reduced-hessian.md
+  - ../../source/2007-saliola-some-notes-equivalence-first-order.md
+  - ../../source/2011-cohn-rigidity-spherical-codes.md
+  - ../../source/2012-holmescerfon-geometrical-approach-computing-free-energy.md
 related_personas: [poincare.md]
 ---
 
@@ -70,8 +74,19 @@ The practical inversion: **count active constraints vs DOF before launching mult
 2. **P11 Tammes (n=50)** — `|I| = 95+` near-contact pairs at `tol = 1e-3` for ~50 vectors with 3 DOF each (after rotation gauge): basin float64-ceiling. Wide active-pair tolerance (1e-3) is required because 1e-7 tolerance misses 95+ near-contact pairs and stalls below the ceiling. Technique: [slsqp-active-pair-polish](../techniques/slsqp-active-pair-polish.md).
 3. **P15 Heilbronn Triangles (n=11)** — 17 active triples on 8 effective DOF after D1 symmetry. SierpinskiAgent2083's first-order LP returned `δ_min = 0`; CHRONOS's KKT obstruction theorem classifies it as a rigid local max. mpmath 60-digit Newton confirms the basin's true-math ceiling is `+6.245e-17` above the float64 score — `1.6 × 10⁸` times below `minImprovement`.
 
+## Literature anchors
+
+The empirical "44K multistart returned the same basin" observation has three independent theoretical backings in the literature:
+
+- **Cohn–Jiao–Kumar–Torquato 2011** ([`source/2011-cohn-rigidity-spherical-codes.md`](../../source/2011-cohn-rigidity-spherical-codes.md)) — formalises *infinitesimal jamming* of spherical codes as a linear program: perturb $x_i \to x_i + \varepsilon y_i$ with $\langle x_i, y_i\rangle = 0$ and $\langle x_i, y_j\rangle + \langle x_j, y_i\rangle \le 0$ on contact pairs; the code is rigid iff every such deformation is an infinitesimal rotation. This is exactly the first-order LP test SierpinskiAgent2083 ran on P15. Connelly–Roth–Whiteley supplies the missing implication: *infinitesimal* jamming $\Rightarrow$ jamming, so the LP certificate is also a finite-distance certificate. The paper proves $K_{12}$ (Coxeter–Todd) is *not* jammed despite being a kissing-number record — a useful reminder that "record" $\ne$ "rigid."
+- **Saliola–Whiteley 2007** ([`source/2007-saliola-some-notes-equivalence-first-order.md`](../../source/2007-saliola-some-notes-equivalence-first-order.md)) — first-order rigidity is the *same theory* across Euclidean, spherical, hyperbolic, and exterior-hyperbolic geometries, via an explicit block-diagonal transform between rigidity matrices. Practical upshot: an arena problem stated in $S^{d-1}$ (kissing on a sphere) and one stated in $\mathbb{R}^d$ (sphere packing) share rigidity certificates — knowing one is rigid in either ambient space transfers.
+- **Holmes-Cerfon–Gortler–Brenner 2012** ([`source/2012-holmescerfon-geometrical-approach-computing-free-energy.md`](../../source/2012-holmescerfon-geometrical-approach-computing-free-energy.md)) — in the short-range limit, the configuration space of $n$ particles stratifies into rigid "corners" connected by floppy modes. The rigid strata correspond exactly to active-constraint sets with $|I| \ge \mathrm{DOF}$; the floppy modes are zero eigenvalues of the reduced Hessian. The paper exhibits the full landscape for $n \le 8$ and finds rigid/floppy ratios are nearly $n$-independent — clusters "melt explosively," not incrementally. The implication for arena multistart: distinct basins do exist, but in fixed-cardinality ratios; covering them needs structurally different seeds, not more random trials.
+
+The empirical pattern of the arena (multistart returns the same configuration up to rigid motion) is the experimental signature of an over-determined active set under the Cohn et al. LP. The arena thus *reproduces* the rigidity literature in a high-dimensional setting, with the optimum's rigidity acting as a ceiling that no local method can pierce.
+
 ## Related
 
 - Concepts: [contact-graph-rigidity](contact-graph-rigidity.md), [equioscillation](equioscillation.md), [float64-ceiling](float64-ceiling.md), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md), [symmetry-and-fundamental-domain](symmetry-and-fundamental-domain.md).
 - Techniques: [slsqp-active-pair-polish](../techniques/slsqp-active-pair-polish.md), [mpmath-ulp-polish](../techniques/mpmath-ulp-polish.md), [basin-hopping-multistart](../techniques/basin-hopping-multistart.md).
 - Findings: [basin-rigidity](../findings/basin-rigidity.md), [float64-ceiling](../findings/float64-ceiling.md), [equioscillation-escape](../findings/equioscillation-escape.md).
+- Sources: [Cohn–Jiao–Kumar–Torquato 2011](../../source/2011-cohn-rigidity-spherical-codes.md), [Saliola–Whiteley 2007](../../source/2007-saliola-some-notes-equivalence-first-order.md), [Holmes-Cerfon–Gortler–Brenner 2012](../../source/2012-holmescerfon-geometrical-approach-computing-free-energy.md).

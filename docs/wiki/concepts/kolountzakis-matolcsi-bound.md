@@ -11,9 +11,9 @@ cites:
   - hardy-hilbert-inequality.md
   - sidon-sets.md
   - lp-duality.md
-  - ../source/2010-matolcsi-autoconvolution.md
-  - ../source/2017-cloninger-autoconvolution-sidon.md
-  - ../source/2010-vinuesa-sidon-thesis.md
+  - ../../source/2010-matolcsi-autoconvolution.md
+  - ../../source/2017-cloninger-autoconvolution-sidon.md
+  - ../../source/2010-vinuesa-sidon-thesis.md
 ---
 
 # Kolountzakis–Matolcsi LP bound (autoconvolution-supremum framework)

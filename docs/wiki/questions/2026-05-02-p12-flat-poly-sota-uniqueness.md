@@ -63,3 +63,11 @@ The cheapest informative move is (1); the most decisive is (4). (2) is the brute
 - `cb/source/2019-balister-flat-littlewood.md` (already in source/)
 - Erdős (1957), "Some unsolved problems" — flat-polynomial conjecture
 - Jedwab, Katz, Schmidt (2013), "Small L4 norm Littlewood polynomials" (arXiv:1205.0260)
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"float64 ceiling" OR all:"basin rigidity" OR all:"byte-identical SOTA at deg-69 ±1 Littlewood") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

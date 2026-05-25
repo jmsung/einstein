@@ -11,9 +11,9 @@ cites:
   - kissing-number.md
   - cohn-elkies-bound.md
   - modular-forms-magic-function.md
-  - ../source/2024-cohn-li-kissing.md
-  - ../source/2024-delaat-kissing-sdp.md
-  - ../source/1971-leech-sphere-packing.md
+  - ../../source/2024-cohn-li-kissing.md
+  - ../../source/2024-delaat-kissing-sdp.md
+  - ../../source/1971-leech-sphere-packing.md
 ---
 
 # Coxeter–Todd lattice K₁₂
