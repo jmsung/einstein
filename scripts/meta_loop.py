@@ -27,7 +27,7 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO / "src"))
 
-from einstein.meta_loop import diagnose  # noqa: E402
+from einstein.meta_loop import diagnose, propose  # noqa: E402
 
 # When running from a worktree (cb-<branch>/), `.mb` is a symlink to ../mb.
 # `_REPO/.mb` resolves to the shared private workspace either way.
@@ -71,6 +71,50 @@ def _add_diagnose(sub: argparse._SubParsersAction) -> None:
     )
 
 
+def _add_propose(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser(
+        "propose",
+        help="invoke LLM proposer; write typed proposals to mb/proposals/pending/",
+    )
+    p.add_argument("--cycle-log", type=Path, default=_REPO / "docs" / "agent" / "cycle-log.md")
+    p.add_argument(
+        "--skill-library", type=Path, default=_REPO / "docs" / "agent" / "skill-library.md"
+    )
+    p.add_argument("--findings-dir", type=Path, default=_REPO / "docs" / "wiki" / "findings")
+    p.add_argument("--questions-dir", type=Path, default=_REPO / "docs" / "wiki" / "questions")
+    p.add_argument("--mb-logs-dir", type=Path, default=_DEFAULT_MB / "logs")
+    p.add_argument("--proposals-root", type=Path, default=_DEFAULT_MB / "proposals")
+    p.add_argument(
+        "--output",
+        type=Path,
+        default=_DEFAULT_MB / "logs" / "meta-loop-report.md",
+        help="diagnostic report destination (run() refreshes it)",
+    )
+
+
+def _cmd_propose(args: argparse.Namespace) -> int:
+    result = propose.run(
+        cycle_log=args.cycle_log,
+        skill_library=args.skill_library,
+        findings_dir=args.findings_dir,
+        questions_dir=args.questions_dir,
+        mb_logs_dir=args.mb_logs_dir,
+        proposals_root=args.proposals_root,
+        output=args.output,
+    )
+    if result.proposer_error:
+        print(f"meta-loop propose — proposer failed: {result.proposer_error}", file=sys.stderr)
+        return 1
+    print(
+        f"meta-loop propose — wrote {len(result.written)} proposal(s) "
+        f"to {args.proposals_root / 'pending'}, "
+        f"rejected {len(result.rejected_raw)} malformed candidate(s)"
+    )
+    for path in result.written:
+        print(f"  + {path.name}")
+    return 0
+
+
 def _cmd_diagnose(args: argparse.Namespace) -> int:
     report = diagnose.run(
         cycle_log=args.cycle_log,
@@ -110,10 +154,10 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     _add_diagnose(sub)
+    _add_propose(sub)
 
     # Stubs for forward-declared subcommands so `--help` lists them and so
     # an agent doesn't accidentally believe they exist yet.
-    sub.add_parser("propose", help="(Goal 2) emit typed proposals; not yet implemented")
     sub.add_parser("review", help="(Goal 4) human-review CLI; not yet implemented")
     sub.add_parser("shadow", help="(Goal 5) shadow A/B harness; not yet implemented")
 
@@ -121,7 +165,7 @@ def main(argv: list[str] | None = None) -> int:
 
     handlers = {
         "diagnose": _cmd_diagnose,
-        "propose": _stub("propose"),
+        "propose": _cmd_propose,
         "review": _stub("review"),
         "shadow": _stub("shadow"),
     }
