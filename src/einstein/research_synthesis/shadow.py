@@ -124,16 +124,20 @@ def synthesis_promotion_decision(
 
 SYNTHESIS_RULE_DIFF = """--- a/.claude/rules/cycle-discipline.md
 +++ b/.claude/rules/cycle-discipline.md
-@@ -1,3 +1,8 @@
+@@ -1,5 +1,13 @@
  # Cycle discipline — every cycle logged, no cherry-picking
-+
-+## Pre-cycle (Goal 5 of js/feat/research-synthesis; A/B-promoted)
+
++## Pre-cycle (research-synthesis branch; A/B-promoted)
 +
 +0a. **Pre-cycle synthesis (research_synthesis):** before step 0 (qmd query),
 +    run `cb/scripts/research_synthesis.py --problem-id N` which writes
 +    `mb/problems/<id>-<slug>/literature-synthesis-<date>.md` for the
 +    inner agent to consume. Citations land in `cited_sources` of the
 +    cycle-log row + `mb/logs/cited-sources.jsonl` sidecar.
++
+ Every problem-attempt cycle MUST produce one row in `docs/agent/cycle-log.md`. Failures count. Cherry-picking is forbidden.
+
+ **Why:** The whole `docs/agent/` layer — `cycle-log.md`, `skill-library.md`, `metrics.md`, `ablations/` — measures whether the agent actually self-improves. Without strict 1:1 cycle:log discipline, the metric becomes "best-of-N selected log" which is theatrically self-improving without being actually so. Honesty over optics.
 """
 
 

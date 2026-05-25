@@ -147,6 +147,23 @@ def test_make_synthesis_proposal_rejects_bad_id() -> None:
         shadow.make_synthesis_proposal(proposal_id="X")  # too short
 
 
+def test_synthesis_rule_diff_applies_cleanly_against_live_file() -> None:
+    """Regression guard: `git apply --check` on the diff against the live
+    .claude/rules/cycle-discipline.md must succeed. Without this, --execute
+    fails at apply-to-A and the whole shadow run aborts (we hit this in the
+    first --execute attempt: hand-crafted hunk header was wrong).
+    """
+    import subprocess
+
+    proc = subprocess.run(
+        ["git", "apply", "--check", "-"],
+        input=shadow.SYNTHESIS_RULE_DIFF,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, f"SYNTHESIS_RULE_DIFF doesn't apply cleanly: stderr={proc.stderr}"
+
+
 # ---------------- CLI orchestrator ----------------
 
 
