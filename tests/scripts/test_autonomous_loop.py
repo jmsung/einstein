@@ -202,6 +202,34 @@ def test_format_cycle_log_row_shape() -> None:
     assert row.endswith("|")
     # Single line
     assert row.count("\n") == 0
+    # cited_sources defaults to () → trailing cites_src column reads 0
+    last_cell = row.rstrip().rstrip("|").rstrip().split("|")[-1].strip()
+    assert last_cell == "0"
+
+
+def test_format_cycle_log_row_with_cited_sources_renders_count() -> None:
+    """Goal 4 of js/feat/research-synthesis: cited_sources count is the rightmost column."""
+    row = al.format_cycle_log_row(
+        cycle_id=42,
+        problem="P19-difference-bases",
+        start_score=2.6390274695,
+        end_score=2.6390274695,
+        hours=0.5,
+        compute="local-cpu",
+        wiki_citations=3,
+        findings_added=0,
+        concepts_added=0,
+        author_mix={"agent": 1, "human": 0, "hybrid": 0},
+        outcome="no-change",
+        notes="smoke",
+        cited_sources=[
+            "docs/source/2026-lee-meta-harness.md",
+            "docs/source/2024-baek-researchagent.md",
+            "docs/source/2026-zhang-hyperagents.md",
+        ],
+    )
+    last_cell = row.rstrip().rstrip("|").rstrip().split("|")[-1].strip()
+    assert last_cell == "3"
 
 
 def test_append_cycle_log_row(tmp_path: Path) -> None:
@@ -581,7 +609,7 @@ def test_run_one_visit_writes_one_row_per_attempt(tmp_path: Path) -> None:
         problem,
         cycle_log=log,
         dry_run=False,
-        cycle_runner=lambda cid, slug: (runner_calls.append((cid, slug)) or 0),
+        cycle_runner=lambda cid, slug: runner_calls.append((cid, slug)) or 0,
         max_attempts=3,
         skip_gates=True,
     )

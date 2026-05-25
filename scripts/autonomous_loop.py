@@ -50,6 +50,8 @@ DEFAULT_LOCKFILE = _REPO / ".autonomous-loop.lock"
 DEFAULT_MB_DIR = _REPO.parent / "mb"
 DEFAULT_BUDGET_PATH = DEFAULT_MB_DIR / "logs" / "inner-agent-budget.md"
 DEFAULT_SENTINEL_PATH = DEFAULT_MB_DIR / ".inner-agent-disabled"
+# Goal 4 of js/feat/research-synthesis: per-cycle citation sidecar.
+DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
 
 # Local imports — strategy_picker + inner_agent_gates live in docs/tools/
 sys.path.insert(0, str(_REPO / "docs" / "tools"))
@@ -208,8 +210,15 @@ def format_cycle_log_row(
     author_mix: dict[str, int],
     outcome: str,
     notes: str,
+    cited_sources: list[str] | tuple[str, ...] = (),
 ) -> str:
-    """Produce one markdown table row matching docs/agent/cycle-log.md schema."""
+    """Produce one markdown table row matching docs/agent/cycle-log.md schema.
+
+    `cited_sources` (Goal 4 of js/feat/research-synthesis) renders as a trailing
+    `cites_src` count column. The full per-cycle path list is written to
+    `mb/logs/cited-sources.jsonl` via `append_citation_record` so the
+    promotion-candidate detector can count cross-cycle citations.
+    """
 
     def _fmt_score(s: float | str) -> str:
         if isinstance(s, (int, float)):
@@ -221,10 +230,11 @@ def format_cycle_log_row(
     s_start = _fmt_score(start_score)
     s_end = _fmt_score(end_score)
     score_pair = f"{s_start} → {s_end}" if s_start != s_end else f"{s_start} (no Δ)"
+    cites_n = len(cited_sources)
     return (
         f"| {cycle_id} | {problem} | {score_pair} | {hours:g} | {compute} | "
         f"{wiki_citations} | {findings_added} | {concepts_added} | "
-        f"{_author_mix(author_mix)} | {outcome} | {notes} |"
+        f"{_author_mix(author_mix)} | {outcome} | {notes} | {cites_n} |"
     )
 
 
@@ -501,6 +511,8 @@ def _try_llm_path(
         "outcome": outcome,
         "notes": notes,
         "chosen_techniques": [response.strategy] if response.strategy else [],
+        # Goal 4: thread cited_sources for the cycle-log column + sidecar JSONL
+        "cited_sources": list(getattr(response, "cited_sources", []) or []),
     }
 
 
@@ -696,14 +708,16 @@ _CYCLE_LOG_ROW_KEYS = (
     "author_mix",
     "outcome",
     "notes",
+    "cited_sources",
 )
 
 
 def _row_from_attempt(attempt_result: dict) -> dict:
     """Strip the non-schema `chosen_techniques` key before passing to
     `format_cycle_log_row` — that helper takes **kwargs and would error on
-    unknown args."""
-    return {k: attempt_result[k] for k in _CYCLE_LOG_ROW_KEYS}
+    unknown args. `cited_sources` defaults to () for callers that don't
+    set it (mechanical path, gate-skips)."""
+    return {k: attempt_result.get(k, ()) for k in _CYCLE_LOG_ROW_KEYS}
 
 
 # ---------------- wiki/mb write audit (Goal 7.6) ----------------
@@ -898,6 +912,21 @@ def _run_one_cycle(
         **_row_from_attempt(result),
     )
     append_cycle_log_row(cycle_log, row)
+
+    # Goal 4: write the sidecar citation record so promotion_candidates.py can
+    # count cross-cycle citations. Best-effort — never break the cycle.
+    cited = result.get("cited_sources") or []
+    try:
+        from inner_agent_output import append_citation_record as _append_cit
+
+        _append_cit(
+            DEFAULT_CITED_SOURCES_LOG,
+            cycle_id=cycle_id,
+            problem=problem.display,
+            cited_sources=list(cited),
+        )
+    except Exception as e:  # noqa: BLE001
+        log.warning("cited_sources sidecar write failed: %s", e)
 
     return cycle_result, result
 
@@ -1276,7 +1305,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--no-lock",
         action="store_true",
-        help="Skip the concurrency lockfile (use for explicit " "manual concurrent runs).",
+        help="Skip the concurrency lockfile (use for explicit manual concurrent runs).",
     )
     parser.add_argument(
         "--lockfile", type=Path, default=DEFAULT_LOCKFILE, help="Path to the concurrency lockfile."
@@ -1357,7 +1386,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.discipline_once and results and not args.dry_run:
             last = results[-1]
             log.info(
-                "--discipline-once: running cycle_runner once at end " "(cycle %d, %s)",
+                "--discipline-once: running cycle_runner once at end (cycle %d, %s)",
                 last.cycle_id,
                 last.problem.file_slug,
             )

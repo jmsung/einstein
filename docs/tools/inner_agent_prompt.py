@@ -266,6 +266,13 @@ emit a single JSON object matching the schema at the end. Concretely:
    If the attempt failed (dead end), set `dead_end_finding` to the intended
    path under `docs/wiki/findings/dead-end-*.md`; the orchestrator writes
    the file in Goal 7.6.
+8. **CITED SOURCES** — populate `cited_sources` with every
+   `docs/source/<file>.md` path that materially informed this attempt
+   (read in step 1's wiki-first lookup, surfaced by gap_search, or
+   referenced in a council question). Empty list is OK if no source/
+   page was load-bearing. This field feeds `mb/logs/cited-sources.jsonl`
+   and the promotion-candidate detector per Goal 4 of
+   `js/feat/research-synthesis`.
 
 ## Problem statement
 

@@ -262,5 +262,83 @@ def test_output_schema_is_what_prompt_advertises():
         "wiki_writes",
         "converged",
         "notes",
+        "cited_sources",
     ):
         assert required in iao.OUTPUT_SCHEMA, f"{required!r} missing from OUTPUT_SCHEMA"
+
+
+# ---------------- cited_sources (Goal 4 of js/feat/research-synthesis) ----------------
+
+
+def test_cited_sources_field_accepted():
+    """When the agent declares cited_sources, they round-trip into the response."""
+    payload = dict(VALID_RESPONSE)
+    payload["cited_sources"] = [
+        "docs/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
+        "docs/source/2024-baek-researchagent-iterative-research-idea.md",
+    ]
+    resp = iao.parse_response(json.dumps(payload))
+    assert resp.cited_sources == payload["cited_sources"]
+
+
+def test_cited_sources_absent_defaults_to_empty_list():
+    """Backwards compat: older agent replies without cited_sources still validate."""
+    payload = dict(VALID_RESPONSE)
+    payload.pop("cited_sources", None)
+    resp = iao.parse_response(json.dumps(payload))
+    assert resp.cited_sources == []
+
+
+def test_cited_sources_wrong_prefix_rejected():
+    """Each entry must start with docs/source/ — anything else is a typo/hallucination."""
+    payload = dict(VALID_RESPONSE)
+    payload["cited_sources"] = ["docs/wiki/concepts/equioscillation.md"]
+    with pytest.raises(iao.InnerAgentOutputError, match="cited_sources"):
+        iao.parse_response(json.dumps(payload))
+
+
+def test_cited_sources_not_list_rejected():
+    """Wrong type up top (string instead of list) raises a clear error."""
+    payload = dict(VALID_RESPONSE)
+    payload["cited_sources"] = "docs/source/X.md"
+    with pytest.raises(iao.InnerAgentOutputError, match="cited_sources"):
+        iao.parse_response(json.dumps(payload))
+
+
+def test_append_citation_record_creates_file_when_missing(tmp_path):
+    """First call creates the JSONL file with a single record."""
+    p = tmp_path / "cited-sources.jsonl"
+    iao.append_citation_record(
+        p,
+        cycle_id=42,
+        problem="P19-difference-bases",
+        cited_sources=["docs/source/2026-lee-meta-harness.md"],
+    )
+    assert p.exists()
+    lines = p.read_text().splitlines()
+    assert len(lines) == 1
+    rec = json.loads(lines[0])
+    assert rec["cycle_id"] == 42
+    assert rec["problem"] == "P19-difference-bases"
+    assert rec["cited_sources"] == ["docs/source/2026-lee-meta-harness.md"]
+    assert "ts" in rec
+
+
+def test_append_citation_record_appends_to_existing(tmp_path):
+    """Subsequent calls append additional lines."""
+    p = tmp_path / "cited-sources.jsonl"
+    for i in range(3):
+        iao.append_citation_record(
+            p, cycle_id=i, problem=f"Pn-{i}", cited_sources=[f"docs/source/X{i}.md"]
+        )
+    lines = p.read_text().splitlines()
+    assert len(lines) == 3
+    assert json.loads(lines[2])["cycle_id"] == 2
+
+
+def test_append_citation_record_empty_cites_ok(tmp_path):
+    """Empty cited_sources still records the cycle (zero-cite cycles count too)."""
+    p = tmp_path / "cited-sources.jsonl"
+    iao.append_citation_record(p, cycle_id=1, problem="Px", cited_sources=[])
+    rec = json.loads(p.read_text().splitlines()[0])
+    assert rec["cited_sources"] == []

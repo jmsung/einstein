@@ -42,7 +42,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 # ---------------- constants ----------------
@@ -51,6 +51,7 @@ MAX_NOTES_CHARS = 200
 DEAD_END_PREFIX = "docs/wiki/findings/dead-end-"
 QUESTIONS_PREFIX = "docs/wiki/questions/"
 WIKI_OR_MB_PREFIXES = ("docs/wiki/", "mb/")
+SOURCE_PREFIX = "docs/source/"
 
 OUTPUT_SCHEMA = """{
   "strategy": "<one-line name of the approach tried this cycle>",
@@ -59,6 +60,7 @@ OUTPUT_SCHEMA = """{
   "dead_end_finding": <"docs/wiki/findings/dead-end-..." | null>,
   "new_questions": [<paths under docs/wiki/questions/ written this cycle>],
   "wiki_writes": [<all paths written under docs/wiki/ or mb/ this cycle>],
+  "cited_sources": [<paths under docs/source/ that informed this attempt; empty list is OK>],
   "converged": <bool — true if no plausible next step remains>,
   "notes": "<<= 200 chars, single line, for cycle-log notes column>"
 }"""
@@ -81,6 +83,10 @@ class InnerAgentResponse:
     wiki_writes: list[str]
     converged: bool
     notes: str
+    # Goal 4 of js/feat/research-synthesis. Optional in the agent reply
+    # (default empty for backwards-compat with pre-G4 responses); each
+    # entry must start with docs/source/.
+    cited_sources: list[str] = field(default_factory=list)
 
 
 # ---------------- fence stripping + JSON extraction ----------------
@@ -237,9 +243,50 @@ def validate(raw: dict) -> InnerAgentResponse:
             "wiki_writes",
             WIKI_OR_MB_PREFIXES,
         ),
+        # Optional (default []) for backwards compat with pre-G4 agent replies.
+        cited_sources=_check_path_list(
+            raw.get("cited_sources", []),
+            "cited_sources",
+            (SOURCE_PREFIX,),
+        ),
         converged=_check_converged(_require_key(raw, "converged")),
         notes=_check_notes(_require_key(raw, "notes")),
     )
+
+
+def append_citation_record(
+    jsonl_path,
+    *,
+    cycle_id: int,
+    problem: str,
+    cited_sources: list[str],
+) -> None:
+    """Append one citation record to the sidecar JSONL.
+
+    Goal 4 of js/feat/research-synthesis. The cycle-log row carries only a
+    `cites_src` count for human readability; the full per-cycle path list
+    lives here so `docs/tools/promotion_candidates.py` can count cross-cycle
+    citations and propose source → concept promotions.
+
+    Format: one JSON object per line, fields:
+        cycle_id, problem, cited_sources, ts (ISO timestamp).
+
+    Creates the parent directory if needed. Thread-safe within a single
+    autonomous-loop process (single-writer append).
+    """
+    import datetime as _dt
+    from pathlib import Path
+
+    p = Path(jsonl_path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "cycle_id": int(cycle_id),
+        "problem": str(problem),
+        "cited_sources": list(cited_sources),
+        "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+    }
+    with p.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record) + "\n")
 
 
 def parse_response(text: str) -> InnerAgentResponse:
