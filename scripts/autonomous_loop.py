@@ -359,6 +359,28 @@ def _pre_cycle_synthesis_enabled(
         return False
 
 
+def _g8_debug_log(message: str) -> None:
+    """Side-channel debug log for the G8 synthesis subprocess.
+
+    The orchestrator's `log.warning` output is captured by run_shadow's
+    subprocess.run(capture_output=True) and only visible AFTER the shadow run
+    completes (6-8h). For diagnosing why G8 isn't firing in live runs we
+    need real-time visibility, so this helper appends to a separate file
+    that bypasses the subprocess capture.
+
+    Best-effort: any I/O error is swallowed; debug logging must never break
+    the cycle.
+    """
+    try:
+        log_path = DEFAULT_MB_DIR / "logs" / "g8-debug.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        ts = dt.datetime.now(dt.timezone.utc).isoformat()
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write(f"[{ts}] {message}\n")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _run_pre_cycle_synthesis(
     problem: Problem,
     *,
@@ -396,6 +418,7 @@ def _run_pre_cycle_synthesis(
         "--output",
         str(output_path),
     ]
+    _g8_debug_log(f"INVOKE P{problem.problem_id} cwd={repo_root} cmd={cmd!r}")
     try:
         proc = runner_fn(
             cmd,
@@ -407,22 +430,33 @@ def _run_pre_cycle_synthesis(
         )
     except Exception as e:  # noqa: BLE001 — graceful degradation by design
         log.warning("pre-cycle synthesis subprocess error: %s", e)
+        _g8_debug_log(f"SUBPROCESS_EXCEPTION P{problem.problem_id}: {type(e).__name__}: {e}")
         return None
     rc = getattr(proc, "returncode", 1)
+    stderr = getattr(proc, "stderr", "") or ""
+    stdout = getattr(proc, "stdout", "") or ""
+    _g8_debug_log(
+        f"RETURN P{problem.problem_id} rc={rc} stdout_tail={stdout[-200:]!r} "
+        f"stderr_tail={stderr[-300:]!r}"
+    )
     if rc != 0:
         log.warning(
             "pre-cycle synthesis exited %s; stderr: %s",
             rc,
-            (getattr(proc, "stderr", "") or "")[-300:],
+            stderr[-300:],
         )
         return None
     if not output_path.exists():
         log.warning("pre-cycle synthesis returned rc=0 but %s is missing", output_path)
+        _g8_debug_log(f"OUTPUT_MISSING P{problem.problem_id} expected_path={output_path}")
         return None
     try:
-        return output_path.read_text(encoding="utf-8")
+        content = output_path.read_text(encoding="utf-8")
+        _g8_debug_log(f"SUCCESS P{problem.problem_id} bytes={len(content)}")
+        return content
     except OSError as e:
         log.warning("pre-cycle synthesis output unreadable: %s", e)
+        _g8_debug_log(f"OUTPUT_UNREADABLE P{problem.problem_id}: {e}")
         return None
 
 
