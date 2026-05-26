@@ -419,22 +419,53 @@ def _run_pre_cycle_synthesis(
         str(output_path),
     ]
     _g8_debug_log(f"INVOKE P{problem.problem_id} cwd={repo_root} cmd={cmd!r}")
+    # G10 take 7 diagnostic: `capture_output=True` (PIPE) makes subprocess.run's
+    # communicate() block on pipe-EOF, not child-exit. The synthesis script
+    # spawns qmd (node) + claude grandchildren that inherit the stdout fd; a
+    # lingering node helper keeps the pipe open, so communicate() waited the
+    # full 600s even though the script had already finished and written its
+    # file. Fix: redirect to temp files (so wait() returns on the direct
+    # child's exit, not pipe EOF) + start_new_session so the whole group is
+    # isolatable. Tests still pass a `runner` stub, which ignores these.
+    import tempfile as _tempfile
+
     try:
-        proc = runner_fn(
-            cmd,
-            cwd=repo_root,
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds,
-            check=False,
-        )
+        if runner is not None:
+            # Test path: stubbed runner with the simple signature.
+            proc = runner_fn(
+                cmd,
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds,
+                check=False,
+            )
+            rc = getattr(proc, "returncode", 1)
+            stderr = getattr(proc, "stderr", "") or ""
+            stdout = getattr(proc, "stdout", "") or ""
+        else:
+            with (
+                _tempfile.TemporaryFile("w+", encoding="utf-8") as _out,
+                _tempfile.TemporaryFile("w+", encoding="utf-8") as _err,
+            ):
+                proc = subprocess.run(
+                    cmd,
+                    cwd=repo_root,
+                    stdout=_out,
+                    stderr=_err,
+                    timeout=timeout_seconds,
+                    check=False,
+                    start_new_session=True,
+                )
+                _out.seek(0)
+                _err.seek(0)
+                stdout = _out.read()
+                stderr = _err.read()
+            rc = proc.returncode
     except Exception as e:  # noqa: BLE001 — graceful degradation by design
         log.warning("pre-cycle synthesis subprocess error: %s", e)
         _g8_debug_log(f"SUBPROCESS_EXCEPTION P{problem.problem_id}: {type(e).__name__}: {e}")
         return None
-    rc = getattr(proc, "returncode", 1)
-    stderr = getattr(proc, "stderr", "") or ""
-    stdout = getattr(proc, "stdout", "") or ""
     _g8_debug_log(
         f"RETURN P{problem.problem_id} rc={rc} stdout_tail={stdout[-200:]!r} "
         f"stderr_tail={stderr[-300:]!r}"

@@ -180,6 +180,7 @@ def run_cli(
         problem_context=strategy_text,
         source_hits=source_hits,
         wiki_hits=wiki_hits,
+        queries=queries,
         drafted_at=drafted_at,
         runner=claude_runner,
         max_budget_usd=args.max_budget_usd,

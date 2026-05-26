@@ -146,9 +146,8 @@ def test_identity_fields_injected_from_kwargs_when_claude_omits_them() -> None:
     them from our kwargs after parsing so the substance fields still get used.
     """
     src, wiki = _sample_hits()
-    # Claude returns substance fields but omits identity fields
+    # Claude returns analytical fields but omits identity fields
     partial = {
-        "queries": ["q1"],
         "cross_source_patterns": [{"name": "P1", "description": "d"}],
     }
     out = Syn.synthesize(
@@ -164,9 +163,45 @@ def test_identity_fields_injected_from_kwargs_when_claude_omits_them() -> None:
     assert out.problem_id == 14
     assert out.problem_slug == "circle-packing-square"
     assert out.drafted_at == "2026-05-26"
-    # Substance fields preserved
-    assert out.queries == ["q1"]
+    # Analytical field from claude preserved
     assert out.cross_source_patterns[0].name == "P1"
+
+
+def test_script_owns_mechanical_fields_g10_take7() -> None:
+    """G10 take 7 fix: queries/top_sources/top_wiki come from the SCRIPT's own
+    gather() results, NOT from claude. Even if claude echoes garbage in those
+    fields, the result uses the real hits passed to synthesize().
+    """
+    src, wiki = _sample_hits()
+    # Claude tries to echo back wrong/empty mechanical fields — ignored.
+    payload = {
+        "queries": ["GARBAGE claude should not own this"],
+        "top_sources": [],  # claude omits — but script has 1 source hit
+        "top_wiki": [{"path": "WRONG.md", "score": 0.1, "snippet": "x", "collection": "y"}],
+        "cross_source_patterns": [{"name": "real-pattern", "description": "d"}],
+        "proposed_approaches": [{"description": "try Z", "cited_sources": []}],
+        "gaps_identified": ["gap-from-claude"],
+    }
+    out = Syn.synthesize(
+        problem_id=14,
+        problem_slug="circle-packing-square",
+        problem_context="ctx",
+        source_hits=src,
+        wiki_hits=wiki,
+        queries=["real query from script"],
+        drafted_at="2026-05-26",
+        runner=_ok_runner(payload),
+    )
+    assert out is not None
+    # Mechanical fields come from the SCRIPT's args, not claude's payload
+    assert out.queries == ["real query from script"]
+    assert [h.path for h in out.top_sources] == [s.path for s in src]
+    assert [h.path for h in out.top_wiki] == [w.path for w in wiki]
+    assert "WRONG.md" not in [h.path for h in out.top_wiki]
+    # Analytical fields come from claude
+    assert out.cross_source_patterns[0].name == "real-pattern"
+    assert out.proposed_approaches[0].description == "try Z"
+    assert out.gaps_identified == ["gap-from-claude"]
 
 
 def test_returns_none_on_completely_malformed_response() -> None:

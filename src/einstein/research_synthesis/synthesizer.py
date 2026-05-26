@@ -104,6 +104,7 @@ def synthesize(
     problem_context: str,
     source_hits: list[Hit],
     wiki_hits: list[Hit],
+    queries: list[str] | None = None,
     drafted_at: str | None = None,
     runner: Runner | None = None,
     model: str = "claude-opus-4-7[1m]",
@@ -114,6 +115,14 @@ def synthesize(
 
     Returns ``None`` on any failure path (auth, timeout, schema mismatch).
     Caller decides whether to fall back to a stub or skip the synthesis step.
+
+    Division of labor (G10 take 7 fix): the SCRIPT owns the mechanical fields
+    it already has — ``queries``, ``top_sources``, ``top_wiki`` — and they are
+    injected into the result directly from the args here. Claude owns ONLY the
+    analytical fields (``cross_source_patterns``, ``proposed_approaches``,
+    ``gaps_identified``). This removes the entire class of "claude didn't echo
+    the hits back" failures (the same root cause as the earlier problem_id
+    omission) and shrinks claude's output so it's faster + less timeout-prone.
     """
     drafted = drafted_at or _dt.date.today().isoformat()
     prompt = _build_prompt(
@@ -142,12 +151,9 @@ def synthesize(
             res.error_message,
         )
         return None
-    # G10 take 6 diagnostic discovered: claude returns valid JSON but omits
-    # `problem_id`/`problem_slug`/`drafted_at` (the agent treats them as
-    # "the orchestrator already knows these" and doesn't echo them back).
-    # Inject the known identity fields from our kwargs before validation
-    # so the substance (cross_source_patterns, proposed_approaches, etc.)
-    # gets processed even when those identity fields are absent.
+    # Parse claude's JSON for the ANALYTICAL fields only. The mechanical
+    # fields (identity + queries + hits) are overwritten from our own args —
+    # claude doesn't need to (and reliably won't) echo them back.
     try:
         import json as _json
 
@@ -160,10 +166,23 @@ def synthesize(
             if text.endswith("```"):
                 text = text[:-3].strip()
         data = _json.loads(text) if text else {}
-        # Inject the identity fields (orchestrator-owned, not agent-owned)
+        if not isinstance(data, dict):
+            raise ValueError(f"top-level JSON is {type(data).__name__}, expected object")
+        # Orchestrator-owned identity fields.
         data["problem_id"] = problem_id
         data["problem_slug"] = problem_slug
         data["drafted_at"] = drafted
+        # Script-owned mechanical fields — overwrite whatever claude emitted
+        # (or didn't) with the real gather() results we already have.
+        data["queries"] = list(queries or [])
+        data["top_sources"] = [
+            {"path": h.path, "score": h.score, "snippet": h.snippet, "collection": h.collection}
+            for h in source_hits
+        ]
+        data["top_wiki"] = [
+            {"path": h.path, "score": h.score, "snippet": h.snippet, "collection": h.collection}
+            for h in wiki_hits
+        ]
         return LiteratureSynthesis.from_dict(data)
     except (ValueError, Exception) as e:  # noqa: BLE001
         log.warning("synthesizer: malformed JSON from claude: %s", e)
