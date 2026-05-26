@@ -72,11 +72,33 @@ def read_strategy(mb_dir: Path, problem_id: int, slug: str) -> str:
     return path.read_text(encoding="utf-8")[:PROBLEM_CONTEXT_CHARS]
 
 
+def _clean_query(s: str) -> str:
+    """Sanitize a candidate query for qmd's argparse.
+
+    Three failure modes we hit in G10 take 4 diagnostic:
+    1. Leading `-` makes qmd treat the arg as a flag and print Usage.
+    2. Leading `*` (bullet) likewise gets weird with some shells.
+    3. Empty / whitespace-only strings make qmd print Usage.
+
+    Strip leading punctuation + trim; caller checks non-empty.
+    """
+    s = s.strip().lstrip("#").strip()
+    # Strip leading bullet/dash/asterisk markers (possibly repeated).
+    while s and s[0] in "-*•·":
+        s = s[1:].lstrip()
+    return s.strip()
+
+
 def derive_queries(problem_id: int, slug: str, strategy_text: str) -> list[str]:
     """Generate 3-5 qmd queries from the problem's slug + strategy keywords.
 
     Keep it deterministic — no LLM call for query formulation. Good enough
     coverage for the gather step; the synthesizer's job is the deep work.
+
+    G10 take 4 diagnostic discovered qmd CLI rejects queries starting with
+    `-` or empty queries with "Usage: qmd query [options] <query>". Cleaning
+    via `_clean_query` and an explicit non-empty check now filters these out
+    before they ever reach qmd.
     """
     base = slug.replace("-", " ")
     queries = [
@@ -85,12 +107,20 @@ def derive_queries(problem_id: int, slug: str, strategy_text: str) -> list[str]:
     ]
     # Pull a couple of distinctive nouns from the first lines of strategy.md
     for line in strategy_text.splitlines()[:20]:
-        line = line.strip().lstrip("#").strip()
-        if 8 < len(line) < 80 and not line.startswith("---"):
-            queries.append(line)
+        clean = _clean_query(line)
+        if 8 < len(clean) < 80 and not clean.startswith("---"):
+            queries.append(clean)
         if len(queries) >= 5:
             break
-    return queries[:5]
+    # Dedupe + drop empties; qmd treats empty/dash-prefixed args as flags.
+    seen: set[str] = set()
+    out: list[str] = []
+    for q in queries:
+        c = _clean_query(q)
+        if c and c not in seen:
+            seen.add(c)
+            out.append(c)
+    return out[:5]
 
 
 def build_output_path(mb_dir: Path, problem_id: int, slug: str, drafted_at: str) -> Path:

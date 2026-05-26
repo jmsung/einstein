@@ -83,6 +83,41 @@ def test_derive_queries_yields_base_and_strategy_lines() -> None:
     assert len(qs) <= 5
 
 
+def test_derive_queries_strips_leading_bullets_g10_take4_regression() -> None:
+    """G10 take 4 diagnostic: qmd rejects args starting with '-' or empty.
+
+    Strategy.md lines like '- **Submitted**: ...' would yield queries with
+    a leading dash, which qmd's argparse interprets as a flag and prints
+    'Usage: qmd query ...'. _clean_query strips leading bullet markers.
+    """
+    strategy = (
+        "# P1 — Erdős Minimum Overlap\n\n"
+        "- **Submitted**: #2 at 0.3808703105862199 (tied SOTA)\n"
+        "* Best local: 0.3808703104931\n"
+        "- Status: DONE — unbridgeable\n"
+    )
+    qs = script.derive_queries(1, "erdos-overlap", strategy)
+    # None of the queries start with '-' or '*' (would confuse qmd)
+    for q in qs:
+        assert not q.startswith("-"), f"query starts with '-': {q!r}"
+        assert not q.startswith("*"), f"query starts with '*': {q!r}"
+        # Non-empty (no whitespace-only)
+        assert q.strip() == q
+        assert q
+
+
+def test_derive_queries_dedupes_and_filters_empties() -> None:
+    """Whitespace-only / empty lines from strategy.md are skipped."""
+    strategy = "# title\n\n   \n\n# title\n"  # duplicate "title" + a blank
+    qs = script.derive_queries(7, "prime-number-theorem", strategy)
+    # Base entries always present
+    assert "P7 prime number theorem" in qs
+    # No duplicates
+    assert len(qs) == len(set(qs))
+    # No empties
+    assert all(q for q in qs)
+
+
 def test_dry_run_prints_prompt_and_does_not_write(mb_layout: Path) -> None:
     args = script._parse_args(
         [
