@@ -61,7 +61,12 @@ DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
 # instructions alone don't change agent behavior — this is the fix.
 PRE_CYCLE_SYNTHESIS_MARKER = "## Pre-cycle (research-synthesis branch; A/B-promoted)"
 DEFAULT_CYCLE_DISCIPLINE_RULE = _REPO / ".claude" / "rules" / "cycle-discipline.md"
-PRE_CYCLE_SYNTHESIS_TIMEOUT_SECONDS = 120
+# G10 first-run diagnostic showed scripts/research_synthesis.py takes longer
+# than 120s in practice (3-5 qmd queries × 2 collections at ~10-30s each,
+# plus claude -p call). Bumping to 600s so synthesis actually has a chance
+# to complete. If it still times out, fix the gather() speed (parallel qmd
+# queries) rather than bumping further.
+PRE_CYCLE_SYNTHESIS_TIMEOUT_SECONDS = 600
 
 # Local imports — strategy_picker + inner_agent_gates live in docs/tools/
 sys.path.insert(0, str(_REPO / "docs" / "tools"))
