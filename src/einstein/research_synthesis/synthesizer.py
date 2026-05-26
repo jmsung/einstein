@@ -142,8 +142,29 @@ def synthesize(
             res.error_message,
         )
         return None
+    # G10 take 6 diagnostic discovered: claude returns valid JSON but omits
+    # `problem_id`/`problem_slug`/`drafted_at` (the agent treats them as
+    # "the orchestrator already knows these" and doesn't echo them back).
+    # Inject the known identity fields from our kwargs before validation
+    # so the substance (cross_source_patterns, proposed_approaches, etc.)
+    # gets processed even when those identity fields are absent.
     try:
-        return LiteratureSynthesis.from_json(res.stdout)
-    except ValueError as e:
+        import json as _json
+
+        # Best-effort extract first JSON object from claude's response.
+        text = res.stdout.strip()
+        if text.startswith("```"):
+            # strip ```json ... ``` fence if present
+            text = text.strip("`")
+            text = text.removeprefix("json").strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
+        data = _json.loads(text) if text else {}
+        # Inject the identity fields (orchestrator-owned, not agent-owned)
+        data["problem_id"] = problem_id
+        data["problem_slug"] = problem_slug
+        data["drafted_at"] = drafted
+        return LiteratureSynthesis.from_dict(data)
+    except (ValueError, Exception) as e:  # noqa: BLE001
         log.warning("synthesizer: malformed JSON from claude: %s", e)
         return None

@@ -140,17 +140,49 @@ def test_returns_none_on_malformed_json() -> None:
     assert out is None
 
 
-def test_returns_none_on_schema_mismatch_missing_required() -> None:
+def test_identity_fields_injected_from_kwargs_when_claude_omits_them() -> None:
+    """G10 take 6 regression: claude often omits problem_id/problem_slug/drafted_at
+    from its JSON output (treats them as 'orchestrator already knows'). Inject
+    them from our kwargs after parsing so the substance fields still get used.
+    """
     src, wiki = _sample_hits()
-    # Missing problem_id
-    bad = {"problem_slug": "x", "drafted_at": "2026-05-25"}
+    # Claude returns substance fields but omits identity fields
+    partial = {
+        "queries": ["q1"],
+        "cross_source_patterns": [{"name": "P1", "description": "d"}],
+    }
     out = Syn.synthesize(
         problem_id=14,
         problem_slug="circle-packing-square",
         problem_context="ctx",
         source_hits=src,
         wiki_hits=wiki,
-        runner=_ok_runner(bad),
+        drafted_at="2026-05-26",
+        runner=_ok_runner(partial),
+    )
+    assert out is not None
+    assert out.problem_id == 14
+    assert out.problem_slug == "circle-packing-square"
+    assert out.drafted_at == "2026-05-26"
+    # Substance fields preserved
+    assert out.queries == ["q1"]
+    assert out.cross_source_patterns[0].name == "P1"
+
+
+def test_returns_none_on_completely_malformed_response() -> None:
+    """If claude returns something that isn't even parseable JSON, return None."""
+    src, wiki = _sample_hits()
+
+    def runner(**kwargs):
+        return Syn._RunnerResult(ok=True, stdout="<<not json at all>>")
+
+    out = Syn.synthesize(
+        problem_id=14,
+        problem_slug="circle-packing-square",
+        problem_context="ctx",
+        source_hits=src,
+        wiki_hits=wiki,
+        runner=runner,
     )
     assert out is None
 
