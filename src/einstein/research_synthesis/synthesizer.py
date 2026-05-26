@@ -107,7 +107,7 @@ def synthesize(
     drafted_at: str | None = None,
     runner: Runner | None = None,
     model: str = "claude-opus-4-7[1m]",
-    timeout_seconds: int = 120,
+    timeout_seconds: int = 300,
     max_budget_usd: float | None = None,
 ) -> LiteratureSynthesis | None:
     """Call claude headless to produce a LiteratureSynthesis.
