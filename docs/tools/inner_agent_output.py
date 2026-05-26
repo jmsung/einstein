@@ -271,10 +271,18 @@ def append_citation_record(
     Format: one JSON object per line, fields:
         cycle_id, problem, cited_sources, ts (ISO timestamp).
 
+    Goal 9 of js/feat/research-synthesis: when the env var
+    ``EINSTEIN_SHADOW_ARM`` is set (e.g. ``A`` or ``B``), the value is
+    recorded in an ``arm`` field. This lets the shadow A/B
+    promotion gate read per-arm citation counts from the shared sidecar
+    JSONL after `run_shadow(cleanup=True)` has deleted the arm cycle-logs.
+    Absent env var → no ``arm`` field (backwards compat with pre-G9 records).
+
     Creates the parent directory if needed. Thread-safe within a single
     autonomous-loop process (single-writer append).
     """
     import datetime as _dt
+    import os as _os
     from pathlib import Path
 
     p = Path(jsonl_path)
@@ -285,6 +293,9 @@ def append_citation_record(
         "cited_sources": list(cited_sources),
         "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(),
     }
+    arm = _os.environ.get("EINSTEIN_SHADOW_ARM")
+    if arm:
+        record["arm"] = arm
     with p.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record) + "\n")
 

@@ -35,7 +35,7 @@ from pathlib import Path
 
 from einstein.meta_loop import shadow as ml_shadow
 from einstein.research_synthesis.shadow import (
-    cycles_with_citations,
+    cycles_with_citations_from_sidecar,
     make_synthesis_proposal,
     synthesis_promotion_decision,
 )
@@ -45,6 +45,10 @@ log = logging.getLogger("research_synthesis_shadow")
 _REPO = Path(__file__).resolve().parents[1]
 DEFAULT_MB = _REPO.parent / "mb"
 DEFAULT_SHADOW_LOG = DEFAULT_MB / "logs" / "research-synthesis-shadow.md"
+# Goal 9: read per-arm citation counts from this sidecar after run_shadow
+# (cleanup=True) deletes the arm cycle-logs. inner_agent_output tags each
+# record with the arm letter via EINSTEIN_SHADOW_ARM env var.
+DEFAULT_CITED_SOURCES_SIDECAR = DEFAULT_MB / "logs" / "cited-sources.jsonl"
 
 
 def dry_run_summary(proposal_id: str, n_cycles: int, evidence_cycles: list[int]) -> str:
@@ -99,6 +103,7 @@ def run_cli(
     dry_run: bool = True,
     execute: bool = False,
     shadow_log: Path = DEFAULT_SHADOW_LOG,
+    sidecar: Path = DEFAULT_CITED_SOURCES_SIDECAR,
     out_stream=sys.stdout,
     cycle_runner=None,  # for tests + stubs
 ) -> int:
@@ -113,6 +118,10 @@ def run_cli(
     if cycle_runner is None:
         cycle_runner = ml_shadow.default_cycle_runner
     repo_root = _REPO
+    # Goal 9: capture the run-start timestamp so we can filter the sidecar
+    # to this run's records (the file has cross-run history). Without this
+    # cutoff, prior runs' citations would contaminate the per-arm counts.
+    run_start_ts = _dt.datetime.now(_dt.timezone.utc).isoformat()
     print(f"running shadow for proposal {proposal.id} with n_cycles={n_cycles}", file=out_stream)
     result = ml_shadow.run_shadow(
         proposal,
@@ -132,13 +141,11 @@ def run_cli(
             file=out_stream,
         )
         return 1
-    # Citation-grounded decision: re-compute over each arm's cycle-log.
-    # Arms live at worktree_parent / cb-shadow-<id>-{A,B}; we passed default
-    # (repo_root.parent). Use the same path convention to read the arm logs.
-    arm_a_log = repo_root.parent / f"cb-shadow-{proposal.id}-A" / "docs" / "agent" / "cycle-log.md"
-    arm_b_log = repo_root.parent / f"cb-shadow-{proposal.id}-B" / "docs" / "agent" / "cycle-log.md"
-    cwc_a = cycles_with_citations(arm_a_log)
-    cwc_b = cycles_with_citations(arm_b_log)
+    # Goal 9: read per-arm citation counts from the sidecar JSONL (which
+    # survives `run_shadow(cleanup=True)`), filtered by run_start_ts so
+    # prior shadow runs don't bleed into the count.
+    cwc_a = cycles_with_citations_from_sidecar(sidecar, arm="A", since_ts=run_start_ts)
+    cwc_b = cycles_with_citations_from_sidecar(sidecar, arm="B", since_ts=run_start_ts)
     decision = synthesis_promotion_decision(
         findings_delta=delta.findings_delta,
         score_changed_delta=delta.score_changed_delta,
@@ -146,6 +153,10 @@ def run_cli(
         cycles_with_citations_b=cwc_b,
     )
     print(f"meta_loop.shadow a_wins (heuristic): {result.a_wins}", file=out_stream)
+    print(
+        f"per-arm citation counts (from sidecar): A={cwc_a}, B={cwc_b}",
+        file=out_stream,
+    )
     print(f"synthesis_promotion_decision: {decision.reason}", file=out_stream)
     print(f"shadow log row appended to {shadow_log}", file=out_stream)
     return 0 if decision.a_wins else 2

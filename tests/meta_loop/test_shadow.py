@@ -380,6 +380,58 @@ def test_run_shadow_cleanup_can_be_disabled(tmp_path: Path) -> None:
     assert result.cleaned_up is False
 
 
+def test_run_shadow_sets_per_arm_env_for_cycle_runner(tmp_path: Path) -> None:
+    """Goal 9: cycle_runner sees EINSTEIN_SHADOW_ARM=A for arm A and =B for arm B."""
+    import os as _os
+
+    from einstein.meta_loop.shadow import run_shadow
+
+    p = _proposal(ptype=ProposalType.NEW_QUESTION.value)
+
+    def git(args, cwd, stdin):
+        if args[:3] == ["git", "worktree", "add"]:
+            Path(args[3]).mkdir(parents=True, exist_ok=True)
+        return RunResult(ok=True)
+
+    arm_env_seen: dict[str, str] = {}
+
+    def cycle_runner(arm_path: Path, n: int):
+        # Capture the env var as set by the wrapper
+        arm = "A" if "A" in arm_path.name else "B"
+        arm_env_seen[arm] = _os.environ.get("EINSTEIN_SHADOW_ARM", "<unset>")
+        return [_cycle_row(i) for i in range(n)]
+
+    # Confirm env is NOT polluted before the run
+    assert "EINSTEIN_SHADOW_ARM" not in _os.environ
+
+    run_shadow(
+        p,
+        repo_root=tmp_path,
+        worktree_parent=tmp_path,
+        n_cycles=1,
+        cycle_runner=cycle_runner,
+        git_runner=git,
+        shadow_log=tmp_path / "shadow-log.md",
+    )
+    assert arm_env_seen == {"A": "A", "B": "B"}
+    # And confirm env is restored after the run
+    assert "EINSTEIN_SHADOW_ARM" not in _os.environ
+
+
+def test_with_env_restores_prior_value(tmp_path: Path) -> None:
+    """If EINSTEIN_SHADOW_ARM was already set, it's restored after _with_env exits."""
+    import os as _os
+
+    from einstein.meta_loop.shadow import _with_env
+
+    _os.environ["EINSTEIN_SHADOW_ARM"] = "PRIOR"
+    try:
+        _with_env(_os, "EINSTEIN_SHADOW_ARM", "A", lambda: None)
+        assert _os.environ["EINSTEIN_SHADOW_ARM"] == "PRIOR"
+    finally:
+        _os.environ.pop("EINSTEIN_SHADOW_ARM", None)
+
+
 def test_default_cycle_runner_returns_partial_rows_on_timeout(tmp_path: Path, monkeypatch) -> None:
     """Regression: if autonomous_loop subprocess hits the timeout, the runner
     must still return whatever cycle-log rows were appended before the kill.

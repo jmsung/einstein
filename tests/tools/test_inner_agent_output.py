@@ -342,3 +342,31 @@ def test_append_citation_record_empty_cites_ok(tmp_path):
     iao.append_citation_record(p, cycle_id=1, problem="Px", cited_sources=[])
     rec = json.loads(p.read_text().splitlines()[0])
     assert rec["cited_sources"] == []
+
+
+def test_append_citation_record_includes_arm_when_env_set(tmp_path, monkeypatch):
+    """Goal 9: EINSTEIN_SHADOW_ARM='A' → record includes arm field."""
+    p = tmp_path / "cited-sources.jsonl"
+    monkeypatch.setenv("EINSTEIN_SHADOW_ARM", "A")
+    iao.append_citation_record(
+        p,
+        cycle_id=10,
+        problem="P14-circle-packing-square",
+        cited_sources=["docs/source/X.md"],
+    )
+    rec = json.loads(p.read_text().strip())
+    assert rec["arm"] == "A"
+
+
+def test_append_citation_record_omits_arm_when_env_unset(tmp_path, monkeypatch):
+    """No env var → no arm field. Backwards-compat with pre-G9 records."""
+    p = tmp_path / "cited-sources.jsonl"
+    monkeypatch.delenv("EINSTEIN_SHADOW_ARM", raising=False)
+    iao.append_citation_record(
+        p,
+        cycle_id=11,
+        problem="P14-circle-packing-square",
+        cited_sources=[],
+    )
+    rec = json.loads(p.read_text().strip())
+    assert "arm" not in rec

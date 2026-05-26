@@ -39,6 +39,59 @@ DEFAULT_SHADOW_RULE_PATH = ".claude/rules/cycle-discipline.md"
 # ---------------- metric: cycles with non-empty cited_sources ----------------
 
 
+def cycles_with_citations_from_sidecar(
+    sidecar_path: Path,
+    *,
+    arm: str,
+    since_ts: str | None = None,
+) -> int:
+    """Count records in the citation sidecar JSONL that came from a specific arm.
+
+    Goal 9 of js/feat/research-synthesis: the original `cycles_with_citations`
+    reads the arm cycle-log markdown — but `run_shadow(cleanup=True)` deletes
+    the arm worktrees before the orchestrator gets a chance to read them, so
+    that path always returns 0. This helper reads the SHARED sidecar JSONL
+    instead, filtered by the per-record ``arm`` tag that
+    ``inner_agent_output.append_citation_record`` now writes when
+    ``EINSTEIN_SHADOW_ARM`` is set.
+
+    Args:
+        sidecar_path: ``mb/logs/cited-sources.jsonl``.
+        arm: ``"A"`` or ``"B"`` — the per-arm tag to match.
+        since_ts: optional ISO-8601 timestamp lower bound (records strictly
+            after this time count). Pass the run's start ts to scope to one
+            shadow run when the sidecar has cross-run history.
+
+    Returns:
+        Count of records with ``arm == <arm>`` (and ts > since_ts if set)
+        whose ``cited_sources`` is non-empty. Returns 0 on any read error
+        (missing file, malformed JSONL).
+    """
+    if not sidecar_path.is_file():
+        return 0
+    n = 0
+    try:
+        for line in sidecar_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                import json as _json
+
+                rec = _json.loads(line)
+            except Exception:  # noqa: BLE001
+                continue
+            if rec.get("arm") != arm:
+                continue
+            if since_ts is not None and rec.get("ts", "") <= since_ts:
+                continue
+            if rec.get("cited_sources"):
+                n += 1
+    except OSError:
+        return 0
+    return n
+
+
 def cycles_with_citations(cycle_log_path: Path, *, since_cycle_id: int = 0) -> int:
     """Count cycle-log rows whose trailing `cites_src` column is > 0.
 

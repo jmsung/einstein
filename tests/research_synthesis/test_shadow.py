@@ -44,6 +44,55 @@ def test_cycles_with_citations_missing_file_returns_zero(tmp_path: Path) -> None
     assert shadow.cycles_with_citations(tmp_path / "missing.md") == 0
 
 
+def test_cycles_with_citations_from_sidecar_counts_arm_records(tmp_path: Path) -> None:
+    """G9: sidecar reader counts records with arm=<arm> + non-empty cited_sources."""
+    sidecar = tmp_path / "cited-sources.jsonl"
+    sidecar.write_text(
+        '{"cycle_id": 1, "problem": "P14", "cited_sources": ["docs/source/X.md"], "ts": "2026-05-25T10:00:00+00:00", "arm": "A"}\n'
+        '{"cycle_id": 2, "problem": "P14", "cited_sources": [], "ts": "2026-05-25T10:01:00+00:00", "arm": "A"}\n'
+        '{"cycle_id": 3, "problem": "P19", "cited_sources": ["docs/source/Y.md"], "ts": "2026-05-25T10:02:00+00:00", "arm": "A"}\n'
+        '{"cycle_id": 1, "problem": "P14", "cited_sources": ["docs/source/Z.md"], "ts": "2026-05-25T10:03:00+00:00", "arm": "B"}\n'
+    )
+    assert shadow.cycles_with_citations_from_sidecar(sidecar, arm="A") == 2  # cycles 1, 3
+    assert shadow.cycles_with_citations_from_sidecar(sidecar, arm="B") == 1
+
+
+def test_cycles_with_citations_from_sidecar_since_ts_filter(tmp_path: Path) -> None:
+    """since_ts excludes records at/before the cutoff."""
+    sidecar = tmp_path / "cited-sources.jsonl"
+    sidecar.write_text(
+        '{"cycle_id": 1, "cited_sources": ["X"], "ts": "2026-05-25T10:00:00+00:00", "arm": "A"}\n'
+        '{"cycle_id": 2, "cited_sources": ["Y"], "ts": "2026-05-25T11:00:00+00:00", "arm": "A"}\n'
+    )
+    # since_ts cuts off everything at or before 10:30
+    n = shadow.cycles_with_citations_from_sidecar(
+        sidecar, arm="A", since_ts="2026-05-25T10:30:00+00:00"
+    )
+    assert n == 1
+
+
+def test_cycles_with_citations_from_sidecar_missing_file_returns_zero(tmp_path: Path) -> None:
+    assert shadow.cycles_with_citations_from_sidecar(tmp_path / "missing.jsonl", arm="A") == 0
+
+
+def test_cycles_with_citations_from_sidecar_ignores_arm_mismatch(tmp_path: Path) -> None:
+    """Records without arm field, or with different arm, don't count."""
+    sidecar = tmp_path / "cited-sources.jsonl"
+    sidecar.write_text(
+        # No arm field — pre-G9 record
+        '{"cycle_id": 1, "cited_sources": ["X"], "ts": "2026-05-25T10:00:00+00:00"}\n'
+        # arm=B
+        '{"cycle_id": 2, "cited_sources": ["Y"], "ts": "2026-05-25T10:01:00+00:00", "arm": "B"}\n'
+    )
+    assert shadow.cycles_with_citations_from_sidecar(sidecar, arm="A") == 0
+
+
+def test_cycles_with_citations_from_sidecar_skips_malformed(tmp_path: Path) -> None:
+    sidecar = tmp_path / "cited-sources.jsonl"
+    sidecar.write_text('not json\n{"cycle_id": 1, "cited_sources": ["X"], "arm": "A"}\n')
+    assert shadow.cycles_with_citations_from_sidecar(sidecar, arm="A") == 1
+
+
 def test_cycles_with_citations_no_trailing_column(tmp_path: Path) -> None:
     """Pre-G4 rows (no cites_src column) don't match the regex → 0 counted."""
     p = tmp_path / "cycle-log.md"
