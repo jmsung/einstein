@@ -1879,3 +1879,115 @@ def test_call_auto_submit_notifier_failure_is_silent() -> None:
     # Submission outcome wasn't affected by the notification failure
     assert outcome == "improved-and-submitted"
     assert "SUBMITTED" in " ".join(notes)
+
+
+# ---------------- Goal 8: pre-cycle synthesis hook ----------------
+
+
+def _make_problem() -> "al.Problem":
+    return al.Problem(
+        problem_id=14,
+        slug="circle-packing-square",
+        tier="A",
+        status="rank-2-frozen",
+        score_current=2.636,
+        path=Path("/x"),
+    )
+
+
+def test_pre_cycle_synthesis_enabled_when_marker_present(tmp_path: Path) -> None:
+    """The marker heading toggles synthesis on."""
+    rule = tmp_path / "cycle-discipline.md"
+    rule.write_text(
+        f"# Cycle discipline\n\n{al.PRE_CYCLE_SYNTHESIS_MARKER}\n\nRun synthesis before claude.\n"
+    )
+    assert al._pre_cycle_synthesis_enabled(rule_path=rule) is True
+
+
+def test_pre_cycle_synthesis_enabled_when_marker_absent(tmp_path: Path) -> None:
+    """Vanilla cycle-discipline.md → off."""
+    rule = tmp_path / "cycle-discipline.md"
+    rule.write_text("# Cycle discipline\n\nEvery cycle gets logged.\n")
+    assert al._pre_cycle_synthesis_enabled(rule_path=rule) is False
+
+
+def test_pre_cycle_synthesis_enabled_missing_file_returns_false(tmp_path: Path) -> None:
+    """Missing rule file → opt-in by design, returns False."""
+    assert al._pre_cycle_synthesis_enabled(rule_path=tmp_path / "missing.md") is False
+
+
+def test_run_pre_cycle_synthesis_returns_content_on_success(tmp_path: Path) -> None:
+    """Successful subprocess + output file written → return its contents."""
+    problem = _make_problem()
+    # Stub runner pretends scripts/research_synthesis.py wrote the output file
+    expected_output = (
+        (DEFAULT_MB_DIR_FOR_TEST := al.DEFAULT_MB_DIR)
+        / "problems"
+        / problem.file_slug
+        / "literature-synthesis-stub.md"
+    )
+
+    class _StubProc:
+        returncode = 0
+        stderr = ""
+
+    written: dict = {}
+
+    def fake_runner(cmd, **kwargs):
+        # Extract the --output path the CLI would write to
+        idx = cmd.index("--output")
+        out_path = Path(cmd[idx + 1])
+        written["path"] = out_path
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text("# Literature synthesis stub\n\n## Top sources\n- foo\n")
+        return _StubProc()
+
+    result = al._run_pre_cycle_synthesis(problem, runner=fake_runner)
+    try:
+        assert result is not None
+        assert "## Top sources" in result
+        assert "foo" in result
+    finally:
+        # cleanup test artifact (lives under real mb/)
+        p = written.get("path")
+        if p and p.exists():
+            p.unlink()
+
+
+def test_run_pre_cycle_synthesis_returns_none_on_nonzero_exit() -> None:
+    """Subprocess fails → graceful None, no crash."""
+    problem = _make_problem()
+
+    class _StubProc:
+        returncode = 2
+        stderr = "boom"
+
+    def fake_runner(cmd, **kwargs):
+        return _StubProc()
+
+    assert al._run_pre_cycle_synthesis(problem, runner=fake_runner) is None
+
+
+def test_run_pre_cycle_synthesis_returns_none_when_output_missing() -> None:
+    """Subprocess returns ok but doesn't write the file → graceful None."""
+    problem = _make_problem()
+
+    class _StubProc:
+        returncode = 0
+        stderr = ""
+
+    def fake_runner(cmd, **kwargs):
+        # Don't write the output file
+        return _StubProc()
+
+    assert al._run_pre_cycle_synthesis(problem, runner=fake_runner) is None
+
+
+def test_run_pre_cycle_synthesis_returns_none_on_runner_exception() -> None:
+    """Subprocess raising → graceful None, no crash."""
+    problem = _make_problem()
+
+    def fake_runner(cmd, **kwargs):
+        raise RuntimeError("boom")
+
+    assert al._run_pre_cycle_synthesis(problem, runner=fake_runner) is None

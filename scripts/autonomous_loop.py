@@ -53,6 +53,16 @@ DEFAULT_SENTINEL_PATH = DEFAULT_MB_DIR / ".inner-agent-disabled"
 # Goal 4 of js/feat/research-synthesis: per-cycle citation sidecar.
 DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
 
+# Goal 8 of js/feat/research-synthesis: the rule_edit marker that toggles
+# the pre-cycle synthesis step. When this exact heading is present in
+# .claude/rules/cycle-discipline.md, the orchestrator runs
+# scripts/research_synthesis.py before spawning claude -p and embeds the
+# output in the prompt. The G7 finding documented that markdown-rule
+# instructions alone don't change agent behavior — this is the fix.
+PRE_CYCLE_SYNTHESIS_MARKER = "## Pre-cycle (research-synthesis branch; A/B-promoted)"
+DEFAULT_CYCLE_DISCIPLINE_RULE = _REPO / ".claude" / "rules" / "cycle-discipline.md"
+PRE_CYCLE_SYNTHESIS_TIMEOUT_SECONDS = 120
+
 # Local imports — strategy_picker + inner_agent_gates live in docs/tools/
 sys.path.insert(0, str(_REPO / "docs" / "tools"))
 try:
@@ -321,6 +331,96 @@ def _call_auto_submit(
     return None
 
 
+# ---------------- Goal 8: pre-cycle synthesis hook ----------------
+
+
+def _pre_cycle_synthesis_enabled(
+    rule_path: Path = DEFAULT_CYCLE_DISCIPLINE_RULE,
+) -> bool:
+    """Return True iff cycle-discipline.md contains the rule_edit marker.
+
+    Goal 8 of js/feat/research-synthesis: the G7 first-run experiment showed
+    that the agent treats `.claude/rules/` as advisory context — instructing
+    it to run `research_synthesis.py` via a markdown rule didn't work.
+    Instead, have the orchestrator inspect the rule file and run synthesis
+    itself when the rule says to. This is what makes the meta-loop's
+    `rule_edit` proposal channel actually load-bearing.
+
+    Returns False on any read error — synthesis is opt-in by design.
+    """
+    try:
+        return PRE_CYCLE_SYNTHESIS_MARKER in rule_path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+
+def _run_pre_cycle_synthesis(
+    problem: Problem,
+    *,
+    repo_root: Path = _REPO,
+    runner: Callable[..., object] | None = None,
+    timeout_seconds: int = PRE_CYCLE_SYNTHESIS_TIMEOUT_SECONDS,
+) -> str | None:
+    """Invoke scripts/research_synthesis.py for `problem`; return synthesis content or None.
+
+    Test seam: `runner` is a callable matching subprocess.run's signature.
+    Defaults to subprocess.run. On any failure (subprocess error, missing
+    output file, timeout) returns None — the caller falls back to a prompt
+    without the synthesis section so the cycle keeps moving.
+    """
+    runner_fn = runner if runner is not None else subprocess.run
+    # Write to a deterministic per-cycle path under mb/problems/<id>-<slug>/.
+    # Match what scripts/research_synthesis.py's default output naming uses.
+    drafted = dt.date.today().isoformat()
+    output_path = (
+        DEFAULT_MB_DIR / "problems" / problem.file_slug / f"literature-synthesis-{drafted}.md"
+    )
+    cmd = [
+        "uv",
+        "run",
+        "python",
+        "scripts/research_synthesis.py",
+        "--problem-id",
+        str(problem.problem_id),
+        "--slug",
+        problem.slug,
+        "--mb-dir",
+        str(DEFAULT_MB_DIR),
+        "--drafted-at",
+        drafted,
+        "--output",
+        str(output_path),
+    ]
+    try:
+        proc = runner_fn(
+            cmd,
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            check=False,
+        )
+    except Exception as e:  # noqa: BLE001 — graceful degradation by design
+        log.warning("pre-cycle synthesis subprocess error: %s", e)
+        return None
+    rc = getattr(proc, "returncode", 1)
+    if rc != 0:
+        log.warning(
+            "pre-cycle synthesis exited %s; stderr: %s",
+            rc,
+            (getattr(proc, "stderr", "") or "")[-300:],
+        )
+        return None
+    if not output_path.exists():
+        log.warning("pre-cycle synthesis returned rc=0 but %s is missing", output_path)
+        return None
+    try:
+        return output_path.read_text(encoding="utf-8")
+    except OSError as e:
+        log.warning("pre-cycle synthesis output unreadable: %s", e)
+        return None
+
+
 def _try_llm_path(
     *,
     problem: Problem,
@@ -374,6 +474,22 @@ def _try_llm_path(
     category = (
         strategy_picker.category_for(problem.problem_id) if strategy_picker is not None else "?"
     )
+
+    # Goal 8: if the rule_edit marker is present in cycle-discipline.md, run
+    # research_synthesis.py before claude_headless and inject the output into
+    # the prompt. This is what makes the meta-loop's rule_edit proposal
+    # channel actually drive behavior (G7 first-run showed the agent ignored
+    # the markdown instruction on its own).
+    pre_cycle_synthesis = None
+    if _pre_cycle_synthesis_enabled():
+        pre_cycle_synthesis = _run_pre_cycle_synthesis(problem)
+        if pre_cycle_synthesis is None:
+            log.info(
+                "pre-cycle synthesis enabled but produced no content "
+                "for P%d; prompt will omit the section",
+                problem.problem_id,
+            )
+
     try:
         prompt = prompt_renderer(
             problem_id=problem.problem_id,
@@ -386,6 +502,7 @@ def _try_llm_path(
             # cycle_id isn't threaded yet — informational only in the prompt
             cycle_id=0,
             attempt_index=attempt_index,
+            pre_cycle_synthesis=pre_cycle_synthesis,
         )
     except Exception as e:
         log.warning("render_prompt failed: %s — falling back", e)
