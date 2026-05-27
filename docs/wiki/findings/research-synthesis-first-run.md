@@ -17,19 +17,65 @@ cites:
 
 # Research-synthesis first unattended run
 
-**Two runs. Two verdicts. Most-important finding has changed: the `rule_edit`
-channel is NOT inert — it influences agent behavior measurably. But the
-orchestrator-side synthesis-script call (G8) didn't fire on G10 because the
-subprocess timeout I set (120s) was too short. The +0.056 findings delta and
-the 6-vs-4 citation gap come from the agent reading the modified rule and
-citing more diligently, not from the synthesis pipeline's actual output.**
+**Three runs across three days; six integration bugs found + fixed. Take 9
+(2026-05-27) is the first where the synthesis pipeline genuinely fired with
+clean content. Verdict: `a_wins=TRUE` (Δfindings=+0.167, citations A=3 vs
+B=1) — but DIRECTIONAL, NOT statistically proven: n=3 problems, synthesis
+fired exactly once (the rest timed out or were skipped), zero score movement.
+Synthesis-when-it-fires makes the agent cite + find more; the efficacy claim
+needs a larger sample and a faster pipeline.**
 
 ## TL;DR by run
 
-| Run | Date | Wiring | Citation gate | a_wins | What was actually measured |
-|---|---|---|---|---|---|
-| G7 first-run | 2026-05-25 | rule_edit only (no orchestrator hook) | read-after-cleanup bug → always 0 | no (gate broke) | Agent ignored rule; both arms cited from prompt-embedded References |
-| G10 second-run | 2026-05-26 | G8 orchestrator hook landed; G9 citation gate fixed | per-arm sidecar (correct counts) | **yes** | Agent in arm A cited more (8 distinct sources vs B's 5); but no `literature-synthesis-*.md` files generated → G8 timed out silently |
+| Run | Date | Wiring | a_wins | What was actually measured |
+|---|---|---|---|---|
+| G7 first-run | 2026-05-25 | rule_edit only; citation gate read-after-cleanup bug | no (gate broke) | Agent ignored rule; both arms cited from prompt-embedded References |
+| G10 take 2 | 2026-05-26 | G8 hook + G9 gate landed, but G8 timed out silently (120s inner cap) | yes | arm A cited more — but from reading the modified RULE, not synthesis output (zero synthesis files generated) |
+| G10 take 9 | 2026-05-27 | all 6 bugs fixed + 2 quality improvements (retrieval floor, skip-terminal) | **yes** | **Synthesis genuinely fired** (7.5KB clean file, all hits ≥41%); arm A Δfindings=+0.167, citations 3 vs 1 |
+
+The arc of the verdict over the three runs:
+- **G7**: "rule_edit is inert" — wrong, but synthesis wasn't firing
+- **take 2**: "a_wins but for the wrong reason" — rule-text influenced the agent; synthesis still didn't fire
+- **take 9**: "a_wins for the right reason, weakly" — synthesis fired with clean content; arm A directionally beat control
+
+## Take 9 details (2026-05-27) — the validated run
+
+- **Commit**: `cbc2b0a` (retrieval floor + skip-terminal on top of all G8/G9 fixes)
+- **n_cycles**: 3 per arm (deliberately small — validation, not statistics)
+- **Verdict**: `a_wins=TRUE`, Δfindings/cycle=+0.167, score_changed_delta=0
+- **Citation gate**: A=3, B=1 (per-arm, from sidecar)
+- **Debug log**: INVOKE 4, SUCCESS 1, SKIP 2 (conquered), timeout 3
+- **Synthesis content**: P1 file 7.5KB, all retrieved hits ≥41% (retrieval floor
+  working — vs take 8 which had 30-33% text-to-SQL/TPU-hardware noise)
+
+### What take 9 proves
+- The full loop runs end-to-end: orchestrator → synthesis subprocess → qmd
+  gather (floored) → claude → file written → file read → prompt injection →
+  inner agent cites. Every link passes real data.
+- The two improvements work: skip gate (`SKIP P2 conquered`), retrieval floor
+  (min hit 41%).
+- arm A (synthesis-on) shows a directional edge over arm B (control).
+
+### What take 9 does NOT prove (honesty layer)
+- **Efficacy**: n=3, synthesis fired ONCE (SUCCESS=1; 3 timeouts, 2 skips).
+  Δfindings=+0.167 = arm A produced 1 finding vs B's 0 — one finding flips it.
+  Noise-level, not significance.
+- **Problem-solving**: score_changed=0 both arms — these are frozen/conquered
+  problems with no headroom. The win is on findings+citations, not scores.
+- **The pipeline is slow**: synthesis exceeds the 600s subprocess cap roughly
+  half the time (P1 once, P3 twice in take 9). It self-heals (cycle runs
+  without the section; no data lost) but wastes ~10 min per timeout. The next
+  optimization is parallelizing the qmd queries in `gather()` and/or caching
+  synthesis per-problem so it isn't re-run on every visit.
+
+### Honest bottom line
+The branch's central mechanism is **working and clean**, and the directional
+signal is positive. But "literature-driven planning improves outcomes" is
+**not yet demonstrated** — that needs (a) a faster pipeline so synthesis
+fires on most cycles, (b) a larger sample, and ideally (c) problems with
+actual score headroom (the frozen subset can't show score movement).
+
+## G10 take-2 details (2026-05-26, historical — synthesis did NOT fire)
 
 The most consequential update over the G7 verdict: **rule edits DO influence
 agent behavior** at the prompt-reading layer. The G7 framing ("rule_edit is
