@@ -133,6 +133,14 @@ def query_qmd(
     return parse_qmd_output(result.stdout, default_collection=collection)
 
 
+# Relevance floor for gathered hits. G10 post-validation showed gather() was
+# feeding the synthesizer low-relevance noise — e.g. a text-to-SQL paper at 30%
+# and a TPU-hardware paper at 30% surfaced for the Thomson sphere-energy
+# problem. Synthesis is only as good as what it retrieves; dropping sub-floor
+# hits keeps the agent's pre-cycle input signal, not noise.
+DEFAULT_MIN_SCORE = 0.40
+
+
 def gather(
     queries: list[str],
     *,
@@ -141,10 +149,14 @@ def gather(
     n_per_query: int = 10,
     top_k_source: int = 50,
     top_k_wiki: int = 20,
+    min_score: float = DEFAULT_MIN_SCORE,
     runner: Runner | None = None,
     qmd_bin: str = "qmd",
 ) -> tuple[list[Hit], list[Hit]]:
     """Run multiple queries against both collections; dedupe by path; top-K each.
+
+    Hits scoring below ``min_score`` are dropped — they're retrieval noise
+    that dilutes the synthesis. Pass ``min_score=0.0`` to keep everything.
 
     Returns ``(source_hits, wiki_hits)`` sorted descending by score.
     """
@@ -154,12 +166,16 @@ def gather(
         for h in query_qmd(
             q, collection=source_collection, n=n_per_query, runner=runner, qmd_bin=qmd_bin
         ):
+            if h.score < min_score:
+                continue
             prior = source_by_path.get(h.path)
             if prior is None or h.score > prior.score:
                 source_by_path[h.path] = h
         for h in query_qmd(
             q, collection=wiki_collection, n=n_per_query, runner=runner, qmd_bin=qmd_bin
         ):
+            if h.score < min_score:
+                continue
             prior = wiki_by_path.get(h.path)
             if prior is None or h.score > prior.score:
                 wiki_by_path[h.path] = h

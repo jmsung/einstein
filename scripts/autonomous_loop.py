@@ -61,6 +61,14 @@ DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
 # instructions alone don't change agent behavior — this is the fix.
 PRE_CYCLE_SYNTHESIS_MARKER = "## Pre-cycle (research-synthesis branch; A/B-promoted)"
 DEFAULT_CYCLE_DISCIPLINE_RULE = _REPO / ".claude" / "rules" / "cycle-discipline.md"
+# Problem statuses where synthesis is pure waste — the agent cannot act on the
+# result regardless of how good the literature is. `conquered` = already #1, no
+# headroom; `retired` = dead problem; `hidden` = arena won't accept a submission.
+# NOTE: `frozen` / `rank-N-frozen` are deliberately NOT here — unlocking a frozen
+# problem with fresh literature is the entire thesis of this branch, so synthesis
+# stays ON for those. Match is a substring test (statuses like
+# `rank-3-frozen-by-proximity-guard` won't accidentally match `conquered`).
+SYNTHESIS_SKIP_STATUS_SUBSTRINGS = ("conquered", "retired", "hidden")
 # G10 first-run diagnostic showed scripts/research_synthesis.py takes longer
 # than 120s in practice (3-5 qmd queries × 2 collections at ~10-30s each,
 # plus claude -p call). Bumping to 600s so synthesis actually has a chance
@@ -552,13 +560,20 @@ def _try_llm_path(
     # the markdown instruction on its own).
     pre_cycle_synthesis = None
     if _pre_cycle_synthesis_enabled():
-        pre_cycle_synthesis = _run_pre_cycle_synthesis(problem)
-        if pre_cycle_synthesis is None:
-            log.info(
-                "pre-cycle synthesis enabled but produced no content "
-                "for P%d; prompt will omit the section",
-                problem.problem_id,
+        status = (problem.status or "").lower()
+        if any(s in status for s in SYNTHESIS_SKIP_STATUS_SUBSTRINGS):
+            # Terminal state — synthesis can't help; skip the 5-7 min cost.
+            _g8_debug_log(
+                f"SKIP P{problem.problem_id} status={problem.status!r} (terminal — no synthesis)"
             )
+        else:
+            pre_cycle_synthesis = _run_pre_cycle_synthesis(problem)
+            if pre_cycle_synthesis is None:
+                log.info(
+                    "pre-cycle synthesis enabled but produced no content "
+                    "for P%d; prompt will omit the section",
+                    problem.problem_id,
+                )
 
     try:
         prompt = prompt_renderer(

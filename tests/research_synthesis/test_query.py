@@ -173,6 +173,39 @@ def test_gather_sorts_by_score_descending() -> None:
     assert [h.path for h in src] == ["B.md", "C.md", "A.md"]
 
 
+def test_gather_drops_sub_floor_hits() -> None:
+    """G10 post-validation: gather() drops hits below min_score (retrieval noise)."""
+    stdout = textwrap.dedent("""\
+        qmd://einstein-wiki-source/relevant.md #aaaaaa
+        Title: relevant
+        Score:  85%
+
+        @@ -1,1 @@ (0 before, 1 after)
+        body
+
+
+        qmd://einstein-wiki-source/noise.md #bbbbbb
+        Title: noise
+        Score:  30%
+
+        @@ -1,1 @@ (0 before, 1 after)
+        body
+
+    """)
+
+    def runner(cmd, env):
+        if "einstein-wiki-source" in cmd:
+            return RunnerResult(returncode=0, stdout=stdout)
+        return RunnerResult(returncode=0, stdout="")
+
+    # Default floor 0.40 drops the 30% hit
+    src, _ = Q.gather(["q"], runner=runner)
+    assert [h.path for h in src] == ["relevant.md"]
+    # min_score=0.0 keeps both
+    src_all, _ = Q.gather(["q"], min_score=0.0, runner=runner)
+    assert sorted(h.path for h in src_all) == ["noise.md", "relevant.md"]
+
+
 def test_gather_top_k_respected() -> None:
     blocks = []
     hashes = ["aaaaaa", "bbbbbb", "cccccc", "dddddd", "eeeeee"]

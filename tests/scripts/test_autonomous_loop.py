@@ -1991,3 +1991,28 @@ def test_run_pre_cycle_synthesis_returns_none_on_runner_exception() -> None:
         raise RuntimeError("boom")
 
     assert al._run_pre_cycle_synthesis(problem, runner=fake_runner) is None
+
+
+def test_synthesis_skips_terminal_status_problems(monkeypatch, tmp_path):
+    """G10 improvement: synthesis is skipped for conquered/retired/hidden problems
+    (no headroom), but runs for frozen problems (the branch's unlock thesis)."""
+    # Enable the marker check
+    monkeypatch.setattr(al, "_pre_cycle_synthesis_enabled", lambda: True)
+
+    invoked: list[int] = []
+    monkeypatch.setattr(
+        al,
+        "_run_pre_cycle_synthesis",
+        lambda problem, **kw: invoked.append(problem.problem_id) or "synthesis-content",
+    )
+
+    def _p(status: str, pid: int) -> "al.Problem":
+        return al.Problem(
+            problem_id=pid, slug="x", tier="A", status=status, score_current=1.0, path=Path("/x")
+        )
+
+    # Verify the gate logic directly via the substring set
+    for terminal in ("conquered", "retired", "hidden", "rank-2-conquered"):
+        assert any(s in terminal.lower() for s in al.SYNTHESIS_SKIP_STATUS_SUBSTRINGS), terminal
+    for live in ("rank-3-frozen", "frozen", "open", "rank-5-frozen-by-proximity-guard"):
+        assert not any(s in live.lower() for s in al.SYNTHESIS_SKIP_STATUS_SUBSTRINGS), live
