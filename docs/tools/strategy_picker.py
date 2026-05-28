@@ -152,6 +152,11 @@ def _category_matches(row_category: str, target: str) -> bool:
     return False
 
 
+# Public alias — the skill bandit (src/einstein/bandit/) reuses this matcher
+# for per-category arm masking rather than re-implementing it.
+category_matches = _category_matches
+
+
 def pick_strategy(
     library_path: Path, *, category: str, avoid_techniques: set[str] | None = None
 ) -> StrategyPick:
