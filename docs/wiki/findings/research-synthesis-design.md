@@ -43,7 +43,7 @@ self-improvement loop.
 
 ## The question
 
-The branch [`js/feat/research-synthesis`](../../../mb/active/js-feat-research-synthesis.md)
+The branch [`js/feat/research-synthesis`](../../../../mb/active/js-feat-research-synthesis.md)
 opens with a concrete asymmetry: `docs/source/` now holds 1256 distilled
 papers and `docs/wiki/` holds 194 synthesis pages, but `mb/<problem>/`
 cycles rarely cite anything from either. The wiki grows; attempt provenance
