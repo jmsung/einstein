@@ -359,6 +359,380 @@ def _bandit_pick(
     return pick, notes
 
 
+# ---------------- Goal 2 (js/feat/parallel-attempts): K-attempt fanout ----------------
+
+
+_PARALLEL_K_DEFAULT = 1
+_PARALLEL_K_MAX_DEFAULT = 8
+_PARALLEL_TIMEOUT_SECONDS_DEFAULT = 600.0
+_PARALLEL_AUTOFILE_TRUTHY = {"1", "true", "yes", "on"}
+
+
+def _parallel_autofile_findings() -> bool:
+    """Goal 6: `EINSTEIN_PARALLEL_AUTOFILE_FINDINGS` (default OFF) opt-in.
+
+    Writing to `docs/wiki/findings/` is high-stakes — mechanical heuristics
+    can't substitute for the failure-is-a-finding rule's actual test
+    (`would a peer have learned from this?`). Default-off; opt-in once
+    Goal 5's A/B verdict says the auto-stubs are worth the noise.
+    """
+    raw = os.environ.get("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", "")
+    return raw.strip().lower() in _PARALLEL_AUTOFILE_TRUTHY
+
+
+def _parallel_timeout_seconds() -> float:
+    """Read `EINSTEIN_PARALLEL_TIMEOUT_SECONDS` (default 600). Goal 4 of
+    js/feat/parallel-attempts.
+
+    Returns positive seconds. Garbage / non-positive env values fall back to
+    the default — never disable the timeout from env (operator must pass
+    None explicitly in code if they want unbounded).
+    """
+    raw = os.environ.get("EINSTEIN_PARALLEL_TIMEOUT_SECONDS")
+    if raw is None or raw.strip() == "":
+        return _PARALLEL_TIMEOUT_SECONDS_DEFAULT
+    try:
+        v = float(raw)
+    except ValueError:
+        return _PARALLEL_TIMEOUT_SECONDS_DEFAULT
+    return v if v > 0 else _PARALLEL_TIMEOUT_SECONDS_DEFAULT
+
+
+def _parallel_k_max() -> int:
+    """Read `EINSTEIN_PARALLEL_K_MAX` (default 8); minimum 1.
+
+    Defensive cap so a typo'd `EINSTEIN_PARALLEL_K=100` can't burn 100×
+    the per-cycle compute. Per branch-file Goal 2 sub-task #3.
+    """
+    try:
+        v = int(os.environ.get("EINSTEIN_PARALLEL_K_MAX", str(_PARALLEL_K_MAX_DEFAULT)))
+    except ValueError:
+        v = _PARALLEL_K_MAX_DEFAULT
+    return max(1, v)
+
+
+def _parallel_k() -> int:
+    """Read `EINSTEIN_PARALLEL_K` (default 1); clamp to `[1, _parallel_k_max()]`.
+
+    Default-1 preserves the single-attempt behavior bit-for-bit. K > 1 routes
+    `inner_attempt` through the K-attempt fanout (`einstein.parallel.run_fanout`).
+    Invalid env value falls back to 1 (don't crash, just don't enable fanout).
+    """
+    raw = os.environ.get("EINSTEIN_PARALLEL_K")
+    if raw is None or raw.strip() == "":
+        return _PARALLEL_K_DEFAULT
+    try:
+        k = int(raw)
+    except ValueError:
+        return _PARALLEL_K_DEFAULT
+    return max(1, min(k, _parallel_k_max()))
+
+
+def _parallel_seed(problem_id: int, attempt_index: int) -> int:
+    """Shared-rng seed for `run_fanout`.
+
+    Reuses `_bandit_seed`'s formula so the parallel-k=1 single-attempt and
+    parallel-k>1 fanout paths produce the same first bandit pick under the
+    same (problem, attempt) — preserves cross-path determinism.
+    """
+    return _bandit_seed(problem_id, attempt_index)
+
+
+def _build_fanout_runner(
+    problem: "Problem",
+    dispatcher,
+    payloads_by_index: dict,
+):
+    """Wrap the EXECUTE step (optimizer_dispatch) as a `run_fanout` runner.
+
+    Side-channel: when a dispatcher returns ok=True, the payload is stored in
+    `payloads_by_index[ctx.attempt_index]` so the post-fanout caller can hand
+    the winner's payload to `_call_auto_submit`. Keeps `AttemptResult`
+    domain-agnostic — payload doesn't belong on the schema.
+    """
+    from einstein.parallel import AttemptContext as _Ctx
+    from einstein.parallel import AttemptResult as _Res
+
+    def _runner(ctx: _Ctx) -> _Res:
+        if ctx.technique is None:
+            return _Res(
+                index=ctx.attempt_index,
+                technique=None,
+                score=None,
+                exit="no-arm",
+                notes="no bandit arm matched",
+                pick_note=None,
+            )
+        try:
+            result = dispatcher(problem_id=problem.problem_id, strategy=ctx.technique)
+        except Exception as e:  # noqa: BLE001 — runner must never raise
+            return _Res(
+                index=ctx.attempt_index,
+                technique=ctx.technique,
+                score=None,
+                exit="dispatch-failed",
+                notes=f"dispatch-raised: {e}",
+                pick_note=ctx.pick_note,
+            )
+        if getattr(result, "error", None) and "no manifest entry" in (result.error or ""):
+            return _Res(
+                index=ctx.attempt_index,
+                technique=ctx.technique,
+                score=None,
+                exit="no-manifest-entry",
+                notes="dispatch: no-manifest-entry",
+                pick_note=ctx.pick_note,
+            )
+        if getattr(result, "ok", False):
+            payload = getattr(result, "payload", None)
+            if payload is not None:
+                payloads_by_index[ctx.attempt_index] = payload
+            return _Res(
+                index=ctx.attempt_index,
+                technique=ctx.technique,
+                score=result.score,
+                exit="ok",
+                notes=f"dispatch={result.optimizer} score={result.score}",
+                pick_note=ctx.pick_note,
+            )
+        return _Res(
+            index=ctx.attempt_index,
+            technique=ctx.technique,
+            score=None,
+            exit="dispatch-failed",
+            notes=f"dispatch-failed: {getattr(result, 'error', 'unknown')}",
+            pick_note=ctx.pick_note,
+        )
+
+    return _runner
+
+
+def _surface_dead_end_finding(
+    fanout_result,
+    problem: "Problem",
+    skill_library: Path,
+    *,
+    today: str | None = None,
+) -> dict | None:
+    """Goal 6: pick the most interesting non-winning attempt (if any) and
+    build the stub finding's (path, content).
+
+    Returns `{"path": rel_path, "content": str, "technique": str}` when a
+    high-signal candidate is found, else None. Writing the file is the
+    caller's job — this function is pure so tests can drive it directly.
+    """
+    try:
+        sys.path.insert(0, str(_REPO / "src"))
+        from einstein.parallel.dead_end_surface import draft_stub, select_top_candidate
+    except ImportError as e:
+        log.warning("dead_end_surface unavailable (%s) — dead-end surfacing skipped", e)
+        return None
+
+    winner = fanout_result.winner
+    if winner is None:
+        return None
+    losers = [
+        a
+        for a in fanout_result.attempts
+        if a.index - 1 != fanout_result.winner_index and a.technique is not None
+    ]
+
+    # Build the arms_tried map from the skill-library (best-effort).
+    arms_tried: dict[str, int] = {}
+    try:
+        sys.path.insert(0, str(_REPO / "docs" / "tools"))
+        import strategy_picker as _sp  # type: ignore[import-not-found]
+
+        for r in _sp.load_skill_library(skill_library):
+            arms_tried[r.technique] = int(r.tried)
+    except Exception as e:  # noqa: BLE001
+        log.debug("could not load skill-library for arms_tried (%s) — using empty map", e)
+
+    candidate = select_top_candidate(losers=losers, winner=winner, arms_tried=arms_tried)
+    if candidate is None:
+        return None
+
+    iso_today = today or dt.date.today().isoformat()
+    rel_path, content = draft_stub(
+        problem=problem, candidate=candidate, winner=winner, today=iso_today
+    )
+    return {"path": rel_path, "content": content, "technique": candidate.technique}
+
+
+def _inner_attempt_fanout(
+    problem: "Problem",
+    *,
+    k: int,
+    dry_run: bool,
+    attempt_index: int,
+    skill_library: Path,
+    dispatcher,
+    auto_submitter,
+) -> dict:
+    """K-attempt fanout path — used when `EINSTEIN_PARALLEL_K > 1`.
+
+    Mirrors `inner_attempt`'s result-dict contract so callers don't branch
+    on parallel_k. Auto-submit is called at most once — only on the winner's
+    payload — so the 1-hour throttle + daily cap are respected.
+
+    `hours` is the SUM of per-attempt runtimes here (sequential model). Goal 4
+    swaps to `max(...)` once real parallelism + per-attempt timeouts land.
+    """
+    log.info(
+        "inner_attempt[fanout] — problem=%s tier=%s status=%s attempt=%d K=%d",
+        problem.display,
+        problem.tier,
+        problem.status,
+        attempt_index,
+        k,
+    )
+
+    # Lazy imports — parallel + bandit live in src/einstein.
+    sys.path.insert(0, str(_REPO / "src"))
+    from einstein.bandit import ThompsonSampler
+    from einstein.parallel import run_fanout
+
+    category = (
+        strategy_picker.category_for(problem.problem_id) if strategy_picker is not None else "?"
+    )
+    bandit = ThompsonSampler(library_path=skill_library)
+    rng = random.Random(_parallel_seed(problem.problem_id, attempt_index))
+
+    payloads_by_index: dict = {}
+    if dispatcher is None and not dry_run:
+        try:
+            from einstein.optimizer_dispatch import dispatch as _real_dispatch
+
+            dispatcher = _real_dispatch
+        except ImportError:
+            log.warning("optimizer_dispatch unavailable — fanout will see all dispatch-failed")
+            dispatcher = None
+    runner = _build_fanout_runner(problem, dispatcher, payloads_by_index)
+
+    timeout_seconds = _parallel_timeout_seconds()
+    fanout_result = run_fanout(
+        problem,
+        k=k,
+        bandit=bandit,
+        category=category,
+        rng=rng,
+        runner=runner,
+        per_attempt_timeout_seconds=timeout_seconds,
+    )
+
+    # Goal 3: chosen_techniques + attempt_rewards stay length-aligned. We
+    # iterate over fanout_result.attempts ONCE so the i-th reward matches
+    # the i-th technique even when no-arm attempts interleave with ok ones.
+    chosen_techniques: list[str] = []
+    attempt_rewards: list[bool] = []
+    winner_attempt_index = fanout_result.winner.index if fanout_result.winner else None
+    for a in fanout_result.attempts:
+        if a.technique is None:
+            continue
+        chosen_techniques.append(a.technique)
+        attempt_rewards.append(a.index == winner_attempt_index and a.exit == "ok")
+
+    notes_parts: list[str] = [
+        "strategy=thompson-bandit-fanout",
+        f"category={category}",
+        f"parallel_k={k}",
+        f"k_completed={fanout_result.k_completed}",
+        f"per_attempt_timeout_s={timeout_seconds:g}",
+    ]
+    # Goal 4: explicit grep marker for partial-K cycles. Branch line 95: "if
+    # k < K attempts complete, still produce a valid cycle row".
+    if fanout_result.k_completed < k:
+        notes_parts.append("partial-K=True")
+    # Per-attempt audit lines (cycle-log notes carries the full K trace).
+    # `score=…` is included for ok attempts so the cycle-log shows both
+    # winner score AND losers' scores per branch line 81.
+    for a in fanout_result.attempts:
+        head = (
+            f"attempt[{a.index}]: {a.pick_note} → exit={a.exit}"
+            if a.pick_note is not None
+            else f"attempt[{a.index}]: exit={a.exit}"
+        )
+        if a.exit == "ok" and a.score is not None:
+            head += f" score={a.score}"
+        notes_parts.append(head)
+
+    start_score = problem.score_current
+    end_score = problem.score_current
+    outcome = "scaffold-no-attempt"
+    runtime_hours = 0.0
+    compute_tag = "none-strategy-only"
+
+    winner = fanout_result.winner
+    if winner is None and chosen_techniques:
+        # K attempts ran but none completed (all timeouts / dispatch-failed)
+        outcome = "fanout-no-completion"
+    elif winner is None and not chosen_techniques:
+        notes_parts.append("(no bandit arms — council needed)")
+    if winner is not None:
+        end_score = winner.score
+        compute_tag = "local-cpu"  # TODO: thread compute_router per attempt
+        runtime_hours = 0.0  # Goal 4 wires per-attempt runtime accounting
+        notes_parts.append(f"winner=attempt[{winner.index}] technique={winner.technique}")
+        if start_score is not None and winner.score is not None and winner.score < start_score:
+            outcome = "improved-local"
+        else:
+            outcome = "no-change"
+
+        # A3: auto-submit only the winner's payload (never K per cycle — that
+        # would burn the 1-hour throttle + daily cap immediately).
+        winner_payload = payloads_by_index.get(winner.index)
+        if winner_payload is not None and winner.score is not None and not dry_run:
+            override = _call_auto_submit(
+                problem=problem,
+                score=winner.score,
+                payload=winner_payload,
+                auto_submitter=auto_submitter,
+                notes_parts=notes_parts,
+            )
+            if override is not None:
+                outcome = override
+
+    # Goal 6: scan non-winning attempts; if any cross the threshold, note
+    # the candidate (always) and write the stub (only when env opt-in).
+    findings_added = 0
+    dead_end = _surface_dead_end_finding(fanout_result, problem, skill_library)
+    if dead_end is not None:
+        notes_parts.append(f"dead_end_candidate={dead_end['technique']}")
+        if _parallel_autofile_findings() and not dry_run:
+            try:
+                target = _REPO / dead_end["path"]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                # Don't clobber a pre-existing finding with the same slug.
+                if not target.exists():
+                    target.write_text(dead_end["content"])
+                    notes_parts.append(f"dead_end_stub_written={dead_end['path']}")
+                    findings_added = 1
+                else:
+                    notes_parts.append(f"dead_end_stub_exists={dead_end['path']}")
+            except OSError as e:
+                log.warning("dead-end stub write failed: %s", e)
+
+    notes = "autonomous_loop inner_attempt — " + "; ".join(notes_parts)
+
+    return {
+        "start_score": start_score if start_score is not None else "none",
+        "end_score": end_score if end_score is not None else "none",
+        "hours": runtime_hours,
+        "compute": compute_tag,
+        "wiki_citations": 0,
+        "findings_added": findings_added,
+        "concepts_added": 0,
+        "author_mix": {"agent": 1, "human": 0, "hybrid": 0},
+        "outcome": outcome,
+        "notes": notes,
+        "chosen_techniques": chosen_techniques,
+        # Goal 3 of js/feat/parallel-attempts: per-pull reward signal so
+        # `_bandit_skill_update` can bump top3 only on the winner's arm.
+        # Index-aligned with `chosen_techniques`.
+        "attempt_rewards": attempt_rewards,
+    }
+
+
 # Ledger for idempotent skill-library updates (Goal 3). Private, under mb/logs/.
 DEFAULT_BANDIT_LEDGER = DEFAULT_MB_DIR / "logs" / "skill-bandit-updates.tsv"
 
@@ -375,12 +749,24 @@ def _bandit_skill_update(
     skill_library: Path = DEFAULT_SKILL_LIBRARY,
     ledger_path: Path = DEFAULT_BANDIT_LEDGER,
 ) -> list:
-    """Goal 3: bump skill-library counts for the bandit's chosen techniques.
+    """Bump skill-library counts for the bandit's chosen techniques.
 
-    `tried += 1` always; `top3 += 1` when the cycle outcome is a reward.
+    Two modes depending on whether `attempt_result["attempt_rewards"]` is set:
+
+    - **Single-attempt path** (no `attempt_rewards` key, K=1 default) — preserves
+      pre-Goal-3 behavior: `tried += 1` for each technique in `chosen_techniques`,
+      `top3 += 1` for each when the cycle outcome is a reward. Ledger key
+      `(cycle, technique)`. Idempotent on re-runs.
+
+    - **Fanout path** (Goal 3 of js/feat/parallel-attempts; `attempt_rewards`
+      is a `list[bool]` of length `len(chosen_techniques)`) — per-pull
+      semantics: `tried += 1` for every arm pulled (including K-pull
+      collisions on the same arm); `top3 += 1` only for the arms whose
+      `attempt_rewards[i]` is True (the winner only, per branch line 81).
+      Ledger key `(cycle, P{i}, technique)` so K same-arm pulls each count.
+
     Best-effort — any failure is logged and swallowed so the cycle never
-    breaks. Idempotent per (cycle_id, technique) inside `update_counts`.
-    Returns the list of UpdateResult (empty when nothing applied).
+    breaks. Returns the list of UpdateResult (empty when nothing applied).
     """
     techniques = attempt_result.get("chosen_techniques") or []
     if not techniques:
@@ -391,9 +777,15 @@ def _bandit_skill_update(
     except ImportError as e:
         log.warning("skill_update unavailable (%s) — bandit learning loop skipped", e)
         return []
-    reached = attempt_result.get("outcome") in _BANDIT_REWARD_OUTCOMES
+
+    rewards = attempt_result.get("attempt_rewards")
+    fanout = isinstance(rewards, list) and len(rewards) == len(techniques)
+    reached_default = attempt_result.get("outcome") in _BANDIT_REWARD_OUTCOMES
+
     results = []
-    for tech in techniques:
+    for i, tech in enumerate(techniques):
+        reached = bool(rewards[i]) if fanout else reached_default
+        pull_index = i if fanout else None
         try:
             results.append(
                 update_counts(
@@ -402,6 +794,7 @@ def _bandit_skill_update(
                     reached_top3=reached,
                     cycle_id=cycle_id,
                     ledger_path=ledger_path,
+                    pull_index=pull_index,
                 )
             )
         except Exception as e:  # noqa: BLE001 — never break the cycle
@@ -916,6 +1309,22 @@ def inner_attempt(
         if llm_result is not None:
             return llm_result
         log.info("LLM path unavailable — using mechanical fallback")
+
+    # Goal 2 (js/feat/parallel-attempts): route to K-attempt fanout when
+    # `EINSTEIN_PARALLEL_K > 1` AND the bandit is enabled (fanout needs the
+    # Thompson sampler for diversification — see Goal 0 research note).
+    # `llm_enabled` excluded: LLM fanout is a separate future concern.
+    parallel_k = _parallel_k()
+    if parallel_k > 1 and _bandit_enabled() and not llm_enabled:
+        return _inner_attempt_fanout(
+            problem,
+            k=parallel_k,
+            dry_run=dry_run,
+            attempt_index=attempt_index,
+            skill_library=skill_library,
+            dispatcher=dispatcher,
+            auto_submitter=auto_submitter,
+        )
 
     log.info(
         "inner_attempt — problem=%s tier=%s status=%s attempt=%d",
@@ -1569,12 +1978,17 @@ def run_queue(
     sentinel_path: Path = DEFAULT_SENTINEL_PATH,
     skip_gates: bool = False,
     llm_enabled: bool | None = None,
+    problem_ids: list[int] | None = None,
 ) -> list[CycleResult]:
     """Walk the queue: one visit (up to N cycles) per distinct problem.
 
     `max_problems` caps the number of problems visited this invocation.
     `max_attempts_per_visit` caps the cycles per visit (Goal 7.4). Set to
     1 to recover the pre-7.4 one-cycle-per-problem behavior.
+
+    `problem_ids` (Goal 5.5 of js/feat/parallel-attempts) restricts the
+    queue to that subset, preserving tier+id order within the subset.
+    None or empty list → no filter (backward-compatible default).
 
     Tracks already-visited problem ids so each iteration picks the next
     un-visited problem.
@@ -1584,9 +1998,12 @@ def run_queue(
     """
     results: list[CycleResult] = []
     done_ids: set[int] = set()
+    id_subset: set[int] | None = set(problem_ids) if problem_ids else None
     for i in range(max_problems):
         problems = load_problems(problems_dir)
         queue = [p for p in build_queue(problems) if p.problem_id not in done_ids]
+        if id_subset is not None:
+            queue = [p for p in queue if p.problem_id in id_subset]
         if not queue:
             log.info("queue exhausted after %d visits", i)
             break

@@ -95,3 +95,11 @@ JSON with `score ≈ 2.6359830849175`.
 - [dead-end-newton-max-strict-tol-lockout-p14](../findings/dead-end-newton-max-strict-tol-lockout-p14.md)
 - [2026-05-24-p14-strict-tol-manifest-wiring](2026-05-24-p14-strict-tol-manifest-wiring.md) — the
   manifest half of the wiring, now answered; this is the CLI half.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"autonomous loop" OR all:"optimizer dispatch" OR all:"`optimizer_dispatch` has no `__main__` — the") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*
