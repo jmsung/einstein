@@ -27,7 +27,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 |---|---|---|---|---|---|---|
 | `parallel-tempering-sa.md` | kissing / Coulomb | 5 | 3 | 2 | 2026-04-25 | 0.60 |
 | `mpmath-ulp-polish.md` | float64-ceiling family | 8 | 5 | 3 | 2026-04-25 | 0.62 |
-| `slsqp-active-pair-polish.md` | packing / kissing | 6 | 4 | 1 | 2026-04-12 | 0.67 |
+| `slsqp-active-pair-polish.md` | packing / kissing | 7 | 4 | 1 | 2026-05-27 | 0.57 |
 | `arena-tolerance-slsqp.md` | packing | 4 | 3 | 1 | 2026-04-12 | 0.75 |
 | `larger-n-cascade.md` | autocorrelation | 4 | 4 | 2 | 2026-04-09 | 1.00 |
 | `cross-resolution-basin-transfer.md` | autocorrelation | 1 | 1 | 1 | 2026-04-08 | 1.00 |
@@ -42,7 +42,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `k-climbing.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |
 | `multistart-with-rotation-lottery.md` | packing | 4 | 1 | 2 | 2026-04-12 | 0.25 |
 | `basin-hopping-multistart.md` | packing / extremal | 4 | 2 | 2 | 2026-04-12 | 0.50 |
-| `uniform-radius-shrink-fallback.md` | packing | 1 | 1 | 0 | 2026-04-09 | 1.00 |
+| `uniform-radius-shrink-fallback.md` | packing | 2 | 1 | 0 | 2026-05-27 | 0.50 |
 | `micro-perturbation-multiscale.md` | kissing | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `cma-es-with-warmstart.md` | exploration | 3 | 1 | 1 | 2026-04-19 | 0.33 |
 | `memetic-tabu-search.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-02 | 0.00 |
