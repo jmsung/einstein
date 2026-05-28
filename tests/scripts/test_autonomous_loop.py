@@ -2276,3 +2276,677 @@ def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypat
         skill_library=lib,
     )
     assert seen.get("bandit_recommendation") is None
+
+
+# ============================================================================
+# Goal 2 (js/feat/parallel-attempts) — EINSTEIN_PARALLEL_K wiring
+# ============================================================================
+
+
+def _scoring_dispatcher(score_by_strategy: dict):
+    """Build a fake dispatcher that returns deterministic scores per strategy.
+
+    Records every call to .calls. score_by_strategy=None ⇒ dispatch-failed."""
+    from types import SimpleNamespace
+
+    calls: list = []
+
+    def _dispatch(problem_id, strategy):
+        calls.append({"problem_id": problem_id, "strategy": strategy})
+        score = score_by_strategy.get(strategy)
+        if score is None:
+            return SimpleNamespace(ok=False, error="strategy unknown", optimizer=None)
+        return SimpleNamespace(
+            ok=True,
+            optimizer=f"opt-{strategy}",
+            score=score,
+            payload={"strategy": strategy, "score": score},
+            runtime_seconds=1.0,
+            error=None,
+        )
+
+    _dispatch.calls = calls  # type: ignore[attr-defined]
+    return _dispatch
+
+
+def test_parallel_k_unset_uses_single_attempt_path(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_PARALLEL_K unset → existing single-attempt code path used.
+
+    Bit-for-bit preservation guard: the notes must NOT contain `parallel_k=`,
+    which is the fanout audit marker. Bandit on by default after promotion."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.delenv("EINSTEIN_PARALLEL_K", raising=False)
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "parallel_k=" not in r["notes"]
+    # chosen_techniques has exactly 0 or 1 entry (single-attempt path)
+    assert len(r["chosen_techniques"]) <= 1
+
+
+def test_parallel_k_eq_1_uses_single_attempt_path(tmp_path: Path, monkeypatch) -> None:
+    """Explicit EINSTEIN_PARALLEL_K=1 same as unset."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "1")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "parallel_k=" not in r["notes"]
+
+
+def test_parallel_k_gt_1_uses_fanout(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_PARALLEL_K=3 + dispatcher → fanout. Notes carry the audit marker."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "parallel_k=3" in r["notes"]
+    assert len(r["chosen_techniques"]) == 3
+    # All chosen techniques come from the two-arm library
+    assert set(r["chosen_techniques"]) <= {"tech-A", "tech-B"}
+
+
+def test_parallel_k_max_clamps_runaway(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_PARALLEL_K=100 EINSTEIN_PARALLEL_K_MAX=4 → only 4 attempts run."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "100")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K_MAX", "4")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "parallel_k=4" in r["notes"]
+    assert len(dispatcher.calls) == 4  # type: ignore[attr-defined]
+
+
+def test_parallel_k_invalid_falls_back_to_1(tmp_path: Path, monkeypatch) -> None:
+    """Garbage in EINSTEIN_PARALLEL_K → K=1 → single-attempt path."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "not-a-number")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "parallel_k=" not in r["notes"]
+
+
+def test_parallel_k_winner_by_min_score(tmp_path: Path, monkeypatch) -> None:
+    """end_score reflects the min-score attempt (codebase minimize convention)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    # tech-A → 0.7, tech-B → 0.3 (winner)
+    dispatcher = _scoring_dispatcher({"tech-A": 0.7, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    # If at least one tech-B attempt drew, winner score = 0.3; else 0.7
+    assert r["end_score"] in (0.3, 0.7)
+    # The note should report a winner technique
+    assert "winner=" in r["notes"]
+
+
+def test_parallel_k_only_submits_winner_payload(tmp_path: Path, monkeypatch) -> None:
+    """K attempts, but auto_submit is called at most once (on the winner)."""
+    from types import SimpleNamespace
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 2.5})  # tech-A always wins
+    submit_calls: list = []
+
+    def fake_submit(problem_id, payload, score, *, triple_verify, **kw):
+        submit_calls.append({"score": score, "payload": payload})
+        return SimpleNamespace(submitted=False, rejected_at_gate="triple-verify-failed")
+
+    al.inner_attempt(
+        p14,
+        dry_run=False,
+        skill_library=lib,
+        dispatcher=dispatcher,
+        auto_submitter=fake_submit,
+    )
+    # Auto-submit was called 0 or 1 times — never K. 0 happens when no attempt
+    # improved over the problem's prior best (p14 starts at 2.6 and the winner
+    # is 0.5 < 2.6, so 1 call expected).
+    assert len(submit_calls) <= 1
+    if submit_calls:
+        # Winner's payload — strategy field matches one we dispatched
+        assert submit_calls[0]["payload"]["strategy"] in ("tech-A", "tech-B")
+
+
+def test_parallel_k_disabled_when_bandit_off(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_BANDIT=0 + EINSTEIN_PARALLEL_K=4 → fanout disabled.
+
+    Fanout needs the bandit; without it, fall back to the manifest path.
+    Defense in depth: a user setting only PARALLEL_K shouldn't accidentally
+    re-enable a bandit they explicitly disabled."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "0")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "parallel_k=" not in r["notes"]
+
+
+def test_parallel_k_no_arm_no_dispatch(tmp_path: Path, monkeypatch) -> None:
+    """Category with no bandit arm → fanout attempts all 'no-arm'; dispatcher
+    never called."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [dict(problem_id=2, slug="autocorr", tier="A", status="open", score=1.0)],
+    )
+    p2 = next(p for p in al.load_problems(pdir) if p.problem_id == 2)
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 5 | 2 | 1 | 2026-01-01 | 0.40 |\n")
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5})
+    r = al.inner_attempt(p2, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "parallel_k=3" in r["notes"]
+    assert len(dispatcher.calls) == 0  # type: ignore[attr-defined]
+    assert r["chosen_techniques"] == []
+
+
+def test_parallel_k_dispatcher_called_per_attempt(tmp_path: Path, monkeypatch) -> None:
+    """Dispatcher receives the per-attempt technique, including duplicates
+    when K-pull samples the same arm multiple times (collisions allowed)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "5")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert len(dispatcher.calls) == 5  # type: ignore[attr-defined]
+    # Each call's `strategy` is one of the two arms
+    for call in dispatcher.calls:  # type: ignore[attr-defined]
+        assert call["strategy"] in ("tech-A", "tech-B")
+
+
+# ============================================================================
+# Goal 3 (js/feat/parallel-attempts) — cycle-log + bandit counters per K attempt
+# ============================================================================
+
+
+def test_bandit_skill_update_fanout_tried_per_pull(tmp_path: Path) -> None:
+    """K=3 distinct techniques + attempt_rewards=[T,F,F] → 3 ledger entries;
+    each tech tried+=1; winner top3+=1; losers top3 unchanged."""
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n"
+        "| `tech-B` | packing | 6 | 1 | 0 | 2026-01-02 | 0.17 |\n"
+        "| `tech-C` | packing | 8 | 3 | 2 | 2026-01-03 | 0.38 |\n"
+    )
+    ledger = tmp_path / "ledger.tsv"
+    result = {
+        "chosen_techniques": ["tech-A", "tech-B", "tech-C"],
+        "attempt_rewards": [True, False, False],
+        "outcome": "improved-local",
+    }
+    out = al._bandit_skill_update(result, 10, skill_library=lib, ledger_path=ledger)
+    assert len(out) == 3
+    assert all(r.applied for r in out)
+    by_tech = {r.technique: r for r in out}
+    # tech-A (winner) — tried 5, top3 3
+    assert (by_tech["tech-A"].tried, by_tech["tech-A"].top3) == (5, 3)
+    # tech-B/C — tried+=1, top3 unchanged
+    assert (by_tech["tech-B"].tried, by_tech["tech-B"].top3) == (7, 1)
+    assert (by_tech["tech-C"].tried, by_tech["tech-C"].top3) == (9, 3)
+    # Ledger has 3 distinct per-pull entries
+    assert len(ledger.read_text().splitlines()) == 3
+
+
+def test_bandit_skill_update_fanout_duplicate_technique_tried_per_pull(tmp_path: Path) -> None:
+    """K=4 same-arm pulls (Thompson collision case) → tried += 4 for that arm.
+
+    K-pull semantics from Goal 0: collisions are informative — when one arm
+    dominates the posterior, K pulls all land on it. Each pull is a trial."""
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    ledger = tmp_path / "ledger.tsv"
+    result = {
+        "chosen_techniques": ["tech-A", "tech-A", "tech-A", "tech-A"],
+        "attempt_rewards": [True, False, False, False],
+        "outcome": "improved-local",
+    }
+    out = al._bandit_skill_update(result, 11, skill_library=lib, ledger_path=ledger)
+    assert len(out) == 4 and all(r.applied for r in out)
+    # 4 ledger entries — per-pull idempotency, NOT cycle-level dedup
+    assert len(ledger.read_text().splitlines()) == 4
+    # tried bumped 4 times (4 → 8); top3 only on pull 0 (2 → 3)
+    final = out[-1]
+    assert final.tried == 8 and final.top3 == 3
+
+
+def test_bandit_skill_update_fanout_no_winner_no_top3(tmp_path: Path) -> None:
+    """All attempts failed → tried bumps for each, top3 doesn't."""
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n"
+        "| `tech-B` | packing | 6 | 1 | 0 | 2026-01-02 | 0.17 |\n"
+    )
+    ledger = tmp_path / "ledger.tsv"
+    result = {
+        "chosen_techniques": ["tech-A", "tech-B"],
+        "attempt_rewards": [False, False],
+        "outcome": "fanout-no-completion",
+    }
+    out = al._bandit_skill_update(result, 12, skill_library=lib, ledger_path=ledger)
+    by_tech = {r.technique: r for r in out}
+    assert by_tech["tech-A"].tried == 5 and by_tech["tech-A"].top3 == 2  # unchanged top3
+    assert by_tech["tech-B"].tried == 7 and by_tech["tech-B"].top3 == 1  # unchanged top3
+
+
+def test_bandit_skill_update_single_attempt_unchanged(tmp_path: Path) -> None:
+    """Without `attempt_rewards`, behavior is exactly pre-Goal-3:
+    every technique in chosen_techniques gets top3+=1 if outcome is a reward."""
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n"
+        "| `tech-B` | packing | 6 | 1 | 0 | 2026-01-02 | 0.17 |\n"
+    )
+    ledger = tmp_path / "ledger.tsv"
+    # Old-style result dict — no attempt_rewards key
+    result = {"chosen_techniques": ["tech-A", "tech-B"], "outcome": "improved-local"}
+    out = al._bandit_skill_update(result, 13, skill_library=lib, ledger_path=ledger)
+    by_tech = {r.technique: r for r in out}
+    # Both techniques get top3 += 1 (legacy "both share cycle outcome" behavior)
+    assert by_tech["tech-A"].top3 == 3
+    assert by_tech["tech-B"].top3 == 2
+    # Ledger uses the legacy cycle-level key (single line per tech, no Pi prefix)
+    lines = ledger.read_text().splitlines()
+    assert all(
+        "\tP" not in line for line in lines
+    ), f"single-attempt path should not write per-pull ledger keys; got {lines}"
+
+
+def test_parallel_k_attempt_rewards_marks_winner_only(tmp_path: Path, monkeypatch) -> None:
+    """inner_attempt result has attempt_rewards aligned with chosen_techniques;
+    exactly one True (the winner), rest False."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})  # tech-B wins
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    rewards = r["attempt_rewards"]
+    assert isinstance(rewards, list)
+    assert len(rewards) == len(r["chosen_techniques"])
+    assert rewards.count(True) == 1
+    # The True index must correspond to the winning technique
+    winner_tech = r["chosen_techniques"][rewards.index(True)]
+    assert winner_tech == "tech-B"
+
+
+def test_parallel_k_notes_carry_per_attempt_score(tmp_path: Path, monkeypatch) -> None:
+    """Fanout notes contain `score=` for ok attempts (winner + losers)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "score=" in r["notes"]
+
+
+def test_parallel_k_skill_update_end_to_end(tmp_path: Path, monkeypatch) -> None:
+    """End-to-end: inner_attempt(K=4) → _bandit_skill_update applies per-pull
+    increments with winner-only top3."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    ledger = tmp_path / "ledger.tsv"
+    out = al._bandit_skill_update(r, 99, skill_library=lib, ledger_path=ledger)
+    # Exactly one winner-top3 increment; all other increments bump tried only
+    top3_bumps = sum(1 for u in out if u.applied and u.top3 is not None)
+    # Per-pull ledger lines == number of applied techniques (≤ K)
+    assert len(ledger.read_text().splitlines()) == top3_bumps
+
+
+# ============================================================================
+# Goal 4 (js/feat/parallel-attempts) — per-attempt timeout + partial-K
+# ============================================================================
+
+
+def test_parallel_timeout_env_default_600(tmp_path: Path, monkeypatch) -> None:
+    """`EINSTEIN_PARALLEL_TIMEOUT_SECONDS` unset → default 600s."""
+    monkeypatch.delenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", raising=False)
+    assert al._parallel_timeout_seconds() == 600.0
+
+
+def test_parallel_timeout_env_override(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "5")
+    assert al._parallel_timeout_seconds() == 5.0
+
+
+def test_parallel_timeout_env_invalid_falls_back(tmp_path: Path, monkeypatch) -> None:
+    """Garbage env → default. Non-positive (≤0) → default (operator must pass
+    None in code to disable; env-driven disable would be a footgun)."""
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "not-a-number")
+    assert al._parallel_timeout_seconds() == 600.0
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "-10")
+    assert al._parallel_timeout_seconds() == 600.0
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "0")
+    assert al._parallel_timeout_seconds() == 600.0
+
+
+def test_parallel_fanout_notes_carry_timeout_marker(tmp_path: Path, monkeypatch) -> None:
+    """Fanout notes include `per_attempt_timeout_s=N` for audit."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "42")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "per_attempt_timeout_s=42" in r["notes"]
+
+
+def test_parallel_fanout_partial_k_note_marker(tmp_path: Path, monkeypatch) -> None:
+    """When some attempts time out, notes carry `partial-K=True`."""
+    import time as _t
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    # 50ms timeout, but dispatcher always sleeps 500ms → all attempts time out
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "0.05")
+
+    def slow_dispatcher(problem_id, strategy):
+        _t.sleep(0.5)
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            ok=True,
+            optimizer=f"opt-{strategy}",
+            score=0.5,
+            payload={"strategy": strategy},
+            runtime_seconds=0.5,
+            error=None,
+        )
+
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=slow_dispatcher)
+    assert "partial-K=True" in r["notes"]
+    assert "k_completed=0" in r["notes"]
+    # Outcome reflects "no winner" (fanout-no-completion)
+    assert r["outcome"] == "fanout-no-completion"
+
+
+def test_parallel_fanout_timeout_bandit_skill_update_tried_not_top3(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """End-to-end: timed-out attempts in attempt_rewards are False → bandit
+    bumps tried but not top3 for those arms."""
+    import time as _t
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "0.05")
+
+    def slow_dispatcher(problem_id, strategy):
+        _t.sleep(0.5)
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            ok=True,
+            optimizer=f"opt-{strategy}",
+            score=0.5,
+            payload={"strategy": strategy},
+            runtime_seconds=0.5,
+            error=None,
+        )
+
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=slow_dispatcher)
+    # All K attempts timed out → no winner; attempt_rewards all False
+    assert all(reward is False for reward in r["attempt_rewards"])
+    assert r["outcome"] == "fanout-no-completion"
+
+    # Confirm the bandit update path agrees
+    ledger = tmp_path / "ledger.tsv"
+    assert "`tech-A` | packing | 5 |" in lib.read_text()
+    assert "`tech-B` | packing | 3 |" in lib.read_text()
+    al._bandit_skill_update(r, 99, skill_library=lib, ledger_path=ledger)
+    # No top3 increments expected
+    txt = lib.read_text()
+    # tech-A goes 5 → 5+N where N is number of A pulls; top3 stays 2
+    for line in txt.splitlines():
+        if "tech-A" in line:
+            # `| 5+N | 2 |` — top3 unchanged at 2
+            assert "| 2 |" in line
+        elif "tech-B" in line:
+            # top3 unchanged at 1
+            assert "| 1 |" in line
+
+
+# ============================================================================
+# Goal 6 (js/feat/parallel-attempts) — thresholded failure-finding for non-winners
+# ============================================================================
+
+
+def test_parallel_autofile_findings_env_default_off(tmp_path: Path, monkeypatch) -> None:
+    """Default-off: writing to docs/wiki/findings/ is high-stakes, opt-in only."""
+    monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
+    assert al._parallel_autofile_findings() is False
+
+
+def test_parallel_autofile_findings_env_truthy_values(tmp_path: Path, monkeypatch) -> None:
+    for v in ("1", "true", "yes", "on", "TRUE", "On"):
+        monkeypatch.setenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", v)
+        assert al._parallel_autofile_findings() is True, f"{v!r} should enable"
+    for v in ("0", "false", "no", "off", "", "garbage"):
+        monkeypatch.setenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", v)
+        assert al._parallel_autofile_findings() is False, f"{v!r} should disable"
+
+
+def test_surface_dead_end_finding_returns_none_when_no_winner(tmp_path: Path) -> None:
+    """No winner → no anchor for basin gap → no surfacing."""
+    from einstein.parallel.fanout import AttemptResult, FanoutResult
+
+    p = al.Problem(
+        problem_id=14,
+        slug="circle-packing-square",
+        tier="A",
+        status="open",
+        score_current=2.6,
+        path=Path("/x"),
+    )
+    # All attempts failed → winner=None
+    attempts = tuple(
+        AttemptResult(
+            index=i,
+            technique=f"tech-{i}",
+            score=None,
+            exit="timeout",
+            notes="",
+            pick_note=None,
+        )
+        for i in range(1, 4)
+    )
+    fr = FanoutResult(attempts=attempts, winner_index=None)
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("")
+    assert al._surface_dead_end_finding(fr, p, lib) is None
+
+
+def test_surface_dead_end_finding_picks_high_signal_loser(tmp_path: Path) -> None:
+    """Winner=0.5, loser=2.0 with under-explored tech → candidate surfaced."""
+    from einstein.parallel.fanout import AttemptResult, FanoutResult
+
+    p = al.Problem(
+        problem_id=14,
+        slug="circle-packing-square",
+        tier="A",
+        status="open",
+        score_current=2.6,
+        path=Path("/x"),
+    )
+    attempts = (
+        AttemptResult(
+            index=1,
+            technique="winner_tech.md",
+            score=0.5,
+            exit="ok",
+            notes="",
+            pick_note="technique=winner_tech.md",
+        ),
+        AttemptResult(
+            index=2,
+            technique="loser_tech.md",
+            score=2.0,
+            exit="ok",
+            notes="",
+            pick_note="technique=loser_tech.md",
+        ),
+    )
+    fr = FanoutResult(attempts=attempts, winner_index=0)
+    # Both arms have low tried-count → high signal
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `winner_tech.md` | packing | 2 | 1 | 0 | 2026-01-01 | 0.50 |\n"
+        "| `loser_tech.md` | packing | 3 | 0 | 1 | 2026-01-02 | 0.00 |\n"
+    )
+    out = al._surface_dead_end_finding(fr, p, lib, today="2026-05-27")
+    assert out is not None
+    assert out["technique"] == "loser_tech.md"
+    assert "loser-tech" in out["path"] or "loser_tech" in out["path"]
+    assert "p14" in out["path"]
+    assert "status: stub" in out["content"]
+
+
+def test_fanout_dead_end_note_added_when_candidate_exists(tmp_path: Path, monkeypatch) -> None:
+    """Notes carry `dead_end_candidate=` whenever a candidate is found,
+    regardless of whether the env flag enables writing."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    # Both library entries have tried <= 10 → high-signal-eligible
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "2")
+    monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
+    # Score gap > 10%: 0.3 vs 2.5 → easy basin gap
+    dispatcher = _scoring_dispatcher({"tech-A": 0.3, "tech-B": 2.5})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    # Notes should report the candidate even though the file wasn't written
+    assert "dead_end_candidate=" in r["notes"]
+    assert "dead_end_stub_written" not in r["notes"]
+    # findings_added stays 0 since we didn't write
+    assert r["findings_added"] == 0
+
+
+def test_fanout_dead_end_default_off_no_file_written(tmp_path: Path, monkeypatch) -> None:
+    """Env unset/off → no file written even when a candidate exists."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "2")
+    monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
+    # Capture findings dir state before
+    findings_dir = al._REPO / "docs" / "wiki" / "findings"
+    before = set(findings_dir.glob("dead-end-*.md")) if findings_dir.exists() else set()
+    dispatcher = _scoring_dispatcher({"tech-A": 0.3, "tech-B": 2.5})
+    al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    after = set(findings_dir.glob("dead-end-*.md")) if findings_dir.exists() else set()
+    # No new dead-end files appeared
+    assert after == before
+
+
+def test_fanout_dead_end_close_basin_no_candidate(tmp_path: Path, monkeypatch) -> None:
+    """Close-basin losers (score gap <10%) don't trigger surfacing."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "2")
+    monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
+    # Score gap 2.5% < 10% threshold → not a basin difference
+    dispatcher = _scoring_dispatcher({"tech-A": 0.40, "tech-B": 0.41})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "dead_end_candidate=" not in r["notes"]
+
+
+# ============================================================================
+# Goal 5.5 — problem_ids subset filter (follow-on to Goal 5 live A/B)
+# ============================================================================
+
+
+def test_run_queue_problem_ids_filters_queue(tmp_path: Path) -> None:
+    """`problem_ids=[2]` restricts the queue to that subset, even when other
+    problems are higher priority by tier+id."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(problem_id=1, slug="alpha", tier="S", status="open", score=1.0),
+            dict(problem_id=2, slug="beta", tier="A", status="open", score=2.0),
+            dict(problem_id=3, slug="gamma", tier="A", status="open", score=3.0),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    results = al.run_queue(
+        problems_dir=pdir,
+        cycle_log=log,
+        max_problems=2,
+        max_attempts_per_visit=1,
+        problem_ids=[2],
+        cycle_runner=lambda *_a: 0,
+        skip_gates=True,
+    )
+    assert {r.problem.problem_id for r in results} == {2}
+
+
+def test_run_queue_problem_ids_preserves_queue_order(tmp_path: Path) -> None:
+    """Visit order within the subset stays tier+id, not the order in problem_ids."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(problem_id=1, slug="alpha", tier="S", status="open", score=1.0),
+            dict(problem_id=2, slug="beta", tier="A", status="open", score=2.0),
+            dict(problem_id=3, slug="gamma", tier="A", status="open", score=3.0),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    # Pass in the reverse order — output should still be S-tier (P1) then A-tier (P3)
+    results = al.run_queue(
+        problems_dir=pdir,
+        cycle_log=log,
+        max_problems=2,
+        max_attempts_per_visit=1,
+        problem_ids=[3, 1],
+        cycle_runner=lambda *_a: 0,
+        skip_gates=True,
+    )
+    visit_order = [r.problem.problem_id for r in results]
+    assert visit_order == [1, 3]
+
+
+def test_run_queue_problem_ids_none_is_backcompat(tmp_path: Path) -> None:
+    """`problem_ids=None` (default) preserves pre-5.5 behavior."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(problem_id=1, slug="alpha", tier="S", status="open", score=1.0),
+            dict(problem_id=2, slug="beta", tier="A", status="open", score=2.0),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    results = al.run_queue(
+        problems_dir=pdir,
+        cycle_log=log,
+        max_problems=2,
+        max_attempts_per_visit=1,
+        cycle_runner=lambda *_a: 0,
+        skip_gates=True,
+    )
+    assert {r.problem.problem_id for r in results} == {1, 2}
+
+
+def test_run_queue_problem_ids_empty_means_no_subset_no_filter(tmp_path: Path) -> None:
+    """Empty list `[]` is treated like `None` (no filter), not like
+    'no problems match'. Guards against an accidental empty-list bug
+    silently producing zero cycles."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [dict(problem_id=1, slug="alpha", tier="S", status="open", score=1.0)],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    results = al.run_queue(
+        problems_dir=pdir,
+        cycle_log=log,
+        max_problems=1,
+        max_attempts_per_visit=1,
+        problem_ids=[],
+        cycle_runner=lambda *_a: 0,
+        skip_gates=True,
+    )
+    assert len(results) == 1

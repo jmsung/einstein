@@ -81,6 +81,19 @@ Edit the plist before reinstalling — common adjustments:
 | `mb/.inner-agent-disabled` | Skips the visit entirely | `touch mb/.inner-agent-disabled` |
 | Bootout | Stop scheduling cycles | `launchctl bootout …` (above) |
 
+## Parallel-attempt fanout (`js/feat/parallel-attempts`)
+
+`inner_attempt` can fan out to K parallel attempts per cycle (different
+seeds × techniques sampled from the Thompson skill bandit; arena verifier
+picks the winner). Default K=1 preserves single-attempt behavior bit-for-bit.
+
+| Env var | Default | Effect |
+|---|---|---|
+| `EINSTEIN_PARALLEL_K` | `1` | Number of attempts per cycle. `>1` routes through `einstein.parallel.run_fanout`. Clamped to `[1, EINSTEIN_PARALLEL_K_MAX]`; invalid values fall back to 1. |
+| `EINSTEIN_PARALLEL_K_MAX` | `8` | Defensive upper cap so a typo'd K can't burn 100× compute. Minimum 1. |
+| `EINSTEIN_PARALLEL_TIMEOUT_SECONDS` | `600` | Per-attempt soft timeout (seconds). Timed-out attempts record `exit=timeout`; the cycle still produces a valid row. Non-positive / garbage values fall back to the default. |
+| `EINSTEIN_PARALLEL_AUTOFILE_FINDINGS` | off | When truthy, auto-files a finding stub for high-signal losers (close-to-winner attempts with novel arms). Default off — mechanical heuristics don't substitute for the failure-is-a-finding test. |
+
 ## Meta-loop (Goal 6 of `js/feat/meta-loop`)
 
 A second plist, `com.einstein.meta-loop.plist`, runs the meta-loop's

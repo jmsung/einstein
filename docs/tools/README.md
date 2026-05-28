@@ -56,6 +56,12 @@ The top-level orchestrator lives one directory up at
 │         `EINSTEIN_BANDIT=0` → manifest strategy_picker path    │
 │       - strategy_picker.pick_strategy still backs the fallback │
 │         + supplies the row pattern reused by bandit updates    │
+│     - K-attempt fanout (when `EINSTEIN_PARALLEL_K > 1`):       │
+│       einstein.parallel.run_fanout draws K independent picks   │
+│       from the same Beta posterior, runs each attempt under a  │
+│       per-attempt soft timeout, and lets the arena verifier    │
+│       pick the winner. Auto-submit fires at most once (winner  │
+│       only). See docs/ops/README.md "Parallel-attempt fanout". │
 │     - [execute step — Phase 5 per-problem integration, TBD]    │
 │     - at cycle end: einstein.bandit.update_counts rewrites the │
 │       chosen technique's row in skill-library.md               │
