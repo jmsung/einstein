@@ -95,15 +95,20 @@ def _tally(records: list[dict]) -> dict[str, dict]:
 
 def _render_markdown(by_source: dict[str, dict], threshold: int) -> tuple[str, int]:
     """Return ``(markdown, n_candidates)``."""
+    # Gate on DISTINCT cycles (len of the deduped cycle list), not total cite
+    # occurrences — the docstring + rendered markdown both promise "cited in N
+    # distinct cycles", and a source cited twice in one cycle (or the same
+    # cycle_id landing in two sidecar records) must not over-count toward the
+    # threshold.
     candidates = sorted(
-        ((src, info) for src, info in by_source.items() if info["count"] >= threshold),
-        key=lambda kv: (-kv[1]["count"], kv[0]),
+        ((src, info) for src, info in by_source.items() if len(info["cycles"]) >= threshold),
+        key=lambda kv: (-len(kv[1]["cycles"]), kv[0]),
     )
     today = _dt.date.today().isoformat()
     lines = [
         "# Promotion candidates",
         "",
-        f"_Updated: {today}. Threshold: ≥{threshold} cite(s) cross-cycle._",
+        f"_Updated: {today}. Threshold: ≥{threshold} distinct cycle(s)._",
         "",
         (
             "Each `docs/source/<file>.md` below has been declared as a "
@@ -121,8 +126,8 @@ def _render_markdown(by_source: dict[str, dict], threshold: int) -> tuple[str, i
         return "\n".join(lines), 0
     lines.extend(
         [
-            "| Source | Count | Cycles | Problems | First cited | Status |",
-            "|---|---|---|---|---|---|",
+            "| Source | Distinct cycles | Total cites | Cycles | Problems | First cited | Status |",
+            "|---|---|---|---|---|---|---|",
         ]
     )
     for src, info in candidates:
@@ -130,7 +135,8 @@ def _render_markdown(by_source: dict[str, dict], threshold: int) -> tuple[str, i
         problems_str = ", ".join(sorted(info["problems"]))
         first = str(info["first_cycle"]) if info["first_cycle"] is not None else "?"
         lines.append(
-            f"| `{src}` | {info['count']} | {cycles_str} | {problems_str} | {first} | proposed |"
+            f"| `{src}` | {len(info['cycles'])} | {info['count']} | {cycles_str} "
+            f"| {problems_str} | {first} | proposed |"
         )
     lines.append("")
     return "\n".join(lines), len(candidates)

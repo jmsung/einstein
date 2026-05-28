@@ -111,3 +111,25 @@ def test_cli_argv_parsing(tmp_path: Path) -> None:
     rc = pc.main(["--jsonl", str(jsonl), "--output", str(out), "--threshold", "2"])
     assert rc == 0
     assert out.exists()
+
+
+def test_gate_uses_distinct_cycles_not_total_cites(tmp_path: Path) -> None:
+    """code-review S1: a source cited twice in ONE cycle must not over-count.
+    Gate is on distinct cycles, not total cite occurrences."""
+    records = [
+        # X cited twice in cycle 1, once in cycle 2 = 3 total cites but only 2 distinct cycles
+        {
+            "cycle_id": 1,
+            "problem": "P14",
+            "cited_sources": ["docs/source/X.md", "docs/source/X.md"],
+        },
+        {"cycle_id": 2, "problem": "P14", "cited_sources": ["docs/source/X.md"]},
+    ]
+    jsonl = _jsonl(tmp_path, records)
+    out = tmp_path / "promotion-candidates.md"
+    # threshold 3: total-cites=3 would (wrongly) pass; distinct-cycles=2 correctly fails
+    n = pc.run(jsonl=jsonl, output=out, threshold=3)
+    assert n == 0, "should NOT promote — only 2 distinct cycles despite 3 total cites"
+    # threshold 2: distinct-cycles=2 passes
+    n2 = pc.run(jsonl=jsonl, output=out, threshold=2)
+    assert n2 == 1

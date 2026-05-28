@@ -184,6 +184,6 @@ def synthesize(
             for h in wiki_hits
         ]
         return LiteratureSynthesis.from_dict(data)
-    except (ValueError, Exception) as e:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001 — any parse/shape failure → graceful None
         log.warning("synthesizer: malformed JSON from claude: %s", e)
         return None
