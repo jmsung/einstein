@@ -2016,3 +2016,79 @@ def test_synthesis_skips_terminal_status_problems(monkeypatch, tmp_path):
         assert any(s in terminal.lower() for s in al.SYNTHESIS_SKIP_STATUS_SUBSTRINGS), terminal
     for live in ("rank-3-frozen", "frozen", "open", "rank-5-frozen-by-proximity-guard"):
         assert not any(s in live.lower() for s in al.SYNTHESIS_SKIP_STATUS_SUBSTRINGS), live
+
+
+# ---------------- Goal 2: skill-bandit routing ----------------
+
+
+def _p14_with_packing_lib(tmp_path: Path):
+    """P14 (category=packing) + a two-arm packing skill-library. Returns
+    (problem, library_path). Shared by the bandit routing tests."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [dict(problem_id=14, slug="circle-packing-square", tier="A", status="open", score=2.6)],
+    )
+    p14 = next(p for p in al.load_problems(pdir) if p.problem_id == 14)
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `tech-A` | packing | 5 | 2 | 1 | 2026-01-01 | 0.40 |\n"
+        "| `tech-B` | packing | 3 | 1 | 2 | 2026-02-01 | 0.33 |\n"
+    )
+    return p14, lib
+
+
+def test_bandit_flag_routes_through_sampler(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_BANDIT=1 → inner_attempt picks via the Thompson bandit, not
+    the manifest strategy_picker."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "strategy=thompson-bandit" in r["notes"]
+    assert "bandit-pick=" in r["notes"]
+    assert set(r["chosen_techniques"]) <= {"tech-A", "tech-B"}
+    assert r["chosen_techniques"]  # non-empty — an arm matched
+
+
+def test_default_unset_uses_manifest_dispatcher(tmp_path: Path, monkeypatch) -> None:
+    """Flag unset → existing strategy_picker path, no bandit involvement."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.delenv("EINSTEIN_BANDIT", raising=False)
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "thompson-bandit" not in r["notes"]
+    assert "prior=" in r["notes"]  # strategy_picker rationale note
+    assert r["chosen_techniques"]
+
+
+def test_bandit_pick_is_deterministic(tmp_path: Path, monkeypatch) -> None:
+    """Same problem + attempt → same seed → same bandit pick."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r1 = al.inner_attempt(p14, dry_run=True, skill_library=lib, attempt_index=1)
+    r2 = al.inner_attempt(p14, dry_run=True, skill_library=lib, attempt_index=1)
+    assert r1["chosen_techniques"] == r2["chosen_techniques"]
+
+
+def test_bandit_honors_avoid_set(tmp_path: Path, monkeypatch) -> None:
+    """Bandit path respects avoid_techniques (multi-attempt visits)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r = al.inner_attempt(
+        p14, dry_run=True, skill_library=lib, attempt_index=2, avoid_techniques={"tech-A"}
+    )
+    assert "tech-A" not in r["chosen_techniques"]
+    assert r["chosen_techniques"] == ["tech-B"]
+
+
+def test_bandit_no_arms_for_category_leaves_strategy_none(tmp_path: Path, monkeypatch) -> None:
+    """Category with no matching arm → no pick, council-needed note."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [dict(problem_id=2, slug="autocorr", tier="A", status="open", score=1.0)],
+    )
+    p2 = next(p for p in al.load_problems(pdir) if p.problem_id == 2)  # category=autocorrelation
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 5 | 2 | 1 | 2026-01-01 | 0.40 |\n")
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r = al.inner_attempt(p2, dry_run=True, skill_library=lib)
+    assert r["chosen_techniques"] == []
+    assert "no bandit arms" in r["notes"]

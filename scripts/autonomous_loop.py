@@ -30,6 +30,7 @@ import argparse
 import datetime as dt
 import logging
 import os
+import random
 import re
 import subprocess
 import sys
@@ -283,6 +284,74 @@ def next_cycle_id(cycle_log: Path) -> int:
             except ValueError:
                 continue
     return max_id + 1
+
+
+# ---------------- Goal 2: skill-bandit strategy pick ----------------
+
+
+_BANDIT_TRUTHY = {"1", "true", "yes", "on"}
+
+
+def _bandit_enabled() -> bool:
+    """True when `EINSTEIN_BANDIT` is set truthy.
+
+    Opt-in: default (unset) keeps the existing manifest dispatcher via
+    `strategy_picker`. The shadow A/B (Goal 5) validates the bandit before
+    it is ever promoted to default.
+    """
+    return os.environ.get("EINSTEIN_BANDIT", "").strip().lower() in _BANDIT_TRUTHY
+
+
+def _bandit_seed(problem_id: int, attempt_index: int) -> int:
+    """Deterministic per (problem, attempt) seed so cycles are reproducible.
+
+    `EINSTEIN_BANDIT_SEED` shifts the whole stream (lets a shadow arm sweep
+    distinct draws without code edits)."""
+    base = 0
+    env = os.environ.get("EINSTEIN_BANDIT_SEED")
+    if env:
+        try:
+            base = int(env)
+        except ValueError:
+            base = 0
+    return base + problem_id * 1_000_003 + attempt_index
+
+
+def _bandit_pick(
+    problem: Problem,
+    *,
+    skill_library: Path,
+    attempt_index: int,
+    avoid_techniques: set[str] | None,
+):
+    """Thompson-sample one technique for `problem`'s category.
+
+    Returns `(PickResult | None, notes_parts)`. None pick → no arm matched
+    the category (caller leaves `chosen_strategy=None`, dispatch falls back to
+    the manifest default — same as strategy_picker's empty pick).
+    """
+    notes: list[str] = ["strategy=thompson-bandit"]
+    category = (
+        strategy_picker.category_for(problem.problem_id) if strategy_picker is not None else "?"
+    )
+    notes.append(f"category={category}")
+    try:
+        sys.path.insert(0, str(_REPO / "src"))
+        from einstein.bandit import ThompsonSampler
+    except ImportError as e:
+        log.warning("einstein.bandit unavailable (%s) — bandit pick skipped", e)
+        notes.append("bandit-unavailable")
+        return None, notes
+
+    sampler = ThompsonSampler(library_path=skill_library)
+    rng = random.Random(_bandit_seed(problem.problem_id, attempt_index))
+    pick = sampler.pick(category, rng=rng, avoid=avoid_techniques or None)
+    if pick is None:
+        notes.append("(no bandit arms — council needed)")
+        return None, notes
+    notes.append(f"bandit-pick={pick.technique}")
+    log.info("  bandit pick: %s (n_arms=%d)", pick.technique, pick.n_arms)
+    return pick, notes
 
 
 # ---------------- inner attempt placeholder ----------------
@@ -785,7 +854,19 @@ def inner_attempt(
     chosen_techniques: list[str] = []
     if attempt_index > 1:
         notes_parts.append(f"attempt={attempt_index}")
-    if strategy_picker is None:
+    if _bandit_enabled():
+        # Goal 2: route technique selection through the Thompson bandit.
+        pick, bandit_notes = _bandit_pick(
+            problem,
+            skill_library=skill_library,
+            attempt_index=attempt_index,
+            avoid_techniques=avoid_techniques,
+        )
+        notes_parts.extend(bandit_notes)
+        if pick is not None:
+            chosen_strategy = pick.technique
+            chosen_techniques.append(pick.technique)
+    elif strategy_picker is None:
         log.warning("strategy_picker not importable — skipping strategy pick")
         notes_parts.append("strategy_picker unavailable")
     else:
