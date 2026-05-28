@@ -86,6 +86,12 @@ def _add_propose(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--mb-logs-dir", type=Path, default=_DEFAULT_MB / "logs")
     p.add_argument("--proposals-root", type=Path, default=_DEFAULT_MB / "proposals")
     p.add_argument(
+        "--prompt-path",
+        type=Path,
+        default=None,
+        help="proposer system-prompt file (default: docs/agent/proposer_prompts/metaharness-v1.md)",
+    )
+    p.add_argument(
         "--output",
         type=Path,
         default=_DEFAULT_MB / "logs" / "meta-loop-report.md",
@@ -102,6 +108,7 @@ def _cmd_propose(args: argparse.Namespace) -> int:
         mb_logs_dir=args.mb_logs_dir,
         proposals_root=args.proposals_root,
         output=args.output,
+        prompt_path=args.prompt_path,
     )
     if result.proposer_error:
         print(f"meta-loop propose — proposer failed: {result.proposer_error}", file=sys.stderr)
@@ -138,7 +145,7 @@ def _cmd_diagnose(args: argparse.Namespace) -> int:
 def _stub(name: str):
     def _fn(args: argparse.Namespace) -> int:  # noqa: ARG001
         raise NotImplementedError(
-            f"meta_loop.{name} — not yet implemented " "(scheduled later in js/feat/meta-loop)"
+            f"meta_loop.{name} — not yet implemented (scheduled later in js/feat/meta-loop)"
         )
 
     return _fn

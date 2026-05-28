@@ -121,6 +121,25 @@ def test_round_trip_to_markdown_and_back() -> None:
     assert p2.created_at == p.created_at
 
 
+def test_proposer_id_round_trips() -> None:
+    p = Proposal(**_minimal_kwargs(proposer_id="thompson-bandit-v0"))
+    text = p.to_markdown()
+    assert "proposer_id: thompson-bandit-v0" in text
+    p2 = Proposal.from_markdown(text)
+    assert p2.proposer_id == "thompson-bandit-v0"
+
+
+def test_proposer_id_defaults_empty_when_absent() -> None:
+    # A proposal constructed without proposer_id defaults to "" on the dataclass.
+    p = Proposal(**_minimal_kwargs())
+    assert p.proposer_id == ""
+    # And a markdown file with no proposer_id key reads back as "".
+    text = p.to_markdown().replace("proposer_id: ''\n", "")
+    assert "proposer_id" not in text
+    p2 = Proposal.from_markdown(text)
+    assert p2.proposer_id == ""
+
+
 def test_from_markdown_rejects_missing_frontmatter() -> None:
     with pytest.raises(ProposalValidationError, match="frontmatter"):
         Proposal.from_markdown("just body, no frontmatter\n")

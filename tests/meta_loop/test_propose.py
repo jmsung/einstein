@@ -59,6 +59,63 @@ def fake_repo(tmp_path: Path) -> dict[str, Path]:
     }
 
 
+# ---------------- externalized prompt (Goal 1) ----------------
+
+
+def test_default_prompt_path_exists() -> None:
+    """The v1 prompt file ships in the repo and is non-empty."""
+    assert propose.DEFAULT_PROMPT_PATH.is_file()
+    assert "meta-loop proposer" in propose.DEFAULT_PROMPT_PATH.read_text()
+
+
+def test_render_prompt_reads_injected_path(tmp_path: Path) -> None:
+    """_render_prompt loads the system prompt from inp.prompt_path, not a constant."""
+    custom = tmp_path / "custom-prompt.md"
+    custom.write_text("SENTINEL CUSTOM PROMPT BODY\n")
+    inp = propose.ProposerInput(
+        report_text="REPORT",
+        cycle_log_path=tmp_path / "cycle.md",
+        skill_library_path=tmp_path / "skill.md",
+        findings_dir=tmp_path / "findings",
+        questions_dir=tmp_path / "questions",
+        mb_logs_dir=tmp_path / "mb-logs",
+        prompt_path=custom,
+    )
+    rendered = propose._render_prompt(inp)
+    assert rendered.startswith("SENTINEL CUSTOM PROMPT BODY")
+    assert "--- DIAGNOSTIC REPORT ---" in rendered
+    assert "REPORT" in rendered
+    assert str(tmp_path / "cycle.md") in rendered  # dynamic suffix still in code
+
+
+def test_render_prompt_default_resolves_to_v1(tmp_path: Path) -> None:
+    """With no override, ProposerInput.prompt_path is the v1 file and renders it."""
+    inp = propose.ProposerInput(
+        report_text="R",
+        cycle_log_path=tmp_path / "c.md",
+        skill_library_path=tmp_path / "s.md",
+        findings_dir=tmp_path / "f",
+        questions_dir=tmp_path / "q",
+        mb_logs_dir=tmp_path / "m",
+    )
+    assert inp.prompt_path == propose.DEFAULT_PROMPT_PATH
+    assert "meta-loop proposer" in propose._render_prompt(inp)
+
+
+def test_run_threads_prompt_path_to_input(fake_repo: dict[str, Path], tmp_path: Path) -> None:
+    """run(prompt_path=X) reaches the proposer via ProposerInput.prompt_path."""
+    custom = tmp_path / "ab-variant.md"
+    custom.write_text("variant\n")
+    seen: dict[str, Path] = {}
+
+    def stub(inp: propose.ProposerInput) -> list[dict]:
+        seen["prompt_path"] = inp.prompt_path
+        return []
+
+    propose.run(proposer=stub, prompt_path=custom, now=_now(), **fake_repo)
+    assert seen["prompt_path"] == custom
+
+
 # ---------------- _extract_json_array ----------------
 
 
@@ -204,6 +261,47 @@ def test_default_regressions_backfilled_when_missing(fake_repo: dict[str, Path])
     assert len(out.written) == 1
     text = out.written[0].read_text()
     assert "none stated" in text  # the placeholder shows up in the audit
+
+
+def test_default_proposer_id_tagged_on_llm_path(fake_repo: dict[str, Path]) -> None:
+    """A raw proposal without proposer_id is tagged metaharness-llm-v1 (the LLM path)."""
+
+    def stub(inp: propose.ProposerInput) -> list[dict]:
+        return [
+            {
+                "type": ProposalType.NEW_QUESTION.value,
+                "target_path": "docs/wiki/questions/2026-05-25-prov.md",
+                "proposed_diff": "---\nbody\n---\n",
+                "evidence_cycles": [49],
+                "predicted_regressions": ["none"],
+                "confidence": "low",
+            },
+        ]
+
+    out = propose.run(proposer=stub, now=_now(), **fake_repo)
+    assert len(out.written) == 1
+    assert f"proposer_id: {propose.DEFAULT_PROPOSER_ID}" in out.written[0].read_text()
+
+
+def test_explicit_proposer_id_survives(fake_repo: dict[str, Path]) -> None:
+    """A raw proposal carrying proposer_id keeps it — a non-LLM proposer's tag wins."""
+
+    def stub(inp: propose.ProposerInput) -> list[dict]:
+        return [
+            {
+                "type": ProposalType.NEW_QUESTION.value,
+                "target_path": "docs/wiki/questions/2026-05-25-bandit.md",
+                "proposed_diff": "---\nbody\n---\n",
+                "evidence_cycles": [49],
+                "predicted_regressions": ["none"],
+                "confidence": "low",
+                "proposer_id": "thompson-bandit-v0",
+            },
+        ]
+
+    out = propose.run(proposer=stub, now=_now(), **fake_repo)
+    assert len(out.written) == 1
+    assert "proposer_id: thompson-bandit-v0" in out.written[0].read_text()
 
 
 def test_proposer_can_override_requires_shadow_default(fake_repo: dict[str, Path]) -> None:

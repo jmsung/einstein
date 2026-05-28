@@ -133,6 +133,7 @@ If/when this branch ships and Goal 6 produces the post-hoc finding (`meta-loop-f
 
 ## See also
 
+- [meta-loop-swap-surface](meta-loop-swap-surface.md) — the `Callable[[ProposerInput], list[dict]]` swap point + `proposer_id` convention; how non-LLM proposers (bandit, evolutionary, heuristic) plug in. Implements "edit the mechanism, not the next candidate" as a pluggable proposer family.
 - Branch: `js/feat/meta-loop` — `mb/active/js-feat-meta-loop.md`
 - Inner loop: `scripts/autonomous_loop.py` (~1374 LOC)
 - Pattern to mirror: `src/einstein/auto_submit.py` (6-gate chain, 342 LOC)
