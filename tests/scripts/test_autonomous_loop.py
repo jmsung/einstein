@@ -2157,3 +2157,101 @@ def test_bandit_note_carries_prior_and_theta(tmp_path: Path, monkeypatch) -> Non
     assert (m.group(2), m.group(3)) in {("3", "4"), ("2", "3")}
     theta = float(m.group(4))
     assert 0.0 <= theta <= 1.0
+
+
+# ---------------- G2 extension: bandit hint flows into LLM path ----------------
+
+
+def test_llm_path_passes_bandit_recommendation_when_enabled(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_BANDIT=1 → _try_llm_path calls prompt_renderer with a
+    bandit_recommendation hint AND the result's notes carry `technique=`
+    (so cross_problem_rediscovery, the G5 metric, can count it)."""
+    from types import SimpleNamespace
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+
+    seen = {}
+
+    def fake_renderer(**kw):
+        seen.update(kw)
+        return "RENDERED PROMPT"
+
+    def fake_headless(prompt, **kw):
+        return SimpleNamespace(
+            ok=True,
+            stdout='{"strategy":"slsqp","score":null,"payload":null,"dead_end_finding":null,"new_questions":[],"wiki_writes":[],"converged":false,"notes":""}',
+        )
+
+    def fake_parse(stdout):
+        return SimpleNamespace(
+            strategy="slsqp",
+            score=None,
+            payload=None,
+            dead_end_finding=None,
+            new_questions=[],
+            wiki_writes=[],
+            converged=False,
+            notes="",
+            cited_sources=[],
+        )
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=fake_headless,
+        prompt_renderer=fake_renderer,
+        response_parser=fake_parse,
+        skill_library=lib,
+    )
+    assert res is not None
+    # renderer got a bandit_recommendation matching the bandit's note() format
+    assert "bandit_recommendation" in seen
+    assert seen["bandit_recommendation"] is not None
+    assert seen["bandit_recommendation"].startswith("technique=")
+    assert "prior=Beta(" in seen["bandit_recommendation"]
+    # cross_problem_rediscovery (G5 metric) parses `technique=` from notes
+    assert "technique=" in res["notes"]
+
+
+def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypatch) -> None:
+    """Flag unset → renderer gets bandit_recommendation=None (no hint)."""
+    from types import SimpleNamespace
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.delenv("EINSTEIN_BANDIT", raising=False)
+    seen = {}
+
+    def fake_renderer(**kw):
+        seen.update(kw)
+        return "P"
+
+    def fake_headless(p, **k):
+        return SimpleNamespace(ok=True, stdout="{}")
+
+    def fake_parse(s):
+        return SimpleNamespace(
+            strategy="x",
+            score=None,
+            payload=None,
+            dead_end_finding=None,
+            new_questions=[],
+            wiki_writes=[],
+            converged=False,
+            notes="",
+            cited_sources=[],
+        )
+
+    al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=fake_headless,
+        prompt_renderer=fake_renderer,
+        response_parser=fake_parse,
+        skill_library=lib,
+    )
+    assert seen.get("bandit_recommendation") is None

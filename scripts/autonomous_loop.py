@@ -631,6 +631,7 @@ def _try_llm_path(
     response_parser: Callable[[str], object] | None = None,
     budget_recorder: Callable[..., object] | None = None,
     budget_path: Path = DEFAULT_BUDGET_PATH,
+    skill_library: Path = DEFAULT_SKILL_LIBRARY,
     timeout_seconds: int = 1800,
 ) -> dict | None:
     """Best-effort LLM cycle (Goal 7.7).
@@ -674,6 +675,20 @@ def _try_llm_path(
         strategy_picker.category_for(problem.problem_id) if strategy_picker is not None else "?"
     )
 
+    # G2 extension (js/feat/skill-bandit): when EINSTEIN_BANDIT=1, sample the
+    # Thompson bandit and pass its pick as a `bandit_recommendation` hint to
+    # the prompt. Without this, the LLM has no bandit signal and arms A/B run
+    # identical cycles — making the live G5 A/B uninformative.
+    bandit_pick = None
+    bandit_notes_parts: list[str] = []
+    if _bandit_enabled():
+        bandit_pick, bandit_notes_parts = _bandit_pick(
+            problem,
+            skill_library=skill_library,
+            attempt_index=attempt_index,
+            avoid_techniques=avoid_techniques,
+        )
+
     # Goal 8: if the rule_edit marker is present in cycle-discipline.md, run
     # research_synthesis.py before claude_headless and inject the output into
     # the prompt. This is what makes the meta-loop's rule_edit proposal
@@ -709,6 +724,7 @@ def _try_llm_path(
             cycle_id=0,
             attempt_index=attempt_index,
             pre_cycle_synthesis=pre_cycle_synthesis,
+            bandit_recommendation=(bandit_pick.note() if bandit_pick is not None else None),
         )
     except Exception as e:
         log.warning("render_prompt failed: %s — falling back", e)
@@ -778,6 +794,10 @@ def _try_llm_path(
     if attempt_index > 1:
         notes_parts.append(f"attempt={attempt_index}")
     notes_parts.append(f"category={category}")
+    # G2 extension: surface bandit's pick in notes so cross_problem_rediscovery
+    # (the G5 A/B metric, parses `technique=` from notes) can count it.
+    if bandit_notes_parts:
+        notes_parts.extend(bandit_notes_parts)
     notes_parts.append(f"llm-strategy={response.strategy}")
     notes_parts.append(f"tokens=in:{input_estimate}/out:{output_estimate}")
 
@@ -888,6 +908,7 @@ def inner_attempt(
             response_parser=response_parser,
             budget_recorder=budget_recorder,
             budget_path=budget_path,
+            skill_library=skill_library,
         )
         if llm_result is not None:
             return llm_result
