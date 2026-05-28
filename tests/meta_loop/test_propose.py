@@ -206,6 +206,47 @@ def test_default_regressions_backfilled_when_missing(fake_repo: dict[str, Path])
     assert "none stated" in text  # the placeholder shows up in the audit
 
 
+def test_default_proposer_id_tagged_on_llm_path(fake_repo: dict[str, Path]) -> None:
+    """A raw proposal without proposer_id is tagged metaharness-llm-v1 (the LLM path)."""
+
+    def stub(inp: propose.ProposerInput) -> list[dict]:
+        return [
+            {
+                "type": ProposalType.NEW_QUESTION.value,
+                "target_path": "docs/wiki/questions/2026-05-25-prov.md",
+                "proposed_diff": "---\nbody\n---\n",
+                "evidence_cycles": [49],
+                "predicted_regressions": ["none"],
+                "confidence": "low",
+            },
+        ]
+
+    out = propose.run(proposer=stub, now=_now(), **fake_repo)
+    assert len(out.written) == 1
+    assert f"proposer_id: {propose.DEFAULT_PROPOSER_ID}" in out.written[0].read_text()
+
+
+def test_explicit_proposer_id_survives(fake_repo: dict[str, Path]) -> None:
+    """A raw proposal carrying proposer_id keeps it — a non-LLM proposer's tag wins."""
+
+    def stub(inp: propose.ProposerInput) -> list[dict]:
+        return [
+            {
+                "type": ProposalType.NEW_QUESTION.value,
+                "target_path": "docs/wiki/questions/2026-05-25-bandit.md",
+                "proposed_diff": "---\nbody\n---\n",
+                "evidence_cycles": [49],
+                "predicted_regressions": ["none"],
+                "confidence": "low",
+                "proposer_id": "thompson-bandit-v0",
+            },
+        ]
+
+    out = propose.run(proposer=stub, now=_now(), **fake_repo)
+    assert len(out.written) == 1
+    assert "proposer_id: thompson-bandit-v0" in out.written[0].read_text()
+
+
 def test_proposer_can_override_requires_shadow_default(fake_repo: dict[str, Path]) -> None:
     """Proposer can set requires_shadow explicitly for any type."""
 

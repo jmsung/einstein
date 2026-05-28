@@ -110,6 +110,9 @@ class Proposal:
     rationale: str = ""
     created_at: dt.datetime = field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
     author: str = "agent"  # mirror wiki-attribution rule
+    proposer_id: str = (
+        ""  # provenance: which proposer emitted this (free-text, see swap-surface finding)
+    )
 
     def __post_init__(self) -> None:
         self._validate()
@@ -163,6 +166,7 @@ class Proposal:
             "requires_shadow": self.requires_shadow,
             "rationale": self.rationale,
             "author": self.author,
+            "proposer_id": self.proposer_id,
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
         }
         yaml_text = yaml.safe_dump(front, sort_keys=False, default_flow_style=False)
@@ -204,6 +208,7 @@ class Proposal:
             requires_shadow=bool(front.get("requires_shadow", False)),
             rationale=front.get("rationale", ""),
             author=front.get("author", "agent"),
+            proposer_id=front.get("proposer_id", ""),
             created_at=created_at,
         )
 

@@ -43,6 +43,11 @@ from .proposals import (
 
 log = logging.getLogger("meta_loop.propose")
 
+# Provenance tag for proposals emitted by the default LLM proposer below.
+# Free-text by convention (`<approach>-<variant>`) — a non-LLM proposer
+# (e.g. a Thompson bandit) sets its own. See the swap-surface finding.
+DEFAULT_PROPOSER_ID = "metaharness-llm-v1"
+
 
 # ---------------- proposer-input contract ----------------
 
@@ -242,6 +247,10 @@ def _coerce_raw(raw: dict, *, now: dt.datetime) -> Proposal:
         _requires_shadow_default(ptype),
     )
     rationale = raw.get("rationale", "")
+    # Provenance: this path is the default LLM proposer. A raw dict may carry
+    # an explicit proposer_id (e.g. a future non-LLM proposer reusing _coerce_raw);
+    # otherwise tag it as the metaharness LLM proposer. See the swap-surface finding.
+    proposer_id = raw.get("proposer_id") or DEFAULT_PROPOSER_ID
 
     pid = make_proposal_id(proposal_type=ptype, target_path=target, now=now)
     return Proposal(
@@ -255,6 +264,7 @@ def _coerce_raw(raw: dict, *, now: dt.datetime) -> Proposal:
         confidence=confidence,
         requires_shadow=bool(requires_shadow),
         rationale=rationale,
+        proposer_id=proposer_id,
         created_at=now,
     )
 
