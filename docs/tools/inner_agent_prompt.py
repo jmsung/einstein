@@ -258,7 +258,8 @@ def render_prompt(
     else:
         synthesis_section = ""
 
-    # G2 extension (js/feat/skill-bandit): when EINSTEIN_BANDIT=1, the
+    # G2 extension (js/feat/skill-bandit): when the bandit is enabled
+    # (default-on as of G5; kill switch is `EINSTEIN_BANDIT=0`), the
     # orchestrator samples the Thompson skill-bandit and threads its
     # recommendation in as a *strong prior* for step 5 (STRATEGY). Treat it
     # like a council vote with quantified evidence — override only with
@@ -267,7 +268,8 @@ def render_prompt(
     if bandit_recommendation and bandit_recommendation.strip():
         bandit_section = (
             "## Bandit recommendation (consider strongly for STRATEGY step)\n\n"
-            "The Thompson skill-bandit (`EINSTEIN_BANDIT=1`) sampled its "
+            "The Thompson skill-bandit (default-on; kill switch "
+            "`EINSTEIN_BANDIT=0`) sampled its "
             "Beta-Bernoulli posterior over `docs/agent/skill-library.md` and "
             "recommends:\n\n"
             f"  {bandit_recommendation.strip()}\n\n"

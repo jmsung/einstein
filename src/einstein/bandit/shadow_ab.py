@@ -107,9 +107,10 @@ def decide(
 
 _SHADOW_LOG_HEADER = (
     "# meta-shadow runs — skill-bandit (A) vs manifest dispatcher (B)\n\n"
-    "Promotion of the bandit to default (`EINSTEIN_BANDIT` on by default) is "
-    "human-gated. This log is the evidence; a `promote: yes` row is a *candidate*, "
-    "not an applied change.\n\n"
+    "Promotion of the bandit to default landed in G5 (commit `04cef74`, "
+    "2026-05-27); the kill switch is `EINSTEIN_BANDIT=0`. Subsequent A/B "
+    "runs logged here are human-gated regression checks; a `promote: yes` "
+    "row remains a *candidate* signal, not an applied change.\n\n"
     "| timestamp_utc | mode | n_cycles | problems | A_findings/cyc | B_findings/cyc "
     "| cross_problem_rediscovery | promote | reason |\n"
     "|---|---|---|---|---|---|---|---|---|\n"

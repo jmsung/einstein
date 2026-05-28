@@ -1,9 +1,10 @@
 """einstein.bandit — Thompson-sampling skill bandit.
 
 Learns which technique to try per problem category from
-`docs/agent/skill-library.md`, replacing the hand-tuned manifest dispatch
-when `EINSTEIN_BANDIT=1`. The first non-LLM proposer for the meta-loop swap
-surface (`proposer_id="thompson-bandit-v0"`).
+`docs/agent/skill-library.md`, replacing the hand-tuned manifest dispatch.
+Default-on as of G5 (commit `04cef74`); kill switch is `EINSTEIN_BANDIT=0`.
+The first non-LLM proposer for the meta-loop swap surface
+(`proposer_id="thompson-bandit-v0"`).
 
 See `docs/wiki/findings/beta-bernoulli-skill-bandit-posterior.md` for why
 the posterior is Beta-Bernoulli.

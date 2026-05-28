@@ -49,9 +49,16 @@ The top-level orchestrator lives one directory up at
 │                                                                │
 │  3. inner_attempt(problem):                                    │
 │     - category_for(problem_id)                                 │
-│     - strategy_picker.pick_strategy(skill_library, category)   │
-│        → (prior, novel) per the autoresearch 1+1 rule          │
+│     - skill pick:                                              │
+│       - default: einstein.bandit.thompson_proposer samples     │
+│         per-category arms from skill-library counts            │
+│         (Beta-Bernoulli posterior). Kill switch:               │
+│         `EINSTEIN_BANDIT=0` → manifest strategy_picker path    │
+│       - strategy_picker.pick_strategy still backs the fallback │
+│         + supplies the row pattern reused by bandit updates    │
 │     - [execute step — Phase 5 per-problem integration, TBD]    │
+│     - at cycle end: einstein.bandit.update_counts rewrites the │
+│       chosen technique's row in skill-library.md               │
 │     - return result dict for the cycle-log row                 │
 │                                                                │
 │  4. append cycle-log row (docs/agent/cycle-log.md)             │
