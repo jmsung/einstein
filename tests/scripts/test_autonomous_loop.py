@@ -13,6 +13,19 @@ sys.path.insert(0, str(_REPO / "scripts"))
 
 import autonomous_loop as al  # noqa: E402
 
+# ---------------- env default ----------------
+
+
+@pytest.fixture(autouse=True)
+def _bandit_off_by_default(monkeypatch):
+    """Bandit was promoted to default-on (`mb/logs/meta-shadow-runs.md` 2026-05-28),
+    but every test in this module was written assuming the manifest-path default.
+    Pin `EINSTEIN_BANDIT=0` per-test so existing tests keep exercising what they
+    were written for; the bandit-routing tests `monkeypatch.setenv("...", "1")`
+    to override this default."""
+    monkeypatch.setenv("EINSTEIN_BANDIT", "0")
+
+
 # ---------------- fixture builder ----------------
 
 
@@ -2049,14 +2062,22 @@ def test_bandit_flag_routes_through_sampler(tmp_path: Path, monkeypatch) -> None
     assert r["chosen_techniques"]  # non-empty — an arm matched
 
 
-def test_default_unset_uses_manifest_dispatcher(tmp_path: Path, monkeypatch) -> None:
-    """Flag unset → existing strategy_picker path, no bandit involvement."""
+def test_kill_switch_uses_manifest_dispatcher(tmp_path: Path, monkeypatch) -> None:
+    """`EINSTEIN_BANDIT=0` → kill switch → manifest strategy_picker path."""
     p14, lib = _p14_with_packing_lib(tmp_path)
-    monkeypatch.delenv("EINSTEIN_BANDIT", raising=False)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "0")
     r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
     assert "thompson-bandit" not in r["notes"]
     assert "prior=" in r["notes"]  # strategy_picker rationale note
     assert r["chosen_techniques"]
+
+
+def test_unset_env_is_bandit_on_now(tmp_path: Path, monkeypatch) -> None:
+    """Default-on after the G5 promotion: `EINSTEIN_BANDIT` unset → bandit ON."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.delenv("EINSTEIN_BANDIT", raising=False)
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "strategy=thompson-bandit" in r["notes"]
 
 
 def test_bandit_pick_is_deterministic(tmp_path: Path, monkeypatch) -> None:
@@ -2217,11 +2238,11 @@ def test_llm_path_passes_bandit_recommendation_when_enabled(tmp_path: Path, monk
 
 
 def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypatch) -> None:
-    """Flag unset → renderer gets bandit_recommendation=None (no hint)."""
+    """Kill switch (`EINSTEIN_BANDIT=0`) → renderer gets bandit_recommendation=None."""
     from types import SimpleNamespace
 
     p14, lib = _p14_with_packing_lib(tmp_path)
-    monkeypatch.delenv("EINSTEIN_BANDIT", raising=False)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "0")
     seen = {}
 
     def fake_renderer(**kw):

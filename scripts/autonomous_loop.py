@@ -289,17 +289,20 @@ def next_cycle_id(cycle_log: Path) -> int:
 # ---------------- Goal 2: skill-bandit strategy pick ----------------
 
 
-_BANDIT_TRUTHY = {"1", "true", "yes", "on"}
+# Kill-switch values. Anything else (unset, "1", "true", garbage) → bandit ON.
+_BANDIT_FALSY = {"0", "false", "no", "off"}
 
 
 def _bandit_enabled() -> bool:
-    """True when `EINSTEIN_BANDIT` is set truthy.
+    """True unless `EINSTEIN_BANDIT` is explicitly falsy (kill switch).
 
-    Opt-in: default (unset) keeps the existing manifest dispatcher via
-    `strategy_picker`. The shadow A/B (Goal 5) validates the bandit before
-    it is ever promoted to default.
+    **Default-on as of 2026-05-28** — promoted after the G5 pilot A/B verdict
+    in `mb/logs/meta-shadow-runs.md` (row 2026-05-28T03:58:03Z): cross-problem
+    rediscovery confirmed, findings/cycle non-worse, kill switch + production
+    audit treated as the operational safety net. Set `EINSTEIN_BANDIT=0` to
+    revert to the manifest `strategy_picker` path.
     """
-    return os.environ.get("EINSTEIN_BANDIT", "").strip().lower() in _BANDIT_TRUTHY
+    return os.environ.get("EINSTEIN_BANDIT", "").strip().lower() not in _BANDIT_FALSY
 
 
 def _bandit_seed(problem_id: int, attempt_index: int) -> int:
