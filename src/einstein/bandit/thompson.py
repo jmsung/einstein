@@ -108,7 +108,7 @@ class PickResult:
 
     def note(self) -> str:
         """`technique=foo prior=Beta(4,2) sampled_θ=0.71` for the cycle-log."""
-        return f"technique={self.technique} prior={self.prior_str} " f"sampled_θ={self.theta:.2f}"
+        return f"technique={self.technique} prior={self.prior_str} sampled_θ={self.theta:.2f}"
 
 
 # ---------------- the sampler ----------------

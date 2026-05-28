@@ -11,15 +11,18 @@ the posterior is Beta-Bernoulli.
 
 from __future__ import annotations
 
+from .proposer import THOMPSON_PROPOSER_ID, thompson_proposer
 from .skill_update import UpdateResult, update_counts
 from .thompson import Arm, PickResult, ThompsonSampler, arm_from_row, sample_arms
 
 __all__ = [
     "Arm",
     "PickResult",
+    "THOMPSON_PROPOSER_ID",
     "ThompsonSampler",
     "UpdateResult",
     "arm_from_row",
     "sample_arms",
+    "thompson_proposer",
     "update_counts",
 ]
