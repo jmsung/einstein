@@ -308,6 +308,85 @@ def test_audit_log_has_header_on_first_write(tmp_path: Path) -> None:
     assert "meta-proposals audit log" in text
     assert "timestamp_utc" in text
     assert "proposal_id" in text
+    assert "proposer_id" in text  # Goal 2: provenance column
+
+
+# ---------------- gate 7 (Goal 2): proposer_id audit column ----------------
+
+
+def test_audit_row_carries_proposer_id(tmp_path: Path) -> None:
+    """An accepted proposal's proposer_id lands in its audit row."""
+    audit = tmp_path / "audit.md"
+    p = Proposal(
+        id="prov-001",
+        type=ProposalType.NEW_QUESTION.value,
+        target_path="docs/wiki/questions/2026-05-25-prov.md",
+        proposed_diff="---\nbody\n---\n",
+        evidence_cycles=[],
+        predicted_regressions=["none"],
+        confidence="low",
+        requires_shadow=False,
+        rationale="t",
+        created_at=_now(),
+        proposer_id="thompson-bandit-v0",
+    )
+    meta_gate.evaluate(p, audit_log=audit, clock=_now)
+    data_rows = [ln for ln in audit.read_text().splitlines() if ln.startswith("| 20")]
+    assert len(data_rows) == 1
+    assert "thompson-bandit-v0" in data_rows[0]
+    assert data_rows[0].count("|") == 9  # 8 columns incl. proposer_id
+
+
+def test_empty_proposer_id_recorded_as_legacy(tmp_path: Path) -> None:
+    """A proposal with no proposer_id (default "") is written as (legacy)."""
+    audit = tmp_path / "audit.md"
+    meta_gate.evaluate(_new_question_proposal(), audit_log=audit, clock=_now)
+    rows = meta_gate._parse_audit_log(audit)
+    assert len(rows) == 1
+    assert rows[0]["proposer_id"] == "(legacy)"
+
+
+def test_legacy_seven_column_row_parses_cleanly(tmp_path: Path) -> None:
+    """A hand-written pre-migration (7-col) row parses; proposer_id → (legacy).
+
+    The new daily-cap / parse logic must not choke on rows written before the
+    proposer_id column existed."""
+    audit = tmp_path / "audit.md"
+    audit.write_text(
+        "# meta-proposals audit log\n\n"
+        "| timestamp_utc | proposal_id | type | target_path | decision | gate | reason |\n"
+        "|---|---|---|---|---|---|---|\n"
+        "| 2026-05-25T09:00:00Z | legacy-001 | rule_edit | .claude/rules/x.md "
+        "| accepted | — | all gates passed |\n"
+    )
+    rows = meta_gate._parse_audit_log(audit)
+    assert len(rows) == 1
+    assert rows[0]["proposal_id"] == "legacy-001"
+    assert rows[0]["decision"] == "accepted"  # index-stable: decision still parses
+    assert rows[0]["proposer_id"] == "(legacy)"
+
+
+def test_daily_cap_counts_legacy_rows(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Daily-cap accounting reads legacy rows correctly (decision at stable index)."""
+    monkeypatch.delenv(meta_gate.KILL_SWITCH_ENV, raising=False)
+    audit = tmp_path / "audit.md"
+    # Two legacy accepts today → a 3rd should hit the cap (default 2).
+    today = _now().strftime("%Y-%m-%dT%H:%M:%SZ")
+    audit.write_text(
+        "# meta-proposals audit log\n\n"
+        "| timestamp_utc | proposal_id | type | target_path | decision | gate | reason |\n"
+        "|---|---|---|---|---|---|---|\n"
+        f"| {today} | legacy-001 | rule_edit | .claude/rules/x.md | accepted | — | ok |\n"
+        f"| {today} | legacy-002 | rule_edit | .claude/rules/y.md | accepted | — | ok |\n"
+    )
+    r = meta_gate.evaluate(
+        _rule_edit_proposal(pid="new-001"),
+        audit_log=audit,
+        clock=_now,
+        shadow_available=True,
+    )
+    assert r.decision == GateDecision.REJECTED
+    assert r.rejected_at_gate == "daily-cap"
 
 
 def test_audit_reason_escapes_pipes(tmp_path: Path) -> None:
@@ -323,5 +402,5 @@ def test_audit_reason_escapes_pipes(tmp_path: Path) -> None:
     # Find the data row
     data_rows = [ln for ln in lines if ln.startswith("| 20")]
     assert len(data_rows) == 1
-    # Should have exactly 7 pipe-separated columns (8 pipes incl. boundaries)
-    assert data_rows[0].count("|") == 8
+    # 8 pipe-separated columns (9 pipes incl. boundaries) after proposer_id added
+    assert data_rows[0].count("|") == 9

@@ -24,6 +24,7 @@ Excluded proposal types (deliberate — see Goal 2 in the branch file):
 from __future__ import annotations
 
 import datetime as dt
+import functools
 import json
 import logging
 import re
@@ -43,6 +44,17 @@ from .proposals import (
 
 log = logging.getLogger("meta_loop.propose")
 
+# Provenance tag for proposals emitted by the default LLM proposer below.
+# Free-text by convention (`<approach>-<variant>`) — a non-LLM proposer
+# (e.g. a Thompson bandit) sets its own. See the swap-surface finding.
+DEFAULT_PROPOSER_ID = "metaharness-llm-v1"
+
+# The proposer's system prompt lives in a file, not in code, so it can be
+# A/B-tested and shadow-compared without a code edit. `run(prompt_path=...)`
+# overrides it; the default is the v1 metaharness prompt. cb root = parents[3].
+_REPO = Path(__file__).resolve().parents[3]
+DEFAULT_PROMPT_PATH = _REPO / "docs" / "agent" / "proposer_prompts" / "metaharness-v1.md"
+
 
 # ---------------- proposer-input contract ----------------
 
@@ -58,6 +70,7 @@ class ProposerInput:
     questions_dir: Path
     mb_logs_dir: Path
     allowed_types: list[str] = field(default_factory=lambda: sorted(proposals.VALID_PROPOSAL_TYPES))
+    prompt_path: Path = DEFAULT_PROMPT_PATH  # system-prompt file the proposer renders
 
 
 @dataclass
@@ -72,49 +85,20 @@ class ProposerOutput:
 # ---------------- the default LLM-backed proposer ----------------
 
 
-_SYSTEM_PROMPT = """\
-You are the meta-loop proposer for the einstein math-agent repo.
+@functools.lru_cache(maxsize=8)
+def _load_system_prompt(prompt_path: Path) -> str:
+    """Read the proposer system prompt from a file (cached per path).
 
-Your job: read the diagnostic report and the raw filesystem (cycle-log, recent
-findings, recent dead-ends, open questions), then emit 0-3 typed proposals
-that would improve the inner autonomous-loop. Quality > quantity. Emit
-nothing rather than fabricate.
+    Externalized from code so prompts can be A/B-tested + shadow-compared
+    without a code edit. The dynamic suffix (filesystem roots) stays in
+    `_render_prompt`; this is only the static system-prompt body.
 
-Rules (HARD constraints):
-
-- Allowed proposal types: rule_edit, manifest_tweak, queue_reorder, new_question.
-  Anything else is rejected by the gate chain.
-- `target_path` must satisfy the type's path policy (see prompt body).
-- Each proposal MUST cite at least one cycle_id in `evidence_cycles` UNLESS
-  it's a `new_question` proposal (which can stand on a finding/dead-end).
-- Each proposal MUST include at least one item in `predicted_regressions`
-  — even "none expected" is a valid prediction; absence is not. (AHE
-  self-attribution discipline.)
-- `proposed_diff` is a unified diff for edits; for `new_question`, the full
-  file body (the question markdown to create at `target_path`).
-
-Output protocol: a single fenced JSON code block whose content is a JSON
-array of zero or more proposal objects. The array may be empty.
-
-JSON schema per proposal:
-
-  {
-    "type": "rule_edit" | "manifest_tweak" | "queue_reorder" | "new_question",
-    "target_path": "<repo-relative path>",
-    "proposed_diff": "<unified diff or new-file body>",
-    "evidence_cycles": [<int>, ...],
-    "expected_metric_delta": {"<metric>": <float>, ...},
-    "predicted_regressions": ["<short prose>", ...],
-    "confidence": "low" | "medium" | "high",
-    "requires_shadow": <bool>,
-    "rationale": "<one paragraph>"
-  }
-
-`id` and `created_at` are assigned by the harness — do not include them.
-
-If you have nothing high-quality to propose, output `[]`. That is the correct
-honest answer most of the time.
-"""
+    Cached per path: an in-process edit to the SAME prompt file won't be
+    re-read. That's fine for the per-invocation CLI and for shadow A/B across
+    *distinct* prompt files (different paths → different cache keys); a future
+    long-lived harness that mutates one prompt file in place must clear this.
+    """
+    return Path(prompt_path).read_text()
 
 
 def _default_proposer(inp: ProposerInput) -> list[dict]:
@@ -155,15 +139,14 @@ def _default_proposer(inp: ProposerInput) -> list[dict]:
     )
     if not result.ok:
         raise RuntimeError(
-            f"proposer LLM call failed: kind={result.error_kind} "
-            f"message={result.error_message!r}"
+            f"proposer LLM call failed: kind={result.error_kind} message={result.error_message!r}"
         )
     return _extract_json_array(result.stdout)
 
 
 def _render_prompt(inp: ProposerInput) -> str:
     return (
-        _SYSTEM_PROMPT
+        _load_system_prompt(inp.prompt_path).rstrip()
         + "\n\n--- DIAGNOSTIC REPORT ---\n"
         + inp.report_text
         + "\n\n--- FILESYSTEM ROOTS YOU MAY READ ---\n"
@@ -242,6 +225,10 @@ def _coerce_raw(raw: dict, *, now: dt.datetime) -> Proposal:
         _requires_shadow_default(ptype),
     )
     rationale = raw.get("rationale", "")
+    # Provenance: this path is the default LLM proposer. A raw dict may carry
+    # an explicit proposer_id (e.g. a future non-LLM proposer reusing _coerce_raw);
+    # otherwise tag it as the metaharness LLM proposer. See the swap-surface finding.
+    proposer_id = raw.get("proposer_id") or DEFAULT_PROPOSER_ID
 
     pid = make_proposal_id(proposal_type=ptype, target_path=target, now=now)
     return Proposal(
@@ -255,6 +242,7 @@ def _coerce_raw(raw: dict, *, now: dt.datetime) -> Proposal:
         confidence=confidence,
         requires_shadow=bool(requires_shadow),
         rationale=rationale,
+        proposer_id=proposer_id,
         created_at=now,
     )
 
@@ -269,6 +257,7 @@ def run(
     proposals_root: Path,
     output: Path,
     proposer: Callable[[ProposerInput], list[dict]] | None = None,
+    prompt_path: Path | None = None,
     now: dt.datetime | None = None,
 ) -> ProposerOutput:
     """Generate a fresh diagnostic, invoke the proposer, write valid proposals.
@@ -277,12 +266,16 @@ def run(
         proposer: injectable for tests; defaults to `_default_proposer` which
             shells out to `claude -p`. The injected callable receives a
             `ProposerInput` and returns a list of raw dict candidates.
+        prompt_path: system-prompt file the default proposer renders;
+            defaults to DEFAULT_PROMPT_PATH (the v1 metaharness prompt).
+            Override to A/B a prompt variant without a code edit.
 
     Returns:
         ProposerOutput — written paths + rejected-raw candidates + error.
     """
     now = now or dt.datetime.now(dt.timezone.utc)
     proposer = proposer or _default_proposer
+    prompt_path = prompt_path or DEFAULT_PROMPT_PATH
 
     report = diagnose.run(
         cycle_log=cycle_log,
@@ -299,6 +292,7 @@ def run(
         findings_dir=findings_dir,
         questions_dir=questions_dir,
         mb_logs_dir=mb_logs_dir,
+        prompt_path=prompt_path,
     )
     try:
         raw_proposals = proposer(inp)

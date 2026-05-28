@@ -55,10 +55,13 @@ DEFAULT_EVIDENCE_THRESHOLDS: dict[str, int] = {
 _REPO = Path(__file__).resolve().parents[3]
 DEFAULT_AUDIT_LOG = _REPO.parent / "mb" / "logs" / "meta-proposals.md"
 
+# `proposer_id` is appended LAST so the migration shim is index-stable: every
+# pre-existing column keeps its position, and a legacy (pre-migration) row —
+# which has no proposer_id cell — is backfilled to "(legacy)" on read.
 AUDIT_LOG_HEADER = (
     "| timestamp_utc | proposal_id | type | target_path | decision | "
-    "gate | reason |\n"
-    "|---|---|---|---|---|---|---|\n"
+    "gate | reason | proposer_id |\n"
+    "|---|---|---|---|---|---|---|---|\n"
 )
 
 
@@ -109,7 +112,8 @@ def _append_audit_row(
         f"| {safe(proposal.target_path)} "
         f"| {decision.value} "
         f"| {safe(gate) or '—'} "
-        f"| {safe(reason)} |\n"
+        f"| {safe(reason)} "
+        f"| {safe(proposal.proposer_id) or '(legacy)'} |\n"
     )
     with audit_log.open("a") as fh:
         fh.write(row)
@@ -131,6 +135,9 @@ def _parse_audit_log(audit_log: Path) -> list[dict]:
             ts = ts.replace(tzinfo=dt.timezone.utc)
         except ValueError:
             continue
+        # Migration shim: new rows carry proposer_id as the 8th column; legacy
+        # (pre-migration) rows have only 7 — backfill those to "(legacy)".
+        proposer_id = parts[7] if len(parts) >= 8 else "(legacy)"
         rows.append(
             {
                 "timestamp": ts,
@@ -138,6 +145,7 @@ def _parse_audit_log(audit_log: Path) -> list[dict]:
                 "type": parts[2],
                 "target_path": parts[3],
                 "decision": parts[4],
+                "proposer_id": proposer_id,
             }
         )
     return rows
