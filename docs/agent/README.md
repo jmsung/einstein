@@ -27,7 +27,8 @@ Without measurement, "self-improvement" is vibes. Four failure modes the agent l
 | Trigger | Update |
 |---|---|
 | `/worktree-done` | Append one row to `cycle-log.md` |
-| `/wiki-learn` | Update technique citation count in `skill-library.md` |
+| Autonomous-loop cycle end | `einstein.bandit.update_counts` rewrites the chosen technique's row in `skill-library.md` (`tried`/`top3`/`finding`/`last_used`/`hit_rate`); idempotent per `(cycle_id, technique)` |
+| `/wiki-learn` | Update technique citation count in `skill-library.md` (manual path) |
 | Weekly Friday | Recompute `metrics.md` |
 | Monthly | Run an ablation; new file in `ablations/` |
 

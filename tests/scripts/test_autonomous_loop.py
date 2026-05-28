@@ -13,6 +13,19 @@ sys.path.insert(0, str(_REPO / "scripts"))
 
 import autonomous_loop as al  # noqa: E402
 
+# ---------------- env default ----------------
+
+
+@pytest.fixture(autouse=True)
+def _bandit_off_by_default(monkeypatch):
+    """Bandit was promoted to default-on (`mb/logs/meta-shadow-runs.md` 2026-05-28),
+    but every test in this module was written assuming the manifest-path default.
+    Pin `EINSTEIN_BANDIT=0` per-test so existing tests keep exercising what they
+    were written for; the bandit-routing tests `monkeypatch.setenv("...", "1")`
+    to override this default."""
+    monkeypatch.setenv("EINSTEIN_BANDIT", "0")
+
+
 # ---------------- fixture builder ----------------
 
 
@@ -2016,3 +2029,250 @@ def test_synthesis_skips_terminal_status_problems(monkeypatch, tmp_path):
         assert any(s in terminal.lower() for s in al.SYNTHESIS_SKIP_STATUS_SUBSTRINGS), terminal
     for live in ("rank-3-frozen", "frozen", "open", "rank-5-frozen-by-proximity-guard"):
         assert not any(s in live.lower() for s in al.SYNTHESIS_SKIP_STATUS_SUBSTRINGS), live
+
+
+# ---------------- Goal 2: skill-bandit routing ----------------
+
+
+def _p14_with_packing_lib(tmp_path: Path):
+    """P14 (category=packing) + a two-arm packing skill-library. Returns
+    (problem, library_path). Shared by the bandit routing tests."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [dict(problem_id=14, slug="circle-packing-square", tier="A", status="open", score=2.6)],
+    )
+    p14 = next(p for p in al.load_problems(pdir) if p.problem_id == 14)
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `tech-A` | packing | 5 | 2 | 1 | 2026-01-01 | 0.40 |\n"
+        "| `tech-B` | packing | 3 | 1 | 2 | 2026-02-01 | 0.33 |\n"
+    )
+    return p14, lib
+
+
+def test_bandit_flag_routes_through_sampler(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_BANDIT=1 → inner_attempt picks via the Thompson bandit, not
+    the manifest strategy_picker."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "strategy=thompson-bandit" in r["notes"]
+    assert "technique=" in r["notes"]  # Goal 4 audit note
+    assert set(r["chosen_techniques"]) <= {"tech-A", "tech-B"}
+    assert r["chosen_techniques"]  # non-empty — an arm matched
+
+
+def test_kill_switch_uses_manifest_dispatcher(tmp_path: Path, monkeypatch) -> None:
+    """`EINSTEIN_BANDIT=0` → kill switch → manifest strategy_picker path."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "0")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "thompson-bandit" not in r["notes"]
+    assert "prior=" in r["notes"]  # strategy_picker rationale note
+    assert r["chosen_techniques"]
+
+
+def test_unset_env_is_bandit_on_now(tmp_path: Path, monkeypatch) -> None:
+    """Default-on after the G5 promotion: `EINSTEIN_BANDIT` unset → bandit ON."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.delenv("EINSTEIN_BANDIT", raising=False)
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "strategy=thompson-bandit" in r["notes"]
+
+
+def test_bandit_pick_is_deterministic(tmp_path: Path, monkeypatch) -> None:
+    """Same problem + attempt → same seed → same bandit pick."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r1 = al.inner_attempt(p14, dry_run=True, skill_library=lib, attempt_index=1)
+    r2 = al.inner_attempt(p14, dry_run=True, skill_library=lib, attempt_index=1)
+    assert r1["chosen_techniques"] == r2["chosen_techniques"]
+
+
+def test_bandit_honors_avoid_set(tmp_path: Path, monkeypatch) -> None:
+    """Bandit path respects avoid_techniques (multi-attempt visits)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r = al.inner_attempt(
+        p14, dry_run=True, skill_library=lib, attempt_index=2, avoid_techniques={"tech-A"}
+    )
+    assert "tech-A" not in r["chosen_techniques"]
+    assert r["chosen_techniques"] == ["tech-B"]
+
+
+def test_bandit_no_arms_for_category_leaves_strategy_none(tmp_path: Path, monkeypatch) -> None:
+    """Category with no matching arm → no pick, council-needed note."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [dict(problem_id=2, slug="autocorr", tier="A", status="open", score=1.0)],
+    )
+    p2 = next(p for p in al.load_problems(pdir) if p.problem_id == 2)  # category=autocorrelation
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 5 | 2 | 1 | 2026-01-01 | 0.40 |\n")
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r = al.inner_attempt(p2, dry_run=True, skill_library=lib)
+    assert r["chosen_techniques"] == []
+    assert "no bandit arms" in r["notes"]
+
+
+# ---------------- Goal 3: bandit skill-library learning loop ----------------
+
+
+def test_bandit_skill_update_bumps_chosen_techniques(tmp_path: Path) -> None:
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    ledger = tmp_path / "ledger.tsv"
+    result = {"chosen_techniques": ["tech-A"], "outcome": "improved-local"}
+    out = al._bandit_skill_update(result, 5, skill_library=lib, ledger_path=ledger)
+    assert len(out) == 1 and out[0].applied
+    assert out[0].tried == 5 and out[0].top3 == 3  # reward outcome bumps top3
+
+
+def test_bandit_skill_update_no_reward_outcome(tmp_path: Path) -> None:
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    ledger = tmp_path / "ledger.tsv"
+    result = {"chosen_techniques": ["tech-A"], "outcome": "no-change"}
+    out = al._bandit_skill_update(result, 6, skill_library=lib, ledger_path=ledger)
+    assert out[0].tried == 5 and out[0].top3 == 2  # tried bumps, top3 does not
+
+
+def test_bandit_skill_update_idempotent(tmp_path: Path) -> None:
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    ledger = tmp_path / "ledger.tsv"
+    result = {"chosen_techniques": ["tech-A"], "outcome": "improved-local"}
+    al._bandit_skill_update(result, 9, skill_library=lib, ledger_path=ledger)
+    snapshot = lib.read_text()
+    again = al._bandit_skill_update(result, 9, skill_library=lib, ledger_path=ledger)
+    assert not again[0].applied
+    assert lib.read_text() == snapshot
+
+
+def test_bandit_skill_update_empty_techniques(tmp_path: Path) -> None:
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    out = al._bandit_skill_update(
+        {"chosen_techniques": [], "outcome": "no-change"}, 1, skill_library=lib
+    )
+    assert out == []
+
+
+# ---------------- Goal 4: bandit choice audit note ----------------
+
+
+def test_bandit_note_carries_prior_and_theta(tmp_path: Path, monkeypatch) -> None:
+    """The cycle-log note must let a reader reconstruct the pick:
+    `technique=… prior=Beta(a,b) sampled_θ=…`."""
+    import re
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    notes = r["notes"]
+    # full audit triplet present and well-formed
+    m = re.search(r"technique=(\S+) prior=Beta\((\d+),(\d+)\) sampled_θ=([01]\.\d+)", notes)
+    assert m is not None, notes
+    assert m.group(1) in {"tech-A", "tech-B"}
+    # tech-A is Beta(2+1, (5-2)+1)=Beta(3,4); tech-B is Beta(1+1,(3-1)+1)=Beta(2,3)
+    assert (m.group(2), m.group(3)) in {("3", "4"), ("2", "3")}
+    theta = float(m.group(4))
+    assert 0.0 <= theta <= 1.0
+
+
+# ---------------- G2 extension: bandit hint flows into LLM path ----------------
+
+
+def test_llm_path_passes_bandit_recommendation_when_enabled(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_BANDIT=1 → _try_llm_path calls prompt_renderer with a
+    bandit_recommendation hint AND the result's notes carry `technique=`
+    (so cross_problem_rediscovery, the G5 metric, can count it)."""
+    from types import SimpleNamespace
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+
+    seen = {}
+
+    def fake_renderer(**kw):
+        seen.update(kw)
+        return "RENDERED PROMPT"
+
+    def fake_headless(prompt, **kw):
+        return SimpleNamespace(
+            ok=True,
+            stdout='{"strategy":"slsqp","score":null,"payload":null,"dead_end_finding":null,"new_questions":[],"wiki_writes":[],"converged":false,"notes":""}',
+        )
+
+    def fake_parse(stdout):
+        return SimpleNamespace(
+            strategy="slsqp",
+            score=None,
+            payload=None,
+            dead_end_finding=None,
+            new_questions=[],
+            wiki_writes=[],
+            converged=False,
+            notes="",
+            cited_sources=[],
+        )
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=fake_headless,
+        prompt_renderer=fake_renderer,
+        response_parser=fake_parse,
+        skill_library=lib,
+    )
+    assert res is not None
+    # renderer got a bandit_recommendation matching the bandit's note() format
+    assert "bandit_recommendation" in seen
+    assert seen["bandit_recommendation"] is not None
+    assert seen["bandit_recommendation"].startswith("technique=")
+    assert "prior=Beta(" in seen["bandit_recommendation"]
+    # cross_problem_rediscovery (G5 metric) parses `technique=` from notes
+    assert "technique=" in res["notes"]
+
+
+def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypatch) -> None:
+    """Kill switch (`EINSTEIN_BANDIT=0`) → renderer gets bandit_recommendation=None."""
+    from types import SimpleNamespace
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "0")
+    seen = {}
+
+    def fake_renderer(**kw):
+        seen.update(kw)
+        return "P"
+
+    def fake_headless(p, **k):
+        return SimpleNamespace(ok=True, stdout="{}")
+
+    def fake_parse(s):
+        return SimpleNamespace(
+            strategy="x",
+            score=None,
+            payload=None,
+            dead_end_finding=None,
+            new_questions=[],
+            wiki_writes=[],
+            converged=False,
+            notes="",
+            cited_sources=[],
+        )
+
+    al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=fake_headless,
+        prompt_renderer=fake_renderer,
+        response_parser=fake_parse,
+        skill_library=lib,
+    )
+    assert seen.get("bandit_recommendation") is None

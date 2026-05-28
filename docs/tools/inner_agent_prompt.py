@@ -172,6 +172,7 @@ def render_prompt(
     out_token_cap: int = 50_000,
     wall_clock_min: int = 30,
     pre_cycle_synthesis: str | None = None,
+    bandit_recommendation: str | None = None,
 ) -> str:
     """Render the prompt body for one inner cycle.
 
@@ -257,11 +258,34 @@ def render_prompt(
     else:
         synthesis_section = ""
 
+    # G2 extension (js/feat/skill-bandit): when the bandit is enabled
+    # (default-on as of G5; kill switch is `EINSTEIN_BANDIT=0`), the
+    # orchestrator samples the Thompson skill-bandit and threads its
+    # recommendation in as a *strong prior* for step 5 (STRATEGY). Treat it
+    # like a council vote with quantified evidence — override only with
+    # explicit reason. Without this section, the LLM has no signal that the
+    # bandit prefers any particular technique for this category.
+    if bandit_recommendation and bandit_recommendation.strip():
+        bandit_section = (
+            "## Bandit recommendation (consider strongly for STRATEGY step)\n\n"
+            "The Thompson skill-bandit (default-on; kill switch "
+            "`EINSTEIN_BANDIT=0`) sampled its "
+            "Beta-Bernoulli posterior over `docs/agent/skill-library.md` and "
+            "recommends:\n\n"
+            f"  {bandit_recommendation.strip()}\n\n"
+            "Treat this as a strong prior for the 1+1 rule's *prior* slot. "
+            "Override only if you can name a concrete reason (e.g. the "
+            "recommended technique has a known dead-end finding for this "
+            "problem). When you override, say why in `notes`.\n"
+        )
+    else:
+        bandit_section = ""
+
     return f"""# Autonomous cycle — problem {problem_label}
 
 Attempt {attempt_index}/3 in this visit. cycle_id={cycle_id}. category={category}.
 
-{synthesis_section}## Your task
+{synthesis_section}{bandit_section}## Your task
 
 Run the math-solving-protocol (`.claude/rules/math-solving-protocol.md`) and
 emit a single JSON object matching the schema at the end. Concretely:
