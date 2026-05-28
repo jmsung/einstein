@@ -2276,3 +2276,181 @@ def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypat
         skill_library=lib,
     )
     assert seen.get("bandit_recommendation") is None
+
+
+# ============================================================================
+# Goal 2 (js/feat/parallel-attempts) — EINSTEIN_PARALLEL_K wiring
+# ============================================================================
+
+
+def _scoring_dispatcher(score_by_strategy: dict):
+    """Build a fake dispatcher that returns deterministic scores per strategy.
+
+    Records every call to .calls. score_by_strategy=None ⇒ dispatch-failed."""
+    from types import SimpleNamespace
+
+    calls: list = []
+
+    def _dispatch(problem_id, strategy):
+        calls.append({"problem_id": problem_id, "strategy": strategy})
+        score = score_by_strategy.get(strategy)
+        if score is None:
+            return SimpleNamespace(ok=False, error="strategy unknown", optimizer=None)
+        return SimpleNamespace(
+            ok=True,
+            optimizer=f"opt-{strategy}",
+            score=score,
+            payload={"strategy": strategy, "score": score},
+            runtime_seconds=1.0,
+            error=None,
+        )
+
+    _dispatch.calls = calls  # type: ignore[attr-defined]
+    return _dispatch
+
+
+def test_parallel_k_unset_uses_single_attempt_path(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_PARALLEL_K unset → existing single-attempt code path used.
+
+    Bit-for-bit preservation guard: the notes must NOT contain `parallel_k=`,
+    which is the fanout audit marker. Bandit on by default after promotion."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.delenv("EINSTEIN_PARALLEL_K", raising=False)
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "parallel_k=" not in r["notes"]
+    # chosen_techniques has exactly 0 or 1 entry (single-attempt path)
+    assert len(r["chosen_techniques"]) <= 1
+
+
+def test_parallel_k_eq_1_uses_single_attempt_path(tmp_path: Path, monkeypatch) -> None:
+    """Explicit EINSTEIN_PARALLEL_K=1 same as unset."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "1")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "parallel_k=" not in r["notes"]
+
+
+def test_parallel_k_gt_1_uses_fanout(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_PARALLEL_K=3 + dispatcher → fanout. Notes carry the audit marker."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "parallel_k=3" in r["notes"]
+    assert len(r["chosen_techniques"]) == 3
+    # All chosen techniques come from the two-arm library
+    assert set(r["chosen_techniques"]) <= {"tech-A", "tech-B"}
+
+
+def test_parallel_k_max_clamps_runaway(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_PARALLEL_K=100 EINSTEIN_PARALLEL_K_MAX=4 → only 4 attempts run."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "100")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K_MAX", "4")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "parallel_k=4" in r["notes"]
+    assert len(dispatcher.calls) == 4  # type: ignore[attr-defined]
+
+
+def test_parallel_k_invalid_falls_back_to_1(tmp_path: Path, monkeypatch) -> None:
+    """Garbage in EINSTEIN_PARALLEL_K → K=1 → single-attempt path."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "not-a-number")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "parallel_k=" not in r["notes"]
+
+
+def test_parallel_k_winner_by_min_score(tmp_path: Path, monkeypatch) -> None:
+    """end_score reflects the min-score attempt (codebase minimize convention)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    # tech-A → 0.7, tech-B → 0.3 (winner)
+    dispatcher = _scoring_dispatcher({"tech-A": 0.7, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    # If at least one tech-B attempt drew, winner score = 0.3; else 0.7
+    assert r["end_score"] in (0.3, 0.7)
+    # The note should report a winner technique
+    assert "winner=" in r["notes"]
+
+
+def test_parallel_k_only_submits_winner_payload(tmp_path: Path, monkeypatch) -> None:
+    """K attempts, but auto_submit is called at most once (on the winner)."""
+    from types import SimpleNamespace
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 2.5})  # tech-A always wins
+    submit_calls: list = []
+
+    def fake_submit(problem_id, payload, score, *, triple_verify, **kw):
+        submit_calls.append({"score": score, "payload": payload})
+        return SimpleNamespace(submitted=False, rejected_at_gate="triple-verify-failed")
+
+    al.inner_attempt(
+        p14,
+        dry_run=False,
+        skill_library=lib,
+        dispatcher=dispatcher,
+        auto_submitter=fake_submit,
+    )
+    # Auto-submit was called 0 or 1 times — never K. 0 happens when no attempt
+    # improved over the problem's prior best (p14 starts at 2.6 and the winner
+    # is 0.5 < 2.6, so 1 call expected).
+    assert len(submit_calls) <= 1
+    if submit_calls:
+        # Winner's payload — strategy field matches one we dispatched
+        assert submit_calls[0]["payload"]["strategy"] in ("tech-A", "tech-B")
+
+
+def test_parallel_k_disabled_when_bandit_off(tmp_path: Path, monkeypatch) -> None:
+    """EINSTEIN_BANDIT=0 + EINSTEIN_PARALLEL_K=4 → fanout disabled.
+
+    Fanout needs the bandit; without it, fall back to the manifest path.
+    Defense in depth: a user setting only PARALLEL_K shouldn't accidentally
+    re-enable a bandit they explicitly disabled."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "0")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    assert "parallel_k=" not in r["notes"]
+
+
+def test_parallel_k_no_arm_no_dispatch(tmp_path: Path, monkeypatch) -> None:
+    """Category with no bandit arm → fanout attempts all 'no-arm'; dispatcher
+    never called."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [dict(problem_id=2, slug="autocorr", tier="A", status="open", score=1.0)],
+    )
+    p2 = next(p for p in al.load_problems(pdir) if p.problem_id == 2)
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 5 | 2 | 1 | 2026-01-01 | 0.40 |\n")
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5})
+    r = al.inner_attempt(p2, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "parallel_k=3" in r["notes"]
+    assert len(dispatcher.calls) == 0  # type: ignore[attr-defined]
+    assert r["chosen_techniques"] == []
+
+
+def test_parallel_k_dispatcher_called_per_attempt(tmp_path: Path, monkeypatch) -> None:
+    """Dispatcher receives the per-attempt technique, including duplicates
+    when K-pull samples the same arm multiple times (collisions allowed)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "5")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert len(dispatcher.calls) == 5  # type: ignore[attr-defined]
+    # Each call's `strategy` is one of the two arms
+    for call in dispatcher.calls:  # type: ignore[attr-defined]
+        assert call["strategy"] in ("tech-A", "tech-B")

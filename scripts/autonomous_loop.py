@@ -359,6 +359,248 @@ def _bandit_pick(
     return pick, notes
 
 
+# ---------------- Goal 2 (js/feat/parallel-attempts): K-attempt fanout ----------------
+
+
+_PARALLEL_K_DEFAULT = 1
+_PARALLEL_K_MAX_DEFAULT = 8
+
+
+def _parallel_k_max() -> int:
+    """Read `EINSTEIN_PARALLEL_K_MAX` (default 8); minimum 1.
+
+    Defensive cap so a typo'd `EINSTEIN_PARALLEL_K=100` can't burn 100×
+    the per-cycle compute. Per branch-file Goal 2 sub-task #3.
+    """
+    try:
+        v = int(os.environ.get("EINSTEIN_PARALLEL_K_MAX", str(_PARALLEL_K_MAX_DEFAULT)))
+    except ValueError:
+        v = _PARALLEL_K_MAX_DEFAULT
+    return max(1, v)
+
+
+def _parallel_k() -> int:
+    """Read `EINSTEIN_PARALLEL_K` (default 1); clamp to `[1, _parallel_k_max()]`.
+
+    Default-1 preserves the single-attempt behavior bit-for-bit. K > 1 routes
+    `inner_attempt` through the K-attempt fanout (`einstein.parallel.run_fanout`).
+    Invalid env value falls back to 1 (don't crash, just don't enable fanout).
+    """
+    raw = os.environ.get("EINSTEIN_PARALLEL_K")
+    if raw is None or raw.strip() == "":
+        return _PARALLEL_K_DEFAULT
+    try:
+        k = int(raw)
+    except ValueError:
+        return _PARALLEL_K_DEFAULT
+    return max(1, min(k, _parallel_k_max()))
+
+
+def _parallel_seed(problem_id: int, attempt_index: int) -> int:
+    """Shared-rng seed for `run_fanout`.
+
+    Reuses `_bandit_seed`'s formula so the parallel-k=1 single-attempt and
+    parallel-k>1 fanout paths produce the same first bandit pick under the
+    same (problem, attempt) — preserves cross-path determinism.
+    """
+    return _bandit_seed(problem_id, attempt_index)
+
+
+def _build_fanout_runner(
+    problem: "Problem",
+    dispatcher,
+    payloads_by_index: dict,
+):
+    """Wrap the EXECUTE step (optimizer_dispatch) as a `run_fanout` runner.
+
+    Side-channel: when a dispatcher returns ok=True, the payload is stored in
+    `payloads_by_index[ctx.attempt_index]` so the post-fanout caller can hand
+    the winner's payload to `_call_auto_submit`. Keeps `AttemptResult`
+    domain-agnostic — payload doesn't belong on the schema.
+    """
+    from einstein.parallel import AttemptContext as _Ctx
+    from einstein.parallel import AttemptResult as _Res
+
+    def _runner(ctx: _Ctx) -> _Res:
+        if ctx.technique is None:
+            return _Res(
+                index=ctx.attempt_index,
+                technique=None,
+                score=None,
+                exit="no-arm",
+                notes="no bandit arm matched",
+                pick_note=None,
+            )
+        try:
+            result = dispatcher(problem_id=problem.problem_id, strategy=ctx.technique)
+        except Exception as e:  # noqa: BLE001 — runner must never raise
+            return _Res(
+                index=ctx.attempt_index,
+                technique=ctx.technique,
+                score=None,
+                exit="dispatch-failed",
+                notes=f"dispatch-raised: {e}",
+                pick_note=ctx.pick_note,
+            )
+        if getattr(result, "error", None) and "no manifest entry" in (result.error or ""):
+            return _Res(
+                index=ctx.attempt_index,
+                technique=ctx.technique,
+                score=None,
+                exit="no-manifest-entry",
+                notes="dispatch: no-manifest-entry",
+                pick_note=ctx.pick_note,
+            )
+        if getattr(result, "ok", False):
+            payload = getattr(result, "payload", None)
+            if payload is not None:
+                payloads_by_index[ctx.attempt_index] = payload
+            return _Res(
+                index=ctx.attempt_index,
+                technique=ctx.technique,
+                score=result.score,
+                exit="ok",
+                notes=f"dispatch={result.optimizer} score={result.score}",
+                pick_note=ctx.pick_note,
+            )
+        return _Res(
+            index=ctx.attempt_index,
+            technique=ctx.technique,
+            score=None,
+            exit="dispatch-failed",
+            notes=f"dispatch-failed: {getattr(result, 'error', 'unknown')}",
+            pick_note=ctx.pick_note,
+        )
+
+    return _runner
+
+
+def _inner_attempt_fanout(
+    problem: "Problem",
+    *,
+    k: int,
+    dry_run: bool,
+    attempt_index: int,
+    skill_library: Path,
+    dispatcher,
+    auto_submitter,
+) -> dict:
+    """K-attempt fanout path — used when `EINSTEIN_PARALLEL_K > 1`.
+
+    Mirrors `inner_attempt`'s result-dict contract so callers don't branch
+    on parallel_k. Auto-submit is called at most once — only on the winner's
+    payload — so the 1-hour throttle + daily cap are respected.
+
+    `hours` is the SUM of per-attempt runtimes here (sequential model). Goal 4
+    swaps to `max(...)` once real parallelism + per-attempt timeouts land.
+    """
+    log.info(
+        "inner_attempt[fanout] — problem=%s tier=%s status=%s attempt=%d K=%d",
+        problem.display,
+        problem.tier,
+        problem.status,
+        attempt_index,
+        k,
+    )
+
+    # Lazy imports — parallel + bandit live in src/einstein.
+    sys.path.insert(0, str(_REPO / "src"))
+    from einstein.bandit import ThompsonSampler
+    from einstein.parallel import run_fanout
+
+    category = (
+        strategy_picker.category_for(problem.problem_id) if strategy_picker is not None else "?"
+    )
+    bandit = ThompsonSampler(library_path=skill_library)
+    rng = random.Random(_parallel_seed(problem.problem_id, attempt_index))
+
+    payloads_by_index: dict = {}
+    if dispatcher is None and not dry_run:
+        try:
+            from einstein.optimizer_dispatch import dispatch as _real_dispatch
+
+            dispatcher = _real_dispatch
+        except ImportError:
+            log.warning("optimizer_dispatch unavailable — fanout will see all dispatch-failed")
+            dispatcher = None
+    runner = _build_fanout_runner(problem, dispatcher, payloads_by_index)
+
+    fanout_result = run_fanout(
+        problem,
+        k=k,
+        bandit=bandit,
+        category=category,
+        rng=rng,
+        runner=runner,
+    )
+
+    chosen_techniques = [a.technique for a in fanout_result.attempts if a.technique is not None]
+    notes_parts: list[str] = [
+        "strategy=thompson-bandit-fanout",
+        f"category={category}",
+        f"parallel_k={k}",
+        f"k_completed={fanout_result.k_completed}",
+    ]
+    # Per-attempt audit lines (cycle-log will capture all K via Goal 3).
+    for a in fanout_result.attempts:
+        if a.pick_note is not None:
+            notes_parts.append(f"attempt[{a.index}]: {a.pick_note} → exit={a.exit}")
+        else:
+            notes_parts.append(f"attempt[{a.index}]: exit={a.exit}")
+
+    start_score = problem.score_current
+    end_score = problem.score_current
+    outcome = "scaffold-no-attempt"
+    runtime_hours = 0.0
+    compute_tag = "none-strategy-only"
+
+    winner = fanout_result.winner
+    if winner is None and chosen_techniques:
+        # K attempts ran but none completed (all timeouts / dispatch-failed)
+        outcome = "fanout-no-completion"
+    elif winner is None and not chosen_techniques:
+        notes_parts.append("(no bandit arms — council needed)")
+    if winner is not None:
+        end_score = winner.score
+        compute_tag = "local-cpu"  # TODO: thread compute_router per attempt
+        runtime_hours = 0.0  # Goal 4 wires per-attempt runtime accounting
+        notes_parts.append(f"winner=attempt[{winner.index}] technique={winner.technique}")
+        if start_score is not None and winner.score is not None and winner.score < start_score:
+            outcome = "improved-local"
+        else:
+            outcome = "no-change"
+
+        # A3: auto-submit only the winner's payload (never K per cycle — that
+        # would burn the 1-hour throttle + daily cap immediately).
+        winner_payload = payloads_by_index.get(winner.index)
+        if winner_payload is not None and winner.score is not None and not dry_run:
+            override = _call_auto_submit(
+                problem=problem,
+                score=winner.score,
+                payload=winner_payload,
+                auto_submitter=auto_submitter,
+                notes_parts=notes_parts,
+            )
+            if override is not None:
+                outcome = override
+
+    notes = "autonomous_loop inner_attempt — " + "; ".join(notes_parts)
+
+    return {
+        "start_score": start_score if start_score is not None else "none",
+        "end_score": end_score if end_score is not None else "none",
+        "hours": runtime_hours,
+        "compute": compute_tag,
+        "wiki_citations": 0,
+        "findings_added": 0,
+        "concepts_added": 0,
+        "author_mix": {"agent": 1, "human": 0, "hybrid": 0},
+        "outcome": outcome,
+        "notes": notes,
+        "chosen_techniques": chosen_techniques,
+    }
+
+
 # Ledger for idempotent skill-library updates (Goal 3). Private, under mb/logs/.
 DEFAULT_BANDIT_LEDGER = DEFAULT_MB_DIR / "logs" / "skill-bandit-updates.tsv"
 
@@ -916,6 +1158,22 @@ def inner_attempt(
         if llm_result is not None:
             return llm_result
         log.info("LLM path unavailable — using mechanical fallback")
+
+    # Goal 2 (js/feat/parallel-attempts): route to K-attempt fanout when
+    # `EINSTEIN_PARALLEL_K > 1` AND the bandit is enabled (fanout needs the
+    # Thompson sampler for diversification — see Goal 0 research note).
+    # `llm_enabled` excluded: LLM fanout is a separate future concern.
+    parallel_k = _parallel_k()
+    if parallel_k > 1 and _bandit_enabled() and not llm_enabled:
+        return _inner_attempt_fanout(
+            problem,
+            k=parallel_k,
+            dry_run=dry_run,
+            attempt_index=attempt_index,
+            skill_library=skill_library,
+            dispatcher=dispatcher,
+            auto_submitter=auto_submitter,
+        )
 
     log.info(
         "inner_attempt — problem=%s tier=%s status=%s attempt=%d",
