@@ -202,6 +202,34 @@ def test_format_cycle_log_row_shape() -> None:
     assert row.endswith("|")
     # Single line
     assert row.count("\n") == 0
+    # cited_sources defaults to () → trailing cites_src column reads 0
+    last_cell = row.rstrip().rstrip("|").rstrip().split("|")[-1].strip()
+    assert last_cell == "0"
+
+
+def test_format_cycle_log_row_with_cited_sources_renders_count() -> None:
+    """Goal 4 of js/feat/research-synthesis: cited_sources count is the rightmost column."""
+    row = al.format_cycle_log_row(
+        cycle_id=42,
+        problem="P19-difference-bases",
+        start_score=2.6390274695,
+        end_score=2.6390274695,
+        hours=0.5,
+        compute="local-cpu",
+        wiki_citations=3,
+        findings_added=0,
+        concepts_added=0,
+        author_mix={"agent": 1, "human": 0, "hybrid": 0},
+        outcome="no-change",
+        notes="smoke",
+        cited_sources=[
+            "docs/source/2026-lee-meta-harness.md",
+            "docs/source/2024-baek-researchagent.md",
+            "docs/source/2026-zhang-hyperagents.md",
+        ],
+    )
+    last_cell = row.rstrip().rstrip("|").rstrip().split("|")[-1].strip()
+    assert last_cell == "3"
 
 
 def test_append_cycle_log_row(tmp_path: Path) -> None:
@@ -581,7 +609,7 @@ def test_run_one_visit_writes_one_row_per_attempt(tmp_path: Path) -> None:
         problem,
         cycle_log=log,
         dry_run=False,
-        cycle_runner=lambda cid, slug: (runner_calls.append((cid, slug)) or 0),
+        cycle_runner=lambda cid, slug: runner_calls.append((cid, slug)) or 0,
         max_attempts=3,
         skip_gates=True,
     )
@@ -1851,3 +1879,140 @@ def test_call_auto_submit_notifier_failure_is_silent() -> None:
     # Submission outcome wasn't affected by the notification failure
     assert outcome == "improved-and-submitted"
     assert "SUBMITTED" in " ".join(notes)
+
+
+# ---------------- Goal 8: pre-cycle synthesis hook ----------------
+
+
+def _make_problem() -> "al.Problem":
+    return al.Problem(
+        problem_id=14,
+        slug="circle-packing-square",
+        tier="A",
+        status="rank-2-frozen",
+        score_current=2.636,
+        path=Path("/x"),
+    )
+
+
+def test_pre_cycle_synthesis_enabled_when_marker_present(tmp_path: Path) -> None:
+    """The marker heading toggles synthesis on."""
+    rule = tmp_path / "cycle-discipline.md"
+    rule.write_text(
+        f"# Cycle discipline\n\n{al.PRE_CYCLE_SYNTHESIS_MARKER}\n\nRun synthesis before claude.\n"
+    )
+    assert al._pre_cycle_synthesis_enabled(rule_path=rule) is True
+
+
+def test_pre_cycle_synthesis_enabled_when_marker_absent(tmp_path: Path) -> None:
+    """Vanilla cycle-discipline.md → off."""
+    rule = tmp_path / "cycle-discipline.md"
+    rule.write_text("# Cycle discipline\n\nEvery cycle gets logged.\n")
+    assert al._pre_cycle_synthesis_enabled(rule_path=rule) is False
+
+
+def test_pre_cycle_synthesis_enabled_missing_file_returns_false(tmp_path: Path) -> None:
+    """Missing rule file → opt-in by design, returns False."""
+    assert al._pre_cycle_synthesis_enabled(rule_path=tmp_path / "missing.md") is False
+
+
+def test_run_pre_cycle_synthesis_returns_content_on_success(tmp_path: Path) -> None:
+    """Successful subprocess + output file written → return its contents."""
+    problem = _make_problem()
+    # Stub runner pretends scripts/research_synthesis.py wrote the output file
+    expected_output = (
+        (DEFAULT_MB_DIR_FOR_TEST := al.DEFAULT_MB_DIR)
+        / "problems"
+        / problem.file_slug
+        / "literature-synthesis-stub.md"
+    )
+
+    class _StubProc:
+        returncode = 0
+        stderr = ""
+
+    written: dict = {}
+
+    def fake_runner(cmd, **kwargs):
+        # Extract the --output path the CLI would write to
+        idx = cmd.index("--output")
+        out_path = Path(cmd[idx + 1])
+        written["path"] = out_path
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text("# Literature synthesis stub\n\n## Top sources\n- foo\n")
+        return _StubProc()
+
+    result = al._run_pre_cycle_synthesis(problem, runner=fake_runner)
+    try:
+        assert result is not None
+        assert "## Top sources" in result
+        assert "foo" in result
+    finally:
+        # cleanup test artifact (lives under real mb/)
+        p = written.get("path")
+        if p and p.exists():
+            p.unlink()
+
+
+def test_run_pre_cycle_synthesis_returns_none_on_nonzero_exit() -> None:
+    """Subprocess fails → graceful None, no crash."""
+    problem = _make_problem()
+
+    class _StubProc:
+        returncode = 2
+        stderr = "boom"
+
+    def fake_runner(cmd, **kwargs):
+        return _StubProc()
+
+    assert al._run_pre_cycle_synthesis(problem, runner=fake_runner) is None
+
+
+def test_run_pre_cycle_synthesis_returns_none_when_output_missing() -> None:
+    """Subprocess returns ok but doesn't write the file → graceful None."""
+    problem = _make_problem()
+
+    class _StubProc:
+        returncode = 0
+        stderr = ""
+
+    def fake_runner(cmd, **kwargs):
+        # Don't write the output file
+        return _StubProc()
+
+    assert al._run_pre_cycle_synthesis(problem, runner=fake_runner) is None
+
+
+def test_run_pre_cycle_synthesis_returns_none_on_runner_exception() -> None:
+    """Subprocess raising → graceful None, no crash."""
+    problem = _make_problem()
+
+    def fake_runner(cmd, **kwargs):
+        raise RuntimeError("boom")
+
+    assert al._run_pre_cycle_synthesis(problem, runner=fake_runner) is None
+
+
+def test_synthesis_skips_terminal_status_problems(monkeypatch, tmp_path):
+    """G10 improvement: synthesis is skipped for conquered/retired/hidden problems
+    (no headroom), but runs for frozen problems (the branch's unlock thesis)."""
+    # Enable the marker check
+    monkeypatch.setattr(al, "_pre_cycle_synthesis_enabled", lambda: True)
+
+    invoked: list[int] = []
+    monkeypatch.setattr(
+        al,
+        "_run_pre_cycle_synthesis",
+        lambda problem, **kw: invoked.append(problem.problem_id) or "synthesis-content",
+    )
+
+    def _p(status: str, pid: int) -> "al.Problem":
+        return al.Problem(
+            problem_id=pid, slug="x", tier="A", status=status, score_current=1.0, path=Path("/x")
+        )
+
+    # Verify the gate logic directly via the substring set
+    for terminal in ("conquered", "retired", "hidden", "rank-2-conquered"):
+        assert any(s in terminal.lower() for s in al.SYNTHESIS_SKIP_STATUS_SUBSTRINGS), terminal
+    for live in ("rank-3-frozen", "frozen", "open", "rank-5-frozen-by-proximity-guard"):
+        assert not any(s in live.lower() for s in al.SYNTHESIS_SKIP_STATUS_SUBSTRINGS), live

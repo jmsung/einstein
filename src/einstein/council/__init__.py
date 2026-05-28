@@ -20,5 +20,6 @@ Typical usage:
 """
 
 from einstein.council.personas import Persona, dispatch, load_personas
+from einstein.council.prompt import build_enriched_prompt
 
-__all__ = ["Persona", "dispatch", "load_personas"]
+__all__ = ["Persona", "build_enriched_prompt", "dispatch", "load_personas"]

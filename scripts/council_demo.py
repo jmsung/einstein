@@ -20,7 +20,7 @@ import argparse
 import sys
 import textwrap
 
-from einstein.council import Persona, dispatch
+from einstein.council import Persona, build_enriched_prompt, dispatch
 from einstein.council.personas import COUNCIL_PATH
 
 
@@ -66,6 +66,16 @@ def main() -> int:
         action="store_true",
         help="Print the full subagent prompt body for each persona",
     )
+    parser.add_argument(
+        "--enrich",
+        action="store_true",
+        help=(
+            "Use the citation-enriched prompt builder (Goal 3 of "
+            "js/feat/research-synthesis): each persona prompt includes top-k "
+            "qmd hits matching its trigger categories. Requires qmd on PATH; "
+            "falls back to '(no relevant hits)' on failure."
+        ),
+    )
     args = parser.parse_args()
 
     if COUNCIL_PATH is None:
@@ -102,7 +112,14 @@ def main() -> int:
         print("\n" + "=" * 72)
         for p in personas:
             print(f"\n--- {p.name} ({p.tier}) ---")
-            print(build_subagent_prompt(p, args.problem_id))
+            if args.enrich:
+                print(
+                    build_enriched_prompt(
+                        p, problem_id=args.problem_id or 0, problem_category=args.category
+                    )
+                )
+            else:
+                print(build_subagent_prompt(p, args.problem_id))
 
     return 0
 

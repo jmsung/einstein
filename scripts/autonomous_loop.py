@@ -50,6 +50,31 @@ DEFAULT_LOCKFILE = _REPO / ".autonomous-loop.lock"
 DEFAULT_MB_DIR = _REPO.parent / "mb"
 DEFAULT_BUDGET_PATH = DEFAULT_MB_DIR / "logs" / "inner-agent-budget.md"
 DEFAULT_SENTINEL_PATH = DEFAULT_MB_DIR / ".inner-agent-disabled"
+# Goal 4 of js/feat/research-synthesis: per-cycle citation sidecar.
+DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
+
+# Goal 8 of js/feat/research-synthesis: the rule_edit marker that toggles
+# the pre-cycle synthesis step. When this exact heading is present in
+# .claude/rules/cycle-discipline.md, the orchestrator runs
+# scripts/research_synthesis.py before spawning claude -p and embeds the
+# output in the prompt. The G7 finding documented that markdown-rule
+# instructions alone don't change agent behavior — this is the fix.
+PRE_CYCLE_SYNTHESIS_MARKER = "## Pre-cycle (research-synthesis branch; A/B-promoted)"
+DEFAULT_CYCLE_DISCIPLINE_RULE = _REPO / ".claude" / "rules" / "cycle-discipline.md"
+# Problem statuses where synthesis is pure waste — the agent cannot act on the
+# result regardless of how good the literature is. `conquered` = already #1, no
+# headroom; `retired` = dead problem; `hidden` = arena won't accept a submission.
+# NOTE: `frozen` / `rank-N-frozen` are deliberately NOT here — unlocking a frozen
+# problem with fresh literature is the entire thesis of this branch, so synthesis
+# stays ON for those. Match is a substring test (statuses like
+# `rank-3-frozen-by-proximity-guard` won't accidentally match `conquered`).
+SYNTHESIS_SKIP_STATUS_SUBSTRINGS = ("conquered", "retired", "hidden")
+# G10 first-run diagnostic showed scripts/research_synthesis.py takes longer
+# than 120s in practice (3-5 qmd queries × 2 collections at ~10-30s each,
+# plus claude -p call). Bumping to 600s so synthesis actually has a chance
+# to complete. If it still times out, fix the gather() speed (parallel qmd
+# queries) rather than bumping further.
+PRE_CYCLE_SYNTHESIS_TIMEOUT_SECONDS = 600
 
 # Local imports — strategy_picker + inner_agent_gates live in docs/tools/
 sys.path.insert(0, str(_REPO / "docs" / "tools"))
@@ -208,8 +233,15 @@ def format_cycle_log_row(
     author_mix: dict[str, int],
     outcome: str,
     notes: str,
+    cited_sources: list[str] | tuple[str, ...] = (),
 ) -> str:
-    """Produce one markdown table row matching docs/agent/cycle-log.md schema."""
+    """Produce one markdown table row matching docs/agent/cycle-log.md schema.
+
+    `cited_sources` (Goal 4 of js/feat/research-synthesis) renders as a trailing
+    `cites_src` count column. The full per-cycle path list is written to
+    `mb/logs/cited-sources.jsonl` via `append_citation_record` so the
+    promotion-candidate detector can count cross-cycle citations.
+    """
 
     def _fmt_score(s: float | str) -> str:
         if isinstance(s, (int, float)):
@@ -221,10 +253,11 @@ def format_cycle_log_row(
     s_start = _fmt_score(start_score)
     s_end = _fmt_score(end_score)
     score_pair = f"{s_start} → {s_end}" if s_start != s_end else f"{s_start} (no Δ)"
+    cites_n = len(cited_sources)
     return (
         f"| {cycle_id} | {problem} | {score_pair} | {hours:g} | {compute} | "
         f"{wiki_citations} | {findings_added} | {concepts_added} | "
-        f"{_author_mix(author_mix)} | {outcome} | {notes} |"
+        f"{_author_mix(author_mix)} | {outcome} | {notes} | {cites_n} |"
     )
 
 
@@ -311,6 +344,161 @@ def _call_auto_submit(
     return None
 
 
+# ---------------- Goal 8: pre-cycle synthesis hook ----------------
+
+
+def _pre_cycle_synthesis_enabled(
+    rule_path: Path = DEFAULT_CYCLE_DISCIPLINE_RULE,
+) -> bool:
+    """Return True iff cycle-discipline.md contains the rule_edit marker.
+
+    Goal 8 of js/feat/research-synthesis: the G7 first-run experiment showed
+    that the agent treats `.claude/rules/` as advisory context — instructing
+    it to run `research_synthesis.py` via a markdown rule didn't work.
+    Instead, have the orchestrator inspect the rule file and run synthesis
+    itself when the rule says to. This is what makes the meta-loop's
+    `rule_edit` proposal channel actually load-bearing.
+
+    Returns False on any read error — synthesis is opt-in by design.
+    """
+    try:
+        return PRE_CYCLE_SYNTHESIS_MARKER in rule_path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+
+def _g8_debug_log(message: str) -> None:
+    """Side-channel debug log for the G8 synthesis subprocess.
+
+    The orchestrator's `log.warning` output is captured by run_shadow's
+    subprocess.run(capture_output=True) and only visible AFTER the shadow run
+    completes (6-8h). For diagnosing why G8 isn't firing in live runs we
+    need real-time visibility, so this helper appends to a separate file
+    that bypasses the subprocess capture.
+
+    Best-effort: any I/O error is swallowed; debug logging must never break
+    the cycle.
+    """
+    try:
+        log_path = DEFAULT_MB_DIR / "logs" / "g8-debug.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        ts = dt.datetime.now(dt.timezone.utc).isoformat()
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write(f"[{ts}] {message}\n")
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _run_pre_cycle_synthesis(
+    problem: Problem,
+    *,
+    repo_root: Path = _REPO,
+    runner: Callable[..., object] | None = None,
+    timeout_seconds: int = PRE_CYCLE_SYNTHESIS_TIMEOUT_SECONDS,
+) -> str | None:
+    """Invoke scripts/research_synthesis.py for `problem`; return synthesis content or None.
+
+    Test seam: `runner` is a callable matching subprocess.run's signature.
+    Defaults to subprocess.run. On any failure (subprocess error, missing
+    output file, timeout) returns None — the caller falls back to a prompt
+    without the synthesis section so the cycle keeps moving.
+    """
+    runner_fn = runner if runner is not None else subprocess.run
+    # Write to a deterministic per-cycle path under mb/problems/<id>-<slug>/.
+    # Match what scripts/research_synthesis.py's default output naming uses.
+    drafted = dt.date.today().isoformat()
+    output_path = (
+        DEFAULT_MB_DIR / "problems" / problem.file_slug / f"literature-synthesis-{drafted}.md"
+    )
+    cmd = [
+        "uv",
+        "run",
+        "python",
+        "scripts/research_synthesis.py",
+        "--problem-id",
+        str(problem.problem_id),
+        "--slug",
+        problem.slug,
+        "--mb-dir",
+        str(DEFAULT_MB_DIR),
+        "--drafted-at",
+        drafted,
+        "--output",
+        str(output_path),
+    ]
+    _g8_debug_log(f"INVOKE P{problem.problem_id} cwd={repo_root} cmd={cmd!r}")
+    # G10 take 7 diagnostic: `capture_output=True` (PIPE) makes subprocess.run's
+    # communicate() block on pipe-EOF, not child-exit. The synthesis script
+    # spawns qmd (node) + claude grandchildren that inherit the stdout fd; a
+    # lingering node helper keeps the pipe open, so communicate() waited the
+    # full 600s even though the script had already finished and written its
+    # file. Fix: redirect to temp files (so wait() returns on the direct
+    # child's exit, not pipe EOF) + start_new_session so the whole group is
+    # isolatable. Tests still pass a `runner` stub, which ignores these.
+    import tempfile as _tempfile
+
+    try:
+        if runner is not None:
+            # Test path: stubbed runner with the simple signature.
+            proc = runner_fn(
+                cmd,
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds,
+                check=False,
+            )
+            rc = getattr(proc, "returncode", 1)
+            stderr = getattr(proc, "stderr", "") or ""
+            stdout = getattr(proc, "stdout", "") or ""
+        else:
+            with (
+                _tempfile.TemporaryFile("w+", encoding="utf-8") as _out,
+                _tempfile.TemporaryFile("w+", encoding="utf-8") as _err,
+            ):
+                proc = subprocess.run(
+                    cmd,
+                    cwd=repo_root,
+                    stdout=_out,
+                    stderr=_err,
+                    timeout=timeout_seconds,
+                    check=False,
+                    start_new_session=True,
+                )
+                _out.seek(0)
+                _err.seek(0)
+                stdout = _out.read()
+                stderr = _err.read()
+            rc = proc.returncode
+    except Exception as e:  # noqa: BLE001 — graceful degradation by design
+        log.warning("pre-cycle synthesis subprocess error: %s", e)
+        _g8_debug_log(f"SUBPROCESS_EXCEPTION P{problem.problem_id}: {type(e).__name__}: {e}")
+        return None
+    _g8_debug_log(
+        f"RETURN P{problem.problem_id} rc={rc} stdout_tail={stdout[-200:]!r} "
+        f"stderr_tail={stderr[-300:]!r}"
+    )
+    if rc != 0:
+        log.warning(
+            "pre-cycle synthesis exited %s; stderr: %s",
+            rc,
+            stderr[-300:],
+        )
+        return None
+    if not output_path.exists():
+        log.warning("pre-cycle synthesis returned rc=0 but %s is missing", output_path)
+        _g8_debug_log(f"OUTPUT_MISSING P{problem.problem_id} expected_path={output_path}")
+        return None
+    try:
+        content = output_path.read_text(encoding="utf-8")
+        _g8_debug_log(f"SUCCESS P{problem.problem_id} bytes={len(content)}")
+        return content
+    except OSError as e:
+        log.warning("pre-cycle synthesis output unreadable: %s", e)
+        _g8_debug_log(f"OUTPUT_UNREADABLE P{problem.problem_id}: {e}")
+        return None
+
+
 def _try_llm_path(
     *,
     problem: Problem,
@@ -364,6 +552,29 @@ def _try_llm_path(
     category = (
         strategy_picker.category_for(problem.problem_id) if strategy_picker is not None else "?"
     )
+
+    # Goal 8: if the rule_edit marker is present in cycle-discipline.md, run
+    # research_synthesis.py before claude_headless and inject the output into
+    # the prompt. This is what makes the meta-loop's rule_edit proposal
+    # channel actually drive behavior (G7 first-run showed the agent ignored
+    # the markdown instruction on its own).
+    pre_cycle_synthesis = None
+    if _pre_cycle_synthesis_enabled():
+        status = (problem.status or "").lower()
+        if any(s in status for s in SYNTHESIS_SKIP_STATUS_SUBSTRINGS):
+            # Terminal state — synthesis can't help; skip the 5-7 min cost.
+            _g8_debug_log(
+                f"SKIP P{problem.problem_id} status={problem.status!r} (terminal — no synthesis)"
+            )
+        else:
+            pre_cycle_synthesis = _run_pre_cycle_synthesis(problem)
+            if pre_cycle_synthesis is None:
+                log.info(
+                    "pre-cycle synthesis enabled but produced no content "
+                    "for P%d; prompt will omit the section",
+                    problem.problem_id,
+                )
+
     try:
         prompt = prompt_renderer(
             problem_id=problem.problem_id,
@@ -376,6 +587,7 @@ def _try_llm_path(
             # cycle_id isn't threaded yet — informational only in the prompt
             cycle_id=0,
             attempt_index=attempt_index,
+            pre_cycle_synthesis=pre_cycle_synthesis,
         )
     except Exception as e:
         log.warning("render_prompt failed: %s — falling back", e)
@@ -501,6 +713,8 @@ def _try_llm_path(
         "outcome": outcome,
         "notes": notes,
         "chosen_techniques": [response.strategy] if response.strategy else [],
+        # Goal 4: thread cited_sources for the cycle-log column + sidecar JSONL
+        "cited_sources": list(getattr(response, "cited_sources", []) or []),
     }
 
 
@@ -696,14 +910,16 @@ _CYCLE_LOG_ROW_KEYS = (
     "author_mix",
     "outcome",
     "notes",
+    "cited_sources",
 )
 
 
 def _row_from_attempt(attempt_result: dict) -> dict:
     """Strip the non-schema `chosen_techniques` key before passing to
     `format_cycle_log_row` — that helper takes **kwargs and would error on
-    unknown args."""
-    return {k: attempt_result[k] for k in _CYCLE_LOG_ROW_KEYS}
+    unknown args. `cited_sources` defaults to () for callers that don't
+    set it (mechanical path, gate-skips)."""
+    return {k: attempt_result.get(k, ()) for k in _CYCLE_LOG_ROW_KEYS}
 
 
 # ---------------- wiki/mb write audit (Goal 7.6) ----------------
@@ -898,6 +1114,21 @@ def _run_one_cycle(
         **_row_from_attempt(result),
     )
     append_cycle_log_row(cycle_log, row)
+
+    # Goal 4: write the sidecar citation record so promotion_candidates.py can
+    # count cross-cycle citations. Best-effort — never break the cycle.
+    cited = result.get("cited_sources") or []
+    try:
+        from inner_agent_output import append_citation_record as _append_cit
+
+        _append_cit(
+            DEFAULT_CITED_SOURCES_LOG,
+            cycle_id=cycle_id,
+            problem=problem.display,
+            cited_sources=list(cited),
+        )
+    except Exception as e:  # noqa: BLE001
+        log.warning("cited_sources sidecar write failed: %s", e)
 
     return cycle_result, result
 
@@ -1276,7 +1507,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--no-lock",
         action="store_true",
-        help="Skip the concurrency lockfile (use for explicit " "manual concurrent runs).",
+        help="Skip the concurrency lockfile (use for explicit manual concurrent runs).",
     )
     parser.add_argument(
         "--lockfile", type=Path, default=DEFAULT_LOCKFILE, help="Path to the concurrency lockfile."
@@ -1357,7 +1588,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.discipline_once and results and not args.dry_run:
             last = results[-1]
             log.info(
-                "--discipline-once: running cycle_runner once at end " "(cycle %d, %s)",
+                "--discipline-once: running cycle_runner once at end (cycle %d, %s)",
                 last.cycle_id,
                 last.problem.file_slug,
             )
