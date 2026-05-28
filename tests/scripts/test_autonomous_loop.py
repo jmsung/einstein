@@ -2044,7 +2044,7 @@ def test_bandit_flag_routes_through_sampler(tmp_path: Path, monkeypatch) -> None
     monkeypatch.setenv("EINSTEIN_BANDIT", "1")
     r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
     assert "strategy=thompson-bandit" in r["notes"]
-    assert "bandit-pick=" in r["notes"]
+    assert "technique=" in r["notes"]  # Goal 4 audit note
     assert set(r["chosen_techniques"]) <= {"tech-A", "tech-B"}
     assert r["chosen_techniques"]  # non-empty — an arm matched
 
@@ -2135,3 +2135,25 @@ def test_bandit_skill_update_empty_techniques(tmp_path: Path) -> None:
         {"chosen_techniques": [], "outcome": "no-change"}, 1, skill_library=lib
     )
     assert out == []
+
+
+# ---------------- Goal 4: bandit choice audit note ----------------
+
+
+def test_bandit_note_carries_prior_and_theta(tmp_path: Path, monkeypatch) -> None:
+    """The cycle-log note must let a reader reconstruct the pick:
+    `technique=… prior=Beta(a,b) sampled_θ=…`."""
+    import re
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    r = al.inner_attempt(p14, dry_run=True, skill_library=lib)
+    notes = r["notes"]
+    # full audit triplet present and well-formed
+    m = re.search(r"technique=(\S+) prior=Beta\((\d+),(\d+)\) sampled_θ=([01]\.\d+)", notes)
+    assert m is not None, notes
+    assert m.group(1) in {"tech-A", "tech-B"}
+    # tech-A is Beta(2+1, (5-2)+1)=Beta(3,4); tech-B is Beta(1+1,(3-1)+1)=Beta(2,3)
+    assert (m.group(2), m.group(3)) in {("3", "4"), ("2", "3")}
+    theta = float(m.group(4))
+    assert 0.0 <= theta <= 1.0

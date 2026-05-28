@@ -349,8 +349,10 @@ def _bandit_pick(
     if pick is None:
         notes.append("(no bandit arms — council needed)")
         return None, notes
-    notes.append(f"bandit-pick={pick.technique}")
-    log.info("  bandit pick: %s (n_arms=%d)", pick.technique, pick.n_arms)
+    # Goal 4: the audit note lets a reader reconstruct WHY the bandit picked
+    # this arm — `technique=… prior=Beta(a,b) sampled_θ=…`.
+    notes.append(pick.note())
+    log.info("  bandit pick: %s (n_arms=%d, θ=%.3f)", pick.technique, pick.n_arms, pick.theta)
     return pick, notes
 
 
