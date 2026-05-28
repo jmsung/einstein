@@ -30,6 +30,7 @@ import argparse
 import datetime as dt
 import logging
 import os
+import random
 import re
 import subprocess
 import sys
@@ -285,6 +286,129 @@ def next_cycle_id(cycle_log: Path) -> int:
     return max_id + 1
 
 
+# ---------------- Goal 2: skill-bandit strategy pick ----------------
+
+
+# Kill-switch values. Anything else (unset, "1", "true", garbage) → bandit ON.
+_BANDIT_FALSY = {"0", "false", "no", "off"}
+
+
+def _bandit_enabled() -> bool:
+    """True unless `EINSTEIN_BANDIT` is explicitly falsy (kill switch).
+
+    **Default-on as of 2026-05-28** — promoted after the G5 pilot A/B verdict
+    in `mb/logs/meta-shadow-runs.md` (row 2026-05-28T03:58:03Z): cross-problem
+    rediscovery confirmed, findings/cycle non-worse, kill switch + production
+    audit treated as the operational safety net. Set `EINSTEIN_BANDIT=0` to
+    revert to the manifest `strategy_picker` path.
+    """
+    return os.environ.get("EINSTEIN_BANDIT", "").strip().lower() not in _BANDIT_FALSY
+
+
+def _bandit_seed(problem_id: int, attempt_index: int) -> int:
+    """Deterministic per (problem, attempt) seed so cycles are reproducible.
+
+    `EINSTEIN_BANDIT_SEED` shifts the whole stream (lets a shadow arm sweep
+    distinct draws without code edits)."""
+    base = 0
+    env = os.environ.get("EINSTEIN_BANDIT_SEED")
+    if env:
+        try:
+            base = int(env)
+        except ValueError:
+            base = 0
+    return base + problem_id * 1_000_003 + attempt_index
+
+
+def _bandit_pick(
+    problem: Problem,
+    *,
+    skill_library: Path,
+    attempt_index: int,
+    avoid_techniques: set[str] | None,
+):
+    """Thompson-sample one technique for `problem`'s category.
+
+    Returns `(PickResult | None, notes_parts)`. None pick → no arm matched
+    the category (caller leaves `chosen_strategy=None`, dispatch falls back to
+    the manifest default — same as strategy_picker's empty pick).
+    """
+    notes: list[str] = ["strategy=thompson-bandit"]
+    category = (
+        strategy_picker.category_for(problem.problem_id) if strategy_picker is not None else "?"
+    )
+    notes.append(f"category={category}")
+    try:
+        sys.path.insert(0, str(_REPO / "src"))
+        from einstein.bandit import ThompsonSampler
+    except ImportError as e:
+        log.warning("einstein.bandit unavailable (%s) — bandit pick skipped", e)
+        notes.append("bandit-unavailable")
+        return None, notes
+
+    sampler = ThompsonSampler(library_path=skill_library)
+    rng = random.Random(_bandit_seed(problem.problem_id, attempt_index))
+    pick = sampler.pick(category, rng=rng, avoid=avoid_techniques or None)
+    if pick is None:
+        notes.append("(no bandit arms — council needed)")
+        return None, notes
+    # Goal 4: the audit note lets a reader reconstruct WHY the bandit picked
+    # this arm — `technique=… prior=Beta(a,b) sampled_θ=…`.
+    notes.append(pick.note())
+    log.info("  bandit pick: %s (n_arms=%d, θ=%.3f)", pick.technique, pick.n_arms, pick.theta)
+    return pick, notes
+
+
+# Ledger for idempotent skill-library updates (Goal 3). Private, under mb/logs/.
+DEFAULT_BANDIT_LEDGER = DEFAULT_MB_DIR / "logs" / "skill-bandit-updates.tsv"
+
+# Cycle outcomes that count as a bandit "reward" (top3 += 1). Proxy until an
+# arena rank signal is threaded: a local improvement (optionally auto-submitted)
+# is the strongest positive signal the mechanical/LLM cycle currently produces.
+_BANDIT_REWARD_OUTCOMES = {"improved-local", "improved-and-submitted"}
+
+
+def _bandit_skill_update(
+    attempt_result: dict,
+    cycle_id: int,
+    *,
+    skill_library: Path = DEFAULT_SKILL_LIBRARY,
+    ledger_path: Path = DEFAULT_BANDIT_LEDGER,
+) -> list:
+    """Goal 3: bump skill-library counts for the bandit's chosen techniques.
+
+    `tried += 1` always; `top3 += 1` when the cycle outcome is a reward.
+    Best-effort — any failure is logged and swallowed so the cycle never
+    breaks. Idempotent per (cycle_id, technique) inside `update_counts`.
+    Returns the list of UpdateResult (empty when nothing applied).
+    """
+    techniques = attempt_result.get("chosen_techniques") or []
+    if not techniques:
+        return []
+    try:
+        sys.path.insert(0, str(_REPO / "src"))
+        from einstein.bandit.skill_update import update_counts
+    except ImportError as e:
+        log.warning("skill_update unavailable (%s) — bandit learning loop skipped", e)
+        return []
+    reached = attempt_result.get("outcome") in _BANDIT_REWARD_OUTCOMES
+    results = []
+    for tech in techniques:
+        try:
+            results.append(
+                update_counts(
+                    skill_library,
+                    tech,
+                    reached_top3=reached,
+                    cycle_id=cycle_id,
+                    ledger_path=ledger_path,
+                )
+            )
+        except Exception as e:  # noqa: BLE001 — never break the cycle
+            log.warning("skill-library update failed for %s: %s", tech, e)
+    return results
+
+
 # ---------------- inner attempt placeholder ----------------
 
 
@@ -510,6 +634,7 @@ def _try_llm_path(
     response_parser: Callable[[str], object] | None = None,
     budget_recorder: Callable[..., object] | None = None,
     budget_path: Path = DEFAULT_BUDGET_PATH,
+    skill_library: Path = DEFAULT_SKILL_LIBRARY,
     timeout_seconds: int = 1800,
 ) -> dict | None:
     """Best-effort LLM cycle (Goal 7.7).
@@ -553,6 +678,20 @@ def _try_llm_path(
         strategy_picker.category_for(problem.problem_id) if strategy_picker is not None else "?"
     )
 
+    # G2 extension (js/feat/skill-bandit): when EINSTEIN_BANDIT=1, sample the
+    # Thompson bandit and pass its pick as a `bandit_recommendation` hint to
+    # the prompt. Without this, the LLM has no bandit signal and arms A/B run
+    # identical cycles — making the live G5 A/B uninformative.
+    bandit_pick = None
+    bandit_notes_parts: list[str] = []
+    if _bandit_enabled():
+        bandit_pick, bandit_notes_parts = _bandit_pick(
+            problem,
+            skill_library=skill_library,
+            attempt_index=attempt_index,
+            avoid_techniques=avoid_techniques,
+        )
+
     # Goal 8: if the rule_edit marker is present in cycle-discipline.md, run
     # research_synthesis.py before claude_headless and inject the output into
     # the prompt. This is what makes the meta-loop's rule_edit proposal
@@ -588,6 +727,7 @@ def _try_llm_path(
             cycle_id=0,
             attempt_index=attempt_index,
             pre_cycle_synthesis=pre_cycle_synthesis,
+            bandit_recommendation=(bandit_pick.note() if bandit_pick is not None else None),
         )
     except Exception as e:
         log.warning("render_prompt failed: %s — falling back", e)
@@ -657,6 +797,10 @@ def _try_llm_path(
     if attempt_index > 1:
         notes_parts.append(f"attempt={attempt_index}")
     notes_parts.append(f"category={category}")
+    # G2 extension: surface bandit's pick in notes so cross_problem_rediscovery
+    # (the G5 A/B metric, parses `technique=` from notes) can count it.
+    if bandit_notes_parts:
+        notes_parts.extend(bandit_notes_parts)
     notes_parts.append(f"llm-strategy={response.strategy}")
     notes_parts.append(f"tokens=in:{input_estimate}/out:{output_estimate}")
 
@@ -767,6 +911,7 @@ def inner_attempt(
             response_parser=response_parser,
             budget_recorder=budget_recorder,
             budget_path=budget_path,
+            skill_library=skill_library,
         )
         if llm_result is not None:
             return llm_result
@@ -785,7 +930,19 @@ def inner_attempt(
     chosen_techniques: list[str] = []
     if attempt_index > 1:
         notes_parts.append(f"attempt={attempt_index}")
-    if strategy_picker is None:
+    if _bandit_enabled():
+        # Goal 2: route technique selection through the Thompson bandit.
+        pick, bandit_notes = _bandit_pick(
+            problem,
+            skill_library=skill_library,
+            attempt_index=attempt_index,
+            avoid_techniques=avoid_techniques,
+        )
+        notes_parts.extend(bandit_notes)
+        if pick is not None:
+            chosen_strategy = pick.technique
+            chosen_techniques.append(pick.technique)
+    elif strategy_picker is None:
         log.warning("strategy_picker not importable — skipping strategy pick")
         notes_parts.append("strategy_picker unavailable")
     else:
@@ -1114,6 +1271,12 @@ def _run_one_cycle(
         **_row_from_attempt(result),
     )
     append_cycle_log_row(cycle_log, row)
+
+    # Goal 3: close the bandit learning loop — bump skill-library counts for
+    # the chosen techniques. Bandit-path only (the manifest path doesn't learn
+    # from counts the same way); best-effort, idempotent per (cycle, technique).
+    if _bandit_enabled():
+        _bandit_skill_update(result, cycle_id)
 
     # Goal 4: write the sidecar citation record so promotion_candidates.py can
     # count cross-cycle citations. Best-effort — never break the cycle.

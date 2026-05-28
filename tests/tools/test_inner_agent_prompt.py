@@ -338,3 +338,43 @@ def test_render_prompt_includes_synthesis_section_when_provided(fake_layout):
     assert prompt.index("## Pre-cycle synthesis") < prompt.index("## Your task")
     # The instruction nudges the agent to use cited_sources
     assert "cited_sources" in prompt
+
+
+# ---------------- G2 extension: bandit recommendation hint ----------------
+
+
+def test_bandit_recommendation_renders_section(fake_layout):
+    prompt = iap.render_prompt(
+        problem_id=14,
+        problem_slug="circle-packing-square",
+        file_slug="14-circle-packing-square",
+        score_current=2.6,
+        status="rank-2-frozen",
+        tier="A",
+        category="packing",
+        cycle_id=1,
+        attempt_index=1,
+        bandit_recommendation="technique=slsqp.md prior=Beta(5,3) sampled_θ=0.71",
+        **fake_layout,
+    )
+    assert "Bandit recommendation" in prompt
+    assert "technique=slsqp.md" in prompt
+    assert "prior=Beta(5,3)" in prompt
+    assert "sampled_θ=0.71" in prompt
+    assert "strong prior" in prompt  # framing
+
+
+def test_no_bandit_recommendation_omits_section(fake_layout):
+    prompt = iap.render_prompt(
+        problem_id=14,
+        problem_slug="circle-packing-square",
+        file_slug="14-circle-packing-square",
+        score_current=2.6,
+        status="rank-2-frozen",
+        tier="A",
+        category="packing",
+        cycle_id=1,
+        attempt_index=1,
+        **fake_layout,
+    )
+    assert "Bandit recommendation" not in prompt
