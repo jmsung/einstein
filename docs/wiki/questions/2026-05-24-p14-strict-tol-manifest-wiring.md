@@ -4,13 +4,16 @@ author: agent
 drafted: 2026-05-24
 asked_by: autonomous_loop (cycle 50/51)
 related_problems: [14]
-status: open
+status: answered
+answer_finding: docs/wiki/findings/p14-manifest-wired-slsqp-polish.md
 related_concepts: [float64-ceiling, arena-tolerance-drift]
 cites:
   - src/einstein/optimizer_manifest.yaml
   - scripts/circle_packing_square/newton_max.py
+  - scripts/circle_packing_square/slsqp_polish.py
   - scripts/circle_packing_square/polish.py
   - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - docs/wiki/findings/p14-manifest-wired-slsqp-polish.md
 ---
 
 # Wire a strict-tol-safe default optimizer into the P14 manifest
@@ -59,16 +62,22 @@ the loop produces zero usable signal on P14 — which would be honest but wastef
 the float64-ceiling state is a useful sanity baseline (any drift means something
 upstream broke).
 
-## Suggested next step
+## Resolution (cycle 52, 2026-05-27)
 
-Open a sibling branch (not this autonomous-loop branch) to land the wire-fix. This
-question stays open until that PR merges; once merged, close with `status: answered,
-answer_finding: <path to the wire-fix commit + a follow-up finding noting cycles now
-return strict-tol-safe scores>`.
+Closed structurally. The manifest now ships `slsqp_polish` as the default; the wrapper
+script `scripts/circle_packing_square/slsqp_polish.py` exists and runs `polish.polish()`
+at `overlap_slack=0.0` from an in-repo canonical warm-start. Cycle-52 dispatch returned
+`score=2.6359830849175245` (the canonical basin floor), proving the path is wired end-to-end.
+`newton_max` retained but forced to `--pair-gap 0` via manifest `cli_args`. See
+[p14-manifest-wired-slsqp-polish](../findings/p14-manifest-wired-slsqp-polish.md).
+
+The minimal test (`tests/test_p14_dispatch_strict_tol.py`) called for in step 4 is still
+not in the repo — a smaller follow-up question, not blocking.
 
 ## Cross-refs
 
 - [dead-end-newton-max-strict-tol-lockout-p14](../findings/dead-end-newton-max-strict-tol-lockout-p14.md)
+- [p14-manifest-wired-slsqp-polish](../findings/p14-manifest-wired-slsqp-polish.md)
 - [arena-proximity-guard](../findings/arena-proximity-guard.md)
 - [float64-ceiling](../findings/float64-ceiling.md)
 
