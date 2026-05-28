@@ -1978,12 +1978,17 @@ def run_queue(
     sentinel_path: Path = DEFAULT_SENTINEL_PATH,
     skip_gates: bool = False,
     llm_enabled: bool | None = None,
+    problem_ids: list[int] | None = None,
 ) -> list[CycleResult]:
     """Walk the queue: one visit (up to N cycles) per distinct problem.
 
     `max_problems` caps the number of problems visited this invocation.
     `max_attempts_per_visit` caps the cycles per visit (Goal 7.4). Set to
     1 to recover the pre-7.4 one-cycle-per-problem behavior.
+
+    `problem_ids` (Goal 5.5 of js/feat/parallel-attempts) restricts the
+    queue to that subset, preserving tier+id order within the subset.
+    None or empty list → no filter (backward-compatible default).
 
     Tracks already-visited problem ids so each iteration picks the next
     un-visited problem.
@@ -1993,9 +1998,12 @@ def run_queue(
     """
     results: list[CycleResult] = []
     done_ids: set[int] = set()
+    id_subset: set[int] | None = set(problem_ids) if problem_ids else None
     for i in range(max_problems):
         problems = load_problems(problems_dir)
         queue = [p for p in build_queue(problems) if p.problem_id not in done_ids]
+        if id_subset is not None:
+            queue = [p for p in queue if p.problem_id in id_subset]
         if not queue:
             log.info("queue exhausted after %d visits", i)
             break

@@ -161,9 +161,11 @@ def _default_arm_runner(
     `EINSTEIN_PARALLEL_K` flag set for this arm.
 
     Heavy — only invoked on a deliberate live A/B (`mode=live`); the
-    wiring-validation path injects a stub. Reuses the autonomous_loop's
-    `run_queue` walk; exact problem-subset targeting needs the loop's
-    own subset support (TODO follow-on).
+    wiring-validation path injects a stub. As of Goal 5.5, `problems` is
+    threaded as `problem_ids=` into `run_queue`, so the queue walk visits
+    EXACTLY the targeted problems (preserved in tier+id order). Pre-5.5,
+    `problems` was used only for `len()` and the audit row — the cycles
+    ran the queue's id-ordered top-N instead.
     """
     import sys
 
@@ -179,6 +181,7 @@ def _default_arm_runner(
             max_problems=len(problems),
             max_attempts_per_visit=per_visit,
             skip_gates=True,
+            problem_ids=problems,
         )
     finally:
         if prev is None:

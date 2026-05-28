@@ -2850,3 +2850,103 @@ def test_fanout_dead_end_close_basin_no_candidate(tmp_path: Path, monkeypatch) -
     dispatcher = _scoring_dispatcher({"tech-A": 0.40, "tech-B": 0.41})
     r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
     assert "dead_end_candidate=" not in r["notes"]
+
+
+# ============================================================================
+# Goal 5.5 — problem_ids subset filter (follow-on to Goal 5 live A/B)
+# ============================================================================
+
+
+def test_run_queue_problem_ids_filters_queue(tmp_path: Path) -> None:
+    """`problem_ids=[2]` restricts the queue to that subset, even when other
+    problems are higher priority by tier+id."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(problem_id=1, slug="alpha", tier="S", status="open", score=1.0),
+            dict(problem_id=2, slug="beta", tier="A", status="open", score=2.0),
+            dict(problem_id=3, slug="gamma", tier="A", status="open", score=3.0),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    results = al.run_queue(
+        problems_dir=pdir,
+        cycle_log=log,
+        max_problems=2,
+        max_attempts_per_visit=1,
+        problem_ids=[2],
+        cycle_runner=lambda *_a: 0,
+        skip_gates=True,
+    )
+    assert {r.problem.problem_id for r in results} == {2}
+
+
+def test_run_queue_problem_ids_preserves_queue_order(tmp_path: Path) -> None:
+    """Visit order within the subset stays tier+id, not the order in problem_ids."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(problem_id=1, slug="alpha", tier="S", status="open", score=1.0),
+            dict(problem_id=2, slug="beta", tier="A", status="open", score=2.0),
+            dict(problem_id=3, slug="gamma", tier="A", status="open", score=3.0),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    # Pass in the reverse order — output should still be S-tier (P1) then A-tier (P3)
+    results = al.run_queue(
+        problems_dir=pdir,
+        cycle_log=log,
+        max_problems=2,
+        max_attempts_per_visit=1,
+        problem_ids=[3, 1],
+        cycle_runner=lambda *_a: 0,
+        skip_gates=True,
+    )
+    visit_order = [r.problem.problem_id for r in results]
+    assert visit_order == [1, 3]
+
+
+def test_run_queue_problem_ids_none_is_backcompat(tmp_path: Path) -> None:
+    """`problem_ids=None` (default) preserves pre-5.5 behavior."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(problem_id=1, slug="alpha", tier="S", status="open", score=1.0),
+            dict(problem_id=2, slug="beta", tier="A", status="open", score=2.0),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    results = al.run_queue(
+        problems_dir=pdir,
+        cycle_log=log,
+        max_problems=2,
+        max_attempts_per_visit=1,
+        cycle_runner=lambda *_a: 0,
+        skip_gates=True,
+    )
+    assert {r.problem.problem_id for r in results} == {1, 2}
+
+
+def test_run_queue_problem_ids_empty_means_no_subset_no_filter(tmp_path: Path) -> None:
+    """Empty list `[]` is treated like `None` (no filter), not like
+    'no problems match'. Guards against an accidental empty-list bug
+    silently producing zero cycles."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [dict(problem_id=1, slug="alpha", tier="S", status="open", score=1.0)],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    results = al.run_queue(
+        problems_dir=pdir,
+        cycle_log=log,
+        max_problems=1,
+        max_attempts_per_visit=1,
+        problem_ids=[],
+        cycle_runner=lambda *_a: 0,
+        skip_gates=True,
+    )
+    assert len(results) == 1
