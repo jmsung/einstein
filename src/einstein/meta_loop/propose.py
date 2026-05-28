@@ -92,6 +92,11 @@ def _load_system_prompt(prompt_path: Path) -> str:
     Externalized from code so prompts can be A/B-tested + shadow-compared
     without a code edit. The dynamic suffix (filesystem roots) stays in
     `_render_prompt`; this is only the static system-prompt body.
+
+    Cached per path: an in-process edit to the SAME prompt file won't be
+    re-read. That's fine for the per-invocation CLI and for shadow A/B across
+    *distinct* prompt files (different paths → different cache keys); a future
+    long-lived harness that mutates one prompt file in place must clear this.
     """
     return Path(prompt_path).read_text()
 
