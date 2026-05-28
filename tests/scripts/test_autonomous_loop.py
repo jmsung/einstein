@@ -2594,3 +2594,118 @@ def test_parallel_k_skill_update_end_to_end(tmp_path: Path, monkeypatch) -> None
     top3_bumps = sum(1 for u in out if u.applied and u.top3 is not None)
     # Per-pull ledger lines == number of applied techniques (≤ K)
     assert len(ledger.read_text().splitlines()) == top3_bumps
+
+
+# ============================================================================
+# Goal 4 (js/feat/parallel-attempts) — per-attempt timeout + partial-K
+# ============================================================================
+
+
+def test_parallel_timeout_env_default_600(tmp_path: Path, monkeypatch) -> None:
+    """`EINSTEIN_PARALLEL_TIMEOUT_SECONDS` unset → default 600s."""
+    monkeypatch.delenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", raising=False)
+    assert al._parallel_timeout_seconds() == 600.0
+
+
+def test_parallel_timeout_env_override(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "5")
+    assert al._parallel_timeout_seconds() == 5.0
+
+
+def test_parallel_timeout_env_invalid_falls_back(tmp_path: Path, monkeypatch) -> None:
+    """Garbage env → default. Non-positive (≤0) → default (operator must pass
+    None in code to disable; env-driven disable would be a footgun)."""
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "not-a-number")
+    assert al._parallel_timeout_seconds() == 600.0
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "-10")
+    assert al._parallel_timeout_seconds() == 600.0
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "0")
+    assert al._parallel_timeout_seconds() == 600.0
+
+
+def test_parallel_fanout_notes_carry_timeout_marker(tmp_path: Path, monkeypatch) -> None:
+    """Fanout notes include `per_attempt_timeout_s=N` for audit."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "42")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "per_attempt_timeout_s=42" in r["notes"]
+
+
+def test_parallel_fanout_partial_k_note_marker(tmp_path: Path, monkeypatch) -> None:
+    """When some attempts time out, notes carry `partial-K=True`."""
+    import time as _t
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    # 50ms timeout, but dispatcher always sleeps 500ms → all attempts time out
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "0.05")
+
+    def slow_dispatcher(problem_id, strategy):
+        _t.sleep(0.5)
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            ok=True,
+            optimizer=f"opt-{strategy}",
+            score=0.5,
+            payload={"strategy": strategy},
+            runtime_seconds=0.5,
+            error=None,
+        )
+
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=slow_dispatcher)
+    assert "partial-K=True" in r["notes"]
+    assert "k_completed=0" in r["notes"]
+    # Outcome reflects "no winner" (fanout-no-completion)
+    assert r["outcome"] == "fanout-no-completion"
+
+
+def test_parallel_fanout_timeout_bandit_skill_update_tried_not_top3(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """End-to-end: timed-out attempts in attempt_rewards are False → bandit
+    bumps tried but not top3 for those arms."""
+    import time as _t
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_TIMEOUT_SECONDS", "0.05")
+
+    def slow_dispatcher(problem_id, strategy):
+        _t.sleep(0.5)
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            ok=True,
+            optimizer=f"opt-{strategy}",
+            score=0.5,
+            payload={"strategy": strategy},
+            runtime_seconds=0.5,
+            error=None,
+        )
+
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=slow_dispatcher)
+    # All K attempts timed out → no winner; attempt_rewards all False
+    assert all(reward is False for reward in r["attempt_rewards"])
+    assert r["outcome"] == "fanout-no-completion"
+
+    # Confirm the bandit update path agrees
+    ledger = tmp_path / "ledger.tsv"
+    assert "`tech-A` | packing | 5 |" in lib.read_text()
+    assert "`tech-B` | packing | 3 |" in lib.read_text()
+    al._bandit_skill_update(r, 99, skill_library=lib, ledger_path=ledger)
+    # No top3 increments expected
+    txt = lib.read_text()
+    # tech-A goes 5 → 5+N where N is number of A pulls; top3 stays 2
+    for line in txt.splitlines():
+        if "tech-A" in line:
+            # `| 5+N | 2 |` — top3 unchanged at 2
+            assert "| 2 |" in line
+        elif "tech-B" in line:
+            # top3 unchanged at 1
+            assert "| 1 |" in line

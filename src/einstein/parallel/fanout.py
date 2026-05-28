@@ -24,7 +24,9 @@ Portability:
 
 from __future__ import annotations
 
+import concurrent.futures
 import random
+from concurrent.futures import Executor, ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Callable, Literal, Protocol
 
@@ -134,6 +136,18 @@ def _pick_winner(
     return best_index
 
 
+def _timeout_attempt_result(ctx: AttemptContext, seconds: float) -> AttemptResult:
+    """Fabricated result when `runner(ctx)` exceeds the per-attempt timeout."""
+    return AttemptResult(
+        index=ctx.attempt_index,
+        technique=ctx.technique,
+        score=None,
+        exit="timeout",
+        notes=f"per-attempt timeout exceeded ({seconds}s)",
+        pick_note=ctx.pick_note,
+    )
+
+
 def run_fanout(
     problem: _Problem,
     *,
@@ -143,6 +157,8 @@ def run_fanout(
     rng: random.Random,
     runner: AttemptRunner,
     score_direction: Literal["min", "max"] = "min",
+    per_attempt_timeout_seconds: float | None = None,
+    executor: Executor | None = None,
 ) -> FanoutResult:
     """Run K parallel attempts; return all results + winner index.
 
@@ -160,10 +176,22 @@ def run_fanout(
         runner: callable that executes one attempt. Injected so tests don't
             spin up the optimizer dispatch.
         score_direction: "min" (default; codebase convention) or "max".
+        per_attempt_timeout_seconds: when set (Goal 4), each `runner(ctx)`
+            call runs in a `ThreadPoolExecutor` worker and is given at most
+            this many seconds; on timeout, the result becomes
+            `AttemptResult(exit="timeout", score=None, ...)` with the
+            technique + pick_note preserved. Soft timeout — Python can't
+            kill a running thread, so the runner keeps consuming CPU in the
+            background, but the cycle moves on. None = sequential, no thread
+            overhead (pre-Goal-4 behavior).
+        executor: test seam for Goal 4. When timeout is set and `executor`
+            is None, a fresh `ThreadPoolExecutor(max_workers=k)` is created
+            and shut down `wait=False` after collection.
 
     Returns:
-        FanoutResult — K attempts in order, winner_index = the index of the
-        best `exit == "ok"` attempt (None if none completed).
+        FanoutResult — K attempts in submission-index order (NOT completion
+        order — Goal 3 needs `attempts[i]` to align with `chosen_techniques[i]`).
+        `winner_index` = the best `exit == "ok"` attempt (None if none).
 
     Raises:
         ValueError on invalid k or score_direction.
@@ -173,26 +201,47 @@ def run_fanout(
     if score_direction not in ("min", "max"):
         raise ValueError(f"score_direction must be 'min' or 'max', got {score_direction!r}")
 
-    results: list[AttemptResult] = []
+    # 1. Sample K AttemptContexts deterministically from the shared rng.
+    #    Done before any threading so technique picks stay reproducible.
+    ctxs: list[AttemptContext] = []
     for i in range(1, k + 1):
-        # Derive per-attempt rng BEFORE the bandit pick so the two streams
-        # are deterministically interleaved. Determinism test pins this.
+        # Per-attempt rng derived BEFORE the bandit pick — determinism test pins.
         attempt_seed = rng.randint(0, _RAND_INT_MAX)
         attempt_rng = random.Random(attempt_seed)
-
-        # K-pull: K independent draws from the SAME posterior. No `avoid`
-        # set within the fanout — collisions are the correct behavior under
-        # probability matching (Goal 0 research note).
         pick: PickResult | None = bandit.pick(category, rng=rng)
-        ctx = AttemptContext(
-            problem=problem,
-            attempt_index=i,
-            technique=pick.technique if pick is not None else None,
-            pick_note=pick.note() if pick is not None else None,
-            rng=attempt_rng,
+        ctxs.append(
+            AttemptContext(
+                problem=problem,
+                attempt_index=i,
+                technique=pick.technique if pick is not None else None,
+                pick_note=pick.note() if pick is not None else None,
+                rng=attempt_rng,
+            )
         )
-        result = runner(ctx)
-        results.append(result)
+
+    # 2. Run the K attempts. Sequential when no timeout; threaded otherwise.
+    if per_attempt_timeout_seconds is None:
+        results: list[AttemptResult] = [runner(ctx) for ctx in ctxs]
+    else:
+        owns_executor = executor is None
+        ex = executor or ThreadPoolExecutor(max_workers=max(1, k))
+        try:
+            futures = [ex.submit(runner, ctx) for ctx in ctxs]
+            results = []
+            for ctx, fut in zip(ctxs, futures):
+                try:
+                    results.append(fut.result(timeout=per_attempt_timeout_seconds))
+                except concurrent.futures.TimeoutError:
+                    # Dead thread keeps running in background — Python can't
+                    # cancel it. Side-channels that the runner writes to AFTER
+                    # this point are harmless: winner_index is computed over
+                    # exit=="ok" attempts only, so a late write into
+                    # `payloads_by_index` from a timed-out thread can never
+                    # be read.
+                    results.append(_timeout_attempt_result(ctx, per_attempt_timeout_seconds))
+        finally:
+            if owns_executor:
+                ex.shutdown(wait=False)
 
     attempts = tuple(results)
     winner_index = _pick_winner(attempts, score_direction=score_direction)

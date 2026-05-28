@@ -364,6 +364,25 @@ def _bandit_pick(
 
 _PARALLEL_K_DEFAULT = 1
 _PARALLEL_K_MAX_DEFAULT = 8
+_PARALLEL_TIMEOUT_SECONDS_DEFAULT = 600.0
+
+
+def _parallel_timeout_seconds() -> float:
+    """Read `EINSTEIN_PARALLEL_TIMEOUT_SECONDS` (default 600). Goal 4 of
+    js/feat/parallel-attempts.
+
+    Returns positive seconds. Garbage / non-positive env values fall back to
+    the default — never disable the timeout from env (operator must pass
+    None explicitly in code if they want unbounded).
+    """
+    raw = os.environ.get("EINSTEIN_PARALLEL_TIMEOUT_SECONDS")
+    if raw is None or raw.strip() == "":
+        return _PARALLEL_TIMEOUT_SECONDS_DEFAULT
+    try:
+        v = float(raw)
+    except ValueError:
+        return _PARALLEL_TIMEOUT_SECONDS_DEFAULT
+    return v if v > 0 else _PARALLEL_TIMEOUT_SECONDS_DEFAULT
 
 
 def _parallel_k_max() -> int:
@@ -525,6 +544,7 @@ def _inner_attempt_fanout(
             dispatcher = None
     runner = _build_fanout_runner(problem, dispatcher, payloads_by_index)
 
+    timeout_seconds = _parallel_timeout_seconds()
     fanout_result = run_fanout(
         problem,
         k=k,
@@ -532,6 +552,7 @@ def _inner_attempt_fanout(
         category=category,
         rng=rng,
         runner=runner,
+        per_attempt_timeout_seconds=timeout_seconds,
     )
 
     # Goal 3: chosen_techniques + attempt_rewards stay length-aligned. We
@@ -551,7 +572,12 @@ def _inner_attempt_fanout(
         f"category={category}",
         f"parallel_k={k}",
         f"k_completed={fanout_result.k_completed}",
+        f"per_attempt_timeout_s={timeout_seconds:g}",
     ]
+    # Goal 4: explicit grep marker for partial-K cycles. Branch line 95: "if
+    # k < K attempts complete, still produce a valid cycle row".
+    if fanout_result.k_completed < k:
+        notes_parts.append("partial-K=True")
     # Per-attempt audit lines (cycle-log notes carries the full K trace).
     # `score=…` is included for ok attempts so the cycle-log shows both
     # winner score AND losers' scores per branch line 81.

@@ -392,3 +392,167 @@ def test_fanout_result_is_frozen():
     result = FanoutResult(attempts=(), winner_index=None)
     with pytest.raises((AttributeError, Exception)):
         result.winner_index = 0  # type: ignore[misc]
+
+
+# ---------------- Goal 4: per-attempt timeout + partial-K ----------------
+
+
+import time as _time  # noqa: E402
+
+
+def test_run_fanout_per_attempt_timeout_fires():
+    """A runner that sleeps past the timeout produces exit='timeout' results.
+
+    Technique + pick_note must be preserved on the fabricated timeout result
+    so Goal 3's cycle-log + bandit-counter machinery still has the audit info."""
+    bandit = ThompsonSampler(rows=DOMINANT_ROWS)
+
+    def slow_runner(ctx: AttemptContext) -> AttemptResult:
+        _time.sleep(0.5)
+        return AttemptResult(
+            index=ctx.attempt_index,
+            technique=ctx.technique,
+            score=0.0,
+            exit="ok",
+            notes="should-not-be-reached",
+            pick_note=ctx.pick_note,
+        )
+
+    result = run_fanout(
+        _problem(),
+        k=3,
+        bandit=bandit,
+        category="circle-packing",
+        rng=random.Random(1),
+        runner=slow_runner,
+        per_attempt_timeout_seconds=0.05,
+    )
+    assert all(a.exit == "timeout" for a in result.attempts)
+    assert result.k_completed == 0
+    assert result.winner_index is None
+    # Each timeout result preserves the bandit pick's audit fields
+    for a in result.attempts:
+        assert a.technique == "dominant.md"
+        assert a.pick_note is not None
+        assert "technique=dominant.md" in a.pick_note
+
+
+def test_run_fanout_partial_k_with_timeout():
+    """Some attempts complete within timeout, some don't — k_completed reflects
+    the ok ones; winner is picked from those."""
+    bandit = ThompsonSampler(rows=DOMINANT_ROWS)
+
+    def mixed_runner(ctx: AttemptContext) -> AttemptResult:
+        # Even attempts are slow, odd attempts are fast
+        if ctx.attempt_index % 2 == 0:
+            _time.sleep(0.5)
+        return AttemptResult(
+            index=ctx.attempt_index,
+            technique=ctx.technique,
+            score=0.1 * ctx.attempt_index,
+            exit="ok",
+            notes="",
+            pick_note=ctx.pick_note,
+        )
+
+    result = run_fanout(
+        _problem(),
+        k=4,
+        bandit=bandit,
+        category="circle-packing",
+        rng=random.Random(1),
+        runner=mixed_runner,
+        per_attempt_timeout_seconds=0.1,
+    )
+    # Odd attempts (1, 3) completed; even (2, 4) timed out
+    assert result.k_completed == 2
+    completed = [a for a in result.attempts if a.exit == "ok"]
+    timed_out = [a for a in result.attempts if a.exit == "timeout"]
+    assert len(completed) == 2 and len(timed_out) == 2
+    assert {a.index for a in completed} == {1, 3}
+    # Winner is the min-score ok attempt (score = 0.1 * index, so index 1 wins)
+    assert result.winner is not None
+    assert result.winner.index == 1
+
+
+def test_run_fanout_no_timeout_is_sequential():
+    """`per_attempt_timeout_seconds=None` → sequential path (no threads).
+
+    Pinned by checking that the runner's call order matches submission order
+    (the threaded path collects in submission order too, but the no-thread
+    path doesn't create the executor at all)."""
+    bandit = ThompsonSampler(rows=DOMINANT_ROWS)
+    call_order: list[int] = []
+
+    def runner(ctx: AttemptContext) -> AttemptResult:
+        call_order.append(ctx.attempt_index)
+        return AttemptResult(
+            index=ctx.attempt_index,
+            technique=ctx.technique,
+            score=float(ctx.attempt_index),
+            exit="ok",
+            notes="",
+            pick_note=ctx.pick_note,
+        )
+
+    run_fanout(
+        _problem(),
+        k=3,
+        bandit=bandit,
+        category="circle-packing",
+        rng=random.Random(1),
+        runner=runner,
+        per_attempt_timeout_seconds=None,
+    )
+    assert call_order == [1, 2, 3]
+
+
+def test_run_fanout_timeout_results_in_index_order():
+    """When threads finish out of order, results[] is still sorted by index
+    (so attempt_rewards[i] in Goal 3 lines up with chosen_techniques[i])."""
+    bandit = ThompsonSampler(rows=DOMINANT_ROWS)
+
+    def reversed_speed_runner(ctx: AttemptContext) -> AttemptResult:
+        # Later attempts finish first (sleep decreases by index)
+        _time.sleep(max(0, 0.05 - ctx.attempt_index * 0.01))
+        return AttemptResult(
+            index=ctx.attempt_index,
+            technique=ctx.technique,
+            score=float(ctx.attempt_index),
+            exit="ok",
+            notes="",
+            pick_note=ctx.pick_note,
+        )
+
+    result = run_fanout(
+        _problem(),
+        k=4,
+        bandit=bandit,
+        category="circle-packing",
+        rng=random.Random(1),
+        runner=reversed_speed_runner,
+        per_attempt_timeout_seconds=5.0,
+    )
+    indices = [a.index for a in result.attempts]
+    assert indices == [1, 2, 3, 4]
+
+
+def test_run_fanout_timeout_with_executor_seam():
+    """Caller can inject an executor (test seam for deterministic shutdown)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    bandit = ThompsonSampler(rows=DOMINANT_ROWS)
+    runner = _scripted_runner({i: _ok(i, None, score=float(i)) for i in range(1, 4)})
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        result = run_fanout(
+            _problem(),
+            k=3,
+            bandit=bandit,
+            category="circle-packing",
+            rng=random.Random(1),
+            runner=runner,
+            per_attempt_timeout_seconds=5.0,
+            executor=ex,
+        )
+    assert len(result.attempts) == 3
+    assert result.k_completed == 3
