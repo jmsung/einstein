@@ -171,6 +171,7 @@ def render_prompt(
     skill_library_tail_lines: int = 80,
     out_token_cap: int = 50_000,
     wall_clock_min: int = 30,
+    pre_cycle_synthesis: str | None = None,
 ) -> str:
     """Render the prompt body for one inner cycle.
 
@@ -238,11 +239,29 @@ def render_prompt(
         else (str(score_current) if score_current is not None else "none")
     )
 
+    # Goal 8 of js/feat/research-synthesis: when the orchestrator has produced
+    # a pre-cycle literature synthesis (by inspecting cycle-discipline.md for
+    # the rule_edit marker), inject it as a leading section so the inner
+    # agent reads source-grounded patterns BEFORE deciding strategy.
+    if pre_cycle_synthesis and pre_cycle_synthesis.strip():
+        synthesis_section = (
+            "## Pre-cycle synthesis (auto-generated)\n\n"
+            "The orchestrator ran `cb/scripts/research_synthesis.py` before this cycle "
+            "because `.claude/rules/cycle-discipline.md` enables the research-synthesis "
+            "step. The block below summarizes top-k qmd hits against the wiki + source "
+            "collections plus claude's cross-source pattern extraction. **Use the "
+            "`cited_sources` array in your JSON output to declare which of these source "
+            "paths actually informed your attempt.**\n\n"
+            f"{pre_cycle_synthesis.strip()}\n"
+        )
+    else:
+        synthesis_section = ""
+
     return f"""# Autonomous cycle — problem {problem_label}
 
 Attempt {attempt_index}/3 in this visit. cycle_id={cycle_id}. category={category}.
 
-## Your task
+{synthesis_section}## Your task
 
 Run the math-solving-protocol (`.claude/rules/math-solving-protocol.md`) and
 emit a single JSON object matching the schema at the end. Concretely:
@@ -266,6 +285,13 @@ emit a single JSON object matching the schema at the end. Concretely:
    If the attempt failed (dead end), set `dead_end_finding` to the intended
    path under `docs/wiki/findings/dead-end-*.md`; the orchestrator writes
    the file in Goal 7.6.
+8. **CITED SOURCES** — populate `cited_sources` with every
+   `docs/source/<file>.md` path that materially informed this attempt
+   (read in step 1's wiki-first lookup, surfaced by gap_search, or
+   referenced in a council question). Empty list is OK if no source/
+   page was load-bearing. This field feeds `mb/logs/cited-sources.jsonl`
+   and the promotion-candidate detector per Goal 4 of
+   `js/feat/research-synthesis`.
 
 ## Problem statement
 

@@ -18,6 +18,7 @@ Every problem-attempt cycle gets one row. Failures count. Cherry-picking is forb
 | `author_mix` | agent/human/hybrid counts |
 | `outcome` | conquered / improved / no-change / new-finding-no-improvement / blocked |
 | `notes` | one-line gloss |
+| `cites_src` | count of `docs/source/<file>.md` paths the inner agent declared informed this attempt. Full per-cycle path list at `mb/logs/cited-sources.jsonl`; promotion candidates (≥3 cites cross-cycle) at `mb/logs/promotion-candidates.md`. Added 2026-05-25 per Goal 4 of `js/feat/research-synthesis`. Rows before that date predate the column. |
 
 ## Cycles
 

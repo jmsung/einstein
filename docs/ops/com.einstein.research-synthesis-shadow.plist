@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- macOS launchd template for the research-synthesis shadow A/B (Goal 7 of
+js/feat/research-synthesis).
+
+Fires `scripts/research_synthesis_shadow.py --execute --n-cycles 10` once.
+By default this template runs on demand (RunAtLoad=true, no calendar
+interval); install it, run it, capture the report, then uninstall.
+
+Heavy — forks two cb-shadow worktrees and runs N cycles in each via
+autonomous_loop.py (each cycle = one inner-agent LLM call). At N=10 per arm
+on the P1/P9/P14/P19 subset, expect ~2-4 hours wall clock. Logs land in
+mb/autonomous-loop.out.log (per-cycle) and mb/logs/research-synthesis-shadow.md
+(per-A/B-comparison).
+
+Replace __PROJECT_ROOT__ with your local checkout's absolute path before
+installing. See docs/ops/README.md for the install walkthrough. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.einstein.research-synthesis-shadow</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd "__PROJECT_ROOT__" &amp;&amp; uv run python scripts/research_synthesis_shadow.py --execute --n-cycles 10</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__PROJECT_ROOT__</string>
+
+  <!-- On-demand: install, run once at load, then uninstall. Use this for
+       the first unattended run (Goal 7 of js/feat/research-synthesis).
+       Do NOT add a StartCalendarInterval — the shadow A/B is a one-shot
+       experiment, not a recurring job. -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>__PROJECT_ROOT__/../mb/logs/research-synthesis-shadow.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>__PROJECT_ROOT__/../mb/logs/research-synthesis-shadow.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <!-- G1 finding: macOS Metal finalizer SIGABRT on qmd query. -->
+    <key>QMD_FORCE_CPU</key>
+    <string>1</string>
+  </dict>
+</dict>
+</plist>

@@ -197,7 +197,7 @@ def test_render_prompt_attempt_2_includes_visit_history(fake_layout):
         cycle_id=100,
         attempt_index=2,
         prior_visit_summaries=[
-            "tried basin-hopping; no improvement; council surfaced " "rotation-lottery question"
+            "tried basin-hopping; no improvement; council surfaced rotation-lottery question"
         ],
         **fake_layout,
     )
@@ -268,3 +268,73 @@ def test_render_prompt_truncates_long_skill_library(fake_layout):
     assert "row 499" in prompt  # last line preserved
     assert "row 100" not in prompt  # earlier lines dropped
     assert "truncated to last 20 of 500" in prompt
+
+
+# Goal 8 of js/feat/research-synthesis: pre_cycle_synthesis kwarg
+
+
+def test_render_prompt_omits_synthesis_section_when_none(fake_layout):
+    """Default behaviour: no synthesis content → no ## Pre-cycle synthesis section."""
+    prompt = iap.render_prompt(
+        problem_id=14,
+        problem_slug="circle-packing-square",
+        file_slug="14-circle-packing-square",
+        score_current=2.636,
+        status="rank-2-frozen",
+        tier="A",
+        category="packing",
+        cycle_id=99,
+        attempt_index=1,
+        **fake_layout,
+    )
+    assert "## Pre-cycle synthesis (auto-generated)" not in prompt
+    # No mysterious empty section either
+    assert "auto-generated" not in prompt
+
+
+def test_render_prompt_omits_synthesis_when_empty_string(fake_layout):
+    """Empty / whitespace-only synthesis → still no section."""
+    prompt = iap.render_prompt(
+        problem_id=14,
+        problem_slug="circle-packing-square",
+        file_slug="14-circle-packing-square",
+        score_current=2.636,
+        status="rank-2-frozen",
+        tier="A",
+        category="packing",
+        cycle_id=99,
+        attempt_index=1,
+        pre_cycle_synthesis="   \n  \n",
+        **fake_layout,
+    )
+    assert "## Pre-cycle synthesis (auto-generated)" not in prompt
+
+
+def test_render_prompt_includes_synthesis_section_when_provided(fake_layout):
+    """When orchestrator provides synthesis, it lands BEFORE ## Your task."""
+    body = (
+        "# Literature synthesis: P14 — circle-packing-square\n\n"
+        "## Top sources\n- 88% docs/source/2016-cohn-some-properties.md — magic function\n\n"
+        "## Cross-source patterns\n### Pattern: peak-locking transfer\n"
+    )
+    prompt = iap.render_prompt(
+        problem_id=14,
+        problem_slug="circle-packing-square",
+        file_slug="14-circle-packing-square",
+        score_current=2.636,
+        status="rank-2-frozen",
+        tier="A",
+        category="packing",
+        cycle_id=99,
+        attempt_index=1,
+        pre_cycle_synthesis=body,
+        **fake_layout,
+    )
+    assert "## Pre-cycle synthesis (auto-generated)" in prompt
+    # Synthesis body inlined verbatim
+    assert "2016-cohn-some-properties.md" in prompt
+    assert "Pattern: peak-locking transfer" in prompt
+    # Must appear BEFORE ## Your task
+    assert prompt.index("## Pre-cycle synthesis") < prompt.index("## Your task")
+    # The instruction nudges the agent to use cited_sources
+    assert "cited_sources" in prompt

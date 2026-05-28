@@ -345,7 +345,34 @@ CycleRunner = Callable[[Path, int], list[diagnose.CycleRow]]
 """run_n_cycles(arm_path, n) -> list of CycleRow rows produced."""
 
 
-def default_cycle_runner(arm_path: Path, n: int) -> list[diagnose.CycleRow]:
+DEFAULT_CYCLE_RUNNER_TIMEOUT_SECONDS = 14400  # 4h — fits N=10 at observed ~12 min/cycle
+
+
+def _with_env(os_mod, key: str, value: str, fn):
+    """Run ``fn()`` with ``os_mod.environ[key] = value``; restore prior state.
+
+    Used by `run_shadow` to mark each arm's cycle_runner subprocess via
+    inherited env vars (Goal 9 of js/feat/research-synthesis). os_mod is
+    injected so tests can verify the env was set/cleared correctly.
+    """
+    prior = os_mod.environ.get(key)
+    os_mod.environ[key] = value
+    try:
+        return fn()
+    finally:
+        if prior is None:
+            os_mod.environ.pop(key, None)
+        else:
+            os_mod.environ[key] = prior
+
+
+def default_cycle_runner(
+    arm_path: Path,
+    n: int,
+    *,
+    timeout_seconds: int = DEFAULT_CYCLE_RUNNER_TIMEOUT_SECONDS,
+    env: dict[str, str] | None = None,
+) -> list[diagnose.CycleRow]:
     """Shell out to scripts/autonomous_loop.py inside the arm worktree.
 
     Captures the cycle-log rows that get APPENDED during this run by
@@ -353,32 +380,57 @@ def default_cycle_runner(arm_path: Path, n: int) -> list[diagnose.CycleRow]:
 
     Heavy: each cycle is an LLM call. Real use is operator-initiated;
     unit tests stub this.
+
+    On `subprocess.TimeoutExpired`: subprocess is killed, but we still parse
+    whatever rows the autonomous_loop appended before being killed and return
+    them. Without this, a single slow arm crashes the whole shadow run + we
+    lose all in-flight work to the `cleanup=True` finally-block.
+
+    Goal 9 of js/feat/research-synthesis: ``env`` is merged over
+    ``os.environ`` so the caller can set per-arm env vars (e.g.
+    ``EINSTEIN_SHADOW_ARM=A``) that the inner agent's sidecar writes pick up.
+    Without it, both arms' citation records are indistinguishable in the
+    shared sidecar and the promotion gate can't measure per-arm counts.
     """
+    import os as _os
+
     cycle_log = arm_path / "docs" / "agent" / "cycle-log.md"
     rows_before = diagnose.parse_cycle_log(cycle_log)
     before_ids = {r.cycle_id for r in rows_before}
 
-    proc = subprocess.run(
-        [
-            "uv",
-            "run",
-            "python",
-            "scripts/autonomous_loop.py",
-            "--max-problems",
-            str(n),
-        ],
-        cwd=arm_path,
-        capture_output=True,
-        text=True,
-        timeout=3600,  # 1 hour cap for N cycles
-        check=False,
-    )
-    if proc.returncode != 0:
+    full_env = _os.environ.copy()
+    if env:
+        full_env.update(env)
+
+    try:
+        proc = subprocess.run(
+            [
+                "uv",
+                "run",
+                "python",
+                "scripts/autonomous_loop.py",
+                "--max-problems",
+                str(n),
+            ],
+            cwd=arm_path,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            check=False,
+            env=full_env,
+        )
+        if proc.returncode != 0:
+            log.warning(
+                "autonomous_loop in %s exited %d; stderr: %s",
+                arm_path,
+                proc.returncode,
+                proc.stderr[-500:],
+            )
+    except subprocess.TimeoutExpired:
         log.warning(
-            "autonomous_loop in %s exited %d; stderr: %s",
+            "autonomous_loop in %s timed out after %ds; returning partial rows",
             arm_path,
-            proc.returncode,
-            proc.stderr[-500:],
+            timeout_seconds,
         )
 
     rows_after = diagnose.parse_cycle_log(cycle_log)
@@ -430,9 +482,20 @@ def run_shadow(
         if not a.ok:
             result.error = f"apply to A failed: {a.stderr.strip()}"
             return result
-        # Run N cycles in each arm
-        rows_a = cycle_runner(arm_a.path, n_cycles)
-        rows_b = cycle_runner(arm_b.path, n_cycles)
+        # Run N cycles in each arm. Goal 9 of js/feat/research-synthesis:
+        # set EINSTEIN_SHADOW_ARM in os.environ so the cycle_runner
+        # subprocess inherits it; inner_agent_output.append_citation_record
+        # tags each sidecar record with the arm letter. This lets the
+        # downstream promotion gate compute per-arm citation counts from
+        # the shared sidecar JSONL after cleanup deletes the arm cycle-logs.
+        import os as _os
+
+        rows_a = _with_env(
+            _os, "EINSTEIN_SHADOW_ARM", "A", lambda: cycle_runner(arm_a.path, n_cycles)
+        )
+        rows_b = _with_env(
+            _os, "EINSTEIN_SHADOW_ARM", "B", lambda: cycle_runner(arm_b.path, n_cycles)
+        )
         delta = ShadowDelta(
             arm_a=compute_arm_metrics(rows_a),
             arm_b=compute_arm_metrics(rows_b),
