@@ -99,6 +99,11 @@ _ROW_RE = re.compile(
     r"\s*(\d+)\s*\|\s*([0-9-]+|\S*)\s*\|\s*([0-9.]+)\s*\|\s*$"
 )
 
+# Public alias — the skill bandit's counter updater (src/einstein/bandit/
+# skill_update.py) reuses this row pattern to rewrite a technique's counts.
+# Groups: 1=technique 2=category 3=tried 4=top3 5=finding 6=last_used 7=hit_rate.
+ROW_RE = _ROW_RE
+
 
 def load_skill_library(path: Path) -> list[SkillRow]:
     """Parse the markdown table rows from skill-library.md.

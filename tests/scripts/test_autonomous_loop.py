@@ -2092,3 +2092,46 @@ def test_bandit_no_arms_for_category_leaves_strategy_none(tmp_path: Path, monkey
     r = al.inner_attempt(p2, dry_run=True, skill_library=lib)
     assert r["chosen_techniques"] == []
     assert "no bandit arms" in r["notes"]
+
+
+# ---------------- Goal 3: bandit skill-library learning loop ----------------
+
+
+def test_bandit_skill_update_bumps_chosen_techniques(tmp_path: Path) -> None:
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    ledger = tmp_path / "ledger.tsv"
+    result = {"chosen_techniques": ["tech-A"], "outcome": "improved-local"}
+    out = al._bandit_skill_update(result, 5, skill_library=lib, ledger_path=ledger)
+    assert len(out) == 1 and out[0].applied
+    assert out[0].tried == 5 and out[0].top3 == 3  # reward outcome bumps top3
+
+
+def test_bandit_skill_update_no_reward_outcome(tmp_path: Path) -> None:
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    ledger = tmp_path / "ledger.tsv"
+    result = {"chosen_techniques": ["tech-A"], "outcome": "no-change"}
+    out = al._bandit_skill_update(result, 6, skill_library=lib, ledger_path=ledger)
+    assert out[0].tried == 5 and out[0].top3 == 2  # tried bumps, top3 does not
+
+
+def test_bandit_skill_update_idempotent(tmp_path: Path) -> None:
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    ledger = tmp_path / "ledger.tsv"
+    result = {"chosen_techniques": ["tech-A"], "outcome": "improved-local"}
+    al._bandit_skill_update(result, 9, skill_library=lib, ledger_path=ledger)
+    snapshot = lib.read_text()
+    again = al._bandit_skill_update(result, 9, skill_library=lib, ledger_path=ledger)
+    assert not again[0].applied
+    assert lib.read_text() == snapshot
+
+
+def test_bandit_skill_update_empty_techniques(tmp_path: Path) -> None:
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    out = al._bandit_skill_update(
+        {"chosen_techniques": [], "outcome": "no-change"}, 1, skill_library=lib
+    )
+    assert out == []
