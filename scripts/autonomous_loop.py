@@ -534,19 +534,36 @@ def _inner_attempt_fanout(
         runner=runner,
     )
 
-    chosen_techniques = [a.technique for a in fanout_result.attempts if a.technique is not None]
+    # Goal 3: chosen_techniques + attempt_rewards stay length-aligned. We
+    # iterate over fanout_result.attempts ONCE so the i-th reward matches
+    # the i-th technique even when no-arm attempts interleave with ok ones.
+    chosen_techniques: list[str] = []
+    attempt_rewards: list[bool] = []
+    winner_attempt_index = fanout_result.winner.index if fanout_result.winner else None
+    for a in fanout_result.attempts:
+        if a.technique is None:
+            continue
+        chosen_techniques.append(a.technique)
+        attempt_rewards.append(a.index == winner_attempt_index and a.exit == "ok")
+
     notes_parts: list[str] = [
         "strategy=thompson-bandit-fanout",
         f"category={category}",
         f"parallel_k={k}",
         f"k_completed={fanout_result.k_completed}",
     ]
-    # Per-attempt audit lines (cycle-log will capture all K via Goal 3).
+    # Per-attempt audit lines (cycle-log notes carries the full K trace).
+    # `score=…` is included for ok attempts so the cycle-log shows both
+    # winner score AND losers' scores per branch line 81.
     for a in fanout_result.attempts:
-        if a.pick_note is not None:
-            notes_parts.append(f"attempt[{a.index}]: {a.pick_note} → exit={a.exit}")
-        else:
-            notes_parts.append(f"attempt[{a.index}]: exit={a.exit}")
+        head = (
+            f"attempt[{a.index}]: {a.pick_note} → exit={a.exit}"
+            if a.pick_note is not None
+            else f"attempt[{a.index}]: exit={a.exit}"
+        )
+        if a.exit == "ok" and a.score is not None:
+            head += f" score={a.score}"
+        notes_parts.append(head)
 
     start_score = problem.score_current
     end_score = problem.score_current
@@ -598,6 +615,10 @@ def _inner_attempt_fanout(
         "outcome": outcome,
         "notes": notes,
         "chosen_techniques": chosen_techniques,
+        # Goal 3 of js/feat/parallel-attempts: per-pull reward signal so
+        # `_bandit_skill_update` can bump top3 only on the winner's arm.
+        # Index-aligned with `chosen_techniques`.
+        "attempt_rewards": attempt_rewards,
     }
 
 
@@ -617,12 +638,24 @@ def _bandit_skill_update(
     skill_library: Path = DEFAULT_SKILL_LIBRARY,
     ledger_path: Path = DEFAULT_BANDIT_LEDGER,
 ) -> list:
-    """Goal 3: bump skill-library counts for the bandit's chosen techniques.
+    """Bump skill-library counts for the bandit's chosen techniques.
 
-    `tried += 1` always; `top3 += 1` when the cycle outcome is a reward.
+    Two modes depending on whether `attempt_result["attempt_rewards"]` is set:
+
+    - **Single-attempt path** (no `attempt_rewards` key, K=1 default) — preserves
+      pre-Goal-3 behavior: `tried += 1` for each technique in `chosen_techniques`,
+      `top3 += 1` for each when the cycle outcome is a reward. Ledger key
+      `(cycle, technique)`. Idempotent on re-runs.
+
+    - **Fanout path** (Goal 3 of js/feat/parallel-attempts; `attempt_rewards`
+      is a `list[bool]` of length `len(chosen_techniques)`) — per-pull
+      semantics: `tried += 1` for every arm pulled (including K-pull
+      collisions on the same arm); `top3 += 1` only for the arms whose
+      `attempt_rewards[i]` is True (the winner only, per branch line 81).
+      Ledger key `(cycle, P{i}, technique)` so K same-arm pulls each count.
+
     Best-effort — any failure is logged and swallowed so the cycle never
-    breaks. Idempotent per (cycle_id, technique) inside `update_counts`.
-    Returns the list of UpdateResult (empty when nothing applied).
+    breaks. Returns the list of UpdateResult (empty when nothing applied).
     """
     techniques = attempt_result.get("chosen_techniques") or []
     if not techniques:
@@ -633,9 +666,15 @@ def _bandit_skill_update(
     except ImportError as e:
         log.warning("skill_update unavailable (%s) — bandit learning loop skipped", e)
         return []
-    reached = attempt_result.get("outcome") in _BANDIT_REWARD_OUTCOMES
+
+    rewards = attempt_result.get("attempt_rewards")
+    fanout = isinstance(rewards, list) and len(rewards) == len(techniques)
+    reached_default = attempt_result.get("outcome") in _BANDIT_REWARD_OUTCOMES
+
     results = []
-    for tech in techniques:
+    for i, tech in enumerate(techniques):
+        reached = bool(rewards[i]) if fanout else reached_default
+        pull_index = i if fanout else None
         try:
             results.append(
                 update_counts(
@@ -644,6 +683,7 @@ def _bandit_skill_update(
                     reached_top3=reached,
                     cycle_id=cycle_id,
                     ledger_path=ledger_path,
+                    pull_index=pull_index,
                 )
             )
         except Exception as e:  # noqa: BLE001 — never break the cycle

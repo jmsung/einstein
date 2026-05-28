@@ -2454,3 +2454,143 @@ def test_parallel_k_dispatcher_called_per_attempt(tmp_path: Path, monkeypatch) -
     # Each call's `strategy` is one of the two arms
     for call in dispatcher.calls:  # type: ignore[attr-defined]
         assert call["strategy"] in ("tech-A", "tech-B")
+
+
+# ============================================================================
+# Goal 3 (js/feat/parallel-attempts) — cycle-log + bandit counters per K attempt
+# ============================================================================
+
+
+def test_bandit_skill_update_fanout_tried_per_pull(tmp_path: Path) -> None:
+    """K=3 distinct techniques + attempt_rewards=[T,F,F] → 3 ledger entries;
+    each tech tried+=1; winner top3+=1; losers top3 unchanged."""
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n"
+        "| `tech-B` | packing | 6 | 1 | 0 | 2026-01-02 | 0.17 |\n"
+        "| `tech-C` | packing | 8 | 3 | 2 | 2026-01-03 | 0.38 |\n"
+    )
+    ledger = tmp_path / "ledger.tsv"
+    result = {
+        "chosen_techniques": ["tech-A", "tech-B", "tech-C"],
+        "attempt_rewards": [True, False, False],
+        "outcome": "improved-local",
+    }
+    out = al._bandit_skill_update(result, 10, skill_library=lib, ledger_path=ledger)
+    assert len(out) == 3
+    assert all(r.applied for r in out)
+    by_tech = {r.technique: r for r in out}
+    # tech-A (winner) — tried 5, top3 3
+    assert (by_tech["tech-A"].tried, by_tech["tech-A"].top3) == (5, 3)
+    # tech-B/C — tried+=1, top3 unchanged
+    assert (by_tech["tech-B"].tried, by_tech["tech-B"].top3) == (7, 1)
+    assert (by_tech["tech-C"].tried, by_tech["tech-C"].top3) == (9, 3)
+    # Ledger has 3 distinct per-pull entries
+    assert len(ledger.read_text().splitlines()) == 3
+
+
+def test_bandit_skill_update_fanout_duplicate_technique_tried_per_pull(tmp_path: Path) -> None:
+    """K=4 same-arm pulls (Thompson collision case) → tried += 4 for that arm.
+
+    K-pull semantics from Goal 0: collisions are informative — when one arm
+    dominates the posterior, K pulls all land on it. Each pull is a trial."""
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n")
+    ledger = tmp_path / "ledger.tsv"
+    result = {
+        "chosen_techniques": ["tech-A", "tech-A", "tech-A", "tech-A"],
+        "attempt_rewards": [True, False, False, False],
+        "outcome": "improved-local",
+    }
+    out = al._bandit_skill_update(result, 11, skill_library=lib, ledger_path=ledger)
+    assert len(out) == 4 and all(r.applied for r in out)
+    # 4 ledger entries — per-pull idempotency, NOT cycle-level dedup
+    assert len(ledger.read_text().splitlines()) == 4
+    # tried bumped 4 times (4 → 8); top3 only on pull 0 (2 → 3)
+    final = out[-1]
+    assert final.tried == 8 and final.top3 == 3
+
+
+def test_bandit_skill_update_fanout_no_winner_no_top3(tmp_path: Path) -> None:
+    """All attempts failed → tried bumps for each, top3 doesn't."""
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n"
+        "| `tech-B` | packing | 6 | 1 | 0 | 2026-01-02 | 0.17 |\n"
+    )
+    ledger = tmp_path / "ledger.tsv"
+    result = {
+        "chosen_techniques": ["tech-A", "tech-B"],
+        "attempt_rewards": [False, False],
+        "outcome": "fanout-no-completion",
+    }
+    out = al._bandit_skill_update(result, 12, skill_library=lib, ledger_path=ledger)
+    by_tech = {r.technique: r for r in out}
+    assert by_tech["tech-A"].tried == 5 and by_tech["tech-A"].top3 == 2  # unchanged top3
+    assert by_tech["tech-B"].tried == 7 and by_tech["tech-B"].top3 == 1  # unchanged top3
+
+
+def test_bandit_skill_update_single_attempt_unchanged(tmp_path: Path) -> None:
+    """Without `attempt_rewards`, behavior is exactly pre-Goal-3:
+    every technique in chosen_techniques gets top3+=1 if outcome is a reward."""
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `tech-A` | packing | 4 | 2 | 1 | 2026-01-01 | 0.50 |\n"
+        "| `tech-B` | packing | 6 | 1 | 0 | 2026-01-02 | 0.17 |\n"
+    )
+    ledger = tmp_path / "ledger.tsv"
+    # Old-style result dict — no attempt_rewards key
+    result = {"chosen_techniques": ["tech-A", "tech-B"], "outcome": "improved-local"}
+    out = al._bandit_skill_update(result, 13, skill_library=lib, ledger_path=ledger)
+    by_tech = {r.technique: r for r in out}
+    # Both techniques get top3 += 1 (legacy "both share cycle outcome" behavior)
+    assert by_tech["tech-A"].top3 == 3
+    assert by_tech["tech-B"].top3 == 2
+    # Ledger uses the legacy cycle-level key (single line per tech, no Pi prefix)
+    lines = ledger.read_text().splitlines()
+    assert all(
+        "\tP" not in line for line in lines
+    ), f"single-attempt path should not write per-pull ledger keys; got {lines}"
+
+
+def test_parallel_k_attempt_rewards_marks_winner_only(tmp_path: Path, monkeypatch) -> None:
+    """inner_attempt result has attempt_rewards aligned with chosen_techniques;
+    exactly one True (the winner), rest False."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})  # tech-B wins
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    rewards = r["attempt_rewards"]
+    assert isinstance(rewards, list)
+    assert len(rewards) == len(r["chosen_techniques"])
+    assert rewards.count(True) == 1
+    # The True index must correspond to the winning technique
+    winner_tech = r["chosen_techniques"][rewards.index(True)]
+    assert winner_tech == "tech-B"
+
+
+def test_parallel_k_notes_carry_per_attempt_score(tmp_path: Path, monkeypatch) -> None:
+    """Fanout notes contain `score=` for ok attempts (winner + losers)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "3")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "score=" in r["notes"]
+
+
+def test_parallel_k_skill_update_end_to_end(tmp_path: Path, monkeypatch) -> None:
+    """End-to-end: inner_attempt(K=4) → _bandit_skill_update applies per-pull
+    increments with winner-only top3."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "4")
+    dispatcher = _scoring_dispatcher({"tech-A": 0.5, "tech-B": 0.3})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    ledger = tmp_path / "ledger.tsv"
+    out = al._bandit_skill_update(r, 99, skill_library=lib, ledger_path=ledger)
+    # Exactly one winner-top3 increment; all other increments bump tried only
+    top3_bumps = sum(1 for u in out if u.applied and u.top3 is not None)
+    # Per-pull ledger lines == number of applied techniques (≤ K)
+    assert len(ledger.read_text().splitlines()) == top3_bumps

@@ -52,21 +52,35 @@ class UpdateResult:
     hit_rate: float | None = None
 
 
-def _ledger_key(cycle_id: int, technique: str) -> str:
-    return f"{cycle_id}\t{technique}"
+def _ledger_key(cycle_id: int, technique: str, pull_index: int | None = None) -> str:
+    """Build the ledger key.
+
+    `pull_index=None` (single-attempt path) → `cycle\ttechnique` (legacy
+    format, preserved for backward compat).
+    `pull_index=int` (fanout K-pull path) → `cycle\tP{pull_index}\ttechnique`,
+    a distinct namespace so the same arm pulled K times in one cycle counts
+    as K trials, not deduped to 1.
+    """
+    if pull_index is None:
+        return f"{cycle_id}\t{technique}"
+    return f"{cycle_id}\tP{pull_index}\t{technique}"
 
 
-def _ledger_has(ledger_path: Path, cycle_id: int, technique: str) -> bool:
+def _ledger_has(
+    ledger_path: Path, cycle_id: int, technique: str, pull_index: int | None = None
+) -> bool:
     if not ledger_path.exists():
         return False
-    key = _ledger_key(cycle_id, technique)
+    key = _ledger_key(cycle_id, technique, pull_index)
     return any(line.rstrip("\n") == key for line in ledger_path.read_text().splitlines())
 
 
-def _ledger_append(ledger_path: Path, cycle_id: int, technique: str) -> None:
+def _ledger_append(
+    ledger_path: Path, cycle_id: int, technique: str, pull_index: int | None = None
+) -> None:
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
     with ledger_path.open("a", encoding="utf-8") as f:
-        f.write(_ledger_key(cycle_id, technique) + "\n")
+        f.write(_ledger_key(cycle_id, technique, pull_index) + "\n")
 
 
 def update_counts(
@@ -78,14 +92,26 @@ def update_counts(
     ledger_path: Path = DEFAULT_LEDGER,
     produced_finding: bool = False,
     today: str | None = None,
+    pull_index: int | None = None,
 ) -> UpdateResult:
-    """Bump `technique`'s row in `library_path`. Idempotent per (cycle, technique).
+    """Bump `technique`'s row in `library_path`. Idempotent per ledger key.
+
+    `pull_index=None` (single-attempt path) — ledger key is `(cycle, technique)`,
+    matching the pre-Goal-3 format. Two calls with the same (cycle, technique)
+    dedupe.
+
+    `pull_index=int` (fanout K-pull, Goal 3 of js/feat/parallel-attempts) —
+    ledger key is `(cycle, P{pull}, technique)`. K pulls of the SAME arm in
+    one cycle apply K times because the keys differ. This is the bandit
+    semantics requested by branch line 81: "tried increments for every arm
+    pulled (not just winner)". Under K-pull Thompson, posterior collisions
+    are informative; the posterior should advance by K trials.
 
     Returns `UpdateResult(applied=False, ...)` without mutating anything when
-    the (cycle_id, technique) pair is already in the ledger, or when the
-    technique has no row in the library.
+    the ledger already has this key, or when the technique has no row in the
+    library.
     """
-    if _ledger_has(ledger_path, cycle_id, technique):
+    if _ledger_has(ledger_path, cycle_id, technique, pull_index):
         return UpdateResult(False, technique, "already applied (idempotent)")
 
     row_re = _row_re()
@@ -114,7 +140,7 @@ def update_counts(
         return UpdateResult(False, technique, "technique not in library")
 
     library_path.write_text("".join(out))
-    _ledger_append(ledger_path, cycle_id, technique)
+    _ledger_append(ledger_path, cycle_id, technique, pull_index)
     tried, top3, finding, hit = counts
     return UpdateResult(True, technique, "updated", tried, top3, finding, hit)
 
