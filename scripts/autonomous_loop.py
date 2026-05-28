@@ -365,6 +365,19 @@ def _bandit_pick(
 _PARALLEL_K_DEFAULT = 1
 _PARALLEL_K_MAX_DEFAULT = 8
 _PARALLEL_TIMEOUT_SECONDS_DEFAULT = 600.0
+_PARALLEL_AUTOFILE_TRUTHY = {"1", "true", "yes", "on"}
+
+
+def _parallel_autofile_findings() -> bool:
+    """Goal 6: `EINSTEIN_PARALLEL_AUTOFILE_FINDINGS` (default OFF) opt-in.
+
+    Writing to `docs/wiki/findings/` is high-stakes — mechanical heuristics
+    can't substitute for the failure-is-a-finding rule's actual test
+    (`would a peer have learned from this?`). Default-off; opt-in once
+    Goal 5's A/B verdict says the auto-stubs are worth the noise.
+    """
+    raw = os.environ.get("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", "")
+    return raw.strip().lower() in _PARALLEL_AUTOFILE_TRUTHY
 
 
 def _parallel_timeout_seconds() -> float:
@@ -492,6 +505,58 @@ def _build_fanout_runner(
         )
 
     return _runner
+
+
+def _surface_dead_end_finding(
+    fanout_result,
+    problem: "Problem",
+    skill_library: Path,
+    *,
+    today: str | None = None,
+) -> dict | None:
+    """Goal 6: pick the most interesting non-winning attempt (if any) and
+    build the stub finding's (path, content).
+
+    Returns `{"path": rel_path, "content": str, "technique": str}` when a
+    high-signal candidate is found, else None. Writing the file is the
+    caller's job — this function is pure so tests can drive it directly.
+    """
+    try:
+        sys.path.insert(0, str(_REPO / "src"))
+        from einstein.parallel.dead_end_surface import draft_stub, select_top_candidate
+    except ImportError as e:
+        log.warning("dead_end_surface unavailable (%s) — dead-end surfacing skipped", e)
+        return None
+
+    winner = fanout_result.winner
+    if winner is None:
+        return None
+    losers = [
+        a
+        for a in fanout_result.attempts
+        if a.index - 1 != fanout_result.winner_index and a.technique is not None
+    ]
+
+    # Build the arms_tried map from the skill-library (best-effort).
+    arms_tried: dict[str, int] = {}
+    try:
+        sys.path.insert(0, str(_REPO / "docs" / "tools"))
+        import strategy_picker as _sp  # type: ignore[import-not-found]
+
+        for r in _sp.load_skill_library(skill_library):
+            arms_tried[r.technique] = int(r.tried)
+    except Exception as e:  # noqa: BLE001
+        log.debug("could not load skill-library for arms_tried (%s) — using empty map", e)
+
+    candidate = select_top_candidate(losers=losers, winner=winner, arms_tried=arms_tried)
+    if candidate is None:
+        return None
+
+    iso_today = today or dt.date.today().isoformat()
+    rel_path, content = draft_stub(
+        problem=problem, candidate=candidate, winner=winner, today=iso_today
+    )
+    return {"path": rel_path, "content": content, "technique": candidate.technique}
 
 
 def _inner_attempt_fanout(
@@ -627,6 +692,26 @@ def _inner_attempt_fanout(
             if override is not None:
                 outcome = override
 
+    # Goal 6: scan non-winning attempts; if any cross the threshold, note
+    # the candidate (always) and write the stub (only when env opt-in).
+    findings_added = 0
+    dead_end = _surface_dead_end_finding(fanout_result, problem, skill_library)
+    if dead_end is not None:
+        notes_parts.append(f"dead_end_candidate={dead_end['technique']}")
+        if _parallel_autofile_findings() and not dry_run:
+            try:
+                target = _REPO / dead_end["path"]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                # Don't clobber a pre-existing finding with the same slug.
+                if not target.exists():
+                    target.write_text(dead_end["content"])
+                    notes_parts.append(f"dead_end_stub_written={dead_end['path']}")
+                    findings_added = 1
+                else:
+                    notes_parts.append(f"dead_end_stub_exists={dead_end['path']}")
+            except OSError as e:
+                log.warning("dead-end stub write failed: %s", e)
+
     notes = "autonomous_loop inner_attempt — " + "; ".join(notes_parts)
 
     return {
@@ -635,7 +720,7 @@ def _inner_attempt_fanout(
         "hours": runtime_hours,
         "compute": compute_tag,
         "wiki_citations": 0,
-        "findings_added": 0,
+        "findings_added": findings_added,
         "concepts_added": 0,
         "author_mix": {"agent": 1, "human": 0, "hybrid": 0},
         "outcome": outcome,

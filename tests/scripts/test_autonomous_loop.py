@@ -2709,3 +2709,144 @@ def test_parallel_fanout_timeout_bandit_skill_update_tried_not_top3(
         elif "tech-B" in line:
             # top3 unchanged at 1
             assert "| 1 |" in line
+
+
+# ============================================================================
+# Goal 6 (js/feat/parallel-attempts) — thresholded failure-finding for non-winners
+# ============================================================================
+
+
+def test_parallel_autofile_findings_env_default_off(tmp_path: Path, monkeypatch) -> None:
+    """Default-off: writing to docs/wiki/findings/ is high-stakes, opt-in only."""
+    monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
+    assert al._parallel_autofile_findings() is False
+
+
+def test_parallel_autofile_findings_env_truthy_values(tmp_path: Path, monkeypatch) -> None:
+    for v in ("1", "true", "yes", "on", "TRUE", "On"):
+        monkeypatch.setenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", v)
+        assert al._parallel_autofile_findings() is True, f"{v!r} should enable"
+    for v in ("0", "false", "no", "off", "", "garbage"):
+        monkeypatch.setenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", v)
+        assert al._parallel_autofile_findings() is False, f"{v!r} should disable"
+
+
+def test_surface_dead_end_finding_returns_none_when_no_winner(tmp_path: Path) -> None:
+    """No winner → no anchor for basin gap → no surfacing."""
+    from einstein.parallel.fanout import AttemptResult, FanoutResult
+
+    p = al.Problem(
+        problem_id=14,
+        slug="circle-packing-square",
+        tier="A",
+        status="open",
+        score_current=2.6,
+        path=Path("/x"),
+    )
+    # All attempts failed → winner=None
+    attempts = tuple(
+        AttemptResult(
+            index=i,
+            technique=f"tech-{i}",
+            score=None,
+            exit="timeout",
+            notes="",
+            pick_note=None,
+        )
+        for i in range(1, 4)
+    )
+    fr = FanoutResult(attempts=attempts, winner_index=None)
+    lib = tmp_path / "skill-library.md"
+    lib.write_text("")
+    assert al._surface_dead_end_finding(fr, p, lib) is None
+
+
+def test_surface_dead_end_finding_picks_high_signal_loser(tmp_path: Path) -> None:
+    """Winner=0.5, loser=2.0 with under-explored tech → candidate surfaced."""
+    from einstein.parallel.fanout import AttemptResult, FanoutResult
+
+    p = al.Problem(
+        problem_id=14,
+        slug="circle-packing-square",
+        tier="A",
+        status="open",
+        score_current=2.6,
+        path=Path("/x"),
+    )
+    attempts = (
+        AttemptResult(
+            index=1,
+            technique="winner_tech.md",
+            score=0.5,
+            exit="ok",
+            notes="",
+            pick_note="technique=winner_tech.md",
+        ),
+        AttemptResult(
+            index=2,
+            technique="loser_tech.md",
+            score=2.0,
+            exit="ok",
+            notes="",
+            pick_note="technique=loser_tech.md",
+        ),
+    )
+    fr = FanoutResult(attempts=attempts, winner_index=0)
+    # Both arms have low tried-count → high signal
+    lib = tmp_path / "skill-library.md"
+    lib.write_text(
+        "| `winner_tech.md` | packing | 2 | 1 | 0 | 2026-01-01 | 0.50 |\n"
+        "| `loser_tech.md` | packing | 3 | 0 | 1 | 2026-01-02 | 0.00 |\n"
+    )
+    out = al._surface_dead_end_finding(fr, p, lib, today="2026-05-27")
+    assert out is not None
+    assert out["technique"] == "loser_tech.md"
+    assert "loser-tech" in out["path"] or "loser_tech" in out["path"]
+    assert "p14" in out["path"]
+    assert "status: stub" in out["content"]
+
+
+def test_fanout_dead_end_note_added_when_candidate_exists(tmp_path: Path, monkeypatch) -> None:
+    """Notes carry `dead_end_candidate=` whenever a candidate is found,
+    regardless of whether the env flag enables writing."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    # Both library entries have tried <= 10 → high-signal-eligible
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "2")
+    monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
+    # Score gap > 10%: 0.3 vs 2.5 → easy basin gap
+    dispatcher = _scoring_dispatcher({"tech-A": 0.3, "tech-B": 2.5})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    # Notes should report the candidate even though the file wasn't written
+    assert "dead_end_candidate=" in r["notes"]
+    assert "dead_end_stub_written" not in r["notes"]
+    # findings_added stays 0 since we didn't write
+    assert r["findings_added"] == 0
+
+
+def test_fanout_dead_end_default_off_no_file_written(tmp_path: Path, monkeypatch) -> None:
+    """Env unset/off → no file written even when a candidate exists."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "2")
+    monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
+    # Capture findings dir state before
+    findings_dir = al._REPO / "docs" / "wiki" / "findings"
+    before = set(findings_dir.glob("dead-end-*.md")) if findings_dir.exists() else set()
+    dispatcher = _scoring_dispatcher({"tech-A": 0.3, "tech-B": 2.5})
+    al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    after = set(findings_dir.glob("dead-end-*.md")) if findings_dir.exists() else set()
+    # No new dead-end files appeared
+    assert after == before
+
+
+def test_fanout_dead_end_close_basin_no_candidate(tmp_path: Path, monkeypatch) -> None:
+    """Close-basin losers (score gap <10%) don't trigger surfacing."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    monkeypatch.setenv("EINSTEIN_BANDIT", "1")
+    monkeypatch.setenv("EINSTEIN_PARALLEL_K", "2")
+    monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
+    # Score gap 2.5% < 10% threshold → not a basin difference
+    dispatcher = _scoring_dispatcher({"tech-A": 0.40, "tech-B": 0.41})
+    r = al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)
+    assert "dead_end_candidate=" not in r["notes"]

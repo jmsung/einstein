@@ -12,6 +12,13 @@ research note pinning down the K-pull Thompson semantics.
 
 from __future__ import annotations
 
+from .dead_end_surface import (
+    ARM_NOVELTY_TRIED_CAP,
+    SCORE_GAP_REL_THRESHOLD,
+    draft_stub,
+    is_high_signal_loser,
+    select_top_candidate,
+)
 from .fanout import (
     AttemptContext,
     AttemptResult,
@@ -21,9 +28,14 @@ from .fanout import (
 )
 
 __all__ = [
+    "ARM_NOVELTY_TRIED_CAP",
     "AttemptContext",
     "AttemptResult",
     "AttemptRunner",
     "FanoutResult",
+    "SCORE_GAP_REL_THRESHOLD",
+    "draft_stub",
+    "is_high_signal_loser",
     "run_fanout",
+    "select_top_candidate",
 ]
