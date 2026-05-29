@@ -45,12 +45,25 @@ DEFAULT_DAILY_CAP = 2
 
 # Per-type minimum evidence cycle count. `new_question` is a read-only
 # artifact that can stand on findings/dead-ends — cycle count not required.
+# `meta_self_edit` is the extra-tight recursive case: see
+# `docs/wiki/findings/recursive-meta-design.md` § "Why ≥10 cycles, not 3".
 DEFAULT_EVIDENCE_THRESHOLDS: dict[str, int] = {
     ProposalType.RULE_EDIT.value: 3,
     ProposalType.MANIFEST_TWEAK.value: 3,
     ProposalType.QUEUE_REORDER.value: 3,
     ProposalType.NEW_QUESTION.value: 0,
+    ProposalType.META_SELF_EDIT.value: 10,
 }
+
+# Statistical floor for the meta_self_edit post-shadow gate. Operationalized
+# as a one-sided binomial test on the findings-per-cycle counts (arm A vs B);
+# the test asks "is arm A's share > 0.5 with probability ≥ 1 - p?".
+META_SELF_EDIT_SHADOW_P_FLOOR = 0.1
+
+# Strict findings-delta minimum on the post-shadow a_wins check — the magnitude
+# half of "directional + statistical". A_wins's default 0.0 is too loose for
+# the recursive case.
+META_SELF_EDIT_FINDINGS_DELTA_MIN = 0.2
 
 _REPO = Path(__file__).resolve().parents[3]
 DEFAULT_AUDIT_LOG = _REPO.parent / "mb" / "logs" / "meta-proposals.md"
@@ -69,11 +82,18 @@ AUDIT_LOG_HEADER = (
 
 
 class GateDecision(str, Enum):
-    """Outcome of one evaluate() call."""
+    """Outcome of one evaluate() call.
+
+    `QUEUED` is the never-auto-merge outcome for `meta_self_edit` — every
+    gate passed, but the diff is parked in `mb/meta-self-edit-queue/` for
+    human review rather than applied. See
+    `docs/wiki/findings/recursive-meta-design.md` § "Revert path".
+    """
 
     ACCEPTED = "accepted"
     REJECTED = "rejected"
     SHADOW_PENDING = "shadow-pending"
+    QUEUED = "queued"
 
 
 @dataclass
@@ -279,6 +299,180 @@ def evaluate(
     )
 
 
+# ---------------- meta_self_edit post-shadow gate (G3 of recursive-meta) ----
+
+
+def _binomial_one_sided_p(a: int, b: int) -> float:
+    """P(X >= a | N=a+b, p=0.5), one-sided.
+
+    Plain-Python implementation — no scipy dep needed for a 1-D binomial.
+    Returns 1.0 when a+b == 0 (no data → cannot reject the null).
+    """
+    n = a + b
+    if n <= 0:
+        return 1.0
+    # P(X >= a) = sum_{k=a..n} C(n,k) * 0.5^n
+    from math import comb
+
+    p_half = 0.5
+    tail = sum(comb(n, k) * (p_half**n) for k in range(a, n + 1))
+    return float(tail)
+
+
+def evaluate_meta_self_edit_post_shadow(
+    proposal: Proposal,
+    shadow_result,  # type-erased to avoid meta_loop.shadow import cycle
+    *,
+    snapshot_source: Path,
+    queue_dir: Path,
+    snapshot_dir: Path,
+    audit_log: Path | None = None,
+    p_floor: float = META_SELF_EDIT_SHADOW_P_FLOOR,
+    findings_delta_min: float = META_SELF_EDIT_FINDINGS_DELTA_MIN,
+    clock: Callable[[], dt.datetime] | None = None,
+) -> GateResult:
+    """Post-shadow gate chain for meta_self_edit (G3 of recursive-meta).
+
+    Runs AFTER `shadow.run_shadow` has produced a `ShadowResult`. Gates A–D
+    per `docs/wiki/findings/recursive-meta-design.md`:
+
+    - **A** (cycles ≥ 10): re-checks `evidence_cycles` count (defense in depth)
+    - **B** (shadow statistical): `a_wins(min_findings_delta=findings_delta_min)`
+      AND one-sided binomial p-value on findings-counts < `p_floor`
+    - **C** (never auto-merge): write a queue entry to `queue_dir/<id>.md`;
+      decision is `QUEUED` not `ACCEPTED` even when every gate passes
+    - **D** (revert path): snapshot `snapshot_source` (the meta_loop.py the diff
+      would apply against) to `snapshot_dir/<timestamp>-<short-sha>.py` BEFORE
+      writing the queue entry; the queue entry references the snapshot
+
+    Args:
+        proposal: must be a meta_self_edit-type Proposal.
+        shadow_result: a `meta_loop.shadow.ShadowResult` (type-erased here).
+            Must have `.delta` (ShadowDelta) populated; an errored shadow
+            result fails Gate B.
+        snapshot_source: path to scripts/meta_loop.py (the file the diff
+            would touch). Read at gate-pass time, written to snapshot_dir.
+        queue_dir: `mb/meta-self-edit-queue/`. Created if absent.
+        snapshot_dir: `mb/meta-loop-snapshots/`. Created if absent.
+
+    Raises:
+        ValueError: if `proposal.type != meta_self_edit`.
+    """
+    if proposal.type != ProposalType.META_SELF_EDIT.value:
+        raise ValueError(f"evaluate_meta_self_edit_post_shadow called on type={proposal.type!r}")
+
+    log_path = audit_log if audit_log is not None else DEFAULT_AUDIT_LOG
+    now = (clock or (lambda: dt.datetime.now(dt.timezone.utc)))()
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+
+    def _record(*, decision: GateDecision, gate: str | None, reason: str) -> GateResult:
+        _append_audit_row(
+            log_path,
+            timestamp=now,
+            proposal=proposal,
+            decision=decision,
+            gate=gate,
+            reason=reason,
+        )
+        return GateResult(
+            decision=decision,
+            proposal_id=proposal.id,
+            rejected_at_gate=gate if decision == GateDecision.REJECTED else None,
+            reason=reason,
+        )
+
+    # --- Gate A: usage-cycles floor (defense in depth) --------------------
+    needed = DEFAULT_EVIDENCE_THRESHOLDS[ProposalType.META_SELF_EDIT.value]
+    have = len(proposal.evidence_cycles)
+    if have < needed:
+        return _record(
+            decision=GateDecision.REJECTED,
+            gate="meta-cycles-floor",
+            reason=f"have {have} cycles, need ≥{needed} for meta_self_edit",
+        )
+
+    # --- Gate B: shadow statistical agreement -----------------------------
+    if getattr(shadow_result, "error", None):
+        return _record(
+            decision=GateDecision.REJECTED,
+            gate="shadow-error",
+            reason=f"shadow run errored: {shadow_result.error}",
+        )
+    delta = getattr(shadow_result, "delta", None)
+    if delta is None:
+        return _record(
+            decision=GateDecision.REJECTED,
+            gate="shadow-missing-delta",
+            reason="shadow result missing delta (likely partial run)",
+        )
+    a_wins = delta.a_wins(min_findings_delta=findings_delta_min)
+    if not a_wins:
+        return _record(
+            decision=GateDecision.REJECTED,
+            gate="shadow-stat",
+            reason=(
+                f"a_wins=False with findings_delta={delta.findings_delta:.3f} "
+                f"(min={findings_delta_min}); see meta-shadow-runs.md"
+            ),
+        )
+    # One-sided binomial: P(arm A's findings count >= observed | p=0.5)
+    p_value = _binomial_one_sided_p(delta.arm_a.findings_added, delta.arm_b.findings_added)
+    if p_value >= p_floor:
+        return _record(
+            decision=GateDecision.REJECTED,
+            gate="shadow-stat",
+            reason=(
+                f"a_wins=True but p={p_value:.3f} >= {p_floor} floor — "
+                "insufficient evidence to reject null"
+            ),
+        )
+
+    # --- Gate D: snapshot BEFORE queue (revert path) ----------------------
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    short_sha = proposal.id.rsplit("-", 1)[-1][:8]
+    snapshot_path = snapshot_dir / f"{now.strftime('%Y%m%dt%H%M%S')}-{short_sha}.py"
+    try:
+        snapshot_path.write_text(Path(snapshot_source).read_text())
+    except OSError as e:
+        return _record(
+            decision=GateDecision.REJECTED,
+            gate="snapshot-failed",
+            reason=f"snapshot write to {snapshot_path} failed: {e}",
+        )
+
+    # --- Gate C: write queue entry — NEVER auto-merge ---------------------
+    queue_dir.mkdir(parents=True, exist_ok=True)
+    queue_path = queue_dir / f"{now.strftime('%Y%m%dt%H%M%S')}-{short_sha}.md"
+    queue_body = (
+        f"# meta_self_edit candidate {proposal.id}\n\n"
+        f"- proposer_id: `{proposal.proposer_id or '(unset)'}`\n"
+        f"- target_path: `{proposal.target_path}`\n"
+        f"- evidence_cycles: {len(proposal.evidence_cycles)}\n"
+        f"- shadow: a_wins=True, findings_delta={delta.findings_delta:.3f}, "
+        f"p={p_value:.3f}\n"
+        f"- snapshot: `{snapshot_path}`\n"
+        f"- revert recipe: `git apply --reverse < <proposal-diff>` then restore "
+        f"`{snapshot_path}` if needed\n\n"
+        "## Rationale\n\n"
+        f"{proposal.rationale or '(none)'}\n\n"
+        "## Proposed diff\n\n"
+        "```diff\n"
+        f"{proposal.proposed_diff}\n"
+        "```\n"
+    )
+    queue_path.write_text(queue_body)
+
+    return _record(
+        decision=GateDecision.QUEUED,
+        gate=None,
+        reason=(
+            f"all gates passed — queued at {queue_path.name}, "
+            f"snapshot={snapshot_path.name}, p={p_value:.3f}"
+        ),
+    )
+
+
 __all__ = [
     "DEFAULT_AUDIT_LOG",
     "DEFAULT_DAILY_CAP",
@@ -286,5 +480,8 @@ __all__ = [
     "GateDecision",
     "GateResult",
     "KILL_SWITCH_ENV",
+    "META_SELF_EDIT_FINDINGS_DELTA_MIN",
+    "META_SELF_EDIT_SHADOW_P_FLOOR",
     "evaluate",
+    "evaluate_meta_self_edit_post_shadow",
 ]
