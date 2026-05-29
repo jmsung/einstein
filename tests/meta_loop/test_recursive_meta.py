@@ -189,6 +189,34 @@ def test_emitted_candidate_round_trips_via_coerce(tmp_path: Path) -> None:
     assert p.type == ProposalType.META_SELF_EDIT.value
 
 
+def test_emitted_diff_preserves_shebang(tmp_path: Path) -> None:
+    """Regression: the candidate diff must NOT insert lines before the shebang.
+
+    A diff that places content above `#!/usr/bin/env python3` makes
+    `./scripts/meta_loop.py` no longer recognized as a Python script by the
+    kernel — the executable bit becomes useless. The marker is added AFTER
+    the shebang for this reason.
+    """
+    log = tmp_path / "meta-proposals.md"
+    _write_audit_log(log, rejected_pattern_count=4, other_rows=META_SELF_EDIT_CYCLE_FLOOR - 4)
+    cand = propose_meta_self_edit(_proposer_input(tmp_path))[0]
+    diff = cand["proposed_diff"]
+    # Find the body lines after `@@` header
+    body = diff.split("@@")[-1].splitlines()
+    body = [line for line in body if line.strip()]  # drop blank lines
+    # First non-blank body line MUST be the shebang context (' #!/...') not a
+    # '+'-prefixed marker line
+    assert body[0].startswith(
+        " #!/usr/bin/env python3"
+    ), f"first hunk body line should be the shebang context, got: {body[0]!r}"
+    # Marker line must be a `+` line that appears AFTER the shebang context
+    plus_lines = [i for i, line in enumerate(body) if line.startswith("+")]
+    shebang_idx = next(i for i, line in enumerate(body) if "#!/usr/bin/env python3" in line)
+    assert all(
+        i > shebang_idx for i in plus_lines
+    ), "marker `+` lines must appear after the shebang context line"
+
+
 def test_emitted_candidate_evidence_cycles_meets_floor(tmp_path: Path) -> None:
     """The candidate's evidence_cycles count must be ≥ the floor — defense in
     depth so the gate also sees the right count (G3's gate re-checks)."""

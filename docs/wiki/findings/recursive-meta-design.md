@@ -98,7 +98,7 @@ arguments**, any one of which would justify it:
    per arm a +10% effect is roughly detectable. This is the same logic that
    made `EINSTEIN_PARALLEL_K`'s default 1 — small N over noisy outcomes
    doesn't move the needle ([PR #108 verdict in
-   `mb/progress.md`](../../../mb/progress.md):26).
+   `mb/progress.md`](../../../../mb/progress.md):26).
 3. **Huxley-Gödel clade-credit-assignment generalization** (Wang et al. 2025):
    on coding agents, *immediate* score-of-child is weakly correlated
    (~0.3) with the long-run improvement potential of the lineage; clade

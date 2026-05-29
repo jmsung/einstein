@@ -161,7 +161,7 @@ tests on top of the 111 existing meta_loop tests.
   pending-first-run finding for the non-recursive meta-loop. Both
   pages should be updated together after the first real overnight run.
 - [meta-loop-swap-surface](meta-loop-swap-surface.md) —
-  `recursive-meta-v0` is the second concrete `proposer_id` after
+  `recursive-meta-v0` is the third concrete `proposer_id` after
   `metaharness-llm-v1` (LLM) and `thompson-bandit-v0` (skill bandit);
   the swap surface earned its keep.
 - Branch: `js/feat/recursive-meta` — `mb/active/js-feat-recursive-meta.md`

@@ -132,16 +132,20 @@ def _candidate_diff(pattern: dict) -> str:
         f"# recursive-meta-v0 flag: gate={gate_s!r} rejected "
         f"type={type_s!r} {n} times. Review meta-self-edit-queue."
     )
-    # Unified diff against the very end of scripts/meta_loop.py. The actual
-    # line numbers are reconstructed by `git apply`; we just need the diff to
-    # validate as a unified diff. Conservative placement (top-of-file comment)
-    # avoids changing any executable code path on apply.
+    # Marker is inserted AFTER the shebang, not before — a line before the
+    # shebang would break `./scripts/meta_loop.py` as an executable script
+    # (the kernel wouldn't recognize the interpreter line). The hunk includes
+    # the shebang AND the docstring opener as context so `git apply` validates
+    # against the current file head. If scripts/meta_loop.py's first two lines
+    # ever change, this diff stops applying — that is the right failure mode
+    # for a queue entry (human re-reads the diff before deciding).
     return (
         "--- a/scripts/meta_loop.py\n"
         "+++ b/scripts/meta_loop.py\n"
-        "@@ -1,1 +1,2 @@\n"
-        f"+{marker}\n"
+        "@@ -1,2 +1,3 @@\n"
         " #!/usr/bin/env python3\n"
+        f"+{marker}\n"
+        ' """meta_loop — outer loop over cycle outcomes; gated proposals to the inner loop.\n'
     )
 
 
