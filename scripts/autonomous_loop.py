@@ -194,9 +194,23 @@ def load_problems(problems_dir: Path) -> list[Problem]:
 # ---------------- queue ----------------
 
 
+_QUEUE_FALSY = {"false", "no", "0", "off"}
+
+
 def is_active(problem: Problem) -> bool:
-    """True unless the problem is permanently inactive (retired)."""
-    return problem.status not in SKIP_STATUSES
+    """True unless the problem is permanently inactive.
+
+    Skipped if either:
+    - `status` ∈ SKIP_STATUSES (retired), or
+    - frontmatter sets `in_active_queue: false` (user-curated queue exclusion;
+      preserves `status` field, e.g. P6 stays `conquered`, P22 stays `rank-3`).
+    """
+    if problem.status in SKIP_STATUSES:
+        return False
+    flag = str(problem.extra.get("in_active_queue", "")).strip().lower()
+    if flag in _QUEUE_FALSY:
+        return False
+    return True
 
 
 def build_queue(problems: list[Problem]) -> list[Problem]:
