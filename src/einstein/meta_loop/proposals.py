@@ -30,19 +30,20 @@ import yaml
 
 
 class ProposalType(str, Enum):
-    """Goal 2 proposal types — `code_edit` and `meta_self_edit` deferred.
+    """Proposal types. `code_edit` is still deferred (tool-autosynthesis branch).
 
-    Per `docs/wiki/findings/meta-loop-design-from-literature.md`:
-    `code_edit` waits on the shadow A/B harness (Goal 5) — regressions
-    can't be foreseen by self-attribution alone (AHE result). `meta_self_edit`
-    waits on the `js/feat/recursive-meta` branch with tighter gates
-    (HyperAgents constraint).
+    `META_SELF_EDIT` landed on `js/feat/recursive-meta` per the design finding
+    `docs/wiki/findings/recursive-meta-design.md`: edits scoped to
+    `scripts/meta_loop.py` only, never auto-merged, gate chain tightened.
+    See `meta_gate.evaluate` for the actual gate logic. The proposer that
+    emits this type tags `proposer_id=recursive-meta-v0`.
     """
 
     RULE_EDIT = "rule_edit"
     MANIFEST_TWEAK = "manifest_tweak"
     QUEUE_REORDER = "queue_reorder"
     NEW_QUESTION = "new_question"
+    META_SELF_EDIT = "meta_self_edit"
 
 
 class Confidence(str, Enum):
@@ -76,6 +77,13 @@ _TARGET_PATTERNS: dict[str, list[re.Pattern[str]]] = {
     ],
     ProposalType.NEW_QUESTION.value: [
         re.compile(r"^docs/wiki/questions/\d{4}-\d{2}-\d{2}-[a-z0-9_\-]+\.md$"),
+    ],
+    # Scope-of-one for the recursive case (see recursive-meta-design.md):
+    # the meta-loop may propose edits to its own CLI driver, and ONLY to that
+    # file. Touching auto_submit / triple_verify / arena_submit / tests via this
+    # type fails at schema validation, before any gate or shadow runs.
+    ProposalType.META_SELF_EDIT.value: [
+        re.compile(r"^scripts/meta_loop\.py$"),
     ],
 }
 
