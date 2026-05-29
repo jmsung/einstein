@@ -145,6 +145,8 @@ def _parse_audit_log(audit_log: Path) -> list[dict]:
                 "type": parts[2],
                 "target_path": parts[3],
                 "decision": parts[4],
+                "gate": parts[5] if len(parts) >= 6 else "",
+                "reason": parts[6] if len(parts) >= 7 else "",
                 "proposer_id": proposer_id,
             }
         )
