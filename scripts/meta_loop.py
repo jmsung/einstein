@@ -27,7 +27,7 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO / "src"))
 
-from einstein.meta_loop import diagnose, propose, review, shadow  # noqa: E402
+from einstein.meta_loop import diagnose, propose, queue, review, shadow  # noqa: E402
 from einstein.meta_loop.proposals import ProposalStore  # noqa: E402
 
 # When running from a worktree (cb-<branch>/), `.mb` is a symlink to ../mb.
@@ -165,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_propose(sub)
     _add_review(sub)
     _add_shadow(sub)
+    _add_queue(sub)
 
     args = parser.parse_args(argv)
 
@@ -173,6 +174,7 @@ def main(argv: list[str] | None = None) -> int:
         "propose": _cmd_propose,
         "review": _cmd_review,
         "shadow": _cmd_shadow,
+        "queue": _cmd_queue,
     }
     return handlers[args.cmd](args)
 
@@ -296,6 +298,68 @@ def _cmd_review(args: argparse.Namespace) -> int:
     for o in summary.errored:
         print(f"  ! {o.proposal.id} → {o.error}", file=sys.stderr)
     return 0 if not summary.errored else 1
+
+
+def _add_queue(sub: argparse._SubParsersAction) -> None:
+    """`meta_loop queue` — review/apply meta_self_edit queue entries (G5 of recursive-meta).
+
+    The queue is the never-auto-merge holding area for meta_self_edit
+    candidates that passed every gate. Two modes: --list (no mutation),
+    --apply <queue_id> (human-driven merge).
+    """
+    p = sub.add_parser(
+        "queue",
+        help="review/apply meta_self_edit queue entries (human-driven)",
+    )
+    p.add_argument(
+        "--queue-dir",
+        type=Path,
+        default=_DEFAULT_MB / "meta-self-edit-queue",
+    )
+    p.add_argument(
+        "--resolved-dir",
+        type=Path,
+        default=_DEFAULT_MB / "meta-self-edit-queue-resolved",
+    )
+    p.add_argument(
+        "--repo-root",
+        type=Path,
+        default=_REPO,
+    )
+    p.add_argument(
+        "--list",
+        action="store_true",
+        help="list queue entries and exit (no mutation)",
+    )
+    p.add_argument(
+        "--apply",
+        metavar="QUEUE_ID",
+        help="apply the queue entry with the given id (e.g. 20260528t130000-abcdef01)",
+    )
+
+
+def _cmd_queue(args: argparse.Namespace) -> int:
+    if args.list and args.apply:
+        print("meta-loop queue: --list and --apply are mutually exclusive", file=sys.stderr)
+        return 2
+    if args.apply:
+        result = queue.apply_queue_entry(
+            args.apply,
+            queue_dir=args.queue_dir,
+            resolved_dir=args.resolved_dir,
+            repo_root=args.repo_root,
+        )
+        if not result.ok:
+            print(f"meta-loop queue --apply: failed — {result.error}", file=sys.stderr)
+            return 1
+        sha_s = result.commit_sha[:10] if result.commit_sha else "?"
+        print(f"meta-loop queue --apply: applied {result.queue_id} (commit {sha_s})")
+        print(f"  moved to: {result.moved_to}")
+        return 0
+    # default to --list
+    entries = queue.list_queue(args.queue_dir)
+    print(queue.render_queue(entries), end="")
+    return 0
 
 
 if __name__ == "__main__":
