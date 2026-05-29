@@ -207,6 +207,77 @@ class ArmMetrics:
         return getattr(self, attr) / self.cycles
 
 
+@dataclass(frozen=True)
+class MetaArmMetrics:
+    """Per-arm meta-layer metrics — read from the arm's meta-proposals audit log.
+
+    Goal 4 of `js/feat/recursive-meta`: the cycle-log metrics on `ArmMetrics`
+    don't move enough on `meta_self_edit` shadow runs (an edit that quiets a
+    proposer looks identical to one that breaks it). The meta-layer signals
+    below are what distinguishes the two — they read from the audit log the
+    gate chain writes to, not from cycle-log.
+
+    See `docs/wiki/findings/recursive-meta-design.md` § "What shadow A/B wins
+    means for the meta layer". The Goodhart counter-measure remains the
+    dead-end-non-regression check on the cycle-log side (`ShadowDelta.a_wins`).
+    """
+
+    proposals_emitted: int
+    proposals_accepted: int
+    proposals_rejected: int
+    proposals_queued: int
+    proposals_shadow_pending: int
+
+    @property
+    def gate_pass_rate(self) -> float:
+        if self.proposals_emitted == 0:
+            return 0.0
+        return (self.proposals_accepted + self.proposals_queued) / self.proposals_emitted
+
+
+def parse_meta_arm_metrics(audit_log_path: Path) -> MetaArmMetrics:
+    """Count audit-log rows by decision to build per-arm meta metrics.
+
+    Uses meta_gate._parse_audit_log under the hood so the row format stays
+    in one place. Returns all-zeros if the audit log is missing or empty —
+    silent rather than throwing, because shadow runs may legitimately
+    produce no proposals.
+    """
+    # Local import to avoid circular module-load (meta_gate → propose → meta_loop)
+    from .meta_gate import _parse_audit_log
+
+    rows = _parse_audit_log(audit_log_path)
+    if not rows:
+        return MetaArmMetrics(0, 0, 0, 0, 0)
+    return MetaArmMetrics(
+        proposals_emitted=len(rows),
+        proposals_accepted=sum(1 for r in rows if r["decision"] == "accepted"),
+        proposals_rejected=sum(1 for r in rows if r["decision"] == "rejected"),
+        proposals_queued=sum(1 for r in rows if r["decision"] == "queued"),
+        proposals_shadow_pending=sum(1 for r in rows if r["decision"] == "shadow-pending"),
+    )
+
+
+@dataclass(frozen=True)
+class ShadowMetaDelta:
+    """A/B delta on meta-layer signals — pair to ShadowDelta for meta_self_edit."""
+
+    arm_a: MetaArmMetrics
+    arm_b: MetaArmMetrics
+
+    @property
+    def emit_rate_delta(self) -> int:
+        return self.arm_a.proposals_emitted - self.arm_b.proposals_emitted
+
+    @property
+    def gate_pass_rate_delta(self) -> float:
+        return self.arm_a.gate_pass_rate - self.arm_b.gate_pass_rate
+
+    @property
+    def queued_delta(self) -> int:
+        return self.arm_a.proposals_queued - self.arm_b.proposals_queued
+
+
 def _safe_int(s: str) -> int:
     """Pull the leading integer out of a cell like '1 (`dead-end-foo.md`)'."""
     if not s:
@@ -529,9 +600,11 @@ def run_shadow(
 __all__ = [
     "ArmMetrics",
     "CycleRunner",
+    "MetaArmMetrics",
     "RunResult",
     "Runner",
     "ShadowDelta",
+    "ShadowMetaDelta",
     "ShadowResult",
     "WorktreeSpec",
     "append_shadow_log",
@@ -539,6 +612,7 @@ __all__ = [
     "compute_arm_metrics",
     "default_cycle_runner",
     "make_arms",
+    "parse_meta_arm_metrics",
     "remove_worktree",
     "run_shadow",
     "setup_worktree",

@@ -88,6 +88,82 @@ def test_target_path_matches_for_rule_edit() -> None:
     assert p.type == ProposalType.RULE_EDIT.value
 
 
+# ---------------- meta_self_edit (recursive-meta) ----------------
+
+
+def test_meta_self_edit_accepts_scripts_meta_loop_py() -> None:
+    p = Proposal(
+        **_minimal_kwargs(
+            type=ProposalType.META_SELF_EDIT.value,
+            target_path="scripts/meta_loop.py",
+            proposed_diff="--- a/scripts/meta_loop.py\n+++ b/scripts/meta_loop.py\n+# diagnostic column\n",
+            evidence_cycles=list(range(10)),  # 10 cycles to anticipate proposer/gate floor
+        )
+    )
+    assert p.type == ProposalType.META_SELF_EDIT.value
+    assert p.target_path == "scripts/meta_loop.py"
+
+
+def test_meta_self_edit_rejects_src_einstein() -> None:
+    # Scope whitelist: must touch only scripts/meta_loop.py — touching the
+    # gate / proposer source would let the meta-loop bypass its own gates.
+    with pytest.raises(ProposalValidationError, match="target_path"):
+        Proposal(
+            **_minimal_kwargs(
+                type=ProposalType.META_SELF_EDIT.value,
+                target_path="src/einstein/meta_loop/meta_gate.py",
+                proposed_diff="--- a/x\n+++ b/x\n+ \n",
+                evidence_cycles=list(range(10)),
+            )
+        )
+
+
+def test_meta_self_edit_rejects_test_files() -> None:
+    with pytest.raises(ProposalValidationError, match="target_path"):
+        Proposal(
+            **_minimal_kwargs(
+                type=ProposalType.META_SELF_EDIT.value,
+                target_path="tests/meta_loop/test_meta_gate.py",
+                proposed_diff="--- a/x\n+++ b/x\n+ \n",
+                evidence_cycles=list(range(10)),
+            )
+        )
+
+
+def test_meta_self_edit_rejects_other_scripts() -> None:
+    # Tightness check: scripts/autonomous_loop.py is also off-limits — the
+    # queue_reorder pattern catches it, but meta_self_edit must not.
+    with pytest.raises(ProposalValidationError, match="target_path"):
+        Proposal(
+            **_minimal_kwargs(
+                type=ProposalType.META_SELF_EDIT.value,
+                target_path="scripts/autonomous_loop.py",
+                proposed_diff="--- a/x\n+++ b/x\n+ \n",
+                evidence_cycles=list(range(10)),
+            )
+        )
+
+
+def test_meta_self_edit_round_trips() -> None:
+    p = Proposal(
+        **_minimal_kwargs(
+            type=ProposalType.META_SELF_EDIT.value,
+            target_path="scripts/meta_loop.py",
+            proposed_diff="--- a/scripts/meta_loop.py\n+++ b/scripts/meta_loop.py\n@@\n+# new column\n",
+            evidence_cycles=list(range(10)),
+            proposer_id="recursive-meta-v0",
+            requires_shadow=True,
+        )
+    )
+    text = p.to_markdown()
+    assert "type: meta_self_edit" in text
+    assert "proposer_id: recursive-meta-v0" in text
+    p2 = Proposal.from_markdown(text)
+    assert p2.type == ProposalType.META_SELF_EDIT.value
+    assert p2.proposer_id == "recursive-meta-v0"
+    assert p2.target_path == "scripts/meta_loop.py"
+
+
 def test_invalid_confidence_rejected() -> None:
     with pytest.raises(ProposalValidationError, match="confidence"):
         Proposal(**_minimal_kwargs(confidence="extremely-sure"))
