@@ -299,36 +299,56 @@ def _apply_code_edit_graduation(
 def _wire_manifest(*, body: str, problem_ids: list[str], slug: str, script_path: str) -> str:
     """Append a stub optimizer entry under each cited problem id.
 
-    For each `P<id>` in `problem_ids`: find the `<id>:` top-level block in
-    the manifest; locate its `optimizers:` mapping; append the stub entry
-    at the end of that mapping. Idempotent — if the entry already exists,
-    leave the body unchanged.
+    Linear pass — no regex backtracking. Splits the manifest into top-level
+    blocks keyed on `^\\d+:` headers, finds each cited block, locates its
+    `  optimizers:` line, and appends the stub at the end of that block's
+    optimizer mapping. Idempotent: if `py_id:` already appears in the
+    block, leave it alone.
 
-    Returns the (possibly unchanged) body.
+    Returns the (possibly unchanged) body. Skips problem ids whose block
+    isn't present in the manifest (cycle still runs; strategy_picker just
+    won't see the new tool for that problem).
     """
-    out = body
     py_id = slug.replace("-", "_")
     entry = _stub_manifest_entry(slug, script_path=script_path)
-    for pid in problem_ids:
-        n = _problem_id_int(pid)
-        if n is None:
-            continue
-        # Already wired?
-        if re.search(
-            rf"(?ms)^{n}:\s*\n(?:.*?\n)*?\s+{re.escape(py_id)}:\s*\n",
-            out,
-        ):
-            continue
-        # Find the problem's optimizers: block and append at its end.
-        problem_re = re.compile(
-            rf"(?ms)^({n}:\s*\n(?:[ \t].*?\n)*?  optimizers:\s*\n((?:    .*?\n)+))",
-        )
-        m = problem_re.search(out)
-        if not m:
-            continue
-        block = m.group(1)
-        out = out.replace(block, block + entry, 1)
-    return out
+    targets = {_problem_id_int(p) for p in problem_ids}
+    targets.discard(None)
+    if not targets:
+        return body
+
+    # Split on top-level `^\d+:` headers. Each segment starts with either
+    # the preamble (before any header) or `<n>:` block.
+    lines = body.splitlines(keepends=True)
+    # Identify the start line of each top-level block.
+    block_starts: list[int] = []  # indices into `lines`
+    block_ids: list[int | None] = []  # parsed `n` for each block, or None for preamble
+    block_starts.append(0)
+    block_ids.append(None)  # preamble (lines before first `\d+:` header)
+    for i, line in enumerate(lines):
+        m = re.match(r"^(\d+):\s*$", line.rstrip("\n"))
+        if m and i > 0:
+            block_starts.append(i)
+            block_ids.append(int(m.group(1)))
+    # Also handle the case where line 0 is a header (no preamble).
+    if lines and re.match(r"^(\d+):\s*$", lines[0].rstrip("\n")):
+        block_ids[0] = int(re.match(r"^(\d+):\s*$", lines[0].rstrip("\n")).group(1))
+
+    # Walk each block; if target + not already wired, append the stub
+    # right before the next block starts.
+    out_segments: list[str] = []
+    for bi, start in enumerate(block_starts):
+        end = block_starts[bi + 1] if bi + 1 < len(block_starts) else len(lines)
+        segment = "".join(lines[start:end])
+        n = block_ids[bi]
+        if n in targets and f"\n    {py_id}:" not in ("\n" + segment):
+            # Append the stub at the end of this block (before the trailing
+            # blank line(s)). The entry is indented to live under
+            # `<n>: optimizers:`.
+            trimmed = segment.rstrip("\n")
+            trailing = segment[len(trimmed) :]
+            segment = trimmed + "\n" + entry + trailing
+        out_segments.append(segment)
+    return "".join(out_segments)
 
 
 def remove_worktree(
