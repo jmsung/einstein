@@ -174,7 +174,7 @@ def make_code_edit_proposal(
         target_path=target,
         proposed_diff=body,
         evidence_cycles=list(gap.citing_cycles),
-        expected_metric_delta={"tool_invoked_cycles_b": 1.0},
+        expected_metric_delta={"tool_invoked_cycles_a": 1.0},
         predicted_regressions=[
             "draft body raises NotImplementedError — strategy_picker that "
             "selects it before promotion will dispatch-fail",

@@ -40,7 +40,7 @@ optimizer script** when the inner agent repeatedly hits the same tool gap
   Section 3).
 - **Mandatory sandbox validator** before any shadow run (ruff + import +
   colocated tests; NEVER dispatches to a live problem).
-- **Mandatory shadow A/B** with a citation-grounded "B-arm actually used
+- **Mandatory shadow A/B** with a citation-grounded "A-arm actually used
   the tool AND produced a finding" promotion criterion.
 - **Never auto-merge** — the submission-policy gate chain
   ([axioms A1–A4 + submission policy](../../../.claude/rules/axioms.md))
@@ -140,9 +140,9 @@ The "TODO body + cite block" pattern follows Ma SkillClaw's "skip >
 speculative edit" guardrail
 ([2026-ma-skillclaw-let-skills-evolve.md](../../source/2026-ma-skillclaw-let-skills-evolve.md)):
 the proposer drafts the *contract* (signature, docstring, gap citation)
-and refuses to hallucinate the body. The shadow A/B's B-arm then has the
-chance to flesh it out from inside a real cycle, or the human writes the
-body during the human-approval step.
+and refuses to hallucinate the body. The shadow A/B's A-arm (treatment)
+then has the chance to flesh it out from inside a real cycle, or the
+human writes the body during the human-approval step.
 
 ## Sandbox validator spec (Goal 3)
 
@@ -174,35 +174,39 @@ boundary.
 
 Same A/B harness as
 [`shadow.run_shadow`](../../../src/einstein/meta_loop/shadow.py),
-extended to handle the `code_edit` apply step:
+extended to handle the `code_edit` apply step. **Arm convention matches
+the rest of the meta-loop** (`research_synthesis_shadow`,
+`shadow.run_shadow` which calls
+`apply_proposal_to_worktree(proposal, arm_a, ...)`):
 
-- **A-arm** (control): current manifest, current scripts dir.
-- **B-arm** (treatment): `apply_proposal_to_worktree` runs `mv
+- **A-arm** (treatment): `apply_proposal_to_worktree` runs `mv
   scripts/proposed/<tool>.py scripts/<tool>.py` AND writes the manifest
   entry — both happen in the worktree only, not on the human's checkout.
+- **B-arm** (control): current manifest, current scripts dir.
 - **N cycles per arm** with `EINSTEIN_SHADOW_ARM=A|B` env so the sidecar
   citation records tag per-arm
   (research-synthesis G9 pattern,
   [research-synthesis-design.md](research-synthesis-design.md)).
 - **`compute_arm_metrics` extension**: a new `tool_invoked_cycles` field
-  counts B-arm cycles whose `notes` mention the proposed tool's slug. This
-  is what the promotion gate keys on — not the existing
-  findings/concepts/score deltas (which can be coincidence at N=10).
+  counts cycles whose `notes` mention the proposed tool's slug —
+  populated on both arms; ≥ 1 in A is the citation-grounded promotion
+  signal (B should normally be 0 since the tool isn't wired there).
 
 ## Promotion gate (Goal 5)
 
-`tool_autosynthesis_promotion_decision(arm_a_log, arm_b_log) -> Decision`.
-B wins iff all four:
+`tool_autosynthesis_promotion_decision(*, arm_a, arm_b, validator) ->
+ToolPromotionDecision`. A wins iff all four:
 
-1. **≥ 1 B-arm cycle invoked the proposed tool** (citation-grounded:
-   `tool_invoked_cycles ≥ 1`, not just "B-arm produced more findings").
-2. **≥ 1 finding produced in that B-arm cycle** (positive OR dead-end —
-   either is signal that the dispatch did real work).
-3. **No A-arm regression** on findings_delta or score_changed_delta
-   (matching `ShadowDelta.a_wins` semantics, but inverted: here we want
-   B-wins, i.e. `delta.findings_delta > 0` from B's perspective).
-4. **Validator clean** (from Goal 3 — already enforced earlier, re-asserted
-   in the audit row for transparency).
+1. **≥ 1 A-arm cycle invoked the proposed tool** (citation-grounded:
+   `arm_a.tool_invoked_cycles ≥ 1`, not just "A-arm produced more
+   findings").
+2. **≥ 1 finding produced in A** (positive OR dead-end — either is
+   signal that the dispatch did real work).
+3. **No regression vs control** — `arm_a.findings_added ≥
+   arm_b.findings_added` (matching `ShadowDelta.a_wins` semantics:
+   treatment must not lag control).
+4. **Validator clean** (from Goal 3 — already enforced earlier,
+   re-asserted in the audit row for transparency).
 5. **Human approval** — there is no auto-merge path. Compare to
    research-synthesis where research synthesis's promotion is also
    human-gated; we hold the same line here because the new artifact is
@@ -215,8 +219,8 @@ Audit row to `mb/logs/tool-autosynthesis.md` (schema mirrors
 
 ```
 | timestamp_utc | proposal_id | tool_slug | n_cycles_per_arm |
-  A_findings | B_findings | tool_invoked_cycles_B |
-  validator_passed | promoted | reason |
+  A_findings (treatment) | B_findings (control) | tool_invoked_cycles_A |
+  validator_passed | a_wins | promoted | reason |
 ```
 
 Reject paths also log — same transparency pattern as research-synthesis
@@ -262,12 +266,13 @@ novel=bnb-exhaustive-w3.md(finding_rate=1.00)` but P12 has no
 `algebraic-construction-*` script wired despite the Rudin-Shapiro concept
 ([`concepts/rudin-shapiro.md`](../concepts/rudin-shapiro.md)) explicitly
 naming algebraic construction as the analytic backbone. The expected
-verdict: B-arm drafts `scripts/proposed/algebraic-construction-flat-poly.py`,
-gets dispatched in ≥ 1 of 10 B-arm cycles, produces either a positive
-finding (a new flat-polynomial candidate) or a dead-end finding (the
-construction is too coarse for n ≈ 200), either of which satisfies the
-promotion criterion. A *rejection* verdict — B-arm dispatches the tool
-but it produces no finding either way — would be a higher-information
+verdict: A-arm (treatment) drafts
+`scripts/proposed/algebraic-construction-flat-poly.py`, gets dispatched
+in ≥ 1 of 10 A-arm cycles, produces either a positive finding (a new
+flat-polynomial candidate) or a dead-end finding (the construction is
+too coarse for n ≈ 200), either of which satisfies the promotion
+criterion. A *rejection* verdict — A-arm dispatches the tool but it
+produces no finding either way — would be a higher-information
 outcome, suggesting the gap-detector misclassified an "agent-can-still-do-it"
 gap as a tool gap. Either signal updates the threshold calibration for the
 next branch.
@@ -306,21 +311,22 @@ Now that the infrastructure has landed (G0–G5), the lifecycle of a
 
 5. **Shadow A/B runs** (Goal 4).
    [`meta_loop.shadow.run_shadow`](../../../src/einstein/meta_loop/shadow.py)
-   forks two worktrees from current HEAD. The A-arm is control; the B-arm
-   gets `apply_proposal_to_worktree` which graduates the draft
+   forks two worktrees from current HEAD. The A-arm (treatment) gets
+   `apply_proposal_to_worktree` which graduates the draft
    (`scripts/<slug>.py`) AND wires stub manifest entries under every
    cited problem id. Each arm runs `n_cycles` cycles via
    `default_cycle_runner` (shells out to `scripts/autonomous_loop.py`).
    The cycle-log notes from each arm are then aggregated by
    `compute_arm_metrics(rows, tool_slug=<slug>)` — the new
-   `tool_invoked_cycles` field counts B-arm cycles whose notes mention
-   the slug.
+   `tool_invoked_cycles` field counts cycles whose notes mention the
+   slug (typically ≥ 1 in A, 0 in B).
 
 6. **Promotion gate** (Goal 5).
    [`meta_loop.tool_autosynthesis.tool_autosynthesis_promotion_decision`](../../../src/einstein/meta_loop/tool_autosynthesis.py)
-   returns `b_wins=True` iff validator passed AND
-   `tool_invoked_cycles ≥ 1` AND `findings_added ≥ 1` AND no A
-   regression. The mechanical verdict is logged to
+   returns `a_wins=True` iff validator passed AND
+   `arm_a.tool_invoked_cycles ≥ 1` AND `arm_a.findings_added ≥ 1` AND
+   `arm_a.findings_added ≥ arm_b.findings_added` (no regression vs
+   control). The mechanical verdict is logged to
    `mb/logs/tool-autosynthesis.md` (and the parallel
    `mb/logs/meta-shadow-runs.md`) regardless of outcome — reject paths
    also log.

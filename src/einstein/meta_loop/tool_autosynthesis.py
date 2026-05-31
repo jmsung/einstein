@@ -1,13 +1,21 @@
 """meta_loop.tool_autosynthesis — Goal 5 promotion gate + audit log.
 
-The promotion verdict for `code_edit` proposals. Citation-grounded: B
+The promotion verdict for `code_edit` proposals. Citation-grounded: A
 wins iff the proposed tool was actually invoked AND produced a finding in
-the B-arm, AND the A-arm didn't regress, AND the validator passed.
+the A-arm, AND the B-arm (control) didn't outperform it, AND the
+validator passed.
+
+**Arm convention (matches `research_synthesis_shadow.py` and
+`shadow.run_shadow`):**
+- **A** = treatment. The proposal is applied to arm A — for `code_edit`,
+  that means the draft is graduated to `scripts/<slug>.py` and the
+  manifest is wired (see `shadow._apply_code_edit_graduation`).
+- **B** = control. Untouched HEAD; the proposed tool is absent.
 
 The fifth gate — human approval — is reflected by a separate
 `Decision.promoted` field that callers set explicitly. The mechanical
-gates produce `b_wins=True/False + reason`; promotion requires both
-`b_wins` AND human sign-off.
+gates produce `a_wins=True/False + reason`; promotion requires both
+`a_wins` AND human sign-off.
 
 Audit log: `mb/logs/tool-autosynthesis.md`. Schema mirrors
 `mb/logs/meta-shadow-runs.md`. Reject paths log too — transparency over
@@ -31,19 +39,19 @@ class ToolPromotionDecision:
     """Result of the mechanical promotion check (gates 1–4).
 
     Promotion (mv from `scripts/proposed/<slug>.py` to `scripts/<slug>.py`
-    + manifest commit on `main`) requires `b_wins=True` AND an explicit
+    + manifest commit on `main`) requires `a_wins=True` AND an explicit
     human approval. The decision itself only carries the mechanical
     verdict; `promoted` is what the human flips after reading the audit
     row.
     """
 
-    b_wins: bool
+    a_wins: bool
     reason: str
     arm_a_findings: int
     arm_b_findings: int
-    tool_invoked_cycles_b: int
+    tool_invoked_cycles_a: int
     validator_passed: bool
-    # Set True by the human after `b_wins == True`.
+    # Set True by the human after `a_wins == True`.
     promoted: bool = False
 
 
@@ -52,31 +60,36 @@ def tool_autosynthesis_promotion_decision(
     arm_a: ArmMetrics,
     arm_b: ArmMetrics,
     validator: ValidationReport | None,
-    min_a_findings_delta: int = 0,
+    min_b_findings_delta: int = 0,
 ) -> ToolPromotionDecision:
     """Citation-grounded promotion gate for `code_edit` proposals.
 
-    B wins iff ALL of:
+    Arm convention: A = treatment (proposal applied), B = control. Matches
+    `shadow.run_shadow` which calls `apply_proposal_to_worktree(proposal,
+    arm_a, ...)` and `research_synthesis_shadow`'s "arm A: this proposal
+    applied / arm B: control" phrasing.
+
+    A wins iff ALL of:
       1. validator.passed (or None — explicit "skipped" case, e.g. dry-run)
-      2. arm_b.tool_invoked_cycles >= 1   (the tool was actually dispatched)
-      3. arm_b.findings_added >= 1         (the dispatch produced a finding)
-      4. arm_b.findings_added - arm_a.findings_added >= min_a_findings_delta
-                                            (no A regression)
+      2. arm_a.tool_invoked_cycles >= 1   (the tool was actually dispatched)
+      3. arm_a.findings_added >= 1         (the dispatch produced a finding)
+      4. arm_a.findings_added - arm_b.findings_added >= min_b_findings_delta
+                                            (no regression vs control)
 
     Gate 1 differs from research-synthesis: there, the validator step
     doesn't exist (rule_edit is a markdown swap). Here the validator is a
     hard gate — a draft that can't even import shouldn't survive shadow.
 
     Args:
-        arm_a: control metrics (existing manifest, no proposed tool).
-        arm_b: treatment metrics (manifest wired with the proposed tool).
+        arm_a: treatment metrics (manifest wired with the proposed tool).
+        arm_b: control metrics (existing manifest, no proposed tool).
         validator: result of `validate_proposed_tool` on the draft body.
             `None` means "validator wasn't run" — treated as a fail
             (defensive). Pass an explicit no-op report to bypass for
             tests.
-        min_a_findings_delta: how much B can lag A on findings before we
-            consider it a regression. Default 0 means "B must match or
-            exceed A's findings count."
+        min_b_findings_delta: how much A can lag B on findings before we
+            consider it a regression. Default 0 means "A must match or
+            exceed B's findings count."
     """
     reasons: list[str] = []
     validator_ok = validator is not None and validator.passed
@@ -84,29 +97,31 @@ def tool_autosynthesis_promotion_decision(
         reasons.append("validator did not run")
     elif not validator.passed:
         reasons.append("validator failed")
-    if arm_b.tool_invoked_cycles < 1:
-        reasons.append(f"B-arm did not invoke the tool ({arm_b.tool_invoked_cycles} cycles cited)")
-    if arm_b.findings_added < 1:
-        reasons.append(f"B-arm produced no findings ({arm_b.findings_added})")
-    findings_delta = arm_b.findings_added - arm_a.findings_added
-    if findings_delta < min_a_findings_delta:
-        reasons.append(f"A regressed: findings_delta={findings_delta} < {min_a_findings_delta}")
+    if arm_a.tool_invoked_cycles < 1:
+        reasons.append(f"A-arm did not invoke the tool ({arm_a.tool_invoked_cycles} cycles cited)")
+    if arm_a.findings_added < 1:
+        reasons.append(f"A-arm produced no findings ({arm_a.findings_added})")
+    findings_delta = arm_a.findings_added - arm_b.findings_added
+    if findings_delta < min_b_findings_delta:
+        reasons.append(
+            f"A regressed vs control: findings_delta={findings_delta} < {min_b_findings_delta}"
+        )
 
-    b_wins = not reasons
-    if b_wins:
+    a_wins = not reasons
+    if a_wins:
         reason = (
-            f"b_wins=true (validator_ok=true, tool_invoked_B={arm_b.tool_invoked_cycles}, "
-            f"findings_B={arm_b.findings_added}, findings_A={arm_a.findings_added})"
+            f"a_wins=true (validator_ok=true, tool_invoked_A={arm_a.tool_invoked_cycles}, "
+            f"findings_A={arm_a.findings_added}, findings_B={arm_b.findings_added})"
         )
     else:
-        reason = "b_wins=false: " + "; ".join(reasons)
+        reason = "a_wins=false: " + "; ".join(reasons)
 
     return ToolPromotionDecision(
-        b_wins=b_wins,
+        a_wins=a_wins,
         reason=reason,
         arm_a_findings=arm_a.findings_added,
         arm_b_findings=arm_b.findings_added,
-        tool_invoked_cycles_b=arm_b.tool_invoked_cycles,
+        tool_invoked_cycles_a=arm_a.tool_invoked_cycles,
         validator_passed=validator_ok,
     )
 
@@ -116,8 +131,8 @@ def tool_autosynthesis_promotion_decision(
 
 AUDIT_LOG_HEADER = (
     "| timestamp_utc | proposal_id | tool_slug | n_cycles_per_arm "
-    "| A_findings | B_findings | tool_invoked_cycles_B "
-    "| validator_passed | b_wins | promoted | reason |\n"
+    "| A_findings (treatment) | B_findings (control) | tool_invoked_cycles_A "
+    "| validator_passed | a_wins | promoted | reason |\n"
     "|---|---|---|---|---|---|---|---|---|---|---|\n"
 )
 
@@ -140,9 +155,9 @@ def append_audit_row(
 ) -> None:
     """Append one row — accept or reject. Always logged.
 
-    Promote-or-reject is captured in `decision.promoted`. A
-    `b_wins=true, promoted=false` row is the "mechanical pass, human
-    didn't promote" case; a `b_wins=false, promoted=false` row is the
+    Promote-or-reject is captured in `decision.promoted`. An
+    `a_wins=true, promoted=false` row is the "mechanical pass, human
+    didn't promote" case; an `a_wins=false, promoted=false` row is the
     "mechanical reject" case. Both are useful audit signals.
     """
     _ensure_audit_log_header(path)
@@ -150,9 +165,9 @@ def append_audit_row(
         f"| {timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')} "
         f"| {proposal_id} | {tool_slug} | {n_cycles} "
         f"| {decision.arm_a_findings} | {decision.arm_b_findings} "
-        f"| {decision.tool_invoked_cycles_b} "
+        f"| {decision.tool_invoked_cycles_a} "
         f"| {'yes' if decision.validator_passed else 'no'} "
-        f"| {'yes' if decision.b_wins else 'no'} "
+        f"| {'yes' if decision.a_wins else 'no'} "
         f"| {'yes' if decision.promoted else 'no'} "
         f"| {decision.reason} |\n"
     )
