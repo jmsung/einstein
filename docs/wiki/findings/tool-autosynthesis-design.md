@@ -272,6 +272,76 @@ outcome, suggesting the gap-detector misclassified an "agent-can-still-do-it"
 gap as a tool gap. Either signal updates the threshold calibration for the
 next branch.
 
+## Lifecycle (post-G5 revision, 2026-05-31)
+
+Now that the infrastructure has landed (G0–G5), the lifecycle of a
+`code_edit` proposal is:
+
+1. **Cycle log accumulates** signals (`dispatch-failed`, `manifest only
+   exposes ...`, `<slug> ... not yet wired`). The signals come for free
+   from the inner agent's normal cycle-end writeback —
+   [`autonomous_loop.py`](../../../scripts/autonomous_loop.py) writes
+   them to `docs/agent/cycle-log.md`.
+
+2. **Gap detector fires** (Goal 1).
+   [`meta_loop.tool_gaps.detect_recurring_tool_gaps`](../../../src/einstein/meta_loop/tool_gaps.py)
+   clusters the signals into `ToolGap` records and applies the
+   ≥3-cycles-across-≥2-problems threshold. Fungible markers
+   (`no-manifest-entry`, `no-library-match`, `dispatch-failed`) collapse
+   into one cluster so three different problems with one cycle each
+   still pass the threshold.
+
+3. **Proposer drafts** (Goal 2).
+   [`meta_loop.code_edit.make_code_edit_proposal`](../../../src/einstein/meta_loop/code_edit.py)
+   emits a `Proposal` with `type=code_edit`, `target_path=scripts/proposed/<slug>.py`,
+   and `proposed_diff` = full file body (cite block + `NotImplementedError`
+   stub). The proposal is stored at `mb/proposals/pending/<id>.md` via
+   `ProposalStore.write_pending`.
+
+4. **Validator runs** (Goal 3).
+   [`meta_loop.sandbox.validate_proposed_tool`](../../../src/einstein/meta_loop/sandbox.py)
+   ruff-checks, imports in a subprocess, and runs any colocated
+   `tests/proposed/test_<slug>.py`. Result serialized to
+   `mb/proposals/pending/<id>/validation.json`. NEVER dispatches.
+
+5. **Shadow A/B runs** (Goal 4).
+   [`meta_loop.shadow.run_shadow`](../../../src/einstein/meta_loop/shadow.py)
+   forks two worktrees from current HEAD. The A-arm is control; the B-arm
+   gets `apply_proposal_to_worktree` which graduates the draft
+   (`scripts/<slug>.py`) AND wires stub manifest entries under every
+   cited problem id. Each arm runs `n_cycles` cycles via
+   `default_cycle_runner` (shells out to `scripts/autonomous_loop.py`).
+   The cycle-log notes from each arm are then aggregated by
+   `compute_arm_metrics(rows, tool_slug=<slug>)` — the new
+   `tool_invoked_cycles` field counts B-arm cycles whose notes mention
+   the slug.
+
+6. **Promotion gate** (Goal 5).
+   [`meta_loop.tool_autosynthesis.tool_autosynthesis_promotion_decision`](../../../src/einstein/meta_loop/tool_autosynthesis.py)
+   returns `b_wins=True` iff validator passed AND
+   `tool_invoked_cycles ≥ 1` AND `findings_added ≥ 1` AND no A
+   regression. The mechanical verdict is logged to
+   `mb/logs/tool-autosynthesis.md` (and the parallel
+   `mb/logs/meta-shadow-runs.md`) regardless of outcome — reject paths
+   also log.
+
+7. **Human approval** flips `decision.promoted = True`. This is the only
+   path that actually `mv`s `scripts/proposed/<slug>.py` to
+   `scripts/<slug>.py` on `main` and commits the manifest wire. The
+   submission-policy gate chain
+   ([`axioms.md`](../../../.claude/rules/axioms.md)) deliberately does
+   NOT extend here.
+
+The standing live A/B candidate (P12 algebraic-construction gap) does
+not yet appear in the cycle-log because the inner agent has only just
+gained the ability to surface "not yet wired" markers (cycles 49–51 of
+P14 are the precedent). The P12 case will manifest organically once the
+autonomous loop runs against P12 with a strategy_picker that flags the
+gap. Pending that trigger, the [G6 verdict row in
+`mb/logs/meta-shadow-runs.md`](../../../mb/logs/meta-shadow-runs.md)
+records "infrastructure landed, live A/B deferred" — mirroring the
+[skill-bandit branch's same-shape status entry](../../../mb/logs/meta-shadow-runs.md).
+
 ## See also
 
 - [[meta-loop-design-from-literature]] — the L1 design that introduced
