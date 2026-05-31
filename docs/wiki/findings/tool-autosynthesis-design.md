@@ -338,15 +338,29 @@ Now that the infrastructure has landed (G0–G5), the lifecycle of a
    ([`axioms.md`](../../../.claude/rules/axioms.md)) deliberately does
    NOT extend here.
 
-The standing live A/B candidate (P12 algebraic-construction gap) does
-not yet appear in the cycle-log because the inner agent has only just
-gained the ability to surface "not yet wired" markers (cycles 49–51 of
-P14 are the precedent). The P12 case will manifest organically once the
-autonomous loop runs against P12 with a strategy_picker that flags the
-gap. Pending that trigger, the [G6 verdict row in
-`mb/logs/meta-shadow-runs.md`](../../../mb/logs/meta-shadow-runs.md)
-records "infrastructure landed, live A/B deferred" — mirroring the
-[skill-bandit branch's same-shape status entry](../../../mb/logs/meta-shadow-runs.md).
+The first live A/B ran on **2026-05-31** at N=2 cycles per arm
+(~57 min wall-clock) — the fungible-marker cluster
+`manifest_or_dispatch_gap` (P1/P9/P14, 9 cycles, no extractable slug,
+synthesized slug `manifest-or-dispatch-gap-p1-p14-p9`). Verdict:
+`a_wins=false` — `tool_invoked_cycles_a = 0` because the synthesized
+slug isn't in the strategy_picker's vocabulary. This is the design's
+expected behavior for fungible-cluster proposals: the gate correctly
+distinguishes "infrastructure works end-to-end" from "promotion
+criterion met". All steps validated (worktree fork → graduate +
+manifest-wire under P14 → 2 visits per arm → metric aggregation →
+verdict + audit row).
+
+The standing real-tool A/B candidate (P12 algebraic-construction gap)
+does not yet appear in the cycle-log because the inner agent has only
+just gained the ability to surface "not yet wired" markers — cycles
+49–51 of P14 are the precedent. The P12 case will manifest organically
+once the autonomous loop runs against P12 with a strategy_picker that
+flags the gap. Pending that trigger, the audit log at
+[`mb/logs/tool-autosynthesis.md`](../../../mb/logs/tool-autosynthesis.md)
+holds the first reject row and the cross-system status at
+[`mb/logs/meta-shadow-runs.md`](../../../mb/logs/meta-shadow-runs.md)
+records "infrastructure landed + first live A/B ran (reject, as
+expected)".
 
 ## See also
 
