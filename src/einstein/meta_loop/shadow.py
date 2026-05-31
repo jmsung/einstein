@@ -132,10 +132,32 @@ def apply_proposal_to_worktree(
     *,
     runner: Runner | None = None,
 ) -> RunResult:
-    """Apply the proposal's diff/body to the arm's worktree."""
+    """Apply the proposal's diff/body to the arm's worktree.
+
+    Whole-file types (`NEW_QUESTION`, `CODE_EDIT`) write
+    `proposed_diff` to `target_path` as a fresh file. `CODE_EDIT`
+    additionally goes through `code_edit.apply_code_edit_to_worktree` for
+    the promotion-time mv from `scripts/proposed/` → `scripts/` + manifest
+    wire (Goal 4); during shadow A/B the draft stays in `scripts/proposed/`
+    so the per-problem dispatcher can pick it up via the worktree-local
+    manifest entry the shadow runner adds. Other types apply a unified
+    diff via `git apply`.
+    """
     r = runner or _default_runner
-    if proposal.type == ProposalType.NEW_QUESTION.value:
+    if proposal.type in (
+        ProposalType.NEW_QUESTION.value,
+        ProposalType.CODE_EDIT.value,
+    ):
         target = spec.path / proposal.target_path
+        if target.exists():
+            return RunResult(
+                ok=False,
+                stderr=(
+                    f"target_path={proposal.target_path!r} already exists in worktree "
+                    f"{spec.path}; refusing to overwrite"
+                ),
+                returncode=-1,
+            )
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(proposal.proposed_diff)
         add = r(["git", "add", proposal.target_path], spec.path, None)
