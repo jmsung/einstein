@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -134,20 +135,22 @@ def apply_proposal_to_worktree(
 ) -> RunResult:
     """Apply the proposal's diff/body to the arm's worktree.
 
-    Whole-file types (`NEW_QUESTION`, `CODE_EDIT`) write
-    `proposed_diff` to `target_path` as a fresh file. `CODE_EDIT`
-    additionally goes through `code_edit.apply_code_edit_to_worktree` for
-    the promotion-time mv from `scripts/proposed/` → `scripts/` + manifest
-    wire (Goal 4); during shadow A/B the draft stays in `scripts/proposed/`
-    so the per-problem dispatcher can pick it up via the worktree-local
-    manifest entry the shadow runner adds. Other types apply a unified
-    diff via `git apply`.
+    Per-type behavior:
+
+    - `NEW_QUESTION` — write `proposed_diff` to `target_path` as a fresh file.
+    - `CODE_EDIT` — *graduate* the draft. `target_path` is
+      `scripts/proposed/<slug>.py` by schema; in the shadow arm we write
+      the body to `scripts/<slug>.py` AND add stub manifest entries under
+      every problem id cited in the body, so the per-problem dispatcher
+      can pick the tool up during the B-arm cycles. The draft path
+      `scripts/proposed/` stays empty post-apply (Goal 4 invariant). See
+      `_apply_code_edit_graduation` for the details.
+    - other types — unified diff via `git apply`.
     """
     r = runner or _default_runner
-    if proposal.type in (
-        ProposalType.NEW_QUESTION.value,
-        ProposalType.CODE_EDIT.value,
-    ):
+    if proposal.type == ProposalType.CODE_EDIT.value:
+        return _apply_code_edit_graduation(proposal, spec, r)
+    if proposal.type == ProposalType.NEW_QUESTION.value:
         target = spec.path / proposal.target_path
         if target.exists():
             return RunResult(
@@ -185,6 +188,149 @@ def apply_proposal_to_worktree(
     )
 
 
+# ---- code_edit graduation helpers ----------------------------------------
+
+
+# Parse `- problems: ['P14', 'P12']` from the draft body's cite block. The
+# body shape is set by `code_edit._render_draft_body`; keep this regex in
+# sync with that template.
+_CITE_PROBLEMS_RE = re.compile(
+    r"^- problems:\s*\[(.+?)\]\s*$",
+    re.MULTILINE,
+)
+
+
+def _parse_problem_ids_from_body(body: str) -> list[str]:
+    """Extract `['P14', 'P12']` from the draft's cite block.
+
+    Returns sorted, deduplicated problem ids. Empty list if no cite block
+    is present (e.g. a hand-edited draft) — the apply step still writes
+    the script but skips the manifest wire in that case.
+    """
+    m = _CITE_PROBLEMS_RE.search(body)
+    if not m:
+        return []
+    raw = m.group(1)
+    ids = re.findall(r"P\d+", raw)
+    return sorted(set(ids))
+
+
+def _problem_id_int(pid: str) -> int | None:
+    m = re.fullmatch(r"P(\d+)", pid)
+    return int(m.group(1)) if m else None
+
+
+def _stub_manifest_entry(slug: str, *, script_path: str) -> str:
+    """Render the YAML lines for a stub optimizer entry under a problem.
+
+    Indented to live under `<id>: optimizers:` per the existing
+    `optimizer_manifest.yaml` shape. Result is a string with a leading
+    newline so it can be appended idempotently.
+    """
+    py_id = slug.replace("-", "_")
+    return (
+        f"    # autosynth-stub (shadow B-arm only): see tool-autosynthesis-design.md\n"
+        f"    {py_id}:\n"
+        f"      script: {script_path}\n"
+        f"      cli_args: []\n"
+        f"      timeout_seconds: 60\n"
+        f"      result_file: results/proposed/{slug}_result.json\n"
+        f"      result_parser: json_score_payload\n"
+    )
+
+
+def _apply_code_edit_graduation(
+    proposal: Proposal,
+    spec: WorktreeSpec,
+    r: Runner,
+) -> RunResult:
+    """Graduate the draft into `scripts/` + wire stub manifest entries.
+
+    Steps:
+      1. Refuse if `scripts/<slug>.py` already exists (graduation collision).
+      2. Write the body to `scripts/<slug>.py`.
+      3. Parse problem_ids from the body's cite block.
+      4. For each problem id with a block in `optimizer_manifest.yaml`,
+         append a stub optimizer entry under its `optimizers:` mapping.
+      5. `git add` both paths; commit.
+
+    The manifest wire is *additive*: existing entries are untouched. If a
+    problem block isn't present in the manifest, that id is silently
+    skipped (the cycle still runs; the strategy_picker just won't see the
+    new tool for that problem). Logged via stdout so the operator can see
+    which problems got wired.
+    """
+    slug = Path(proposal.target_path).stem
+    graduated = spec.path / "scripts" / f"{slug}.py"
+    if graduated.exists():
+        return RunResult(
+            ok=False,
+            stderr=f"scripts/{slug}.py already exists in worktree; refusing to graduate",
+            returncode=-1,
+        )
+    graduated.parent.mkdir(parents=True, exist_ok=True)
+    graduated.write_text(proposal.proposed_diff)
+    paths_to_add = [f"scripts/{slug}.py"]
+
+    # Manifest wire (best-effort additive).
+    manifest_path = spec.path / "src" / "einstein" / "optimizer_manifest.yaml"
+    if manifest_path.is_file():
+        body = manifest_path.read_text()
+        wired = _wire_manifest(
+            body=body,
+            problem_ids=_parse_problem_ids_from_body(proposal.proposed_diff),
+            slug=slug,
+            script_path=f"scripts/{slug}.py",
+        )
+        if wired != body:
+            manifest_path.write_text(wired)
+            paths_to_add.append("src/einstein/optimizer_manifest.yaml")
+
+    add = r(["git", "add", *paths_to_add], spec.path, None)
+    if not add.ok:
+        return add
+    return r(
+        ["git", "commit", "-m", f"shadow({spec.arm}): graduate {proposal.id} ({slug})"],
+        spec.path,
+        None,
+    )
+
+
+def _wire_manifest(*, body: str, problem_ids: list[str], slug: str, script_path: str) -> str:
+    """Append a stub optimizer entry under each cited problem id.
+
+    For each `P<id>` in `problem_ids`: find the `<id>:` top-level block in
+    the manifest; locate its `optimizers:` mapping; append the stub entry
+    at the end of that mapping. Idempotent — if the entry already exists,
+    leave the body unchanged.
+
+    Returns the (possibly unchanged) body.
+    """
+    out = body
+    py_id = slug.replace("-", "_")
+    entry = _stub_manifest_entry(slug, script_path=script_path)
+    for pid in problem_ids:
+        n = _problem_id_int(pid)
+        if n is None:
+            continue
+        # Already wired?
+        if re.search(
+            rf"(?ms)^{n}:\s*\n(?:.*?\n)*?\s+{re.escape(py_id)}:\s*\n",
+            out,
+        ):
+            continue
+        # Find the problem's optimizers: block and append at its end.
+        problem_re = re.compile(
+            rf"(?ms)^({n}:\s*\n(?:[ \t].*?\n)*?  optimizers:\s*\n((?:    .*?\n)+))",
+        )
+        m = problem_re.search(out)
+        if not m:
+            continue
+        block = m.group(1)
+        out = out.replace(block, block + entry, 1)
+    return out
+
+
 def remove_worktree(
     spec: WorktreeSpec,
     *,
@@ -213,7 +359,13 @@ def remove_worktree(
 
 @dataclass(frozen=True)
 class ArmMetrics:
-    """Per-arm metric tuple computed from that arm's cycle-log rows."""
+    """Per-arm metric tuple computed from that arm's cycle-log rows.
+
+    `tool_invoked_cycles` is populated only when `compute_arm_metrics` is
+    called with a `tool_slug` — the count of cycles whose notes mention
+    the slug (case-insensitive). For `code_edit` shadow runs this is the
+    key promotion signal (Goal 5).
+    """
 
     cycles: int
     score_changed_cycles: int
@@ -222,6 +374,7 @@ class ArmMetrics:
     dead_ends_added: int
     tokens_in: int = 0  # placeholder — not parsed yet
     tokens_out: int = 0
+    tool_invoked_cycles: int = 0
 
     def per_cycle(self, attr: str) -> float:
         if self.cycles == 0:
@@ -314,20 +467,35 @@ def _safe_int(s: str) -> int:
     return int("".join(digits)) if digits else 0
 
 
-def compute_arm_metrics(rows: list[diagnose.CycleRow]) -> ArmMetrics:
-    """Aggregate per-arm metrics from parsed cycle-log rows."""
+def compute_arm_metrics(
+    rows: list[diagnose.CycleRow],
+    *,
+    tool_slug: str | None = None,
+) -> ArmMetrics:
+    """Aggregate per-arm metrics from parsed cycle-log rows.
+
+    `tool_slug` (Goal 4 of `js/feat/tool-autosynthesis`): if provided,
+    count cycles whose `notes` mention the slug (case-insensitive). This
+    becomes the `tool_invoked_cycles` field — the citation-grounded
+    promotion signal for `code_edit` shadow runs.
+    """
     if not rows:
         return ArmMetrics(0, 0, 0, 0, 0)
     findings = sum(_safe_int(r.findings_added) for r in rows)
     concepts = sum(_safe_int(r.concepts_added) for r in rows)
     # Dead-ends approximated by the count of "dead-end" outcomes
     dead_ends = sum(1 for r in rows if "dead-end" in r.outcome.lower())
+    tool_invoked = 0
+    if tool_slug:
+        slug_low = tool_slug.lower()
+        tool_invoked = sum(1 for r in rows if slug_low in (r.notes or "").lower())
     return ArmMetrics(
         cycles=len(rows),
         score_changed_cycles=sum(1 for r in rows if r.score_changed),
         findings_added=findings,
         concepts_added=concepts,
         dead_ends_added=dead_ends,
+        tool_invoked_cycles=tool_invoked,
     )
 
 
@@ -589,9 +757,14 @@ def run_shadow(
         rows_b = _with_env(
             _os, "EINSTEIN_SHADOW_ARM", "B", lambda: cycle_runner(arm_b.path, n_cycles)
         )
+        # For code_edit proposals, count cycles that mention the tool slug.
+        # The B-arm has the tool wired into its manifest; A-arm is control.
+        tool_slug: str | None = None
+        if proposal.type == ProposalType.CODE_EDIT.value:
+            tool_slug = Path(proposal.target_path).stem
         delta = ShadowDelta(
-            arm_a=compute_arm_metrics(rows_a),
-            arm_b=compute_arm_metrics(rows_b),
+            arm_a=compute_arm_metrics(rows_a, tool_slug=tool_slug),
+            arm_b=compute_arm_metrics(rows_b, tool_slug=tool_slug),
         )
         result.delta = delta
         result.a_wins = delta.a_wins()
