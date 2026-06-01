@@ -4,7 +4,8 @@ author: agent
 drafted: 2026-05-27
 asked_by: autonomous_loop (cycle 52 attempt 2)
 related_problems: [14]
-status: open
+status: answered
+answer_finding: docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
 related_concepts: [float64-ceiling, basin-rigidity, mpmath-precision]
 cites:
   - src/einstein/optimizer_manifest.yaml
@@ -58,7 +59,7 @@ A concrete diff that:
 
 1. Adds `scripts/circle_packing_square/mpmath_polish.py`:
    - Loads the SLSQP-floor circles (warm-start).
-   - At `mpmath.mp.dps=60` (matching the [triple-verify](../../.claude/rules/triple-verify.md)
+   - At `mpmath.mp.dps=60` (matching the [triple-verify](../../../.claude/rules/triple-verify.md)
      suggested range for P5/P6/P11/P14/P17), runs a high-precision local refine
      analogous to `polish.polish()` but in mpmath arithmetic.
    - Round-trips back to float64, runs `evaluate_strict(sol)`, only emits the
@@ -114,3 +115,21 @@ increment from automated invocations.
 Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
 
 *(no results; broaden the search terms or query the web)*
+
+## Resolution (2026-06-01, branch js/feat/p14-mpmath-ulp-polish-body)
+
+Answered. `scripts/circle_packing_square/mpmath_ulp_polish.py` now exists (ULP-step
+coordinate descent, dual-gate feasibility) and is wired into `optimizer_manifest.yaml`
+under P14 as `mpmath_ulp_polish` (default stays `slsqp_polish`). Dispatch resolves it
+end-to-end. On the rank-2 seed it produced a triple-verified **+6.617e-14**
+(2.6359830849175245 → 2.6359830849175907, worst exact gap +1.44e-19).
+
+The sub-float64-ulp gap to AlphaEvolve #1 (2.6359830849176067) is **not** closed: ~1.6e-14
+remains, and that residual is the proximity-guard-rejected territory — closing it would
+require an exact-infeasible (tolerance-exploit) move, which the dual gate correctly
+refuses. So P14 is honestly capped at 2.6359830849175907 for strict-disjoint packings.
+See [mpmath-ulp-polish-dual-gate-p14](../findings/mpmath-ulp-polish-dual-gate-p14.md)
+and `mb/problems/14-circle-packing-square/experiment-log.md` (2026-06-01 entry).
+
+(Note: this question duplicates `2026-05-25-p14-mpmath-ulp-polish-wiring.md`; both closed
+by the same branch.)
