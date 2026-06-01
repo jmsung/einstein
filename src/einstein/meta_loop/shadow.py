@@ -229,13 +229,102 @@ def _stub_manifest_entry(slug: str, *, script_path: str) -> str:
     """
     py_id = slug.replace("-", "_")
     return (
-        f"    # autosynth-stub (shadow B-arm only): see tool-autosynthesis-design.md\n"
+        f"    # autosynth-stub (shadow A-arm only): see tool-autosynthesis-design.md\n"
         f"    {py_id}:\n"
         f"      script: {script_path}\n"
         f"      cli_args: []\n"
         f"      timeout_seconds: 60\n"
         f"      result_file: results/proposed/{slug}_result.json\n"
         f"      result_parser: json_score_payload\n"
+    )
+
+
+# ---- skill-library + techniques-page coupling --------------------------------
+
+
+# Mirror of `docs/tools/strategy_picker._PROBLEM_CATEGORY`. Imported lazily
+# at call time so the worktree's own strategy_picker is used (the arm could
+# have edits to the map). Default fallback covers the standalone case.
+def _problem_categories(worktree: Path, problem_ids: list[str]) -> list[str]:
+    """Return the deduplicated categories for the cited problem ids.
+
+    Reads `docs/tools/strategy_picker._PROBLEM_CATEGORY` from the
+    worktree (so the map seen by the inner strategy_picker is the same
+    one we wire into skill-library). Falls back to a static minimal map
+    when the import fails — useful in test fixtures with no tools/.
+    """
+    import importlib.util as _ilu
+    import sys as _sys
+
+    sp_path = worktree / "docs" / "tools" / "strategy_picker.py"
+    cat_map: dict[int, str] = {}
+    if sp_path.is_file():
+        try:
+            spec = _ilu.spec_from_file_location("_autosynth_sp", sp_path)
+            if spec and spec.loader:
+                mod = _ilu.module_from_spec(spec)
+                _sys.modules["_autosynth_sp"] = mod
+                spec.loader.exec_module(mod)
+                cat_map = dict(getattr(mod, "_PROBLEM_CATEGORY", {}))
+        except Exception:  # noqa: BLE001 - any import error → fall back
+            cat_map = {}
+    cats: list[str] = []
+    seen: set[str] = set()
+    for pid in problem_ids:
+        n = _problem_id_int(pid)
+        if n is None:
+            continue
+        c = cat_map.get(n, "?")
+        if c == "?" or c in seen:
+            continue
+        seen.add(c)
+        cats.append(c)
+    return cats
+
+
+def _stub_skill_library_row(
+    slug: str,
+    *,
+    categories: list[str],
+    drafted: str,
+) -> str:
+    """Render one skill-library table row for the autosynth stub.
+
+    Schema (from `docs/tools/strategy_picker.SkillRow`): `| `tech.md` |
+    category | tried | top3 | finding | last_used | hit_rate |`. Bandit
+    parses with `_ROW_RE` (note: hit_rate must match `[0-9.]+`).
+    Categories are joined with " / " — `category_matches` segments on
+    `[/,]` so multi-category rows match any of their segments.
+    """
+    cat_field = " / ".join(categories) if categories else "exploration"
+    return f"| `{slug}.md` | {cat_field} | 0 | 0 | 0 | {drafted} | 0.00 |\n"
+
+
+def _stub_techniques_page(slug: str, *, drafted: str, gap_canonical: str) -> str:
+    """Render a minimal `docs/wiki/techniques/<slug>.md` for the autosynth stub.
+
+    Required because the inner strategy_picker / bandit logs the
+    technique path and downstream tooling (qmd, wiki_lint) expects the
+    file to exist. Frontmatter follows the same shape as other technique
+    pages in the wiki.
+    """
+    return (
+        "---\n"
+        "type: technique\n"
+        "author: agent\n"
+        f"drafted: {drafted}\n"
+        "status: autosynth-stub\n"
+        "cites: []\n"
+        "---\n\n"
+        f"# {slug} — autosynth stub\n\n"
+        "**Status:** autosynth stub. Body is `NotImplementedError`; see\n"
+        f"`scripts/{slug}.py`. Promotion gate at\n"
+        "[`tool-autosynthesis-design.md`](../findings/tool-autosynthesis-design.md)\n"
+        "requires a human-written body before this technique counts as\n"
+        "real. The bandit may still sample it for the cited categories;\n"
+        "an invocation that dispatch-fails becomes a dead-end finding,\n"
+        "which is the signal the promotion gate keys on.\n\n"
+        f"Originating gap: `{gap_canonical}`.\n"
     )
 
 
@@ -272,19 +361,58 @@ def _apply_code_edit_graduation(
     graduated.write_text(proposal.proposed_diff)
     paths_to_add = [f"scripts/{slug}.py"]
 
+    problem_ids = _parse_problem_ids_from_body(proposal.proposed_diff)
+
     # Manifest wire (best-effort additive).
     manifest_path = spec.path / "src" / "einstein" / "optimizer_manifest.yaml"
     if manifest_path.is_file():
         body = manifest_path.read_text()
         wired = _wire_manifest(
             body=body,
-            problem_ids=_parse_problem_ids_from_body(proposal.proposed_diff),
+            problem_ids=problem_ids,
             slug=slug,
             script_path=f"scripts/{slug}.py",
         )
         if wired != body:
             manifest_path.write_text(wired)
             paths_to_add.append("src/einstein/optimizer_manifest.yaml")
+
+    # Skill-library coupling: append a stub row so the inner agent's
+    # strategy_picker / Thompson bandit can sample this technique for the
+    # cited problem categories. Without this, the manifest entry alone is
+    # invisible to the picker (the picker indexes the skill-library, not
+    # the manifest). See `tool-autosynthesis-design.md` "Lifecycle" step 5.
+    drafted = (
+        proposal.created_at.strftime("%Y-%m-%d")
+        if hasattr(proposal, "created_at")
+        else "2026-01-01"
+    )
+    categories = _problem_categories(spec.path, problem_ids)
+    library_path = spec.path / "docs" / "agent" / "skill-library.md"
+    if library_path.is_file():
+        body = library_path.read_text()
+        if f"`{slug}.md`" not in body:
+            library_path.write_text(
+                body.rstrip("\n")
+                + "\n"
+                + _stub_skill_library_row(slug, categories=categories, drafted=drafted)
+            )
+            paths_to_add.append("docs/agent/skill-library.md")
+
+    # Techniques-page coupling: write a stub wiki/techniques/<slug>.md so
+    # downstream tooling (qmd, wiki_lint, the bandit's logging) sees a
+    # real file at the path the skill-library row points to.
+    tech_path = spec.path / "docs" / "wiki" / "techniques" / f"{slug}.md"
+    if not tech_path.exists():
+        tech_path.parent.mkdir(parents=True, exist_ok=True)
+        tech_path.write_text(
+            _stub_techniques_page(
+                slug,
+                drafted=drafted,
+                gap_canonical=_extract_gap_canonical_from_body(proposal.proposed_diff),
+            )
+        )
+        paths_to_add.append(f"docs/wiki/techniques/{slug}.md")
 
     add = r(["git", "add", *paths_to_add], spec.path, None)
     if not add.ok:
@@ -294,6 +422,15 @@ def _apply_code_edit_graduation(
         spec.path,
         None,
     )
+
+
+_CITE_CANONICAL_RE = re.compile(r"^- canonical gap:\s*(.+)$", re.MULTILINE)
+
+
+def _extract_gap_canonical_from_body(body: str) -> str:
+    """Best-effort: pull `canonical gap: <value>` from the draft's cite block."""
+    m = _CITE_CANONICAL_RE.search(body)
+    return m.group(1).strip() if m else "(unknown)"
 
 
 def _wire_manifest(*, body: str, problem_ids: list[str], slug: str, script_path: str) -> str:
