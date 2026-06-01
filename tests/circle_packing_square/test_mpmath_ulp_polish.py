@@ -114,48 +114,46 @@ def test_to_mp_uses_exact_binary_value():
 
 
 def test_dual_gate_rejects_float64_feasible_but_exact_overlap():
-    """The dual gate's reason to exist: a move that the arena's float64 check
-    passes but mpmath-exact rejects (gap < 0) is the tolerance-band exploit and
-    must be refused. We verify the two gates can disagree and that mpmath is the
-    stricter one near contact."""
+    """The dual gate's reason to exist: a radius bump that the arena's float64
+    check passes (rounds to "just touching") but mpmath-exact rejects (gap < 0)
+    is the tolerance-band exploit and MUST be refused.
+
+    On the real seed (every disk at contact) growing a radius by ulps quickly
+    produces overlaps; at the rounding boundary some are float64-feasible yet
+    exact-overlapping. We find one deterministically and assert `_dual_feasible`
+    blocks it — pinning the headline behavior, not just the reverse invariant."""
     mod = _load_module()
     import mpmath as mp
 
     mp.mp.dps = 80
-    # Two disks placed so the float64 distance rounds to exactly r_i + r_j while
-    # the exact distance is fractionally short — i.e. float64 says "just touching"
-    # (feasible at tol=0) but exact arithmetic says "overlapping".
-    # Construct directly: put them at a separation whose float64 sqrt ties up.
-    r = 0.3
-    # centres on a horizontal line, separation chosen at the float64 contact edge
-    sep = 2 * r
-    circles = np.array(
-        [[0.5 - sep / 2, 0.5, r], [0.5 + sep / 2, 0.5, r], [0.1, 0.1, 0.05], [0.9, 0.9, 0.05]],
-        dtype=np.float64,
-    )
-    # grow disk 0's radius by 1 ulp: float64 may still read disjoint by rounding,
-    # but exact arithmetic sees the overlap. Scan a few ulps to find such a move.
-    found_disagreement = False
-    for r_new in mod.ulp_neighbors(r, steps=(1, 2, 3, 4, 5)):
-        cand = circles.copy()
-        cand[0, 2] = r_new
-        f64 = mod._float64_circle_feasible(cand, 0)
-        exact = mod._circle_gap_min(mod._to_mp(cand), 0) >= 0
-        if f64 and not exact:
-            found_disagreement = True
+    seed = _seed_circles()
+
+    found = None  # (i, r_new)
+    for i in range(26):
+        r = seed[i, 2]
+        for r_new in mod.ulp_neighbors(r, steps=tuple(range(1, 60))):
+            cand = seed.copy()
+            cand[i, 2] = r_new
+            f64 = mod._float64_circle_feasible(cand, i)
+            exact = mod._circle_gap_min(mod._to_mp(cand), i) >= 0
+            # the only disagreement direction that can occur near contact:
+            assert not (
+                exact and not f64
+            ), f"circle {i}: exact-feasible but float64-overlap — impossible here"
+            if f64 and not exact and found is None:
+                found = (i, cand.copy())
+        if found:
             break
-    # If we found a disagreement, exact (mpmath) is the binding gate. If none in
-    # this small scan, the property (mpmath never looser than float64) still holds.
-    assert found_disagreement or True  # documents intent; core check is below
-    # Core invariant: whenever the gates disagree, exact is the stricter one —
-    # never the reverse (float64 feasible & exact infeasible is the only allowed
-    # disagreement direction at contact).
-    for r_new in mod.ulp_neighbors(r, steps=(1, 2, 3, 4, 5)):
-        cand = circles.copy()
-        cand[0, 2] = r_new
-        f64 = mod._float64_circle_feasible(cand, 0)
-        exact = mod._circle_gap_min(mod._to_mp(cand), 0) >= 0
-        assert not (exact and not f64), "exact-feasible but float64-overlap should not occur here"
+
+    assert (
+        found is not None
+    ), "expected at least one float64-feasible/exact-overlap move on the jammed seed"
+    i, cand = found
+    # The dual gate must REJECT it (the float64-only gate would have accepted).
+    assert mod._float64_circle_feasible(cand, i) is True
+    assert (
+        mod._dual_feasible(cand, i) is False
+    ), "dual gate must reject a float64-feasible-but-exact-overlapping move (axiom A1)"
 
 
 # ---------------- real-seed polish kernel ----------------

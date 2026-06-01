@@ -142,6 +142,23 @@ def _float64_circle_feasible(circles: np.ndarray, i: int) -> bool:
     return True
 
 
+def _dual_feasible(circles: np.ndarray, i: int) -> bool:
+    """The dual gate: circle ``i`` is feasible iff its constraints hold in BOTH
+    the arena's float64 strict check (tol=0) AND mpmath-exact (gap ≥ 0).
+
+    Both required, and they reject opposite failure modes:
+      - float64-feasible but exact-overlapping → the 2026-04-09 tolerance-band
+        exploit (axiom A1); the mpmath gate rejects it.
+      - exact-feasible but float64-overlapping → the arena verifier scores it as
+        an overlap; the float64 gate rejects it.
+    Non-finite candidates (a ulp step across 0 can yield NaN, which would slip
+    past ``nan < 0 == False`` in the float64 wall check) are rejected up front.
+    """
+    if not all(np.isfinite(circles[i])):
+        return False
+    return _float64_circle_feasible(circles, i) and (_circle_gap_min(_to_mp(circles), i) >= 0)
+
+
 def _sum_r(circles: np.ndarray) -> float:
     """float64 Σ rᵢ — the arena score."""
     return float(np.sum(circles[:, 2]))
@@ -175,19 +192,10 @@ def mpmath_ulp_polish(
     sweeps = 0
 
     def feasible_after(i: int, cand: tuple[float, float, float]) -> bool:
-        # A move is safe iff circle i's constraints hold in BOTH:
-        #   (a) the arena's float64 strict check (tol=0) — the ground truth the
-        #       leaderboard verifier actually runs, and
-        #   (b) mpmath-exact at the active dps — so we never bank a gain that is
-        #       only a float64 rounding artifact (the 2026-04-09 false-breakthrough
-        #       500-pt trap; axiom A1).
-        # Both required: float64-feasible-but-exact-overlapping is the exploit we
-        # reject; exact-feasible-but-float64-overlapping is rejected by the arena.
-        if not all(np.isfinite(cand)):  # ulp step across 0 can produce NaN
-            return False
+        # Tentatively apply the candidate, run the dual gate, restore.
         saved = circles[i].copy()
         circles[i] = cand
-        ok = _float64_circle_feasible(circles, i) and (_circle_gap_min(_to_mp(circles), i) >= 0)
+        ok = _dual_feasible(circles, i)
         circles[i] = saved
         return ok
 
