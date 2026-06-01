@@ -115,3 +115,49 @@ The validation harness here used **direct synthetic invocations of `auto_submit.
 **Rule**: any refactor that moves a file holding append-only state (ledgers, audit logs, budget files) must include a synthetic end-to-end exercise of every consumer of that state, not just a unit-test of the new path string. The full chain — path resolution → parser → gate logic → header creation → audit-row write — is what compounds across cycles. Drop any one of those and the next cycle silently breaks.
 
 **Corollary**: when auto-mode (or a human reviewer) refuses to run the "real" live test on a dry-run branch, do not skip the validation. Substitute direct calls to the public API with controlled inputs that exercise the same code paths without the risky side effect (no real POST, no real arena fetch). This was the move here when `unset EINSTEIN_AUTO_SUBMIT` was correctly denied — passing `leaderboard_fetcher=lambda pid: 99.0` exercises gate-5 just as faithfully and cannot accidentally submit anything.
+
+## #107: Catastrophic regex backtracking — prefer linear scan over nested quantifiers {#lesson-107}
+
+Branch `js/feat/tool-autosynthesis` commit `d771626` (2026-05-31): `_wire_manifest` in `src/einstein/meta_loop/code_edit.py` used a regex with a nested quantifier — `(?:.*?\n)*?` followed by a non-matching suffix — to splice a manifest entry under a problem block. On a 55-line `optimizer_manifest.yaml` whose suffix never matched, the regex engine consumed ~6 minutes of CPU before timing out the test. The engine explored every combination of "how many lines does `(?:.*?\n)*?` consume" × "where does the suffix start" — exponential in the number of newlines in the file.
+
+Root cause: `(?:.*?\n)*?` is the classic "match any number of lines lazily" idiom, and it works fine when the suffix matches. When the suffix doesn't match (e.g. the problem block has no closing marker the regex expects), the engine backtracks across every possible split point. On 55 lines this is enumerable but slow; on a 500-line file it would be effectively infinite.
+
+**Fix**: replace the regex with a linear scan — `for line in lines: if line.startswith(problem_marker): ...` — that walks the file once and exits on the first match or end-of-file. Same logic, O(n) instead of O(2^n) worst case, and immediately readable.
+
+**Rule**: any regex with nested `*` / `+` quantifiers (especially `(?:...)*` containing `.*` or `.*?`) is a backtracking bomb. Default to a linear scan for "find the line that starts a block" / "find the matching close" — Python's `for line in lines` with an index counter is faster to write, faster to read, and immune to catastrophic backtracking. Reserve regex for true pattern-matching (e.g. tokenization) where the alternative is genuinely worse. The pre-commit hook should flag PRs that introduce `(?:.*\n)*` or `(?:.*?\n)*?` patterns in `src/`.
+
+## #108: A/B arm convention must be documented at the proposal-type definition site, not the call site {#lesson-108}
+
+Branch `js/feat/tool-autosynthesis` commit `7aa4520` (2026-05-31): the Goal 5 promotion gate (`tool_autosynthesis_promotion_decision`) was initially written with `B = treatment, A = control`. Every other piece of the meta-loop — `research_synthesis_shadow`, `shadow.run_shadow`'s `apply_proposal_to_worktree(proposal, arm_a, ...)`, the `EINSTEIN_SHADOW_ARM=A|B` env tag, `ShadowDelta.a_wins()` — uses `A = treatment, B = control`. The drift was caught only when reading the audit log and noticing the column labels disagreed with the rest of `mb/logs/`.
+
+Root cause: the convention is implicit. There is no single place in `src/einstein/meta_loop/` that says "A means treatment" — it's a property of how each consumer happens to construct its worktrees. A new proposal type that doesn't read the existing call sites silently inverts the convention, and the bug only surfaces at audit-log review time (which is rare).
+
+**Fix**: rename arms in `tool_autosynthesis_promotion_decision` so A=treatment matches the rest of the meta-loop. Document the convention as a comment on `ProposalType` itself:
+
+```python
+class ProposalType(StrEnum):
+    """Convention: A-arm = treatment (proposal applied), B-arm = control.
+    Mirrored by ShadowDelta.a_wins() and EINSTEIN_SHADOW_ARM env tags.
+    Any new shadow-A/B helper MUST follow this convention.
+    """
+```
+
+**Rule**: any cross-cutting convention (arm semantics, axis directions, sign of "improvement", "Δ = a - b" vs "b - a") must be documented at the *type definition site*, not at each call site. Future proposal types or new shadow harnesses will read the type definition; they won't read every existing caller. The cost of one comment at the type is amortized across every new consumer that gets the convention right by default. Pair the comment with a unit test (`test_arm_convention_is_a_treatment`) that asserts `apply_proposal_to_worktree` modifies arm A's worktree and leaves B untouched.
+
+## #109: Wire BOTH the manifest AND the skill-library — Thompson bandit doesn't read the manifest {#lesson-109}
+
+Branch `js/feat/tool-autosynthesis` (2026-05-31), Run 1 → Run 2 fix in commit `675b839`: the first live A/B (N=2) returned `a_wins=false` with `tool_invoked_cycles_a = 0`. The autosynthesized slug was wired into `optimizer_manifest.yaml` under both cited problems, but the Thompson skill bandit (`docs/agent/skill-library.md`) had no row for it — and the bandit reads `skill-library.md`, NOT the manifest. Result: the picker never sampled the new technique in the A-arm, so the proposed tool was never dispatched, so `tool_invoked_cycles_a` stayed at 0, so the citation-grounded promotion gate (correctly) refused to promote.
+
+Root cause: `code_edit`'s `_apply_code_edit_graduation` originally implemented only step (1) of the documented 4-step graduation: write `scripts/<slug>.py`, wire `optimizer_manifest.yaml`. It silently skipped step (3) — append a `skill-library.md` row — and step (4) — write a `docs/wiki/techniques/<slug>.md` stub. Without (3), the bandit was blind to the autosynth slug; without (4), the inner agent had no docs to read about what the tool was supposed to do.
+
+**Fix** (commit `675b839`): graduation now performs all four steps atomically:
+1. `mv scripts/proposed/<slug>.py scripts/<slug>.py`
+2. wire `optimizer_manifest.yaml` under every cited problem id
+3. **append `docs/agent/skill-library.md` row** with categories from the strategy_picker map
+4. **write `docs/wiki/techniques/<slug>.md` stub** linking back to the originating gap question
+
+Run 2 (N=10) post-fix returned `a_wins=true` — the bandit sampled the autosynth stub 4 times across two problems, the LLM agent dispatched it, got `NotImplementedError`, and filed dead-end findings (the citation-grounded signal the gate keys on).
+
+**Rule**: when adding a new "tool" type to a system with multiple registries, list every registry the picker / dispatcher / docs / metrics pipeline reads. Wiring just the most-obvious one (the manifest) breaks discovery silently. Pair the graduation routine with an integration test that asserts `bandit.sample()` can return the new slug — not just that the manifest contains it.
+
+**Corollary — mechanical `a_wins=true` ≠ ship**: Run 2's verdict was the system's first `a_wins=true`, for a *synthesized-placeholder* slug (`manifest-or-dispatch-gap-p1-p14-p9`) with a `NotImplementedError` body. The human correctly held the gate at `promoted=no`. The gate chain is designed so that all four mechanical gates can pass while the artifact still isn't shippable — and that's the correct shape. "Skip > speculative edit" extends to the human approval step: the human can reject for non-mechanical reasons (slug is a placeholder, body is a stub, the gap-detector clustered fungibly across non-fungible problems) without needing to invent a new gate. Document this in the audit log row's `reason` column so the next reviewer sees the precedent.
