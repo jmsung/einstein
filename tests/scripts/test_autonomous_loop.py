@@ -134,6 +134,52 @@ def test_is_active_status_predicate(status: str, active: bool) -> None:
     assert al.is_active(p) is active
 
 
+@pytest.mark.parametrize(
+    "flag,active",
+    [
+        # 2026-05-28: in_active_queue: false skips regardless of status. Lets the
+        # user curate a queue (P6 terminal-min, P22 arena-unavailable) without
+        # mutating the semantic `status` field.
+        (None, True),  # unset → default in-queue
+        ("true", True),
+        ("True", True),
+        ("yes", True),
+        ("1", True),
+        ("false", False),
+        ("False", False),
+        ("no", False),
+        ("0", False),
+        ("off", False),
+    ],
+)
+def test_is_active_in_active_queue_flag(flag: str | None, active: bool) -> None:
+    extra = {} if flag is None else {"in_active_queue": flag}
+    p = al.Problem(
+        problem_id=1,
+        slug="x",
+        tier="A",
+        status="open",
+        score_current=None,
+        path=Path("/nowhere"),
+        extra=extra,
+    )
+    assert al.is_active(p) is active
+
+
+def test_is_active_retired_overrides_in_active_queue_true() -> None:
+    """Retired wins: a retired problem with in_active_queue: true is still skipped."""
+    p = al.Problem(
+        problem_id=1,
+        slug="x",
+        tier="A",
+        status="retired",
+        score_current=None,
+        path=Path("/nowhere"),
+        extra={"in_active_queue": "true"},
+    )
+    assert al.is_active(p) is False
+
+
 # ---------------- queue ordering ----------------
 
 

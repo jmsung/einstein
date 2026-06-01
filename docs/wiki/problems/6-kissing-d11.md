@@ -5,6 +5,9 @@ drafted: 2026-05-02
 problem_id: 6
 arena_url: https://einsteinarena.com/problems/kissing-number-d11
 status: conquered
+in_active_queue: false
+queue_exclusion_reason: terminal-min (score 0.0 = theoretical minimum; κ(11)≥594 proven, no improvement possible)
+queue_excluded_at: 2026-05-28
 score_current: 0.0
 tier: S
 concepts_invoked: [sphere-packing.md, kissing-number.md, hinge-overlap.md, fractal-perturbation-landscape.md, basin-rigidity.md]

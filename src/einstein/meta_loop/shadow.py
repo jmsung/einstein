@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -132,10 +133,34 @@ def apply_proposal_to_worktree(
     *,
     runner: Runner | None = None,
 ) -> RunResult:
-    """Apply the proposal's diff/body to the arm's worktree."""
+    """Apply the proposal's diff/body to the arm's worktree.
+
+    Per-type behavior:
+
+    - `NEW_QUESTION` — write `proposed_diff` to `target_path` as a fresh file.
+    - `CODE_EDIT` — *graduate* the draft. `target_path` is
+      `scripts/proposed/<slug>.py` by schema; in the treatment arm (A) we
+      write the body to `scripts/<slug>.py` AND add stub manifest entries
+      under every problem id cited in the body, so the per-problem
+      dispatcher can pick the tool up during the A-arm cycles. The draft
+      path `scripts/proposed/` stays empty post-apply (Goal 4 invariant).
+      See `_apply_code_edit_graduation` for the details.
+    - other types — unified diff via `git apply`.
+    """
     r = runner or _default_runner
+    if proposal.type == ProposalType.CODE_EDIT.value:
+        return _apply_code_edit_graduation(proposal, spec, r)
     if proposal.type == ProposalType.NEW_QUESTION.value:
         target = spec.path / proposal.target_path
+        if target.exists():
+            return RunResult(
+                ok=False,
+                stderr=(
+                    f"target_path={proposal.target_path!r} already exists in worktree "
+                    f"{spec.path}; refusing to overwrite"
+                ),
+                returncode=-1,
+            )
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(proposal.proposed_diff)
         add = r(["git", "add", proposal.target_path], spec.path, None)
@@ -161,6 +186,306 @@ def apply_proposal_to_worktree(
         spec.path,
         None,
     )
+
+
+# ---- code_edit graduation helpers ----------------------------------------
+
+
+# Parse `- problems: ['P14', 'P12']` from the draft body's cite block. The
+# body shape is set by `code_edit._render_draft_body`; keep this regex in
+# sync with that template.
+_CITE_PROBLEMS_RE = re.compile(
+    r"^- problems:\s*\[(.+?)\]\s*$",
+    re.MULTILINE,
+)
+
+
+def _parse_problem_ids_from_body(body: str) -> list[str]:
+    """Extract `['P14', 'P12']` from the draft's cite block.
+
+    Returns sorted, deduplicated problem ids. Empty list if no cite block
+    is present (e.g. a hand-edited draft) — the apply step still writes
+    the script but skips the manifest wire in that case.
+    """
+    m = _CITE_PROBLEMS_RE.search(body)
+    if not m:
+        return []
+    raw = m.group(1)
+    ids = re.findall(r"P\d+", raw)
+    return sorted(set(ids))
+
+
+def _problem_id_int(pid: str) -> int | None:
+    m = re.fullmatch(r"P(\d+)", pid)
+    return int(m.group(1)) if m else None
+
+
+def _stub_manifest_entry(slug: str, *, script_path: str) -> str:
+    """Render the YAML lines for a stub optimizer entry under a problem.
+
+    Indented to live under `<id>: optimizers:` per the existing
+    `optimizer_manifest.yaml` shape. Result is a string with a leading
+    newline so it can be appended idempotently.
+    """
+    py_id = slug.replace("-", "_")
+    return (
+        f"    # autosynth-stub (shadow A-arm only): see tool-autosynthesis-design.md\n"
+        f"    {py_id}:\n"
+        f"      script: {script_path}\n"
+        f"      cli_args: []\n"
+        f"      timeout_seconds: 60\n"
+        f"      result_file: results/proposed/{slug}_result.json\n"
+        f"      result_parser: json_score_payload\n"
+    )
+
+
+# ---- skill-library + techniques-page coupling --------------------------------
+
+
+# Mirror of `docs/tools/strategy_picker._PROBLEM_CATEGORY`. Imported lazily
+# at call time so the worktree's own strategy_picker is used (the arm could
+# have edits to the map). Default fallback covers the standalone case.
+def _problem_categories(worktree: Path, problem_ids: list[str]) -> list[str]:
+    """Return the deduplicated categories for the cited problem ids.
+
+    Reads `docs/tools/strategy_picker._PROBLEM_CATEGORY` from the
+    worktree (so the map seen by the inner strategy_picker is the same
+    one we wire into skill-library). Falls back to a static minimal map
+    when the import fails — useful in test fixtures with no tools/.
+    """
+    import importlib.util as _ilu
+    import sys as _sys
+
+    sp_path = worktree / "docs" / "tools" / "strategy_picker.py"
+    cat_map: dict[int, str] = {}
+    if sp_path.is_file():
+        try:
+            spec = _ilu.spec_from_file_location("_autosynth_sp", sp_path)
+            if spec and spec.loader:
+                mod = _ilu.module_from_spec(spec)
+                _sys.modules["_autosynth_sp"] = mod
+                spec.loader.exec_module(mod)
+                cat_map = dict(getattr(mod, "_PROBLEM_CATEGORY", {}))
+        except Exception:  # noqa: BLE001 - any import error → fall back
+            cat_map = {}
+    cats: list[str] = []
+    seen: set[str] = set()
+    for pid in problem_ids:
+        n = _problem_id_int(pid)
+        if n is None:
+            continue
+        c = cat_map.get(n, "?")
+        if c == "?" or c in seen:
+            continue
+        seen.add(c)
+        cats.append(c)
+    return cats
+
+
+def _stub_skill_library_row(
+    slug: str,
+    *,
+    categories: list[str],
+    drafted: str,
+) -> str:
+    """Render one skill-library table row for the autosynth stub.
+
+    Schema (from `docs/tools/strategy_picker.SkillRow`): `| `tech.md` |
+    category | tried | top3 | finding | last_used | hit_rate |`. Bandit
+    parses with `_ROW_RE` (note: hit_rate must match `[0-9.]+`).
+    Categories are joined with " / " — `category_matches` segments on
+    `[/,]` so multi-category rows match any of their segments.
+    """
+    cat_field = " / ".join(categories) if categories else "exploration"
+    return f"| `{slug}.md` | {cat_field} | 0 | 0 | 0 | {drafted} | 0.00 |\n"
+
+
+def _stub_techniques_page(slug: str, *, drafted: str, gap_canonical: str) -> str:
+    """Render a minimal `docs/wiki/techniques/<slug>.md` for the autosynth stub.
+
+    Required because the inner strategy_picker / bandit logs the
+    technique path and downstream tooling (qmd, wiki_lint) expects the
+    file to exist. Frontmatter follows the same shape as other technique
+    pages in the wiki.
+    """
+    return (
+        "---\n"
+        "type: technique\n"
+        "author: agent\n"
+        f"drafted: {drafted}\n"
+        "status: autosynth-stub\n"
+        "cites: []\n"
+        "---\n\n"
+        f"# {slug} — autosynth stub\n\n"
+        "**Status:** autosynth stub. Body is `NotImplementedError`; see\n"
+        f"`scripts/{slug}.py`. Promotion gate at\n"
+        "[`tool-autosynthesis-design.md`](../findings/tool-autosynthesis-design.md)\n"
+        "requires a human-written body before this technique counts as\n"
+        "real. The bandit may still sample it for the cited categories;\n"
+        "an invocation that dispatch-fails becomes a dead-end finding,\n"
+        "which is the signal the promotion gate keys on.\n\n"
+        f"Originating gap: `{gap_canonical}`.\n"
+    )
+
+
+def _apply_code_edit_graduation(
+    proposal: Proposal,
+    spec: WorktreeSpec,
+    r: Runner,
+) -> RunResult:
+    """Graduate the draft into `scripts/` + wire stub manifest entries.
+
+    Steps:
+      1. Refuse if `scripts/<slug>.py` already exists (graduation collision).
+      2. Write the body to `scripts/<slug>.py`.
+      3. Parse problem_ids from the body's cite block.
+      4. For each problem id with a block in `optimizer_manifest.yaml`,
+         append a stub optimizer entry under its `optimizers:` mapping.
+      5. `git add` both paths; commit.
+
+    The manifest wire is *additive*: existing entries are untouched. If a
+    problem block isn't present in the manifest, that id is silently
+    skipped (the cycle still runs; the strategy_picker just won't see the
+    new tool for that problem). Logged via stdout so the operator can see
+    which problems got wired.
+    """
+    slug = Path(proposal.target_path).stem
+    graduated = spec.path / "scripts" / f"{slug}.py"
+    if graduated.exists():
+        return RunResult(
+            ok=False,
+            stderr=f"scripts/{slug}.py already exists in worktree; refusing to graduate",
+            returncode=-1,
+        )
+    graduated.parent.mkdir(parents=True, exist_ok=True)
+    graduated.write_text(proposal.proposed_diff)
+    paths_to_add = [f"scripts/{slug}.py"]
+
+    problem_ids = _parse_problem_ids_from_body(proposal.proposed_diff)
+
+    # Manifest wire (best-effort additive).
+    manifest_path = spec.path / "src" / "einstein" / "optimizer_manifest.yaml"
+    if manifest_path.is_file():
+        body = manifest_path.read_text()
+        wired = _wire_manifest(
+            body=body,
+            problem_ids=problem_ids,
+            slug=slug,
+            script_path=f"scripts/{slug}.py",
+        )
+        if wired != body:
+            manifest_path.write_text(wired)
+            paths_to_add.append("src/einstein/optimizer_manifest.yaml")
+
+    # Skill-library coupling: append a stub row so the inner agent's
+    # strategy_picker / Thompson bandit can sample this technique for the
+    # cited problem categories. Without this, the manifest entry alone is
+    # invisible to the picker (the picker indexes the skill-library, not
+    # the manifest). See `tool-autosynthesis-design.md` "Lifecycle" step 5.
+    drafted = (
+        proposal.created_at.strftime("%Y-%m-%d")
+        if hasattr(proposal, "created_at")
+        else "2026-01-01"
+    )
+    categories = _problem_categories(spec.path, problem_ids)
+    library_path = spec.path / "docs" / "agent" / "skill-library.md"
+    if library_path.is_file():
+        body = library_path.read_text()
+        if f"`{slug}.md`" not in body:
+            library_path.write_text(
+                body.rstrip("\n")
+                + "\n"
+                + _stub_skill_library_row(slug, categories=categories, drafted=drafted)
+            )
+            paths_to_add.append("docs/agent/skill-library.md")
+
+    # Techniques-page coupling: write a stub wiki/techniques/<slug>.md so
+    # downstream tooling (qmd, wiki_lint, the bandit's logging) sees a
+    # real file at the path the skill-library row points to.
+    tech_path = spec.path / "docs" / "wiki" / "techniques" / f"{slug}.md"
+    if not tech_path.exists():
+        tech_path.parent.mkdir(parents=True, exist_ok=True)
+        tech_path.write_text(
+            _stub_techniques_page(
+                slug,
+                drafted=drafted,
+                gap_canonical=_extract_gap_canonical_from_body(proposal.proposed_diff),
+            )
+        )
+        paths_to_add.append(f"docs/wiki/techniques/{slug}.md")
+
+    add = r(["git", "add", *paths_to_add], spec.path, None)
+    if not add.ok:
+        return add
+    return r(
+        ["git", "commit", "-m", f"shadow({spec.arm}): graduate {proposal.id} ({slug})"],
+        spec.path,
+        None,
+    )
+
+
+_CITE_CANONICAL_RE = re.compile(r"^- canonical gap:\s*(.+)$", re.MULTILINE)
+
+
+def _extract_gap_canonical_from_body(body: str) -> str:
+    """Best-effort: pull `canonical gap: <value>` from the draft's cite block."""
+    m = _CITE_CANONICAL_RE.search(body)
+    return m.group(1).strip() if m else "(unknown)"
+
+
+def _wire_manifest(*, body: str, problem_ids: list[str], slug: str, script_path: str) -> str:
+    """Append a stub optimizer entry under each cited problem id.
+
+    Linear pass — no regex backtracking. Splits the manifest into top-level
+    blocks keyed on `^\\d+:` headers, finds each cited block, locates its
+    `  optimizers:` line, and appends the stub at the end of that block's
+    optimizer mapping. Idempotent: if `py_id:` already appears in the
+    block, leave it alone.
+
+    Returns the (possibly unchanged) body. Skips problem ids whose block
+    isn't present in the manifest (cycle still runs; strategy_picker just
+    won't see the new tool for that problem).
+    """
+    py_id = slug.replace("-", "_")
+    entry = _stub_manifest_entry(slug, script_path=script_path)
+    targets = {_problem_id_int(p) for p in problem_ids}
+    targets.discard(None)
+    if not targets:
+        return body
+
+    # Split on top-level `^\d+:` headers. Each segment starts with either
+    # the preamble (before any header) or `<n>:` block.
+    lines = body.splitlines(keepends=True)
+    # Identify the start line of each top-level block.
+    block_starts: list[int] = []  # indices into `lines`
+    block_ids: list[int | None] = []  # parsed `n` for each block, or None for preamble
+    block_starts.append(0)
+    block_ids.append(None)  # preamble (lines before first `\d+:` header)
+    for i, line in enumerate(lines):
+        m = re.match(r"^(\d+):\s*$", line.rstrip("\n"))
+        if m and i > 0:
+            block_starts.append(i)
+            block_ids.append(int(m.group(1)))
+    # Also handle the case where line 0 is a header (no preamble).
+    if lines and re.match(r"^(\d+):\s*$", lines[0].rstrip("\n")):
+        block_ids[0] = int(re.match(r"^(\d+):\s*$", lines[0].rstrip("\n")).group(1))
+
+    # Walk each block; if target + not already wired, append the stub
+    # right before the next block starts.
+    out_segments: list[str] = []
+    for bi, start in enumerate(block_starts):
+        end = block_starts[bi + 1] if bi + 1 < len(block_starts) else len(lines)
+        segment = "".join(lines[start:end])
+        n = block_ids[bi]
+        if n in targets and f"\n    {py_id}:" not in ("\n" + segment):
+            # Append the stub at the end of this block (before the trailing
+            # blank line(s)). The entry is indented to live under
+            # `<n>: optimizers:`.
+            trimmed = segment.rstrip("\n")
+            trailing = segment[len(trimmed) :]
+            segment = trimmed + "\n" + entry + trailing
+        out_segments.append(segment)
+    return "".join(out_segments)
 
 
 def remove_worktree(
@@ -191,7 +516,13 @@ def remove_worktree(
 
 @dataclass(frozen=True)
 class ArmMetrics:
-    """Per-arm metric tuple computed from that arm's cycle-log rows."""
+    """Per-arm metric tuple computed from that arm's cycle-log rows.
+
+    `tool_invoked_cycles` is populated only when `compute_arm_metrics` is
+    called with a `tool_slug` — the count of cycles whose notes mention
+    the slug (case-insensitive). For `code_edit` shadow runs this is the
+    key promotion signal (Goal 5).
+    """
 
     cycles: int
     score_changed_cycles: int
@@ -200,6 +531,7 @@ class ArmMetrics:
     dead_ends_added: int
     tokens_in: int = 0  # placeholder — not parsed yet
     tokens_out: int = 0
+    tool_invoked_cycles: int = 0
 
     def per_cycle(self, attr: str) -> float:
         if self.cycles == 0:
@@ -292,20 +624,35 @@ def _safe_int(s: str) -> int:
     return int("".join(digits)) if digits else 0
 
 
-def compute_arm_metrics(rows: list[diagnose.CycleRow]) -> ArmMetrics:
-    """Aggregate per-arm metrics from parsed cycle-log rows."""
+def compute_arm_metrics(
+    rows: list[diagnose.CycleRow],
+    *,
+    tool_slug: str | None = None,
+) -> ArmMetrics:
+    """Aggregate per-arm metrics from parsed cycle-log rows.
+
+    `tool_slug` (Goal 4 of `js/feat/tool-autosynthesis`): if provided,
+    count cycles whose `notes` mention the slug (case-insensitive). This
+    becomes the `tool_invoked_cycles` field — the citation-grounded
+    promotion signal for `code_edit` shadow runs.
+    """
     if not rows:
         return ArmMetrics(0, 0, 0, 0, 0)
     findings = sum(_safe_int(r.findings_added) for r in rows)
     concepts = sum(_safe_int(r.concepts_added) for r in rows)
     # Dead-ends approximated by the count of "dead-end" outcomes
     dead_ends = sum(1 for r in rows if "dead-end" in r.outcome.lower())
+    tool_invoked = 0
+    if tool_slug:
+        slug_low = tool_slug.lower()
+        tool_invoked = sum(1 for r in rows if slug_low in (r.notes or "").lower())
     return ArmMetrics(
         cycles=len(rows),
         score_changed_cycles=sum(1 for r in rows if r.score_changed),
         findings_added=findings,
         concepts_added=concepts,
         dead_ends_added=dead_ends,
+        tool_invoked_cycles=tool_invoked,
     )
 
 
@@ -567,9 +914,14 @@ def run_shadow(
         rows_b = _with_env(
             _os, "EINSTEIN_SHADOW_ARM", "B", lambda: cycle_runner(arm_b.path, n_cycles)
         )
+        # For code_edit proposals, count cycles that mention the tool slug.
+        # The A-arm has the tool wired into its manifest; B-arm is control.
+        tool_slug: str | None = None
+        if proposal.type == ProposalType.CODE_EDIT.value:
+            tool_slug = Path(proposal.target_path).stem
         delta = ShadowDelta(
-            arm_a=compute_arm_metrics(rows_a),
-            arm_b=compute_arm_metrics(rows_b),
+            arm_a=compute_arm_metrics(rows_a, tool_slug=tool_slug),
+            arm_b=compute_arm_metrics(rows_b, tool_slug=tool_slug),
         )
         result.delta = delta
         result.a_wins = delta.a_wins()

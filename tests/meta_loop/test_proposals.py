@@ -56,8 +56,9 @@ def test_minimal_proposal_validates() -> None:
 
 
 def test_invalid_type_rejected() -> None:
+    # code_edit + meta_self_edit are now both valid; pick a never-defined type
     with pytest.raises(ProposalValidationError, match="type="):
-        Proposal(**_minimal_kwargs(type="code_edit"))  # deferred to Goal 5
+        Proposal(**_minimal_kwargs(type="nonexistent_type"))
 
 
 def test_invalid_id_rejected() -> None:

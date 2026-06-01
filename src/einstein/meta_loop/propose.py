@@ -15,10 +15,16 @@ The LLM call (`_default_proposer`) shells out via `docs/tools/claude_headless`.
 For tests, callers can inject any `Callable[[ProposerInput], list[dict]]` —
 useful when we don't want to spend tokens validating control flow.
 
-Excluded proposal types (deliberate — see Goal 2 in the branch file):
+Proposer scope: this LLM-backed proposer emits the L1 set
+(`rule_edit`, `manifest_tweak`, `queue_reorder`, `new_question`) and
+delegates the two specialized types to their dedicated proposers:
 
-  - `code_edit`        deferred to Goal 5 (needs shadow A/B before promote)
-  - `meta_self_edit`   deferred to `js/feat/recursive-meta` (recursive case)
+  - `meta_self_edit`   — `meta_loop.recursive_meta` (see `recursive-meta-design.md`)
+  - `code_edit`        — `meta_loop.code_edit.make_code_edit_proposal`
+                         (see `tool-autosynthesis-design.md`)
+
+Both specialized types are schema-valid here; the metaharness prompt v1 just
+doesn't emit them. Future prompt revisions can opt in.
 """
 
 from __future__ import annotations
