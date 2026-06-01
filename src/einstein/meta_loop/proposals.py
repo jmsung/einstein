@@ -30,13 +30,22 @@ import yaml
 
 
 class ProposalType(str, Enum):
-    """Proposal types. `code_edit` is still deferred (tool-autosynthesis branch).
+    """Proposal types — every typed change the meta-loop can emit.
 
-    `META_SELF_EDIT` landed on `js/feat/recursive-meta` per the design finding
-    `docs/wiki/findings/recursive-meta-design.md`: edits scoped to
-    `scripts/meta_loop.py` only, never auto-merged, gate chain tightened.
-    See `meta_gate.evaluate` for the actual gate logic. The proposer that
-    emits this type tags `proposer_id=recursive-meta-v0`.
+    - `RULE_EDIT` / `MANIFEST_TWEAK` / `QUEUE_REORDER` / `NEW_QUESTION` —
+      the original L1 set (see `meta-loop-design-from-literature.md`).
+    - `META_SELF_EDIT` landed on `js/feat/recursive-meta` per the design
+      finding `recursive-meta-design.md`: edits scoped to
+      `scripts/meta_loop.py` only, never auto-merged, gate chain tightened.
+      The proposer that emits this type tags
+      `proposer_id=recursive-meta-v0`.
+    - `CODE_EDIT` landed on `js/feat/tool-autosynthesis` per
+      `tool-autosynthesis-design.md`: drafts a NEW optimizer script at
+      `scripts/proposed/<tool>.py` when a tool gap recurs across ≥3
+      cycles / ≥2 problems. Drafts NEVER overwrite `scripts/<tool>.py`;
+      promotion (mv + manifest wire) happens in `apply_proposal_to_worktree`
+      under a shadow A/B run. The proposer tags
+      `proposer_id=tool-autosynthesis-v0`.
     """
 
     RULE_EDIT = "rule_edit"
@@ -44,6 +53,7 @@ class ProposalType(str, Enum):
     QUEUE_REORDER = "queue_reorder"
     NEW_QUESTION = "new_question"
     META_SELF_EDIT = "meta_self_edit"
+    CODE_EDIT = "code_edit"
 
 
 class Confidence(str, Enum):
@@ -84,6 +94,13 @@ _TARGET_PATTERNS: dict[str, list[re.Pattern[str]]] = {
     # type fails at schema validation, before any gate or shadow runs.
     ProposalType.META_SELF_EDIT.value: [
         re.compile(r"^scripts/meta_loop\.py$"),
+    ],
+    # Tool autosynthesis (see tool-autosynthesis-design.md): drafts land
+    # in `scripts/proposed/<tool>.py`, never directly in `scripts/`.
+    # Promotion to `scripts/` happens at the apply-to-worktree step under a
+    # shadow A/B and a human-approval gate.
+    ProposalType.CODE_EDIT.value: [
+        re.compile(r"^scripts/proposed/[a-z0-9_\-]+\.py$"),
     ],
 }
 

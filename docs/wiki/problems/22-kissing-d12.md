@@ -5,6 +5,9 @@ drafted: 2026-05-02
 problem_id: 22
 arena_url: https://einsteinarena.com/problems/kissing-d12
 status: rank-3
+in_active_queue: false
+queue_exclusion_reason: arena-unavailable (human review 2026-05-28; rank-1 score<2.0 also structurally infeasible)
+queue_excluded_at: 2026-05-28
 score_current: 2.001403089191293
 tier: A
 concepts_invoked: [kissing-number.md, sphere-packing.md, hinge-overlap.md, first-order-link-tangent-test.md, basin-rigidity.md]
