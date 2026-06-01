@@ -39,6 +39,20 @@
       timeout_seconds: 1800
       result_file: results/circle_packing_square/newton_max_result.json
       result_parser: json_score_payload
+    mpmath_ulp_polish:
+      # ULP-step coordinate descent (docs/wiki/techniques/mpmath-ulp-polish.md).
+      # Succeeds slsqp_polish at the float64 ceiling: reclaims sub-ulp radius
+      # slack the SLSQP line-search leaves behind. Every accepted move must pass
+      # BOTH the arena float64 strict check (tol=0) AND mpmath-exact (gap ≥ 0) —
+      # so it can never bank the 2026-04-09 tolerance-exploit (axiom A1). On the
+      # current rank-2 seed it yields a triple-verified +6.4e-14 (below arena
+      # minImprovement=1e-7, so not submittable — but the path is real and the
+      # body generalizes to the float64-ceiling family, Phase 2a).
+      script: scripts/circle_packing_square/mpmath_ulp_polish.py
+      cli_args: ["--dps", "80", "--max-iter", "100"]
+      timeout_seconds: 600
+      result_file: results/circle_packing_square/mpmath_ulp_polish_result.json
+      result_parser: json_score_payload
 
 22:
   slug: kissing-d12
