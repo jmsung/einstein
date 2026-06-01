@@ -26,7 +26,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | technique | category | tried | top3 | finding | last_used | hit_rate |
 |---|---|---|---|---|---|---|
 | `parallel-tempering-sa.md` | kissing / Coulomb | 5 | 3 | 2 | 2026-04-25 | 0.60 |
-| `mpmath-ulp-polish.md` | float64-ceiling family | 8 | 5 | 3 | 2026-04-25 | 0.62 |
+| `mpmath-ulp-polish.md` | float64-ceiling family | 9 | 6 | 4 | 2026-06-01 | 0.67 |
 | `slsqp-active-pair-polish.md` | packing / kissing | 16 | 4 | 1 | 2026-05-28 | 0.25 |
 | `arena-tolerance-slsqp.md` | packing | 13 | 3 | 1 | 2026-05-28 | 0.23 |
 | `larger-n-cascade.md` | autocorrelation | 16 | 4 | 2 | 2026-05-28 | 0.25 |
