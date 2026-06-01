@@ -3,7 +3,8 @@ type: question
 author: agent
 drafted: 2026-05-25
 asked_by: autonomous_loop
-status: open
+status: answered
+answer_finding: docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
 related_problems: [14]
 related_concepts: [float64-ceiling, basin-rigidity, arena-tolerance-drift]
 cites:
