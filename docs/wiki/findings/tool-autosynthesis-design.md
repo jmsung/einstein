@@ -466,29 +466,61 @@ Now that the infrastructure has landed (G0–G5), the lifecycle of a
    ([`axioms.md`](../../../.claude/rules/axioms.md)) deliberately does
    NOT extend here.
 
-The first live A/B ran on **2026-05-31** at N=2 cycles per arm
-(~57 min wall-clock) — the fungible-marker cluster
+Two live A/Bs ran on this branch:
+
+**Run 1 — 2026-05-31, N=2: infrastructure-validation reject.** Top
+detected gap was the fungible-marker cluster
 `manifest_or_dispatch_gap` (P1/P9/P14, 9 cycles, no extractable slug,
 synthesized slug `manifest-or-dispatch-gap-p1-p14-p9`). Verdict:
-`a_wins=false` — `tool_invoked_cycles_a = 0` because the synthesized
-slug isn't in the strategy_picker's vocabulary. This is the design's
-expected behavior for fungible-cluster proposals: the gate correctly
-distinguishes "infrastructure works end-to-end" from "promotion
-criterion met". All steps validated (worktree fork → graduate +
-manifest-wire under P14 → 2 visits per arm → metric aggregation →
-verdict + audit row).
+`a_wins=false` because `tool_invoked_cycles_a = 0` — the synthesized
+slug was wired into the manifest but NOT into the skill-library, so the
+Thompson bandit (which indexes the skill-library, not the manifest)
+never sampled it. Diagnosis: the original `_apply_code_edit_graduation`
+only wired the manifest. **Fix:** commit `675b839` adds the
+skill-library row + a `docs/wiki/techniques/<slug>.md` stub at
+graduation time (per the "Shadow A/B contract (Goal 4)" section's
+4-part graduation list).
+
+**Run 2 — 2026-06-01, N=10: first `a_wins=true` verdict
+(`promoted=no`).** Same proposal, post-coupling. Bandit sampled the
+autosynth stub 4 times (cycles 53/54 on P1, 65/66 on P9 — the cross-
+category match via `functional-inequality / packing` worked for both
+problems). Arm B hit the 4h cycle_runner timeout — the documented
+graceful-partial-rows path activated, no error. Findings tied 7-7 in
+absolute terms; per-cycle rate was slightly lower in A (more cycles to
+spread over), which the default `ShadowDelta.a_wins()` correctly flagged
+as non-strict-improvement. Goal 5 gate
+(`tool_autosynthesis_promotion_decision`) uses absolute findings, not
+per-cycle: 7≥7 passes gate 4. All four mechanical gates passed →
+`a_wins=true`. **`promoted=no` correctly** — the slug is a synthesized
+placeholder, the body is `NotImplementedError`, and no human should
+flip `promoted=true` for a useless stub. The system correctly
+distinguishes "mechanical gates pass" from "ship to main".
+
+**What Run 2 verifies that Run 1 didn't:**
+- Coupling fix made the autosynth slug visible to the picker.
+- Bandit's category-match logic works across multiple cited problems
+  (P1 + P9 both got picks for a single multi-category arm).
+- LLM agent's "try → fail → file dead-end finding" path produces the
+  citation-grounded signal the gate keys on, even when the body is a
+  stub.
+- Goal 5 gate vs default `ShadowDelta.a_wins()` give different but both
+  useful verdicts: default is stricter (per-cycle rate), Goal 5 more
+  lenient (absolute findings). The audit row captures both.
+- Human-gate discipline holds: `a_wins=true` is necessary but not
+  sufficient; a human can still reject for non-mechanical reasons.
 
 The standing real-tool A/B candidate (P12 algebraic-construction gap)
-does not yet appear in the cycle-log because the inner agent has only
-just gained the ability to surface "not yet wired" markers — cycles
-49–51 of P14 are the precedent. The P12 case will manifest organically
-once the autonomous loop runs against P12 with a strategy_picker that
-flags the gap. Pending that trigger, the audit log at
-[`mb/logs/tool-autosynthesis.md`](../../../mb/logs/tool-autosynthesis.md)
-holds the first reject row and the cross-system status at
-[`mb/logs/meta-shadow-runs.md`](../../../mb/logs/meta-shadow-runs.md)
-records "infrastructure landed + first live A/B ran (reject, as
-expected)".
+still hasn't manifested in the cycle-log — the gap-detector currently
+sees only the fungible cluster, not a concrete tool name across ≥2
+problems. The leaderboard-points campaign (Phases 1a–4 at
+[`mb/todo/`](../../../../mb/todo/)) is the deliberate alternative: write
+real optimizer bodies by hand for known gaps, generalize the pattern,
+then let the body-writer LLM emit real bodies in future autosynth runs.
+Audit history at
+[`mb/logs/tool-autosynthesis.md`](../../../mb/logs/tool-autosynthesis.md);
+cross-system status at
+[`mb/logs/meta-shadow-runs.md`](../../../mb/logs/meta-shadow-runs.md).
 
 ## See also
 
