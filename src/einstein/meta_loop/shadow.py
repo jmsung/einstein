@@ -139,12 +139,12 @@ def apply_proposal_to_worktree(
 
     - `NEW_QUESTION` — write `proposed_diff` to `target_path` as a fresh file.
     - `CODE_EDIT` — *graduate* the draft. `target_path` is
-      `scripts/proposed/<slug>.py` by schema; in the shadow arm we write
-      the body to `scripts/<slug>.py` AND add stub manifest entries under
-      every problem id cited in the body, so the per-problem dispatcher
-      can pick the tool up during the B-arm cycles. The draft path
-      `scripts/proposed/` stays empty post-apply (Goal 4 invariant). See
-      `_apply_code_edit_graduation` for the details.
+      `scripts/proposed/<slug>.py` by schema; in the treatment arm (A) we
+      write the body to `scripts/<slug>.py` AND add stub manifest entries
+      under every problem id cited in the body, so the per-problem
+      dispatcher can pick the tool up during the A-arm cycles. The draft
+      path `scripts/proposed/` stays empty post-apply (Goal 4 invariant).
+      See `_apply_code_edit_graduation` for the details.
     - other types — unified diff via `git apply`.
     """
     r = runner or _default_runner
@@ -915,7 +915,7 @@ def run_shadow(
             _os, "EINSTEIN_SHADOW_ARM", "B", lambda: cycle_runner(arm_b.path, n_cycles)
         )
         # For code_edit proposals, count cycles that mention the tool slug.
-        # The B-arm has the tool wired into its manifest; A-arm is control.
+        # The A-arm has the tool wired into its manifest; B-arm is control.
         tool_slug: str | None = None
         if proposal.type == ProposalType.CODE_EDIT.value:
             tool_slug = Path(proposal.target_path).stem

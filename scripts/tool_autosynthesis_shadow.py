@@ -128,9 +128,7 @@ def dry_run_summary(
         "## Operator instructions",
         "",
         "Re-run with `--execute` to fork two real worktrees and run cycles.",
-        "Each cycle is an LLM call; budget ~$X per arm at N=10. Validator",
-        "stub (no real ruff/pytest spawn) can be enabled via `--stub-validator`",
-        "for smoke tests.",
+        "Each cycle is an LLM call; budget ~$X per arm at N=10.",
         "",
     ]
     return "\n".join(lines)

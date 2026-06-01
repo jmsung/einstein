@@ -256,10 +256,9 @@ def _link_questions_to_gaps(gaps: list[ToolGap], questions: list[Path]) -> list[
         return gaps
     by_qpid: dict[Path, set[str]] = {}
     for q in questions:
-        # Filename like `2026-05-24-p14-strict-tol-manifest-wiring.md`
-        pids = {m.upper() for m in re.findall(r"\bp(\d+)\b", q.stem.lower())}
-        pids = {f"P{p}" for p in re.findall(r"\bp(\d+)\b", q.stem.lower())}
-        by_qpid[q] = pids
+        # Filename like `2026-05-24-p14-strict-tol-manifest-wiring.md` →
+        # extract `p14` and normalize to `P14`.
+        by_qpid[q] = {f"P{p}" for p in re.findall(r"\bp(\d+)\b", q.stem.lower())}
     out: list[ToolGap] = []
     for g in gaps:
         linked = [q for q, pids in by_qpid.items() if pids & set(g.problem_ids)]
