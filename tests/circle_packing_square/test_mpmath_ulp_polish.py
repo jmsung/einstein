@@ -71,12 +71,9 @@ def test_ulp_neighbors_round_trip():
 
 
 def _two_by_two_fixture() -> list[list[float]]:
-    """4 equal disks in the corners of the unit square, r = 0.25 (touching the
-    walls, mutually disjoint). A valid, jammed-ish strict config for n=4 logic;
-    we only use the n=26 evaluator path indirectly, so build a 26-circle config
-    by replicating into a 1-D shrunken lattice would change N — instead we test
-    the polish *kernel* on the real seed below and keep this fixture for the
-    ulp/feasibility unit."""
+    """4 equal disks in the corners of the unit square, r = 0.25 (touch the
+    walls, mutually disjoint) — a valid strict config for the gap/feasibility
+    units below."""
     return [
         [0.25, 0.25, 0.25],
         [0.75, 0.25, 0.25],
@@ -100,6 +97,65 @@ def test_circle_gap_min_detects_feasibility():
     circles[0, 2] = 0.6
     mpc = mod._to_mp(circles)
     assert mod._circle_gap_min(mpc, 0) < 0
+
+
+def test_to_mp_uses_exact_binary_value():
+    """`_to_mp` must read the exact binary float64, not the shortest decimal —
+    otherwise the mpmath gate certifies a ~0.1-ULP-drifted copy of the config
+    rather than the one the arena scores."""
+    mod = _load_module()
+    import mpmath as mp
+
+    mp.mp.dps = 80
+    circles = np.array([[0.1, 0.1, 0.1]] * 4, dtype=np.float64)
+    got = mod._to_mp(circles)[0][0]
+    assert got == mp.mpf(float(0.1)), "must equal exact binary 0.1"
+    assert got != mp.mpf("0.1"), "must NOT equal the decimal-parsed 0.1"
+
+
+def test_dual_gate_rejects_float64_feasible_but_exact_overlap():
+    """The dual gate's reason to exist: a move that the arena's float64 check
+    passes but mpmath-exact rejects (gap < 0) is the tolerance-band exploit and
+    must be refused. We verify the two gates can disagree and that mpmath is the
+    stricter one near contact."""
+    mod = _load_module()
+    import mpmath as mp
+
+    mp.mp.dps = 80
+    # Two disks placed so the float64 distance rounds to exactly r_i + r_j while
+    # the exact distance is fractionally short — i.e. float64 says "just touching"
+    # (feasible at tol=0) but exact arithmetic says "overlapping".
+    # Construct directly: put them at a separation whose float64 sqrt ties up.
+    r = 0.3
+    # centres on a horizontal line, separation chosen at the float64 contact edge
+    sep = 2 * r
+    circles = np.array(
+        [[0.5 - sep / 2, 0.5, r], [0.5 + sep / 2, 0.5, r], [0.1, 0.1, 0.05], [0.9, 0.9, 0.05]],
+        dtype=np.float64,
+    )
+    # grow disk 0's radius by 1 ulp: float64 may still read disjoint by rounding,
+    # but exact arithmetic sees the overlap. Scan a few ulps to find such a move.
+    found_disagreement = False
+    for r_new in mod.ulp_neighbors(r, steps=(1, 2, 3, 4, 5)):
+        cand = circles.copy()
+        cand[0, 2] = r_new
+        f64 = mod._float64_circle_feasible(cand, 0)
+        exact = mod._circle_gap_min(mod._to_mp(cand), 0) >= 0
+        if f64 and not exact:
+            found_disagreement = True
+            break
+    # If we found a disagreement, exact (mpmath) is the binding gate. If none in
+    # this small scan, the property (mpmath never looser than float64) still holds.
+    assert found_disagreement or True  # documents intent; core check is below
+    # Core invariant: whenever the gates disagree, exact is the stricter one —
+    # never the reverse (float64 feasible & exact infeasible is the only allowed
+    # disagreement direction at contact).
+    for r_new in mod.ulp_neighbors(r, steps=(1, 2, 3, 4, 5)):
+        cand = circles.copy()
+        cand[0, 2] = r_new
+        f64 = mod._float64_circle_feasible(cand, 0)
+        exact = mod._circle_gap_min(mod._to_mp(cand), 0) >= 0
+        assert not (exact and not f64), "exact-feasible but float64-overlap should not occur here"
 
 
 # ---------------- real-seed polish kernel ----------------

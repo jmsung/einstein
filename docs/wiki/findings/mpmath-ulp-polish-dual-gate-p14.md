@@ -44,8 +44,8 @@ The correct gate:
 ## Why it matters (the payoff)
 
 With the dual gate, P14's submitted rank-2 seed (2.6359830849175245) polished to
-**2.635983084917589** — a triple-verified **+6.4e-14** with worst exact pair gap
-+3.4e-19 (genuinely disjoint). The gain is SLSQP line-search residual: `slsqp_polish`
+**2.6359830849175907** — a triple-verified **+6.617e-14** with worst exact pair gap
++1.44e-19 (genuinely disjoint). The gain is SLSQP line-search residual: `slsqp_polish`
 at ftol=1e-16 halts sub-ulp short of the basin's true float64 ceiling; discrete ±1/±2
 ulp descent that checks the *exact arena constraint per move* reclaims it. Below arena
 `minImprovement=1e-7` so not submittable, but it confirms the basin had reclaimable

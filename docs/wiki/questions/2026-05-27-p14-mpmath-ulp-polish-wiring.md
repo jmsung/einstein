@@ -59,7 +59,7 @@ A concrete diff that:
 
 1. Adds `scripts/circle_packing_square/mpmath_polish.py`:
    - Loads the SLSQP-floor circles (warm-start).
-   - At `mpmath.mp.dps=60` (matching the [triple-verify](../../.claude/rules/triple-verify.md)
+   - At `mpmath.mp.dps=60` (matching the [triple-verify](../../../.claude/rules/triple-verify.md)
      suggested range for P5/P6/P11/P14/P17), runs a high-precision local refine
      analogous to `polish.polish()` but in mpmath arithmetic.
    - Round-trips back to float64, runs `evaluate_strict(sol)`, only emits the
@@ -121,13 +121,13 @@ Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close
 Answered. `scripts/circle_packing_square/mpmath_ulp_polish.py` now exists (ULP-step
 coordinate descent, dual-gate feasibility) and is wired into `optimizer_manifest.yaml`
 under P14 as `mpmath_ulp_polish` (default stays `slsqp_polish`). Dispatch resolves it
-end-to-end. On the rank-2 seed it produced a triple-verified **+6.4e-14**
-(2.6359830849175245 → 2.635983084917589, worst exact gap +3.4e-19).
+end-to-end. On the rank-2 seed it produced a triple-verified **+6.617e-14**
+(2.6359830849175245 → 2.6359830849175907, worst exact gap +1.44e-19).
 
-The sub-float64-ulp gap to AlphaEvolve #1 (2.6359830849176067) is **not** closed: ~1.8e-14
+The sub-float64-ulp gap to AlphaEvolve #1 (2.6359830849176067) is **not** closed: ~1.6e-14
 remains, and that residual is the proximity-guard-rejected territory — closing it would
 require an exact-infeasible (tolerance-exploit) move, which the dual gate correctly
-refuses. So P14 is honestly capped at 2.635983084917589 for strict-disjoint packings.
+refuses. So P14 is honestly capped at 2.6359830849175907 for strict-disjoint packings.
 See [mpmath-ulp-polish-dual-gate-p14](../findings/mpmath-ulp-polish-dual-gate-p14.md)
 and `mb/problems/14-circle-packing-square/experiment-log.md` (2026-06-01 entry).
 

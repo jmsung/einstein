@@ -88,8 +88,15 @@ def ulp_neighbors(x: float, steps: tuple[int, ...] = (-2, -1, 1, 2)) -> list[flo
 
 
 def _to_mp(circles: np.ndarray) -> list[list[mp.mpf]]:
-    """Exact-precision copy of the configuration (current dps)."""
-    return [[mp.mpf(repr(float(v))) for v in row] for row in circles]
+    """Exact-binary-precision copy of the configuration.
+
+    ``mp.mpf(float(v))`` converts the Python float to its *exact* binary value
+    (the same bits the arena verifier reads). ``mp.mpf(repr(v))`` would instead
+    parse the shortest round-trip *decimal*, drifting ~0.1 ULP per coordinate —
+    fatal for a sub-ULP polisher, since the gate would then certify a
+    decimal-rounded copy rather than the configuration actually scored.
+    """
+    return [[mp.mpf(float(v)) for v in row] for row in circles]
 
 
 def _circle_gap_min(mpc: list[list[mp.mpf]], i: int) -> mp.mpf:
@@ -176,6 +183,8 @@ def mpmath_ulp_polish(
         #       500-pt trap; axiom A1).
         # Both required: float64-feasible-but-exact-overlapping is the exploit we
         # reject; exact-feasible-but-float64-overlapping is rejected by the arena.
+        if not all(np.isfinite(cand)):  # ulp step across 0 can produce NaN
+            return False
         saved = circles[i].copy()
         circles[i] = cand
         ok = _float64_circle_feasible(circles, i) and (_circle_gap_min(_to_mp(circles), i) >= 0)
@@ -290,11 +299,14 @@ def main(argv: list[str] | None = None) -> int:
     strict_score = evaluate_strict(payload)
     log.info("strict evaluator score: %.16f", strict_score)
     if abs(strict_score - info["score"]) > 1e-12:
-        log.warning(
-            "score disagreement: ulp=%.16f strict=%.16f — NOT trustworthy (axiom A1)",
+        # Axiom A1: a 2-way disagreement means the score is fake — do NOT emit a
+        # result the dispatch loop would parse as valid. Fail loud, write nothing.
+        log.error(
+            "score disagreement: ulp=%.16f strict=%.16f — refusing to write (axiom A1)",
             info["score"],
             strict_score,
         )
+        return 1
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({"score": float(strict_score), "payload": payload}, indent=2))
