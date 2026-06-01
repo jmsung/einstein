@@ -277,6 +277,134 @@ outcome, suggesting the gap-detector misclassified an "agent-can-still-do-it"
 gap as a tool gap. Either signal updates the threshold calibration for the
 next branch.
 
+## Architecture diagram
+
+Three layers — inner (continuous self-reflection), outer (pattern
+extraction → proposal), shadow A/B (verify before promote).
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  INNER LOOP — continuous self-reflection                                 │
+│                                                                          │
+│  scripts/autonomous_loop.py                                              │
+│   │                                                                      │
+│   ├─ pick problem from queue                                             │
+│   ├─ Thompson bandit samples skill-library.md → technique candidate      │
+│   ├─ spawn `claude -p` inner agent with the problem + bandit pick        │
+│   │     ↓ agent runs math-solving-protocol, may dispatch optimizer       │
+│   │     ↓ returns JSON: { strategy, score, dead_end_finding, notes }     │
+│   └─ append ONE row to docs/agent/cycle-log.md, notes column = the       │
+│      agent's self-report ("dispatch: no-manifest-entry", "<slug> not     │
+│      yet wired", "manifest only exposes …", etc.)                        │
+│                                                                          │
+│  docs/agent/cycle-log.md ← THE PERSISTENT REFLECTION LOG                 │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   │ ≥3 cycles, ≥2 problems
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  OUTER LOOP — pattern extraction → typed proposal                        │
+│                                                                          │
+│  meta_loop/tool_gaps.py     detect_recurring_tool_gaps()                 │
+│     │                       parses notes for marker regexes              │
+│     │                       clusters by canonical key                    │
+│     │                       threshold gate (≥3 cycles, ≥2 problems)      │
+│     ▼                                                                    │
+│  ToolGap{canonical, suggested_tool, citing_cycles, problem_ids, …}       │
+│     │                                                                    │
+│     ▼                                                                    │
+│  meta_loop/code_edit.py     make_code_edit_proposal(gap)                 │
+│     │                       renders script body (cite block +            │
+│     │                       NotImplementedError stub — SkillClaw         │
+│     │                       "skip > speculative edit")                   │
+│     ▼                                                                    │
+│  Proposal{ type=code_edit,                                               │
+│            target_path=scripts/proposed/<slug>.py,                       │
+│            proposed_diff=<full file body>,                               │
+│            requires_shadow=True }                                        │
+│     │                                                                    │
+│     ▼                                                                    │
+│  mb/proposals/pending/<id>.md  (ProposalStore, schema-validated)         │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  VALIDATE — read-only, never dispatches                                  │
+│                                                                          │
+│  meta_loop/sandbox.py       validate_proposed_tool(path)                 │
+│                             ├─ ruff check                                │
+│                             ├─ import in subprocess (isolation)          │
+│                             └─ pytest tests/proposed/test_<slug>.py      │
+│                                                                          │
+│  ValidationReport → mb/proposals/pending/<id>/validation.json            │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   │ passed?
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  SHADOW A/B — meta_loop/shadow.py  run_shadow(proposal, n_cycles=10)     │
+│                                                                          │
+│       git worktree add cb-shadow-<id>-A    git worktree add cb-shadow-…-B│
+│                  │                                  │                    │
+│  apply_proposal_to_worktree(A)             (no changes — control)        │
+│  = _apply_code_edit_graduation:                                          │
+│   1. write scripts/<slug>.py                                             │
+│   2. wire optimizer_manifest.yaml under cited problems                   │
+│   3. append skill-library.md row (categories from strategy_picker map)   │
+│   4. write docs/wiki/techniques/<slug>.md stub                           │
+│                  │                                  │                    │
+│                  ▼                                  ▼                    │
+│        EINSTEIN_SHADOW_ARM=A             EINSTEIN_SHADOW_ARM=B           │
+│        autonomous_loop --max-problems 10  autonomous_loop --max-problems │
+│        (bandit can now sample            (bandit only sees pre-existing  │
+│         the new technique)                arms)                          │
+│                  │                                  │                    │
+│                  ▼                                  ▼                    │
+│        cycle-log rows in A's              cycle-log rows in B's          │
+│        worktree                            worktree                      │
+│                  │                                  │                    │
+│                  └──── compute_arm_metrics(rows, tool_slug=<slug>) ─────┘│
+│                              │                                           │
+│   ArmMetrics{ cycles, score_changed, findings_added, dead_ends,          │
+│               tool_invoked_cycles ← counts cycles whose notes            │
+│                                      mention the slug }                  │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  PROMOTE — meta_loop/tool_autosynthesis.py                               │
+│                                                                          │
+│  tool_autosynthesis_promotion_decision(arm_a, arm_b, validator)          │
+│   gates (citation-grounded):                                             │
+│    1. validator.passed                                                   │
+│    2. arm_a.tool_invoked_cycles ≥ 1   ← the tool was actually picked     │
+│    3. arm_a.findings_added ≥ 1        ← invocation produced a finding    │
+│    4. arm_a.findings_added ≥ arm_b.findings_added (no regression)        │
+│                                                                          │
+│  → ToolPromotionDecision{ a_wins, reason, …, promoted=False }            │
+│                                                                          │
+│  append_audit_row → mb/logs/tool-autosynthesis.md                        │
+│  append_shadow_log → mb/logs/tool-autosynthesis-shadow.md                │
+│                                                                          │
+│  HUMAN review → flip decision.promoted = True →                          │
+│    mv scripts/proposed/<slug>.py → scripts/<slug>.py + manifest PR       │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Reading the diagram (signals → action):**
+
+- `cycle-log.md` is the **only** persistent reflection layer the system
+  has across sessions. Everything downstream is pattern-extraction on it.
+- The "agent that decides what to change" is **not an LLM proposer** for
+  `code_edit` — it's the deterministic detector + Python boilerplate
+  renderer pair. The LLM-driven proposer
+  ([`meta_loop/propose.py`](../../../src/einstein/meta_loop/propose.py))
+  emits other proposal types (`rule_edit`, `new_question`); `code_edit`
+  deliberately stays LLM-free for the boilerplate because the
+  gap-detector already gives a structured signal.
+- The **inner LLM** in shadow A/B is what fleshes out the stub — by
+  attempting to dispatch it, hitting `NotImplementedError`, and writing
+  a dead-end finding. That finding becomes the citation-grounded signal
+  that "the tool was actually exercised."
+- **No auto-merge.** Mechanical `a_wins=True` is necessary but not
+  sufficient; a human reads the audit row and flips `promoted`.
+
 ## Lifecycle (post-G5 revision, 2026-05-31)
 
 Now that the infrastructure has landed (G0–G5), the lifecycle of a
