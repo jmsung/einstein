@@ -3,7 +3,8 @@ type: question
 author: agent
 drafted: 2026-05-27
 asked_by: autonomous_loop
-status: open
+status: answered
+answer_finding: docs/wiki/findings/verify-seed-dispatch-pattern.md
 related_problems: [14, 22]
 related_concepts: [float64-ceiling]
 cites:
@@ -11,6 +12,17 @@ cites:
   - src/einstein/optimizer_manifest.yaml
   - docs/wiki/findings/dead-end-p14-dispatch-cli-noop.md
 ---
+
+> **ANSWERED 2026-06-01** (branch `js/feat/manifest-coverage-sprint`).
+> **Q-A — yes, add the CLI.** `optimizer_dispatch.py` now has an `argparse`
+> `main()` that runs `dispatch()`, prints the `DispatchResult` as JSON, and sets
+> the exit code (0 ok / 1 fail; `--dry-run` is an informational 0). This makes
+> the whitelisted `python -m einstein.optimizer_dispatch` command real — it was a
+> silent no-op before, so the entire manifest (not just P14) was unreachable.
+> **Q-B — drop `newton_max`.** It emitted `sum_r` (not `score`) to a gitignored
+> `results-temp/` path and defaulted to the rejected `--pair-gap=-9e-10` exploit;
+> unfixable cheaply and unsafe. `slsqp_polish` (default) + `mpmath_ulp_polish`
+> cover P14. See [verify-seed-dispatch-pattern](../findings/verify-seed-dispatch-pattern.md).
 
 # Should `optimizer_dispatch.py` expose a CLI, and should the broken `newton_max` manifest entry be fixed or dropped?
 
@@ -59,4 +71,3 @@ A wiring task (NOT research, and outside the autonomous agent's `src/`+`scripts/
 write scope): add the CLI entrypoint to `optimizer_dispatch.py`, reconcile the
 `newton_max` manifest entry, then re-run a P14 cycle through the sanctioned
 command and confirm a non-stale `slsqp_polish_result.json` with a fresh mtime.
-</content>

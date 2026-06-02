@@ -16,6 +16,16 @@ cites:
 
 # Dead end: the autonomous loop's sanctioned P14 execution channel is a no-op
 
+> **RESOLVED 2026-06-01** (branch `js/feat/manifest-coverage-sprint`). All three
+> wiring breaks are fixed: (1) `optimizer_dispatch.py` now has an `argparse`
+> `main()` that prints the `DispatchResult` as JSON and sets the exit code; (2)
+> the broken `newton_max` manifest entry was **dropped** (it emitted `sum_r` to a
+> gitignored path and defaulted to the rejected tolerance exploit); `slsqp_polish`
+> + `mpmath_ulp_polish` cover P14. The sanctioned `-m einstein.optimizer_dispatch`
+> command is now real end-to-end. Closes question
+> `2026-05-27-optimizer-dispatch-cli-entrypoint`. The finding below is kept as the
+> diagnosis-of-record.
+
 ## What we tried
 
 Autonomous-loop cycle (2026-05-27, attempt 2/3) tried to run a strict-disjoint
@@ -104,5 +114,4 @@ plumbing around it is not.
   finding this corrects.
 - [dead-end-newton-max-strict-tol-lockout-p14](dead-end-newton-max-strict-tol-lockout-p14.md)
 - [float64-ceiling](float64-ceiling.md)
-</content>
-</invoke>
+- [verify-seed-dispatch-pattern](verify-seed-dispatch-pattern.md) — the wiring that resolved this.

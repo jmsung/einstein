@@ -10,19 +10,24 @@
 # `score` (float) and optional `payload` (dict). Recommended for new
 # wirings — keeps the contract simple.
 #
-# Stub state (2026-05-24): only 2 example entries to exercise the dispatch
-# infrastructure. Other 15 live problems will be added incrementally as
-# their scripts are refactored to emit json_score_payload result files.
+# Coverage (2026-06-01, manifest-coverage-sprint): 10 problems wired —
+# P14 (slsqp_polish + mpmath_ulp_polish), P22 (stub), and 8 basin-locked
+# problems (P2,4,5,11,15,16,18,19) via the generic verify_seed emitter. The
+# remaining live problems are added incrementally as their scripts emit
+# json_score_payload result files; P3/P10/P12 are deferred pending a clean
+# in-repo seed (see docs/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md).
 
 14:
   slug: circle-packing-square
-  # Default is `slsqp_polish` (strict tol=0). `newton_max` is kept available
-  # but NOT default — its argparse defaults (`--pair-gap=-9e-10`) are the
-  # arena-tolerance-band exploit explicitly rejected after the 2026-04-09
-  # false-breakthrough 500-pt penalty. See dead-end-newton-max-strict-tol-
-  # lockout-p14.md (cycle 51 of the autonomous loop). When invoking
-  # newton_max here we force `--pair-gap 0` so even an explicit pick stays
-  # strict-tol-safe per axiom A1.
+  # Default is `slsqp_polish` (strict tol=0). `newton_max` was DROPPED on
+  # 2026-06-01 (Goal 6 Q-B of the manifest-coverage-sprint): it emits `sum_r`
+  # (not `score`) to a gitignored `results-temp/` path — unparseable under
+  # json_score_payload regardless of `--pair-gap` — and its argparse defaults
+  # (`--pair-gap=-9e-10`) are the arena-tolerance-band exploit explicitly
+  # rejected after the 2026-04-09 false-breakthrough 500-pt penalty (see
+  # dead-end-newton-max-strict-tol-lockout-p14.md). `slsqp_polish` +
+  # `mpmath_ulp_polish` cover P14 honestly; the script stays in scripts/ for
+  # manual use.
   default: slsqp_polish
   optimizers:
     slsqp_polish:
@@ -30,14 +35,6 @@
       cli_args: []
       timeout_seconds: 300
       result_file: results/circle_packing_square/slsqp_polish_result.json
-      result_parser: json_score_payload
-    newton_max:
-      script: scripts/circle_packing_square/newton_max.py
-      # `--pair-gap 0` forces strict-disjoint (axiom A1). Without this, the
-      # script defaults to `--pair-gap=-9e-10` (arena-tolerance exploit).
-      cli_args: ["--pair-gap", "0"]
-      timeout_seconds: 1800
-      result_file: results/circle_packing_square/newton_max_result.json
       result_parser: json_score_payload
     mpmath_ulp_polish:
       # ULP-step coordinate descent (docs/wiki/techniques/mpmath-ulp-polish.md).
@@ -66,4 +63,131 @@
       cli_args: ["--dry-run"]
       timeout_seconds: 60
       result_file: results/p22_kissing_d12/recon_result.json
+      result_parser: json_score_payload
+
+# ---------------------------------------------------------------------------
+# verify_seed wirings (manifest-coverage-sprint, 2026-06-01).
+#
+# `verify_seed` is the rank-current dispatch emitter for basin-locked problems:
+# it loads the best in-repo seed (scripts/<problem>/seeds/best.json[.gz]) and
+# re-scores it through the audited arena evaluator — triple-verify checks #1+#2
+# in one — then emits json_score_payload. This turns the long-standing
+# `dispatch: no-manifest-entry` rows into real, triple-verified dispatches. The
+# heavy search optimizers stay in scripts/<problem>/ for Phase-2 record runs.
+# See scripts/verify_seed.py (SPECS registry) and the Goal-0 audit.
+# ---------------------------------------------------------------------------
+
+2:
+  slug: first-autocorrelation
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # NOTE: best in-repo seed is the n=30000 basin (1.50286286). The arena-#1
+      # n=90000 solution (1.502861628) was never backed up cleanly — a seed
+      # backfill gap tracked in the deferral finding. Dispatch is still real;
+      # the loop just won't see the absolute best until the 90k seed lands.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "2"]
+      timeout_seconds: 120
+      result_file: results/first_autocorrelation/verify_seed_result.json
+      result_parser: json_score_payload
+
+4:
+  slug: third-autocorrelation
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == arena-#1 (1.45252115504688), the n=100000 block-repeat-cascade
+      # equioscillation basin. Re-score reproduces it exactly.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "4"]
+      timeout_seconds: 120
+      result_file: results/third_autocorrelation/verify_seed_result.json
+      result_parser: json_score_payload
+
+5:
+  slug: min-distance-ratio
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the proven-global (22,8) Cantrell config (12.88922990769401).
+      # Rank #4 frozen: the basin floor is 2.35e-11 below arena #1, blocked by
+      # the minImprovement gate. Dispatch is real; no path to a submittable Δ.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "5"]
+      timeout_seconds: 120
+      result_file: results/min_distance_ratio/verify_seed_result.json
+      result_parser: json_score_payload
+
+11:
+  slug: tammes-n50
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the conjectured Hardin-Sloane n=50 optimum (0.5134720846805645),
+      # tied rank #2 with KawaiiCorgi. Confirmed float64 ceiling by 2 Modal A100
+      # campaigns; no novel basin, #1 unreachable. Dispatch is real, no Δ.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "11"]
+      timeout_seconds: 120
+      result_file: results/tammes/verify_seed_result.json
+      result_parser: json_score_payload
+
+15:
+  slug: heilbronn-triangles
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == AlphaEvolve §6.48 construction (0.036529889880030156), the tied
+      # SOTA basin. mpmath 60-dps Newton showed ceiling +6.25e-17; ~18.8k trials
+      # found no novel basin. Scored via arena_score(data["points"]).
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "15"]
+      timeout_seconds: 120
+      result_file: results/heilbronn_triangles/verify_seed_result.json
+      result_parser: json_score_payload
+
+16:
+  slug: heilbronn-convex
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == JSAgent distinct-basin (0.027835580459939436), rank #2, +9e-9
+      # above the tied group. Multi-seed BH sub-basin; #1 blocked by the
+      # minImprovement proximity filter. Scored via arena_score(data["points"]).
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "16"]
+      timeout_seconds: 120
+      result_file: results/heilbronn_convex/verify_seed_result.json
+      result_parser: json_score_payload
+
+18:
+  slug: circles-rectangle
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed is the rank-#1 (tied) config uniformly shrunk to strict-valid
+      # (perimeter ≤ 4.0): score 2.365832383977751. The raw backup sits 1.98e-9
+      # over our local PERIMETER_TOL=1e-12 though arena accepts it — a documented
+      # local↔arena perimeter-tol drift; uniform-shrink is the rank-current op
+      # (see techniques/uniform-radius-shrink-fallback). Δ from the shrink is
+      # 1.23e-9, far below minImprovement, so non-submittable.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "18"]
+      timeout_seconds: 120
+      result_file: results/circles_rectangle/verify_seed_result.json
+      result_parser: json_score_payload
+
+19:
+  slug: difference-bases
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the 7-way SOTA-tie set (score_set → 2.639027469506608), the
+      # B = A ⊕ 8011·{0,1,4,6} Kronecker construction. Full w=3 BnB sweep
+      # (1.22T nodes, 0 hits) confirmed the tie unbreakable. Dispatch is real.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "19"]
+      timeout_seconds: 120
+      result_file: results/difference_bases/verify_seed_result.json
       result_parser: json_score_payload
