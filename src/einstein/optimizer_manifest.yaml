@@ -118,6 +118,17 @@
       timeout_seconds: 120
       result_file: results/min_distance_ratio/verify_seed_result.json
       result_parser: json_score_payload
+    mpmath_ulp_polish:
+      # Phase 2a dual-gate ULP polish (einstein.ulp_polish). Minimises the exact
+      # (max/min)² ratio by ±ulp coordinate steps gated on BOTH mpmath-exact and
+      # arena-float64. On the Cantrell (22,8) seed it finds sub-float64-ulp exact
+      # improvements while the float64 score stays fixed — a triple-verified
+      # confirmation of the float64 ceiling, not a submittable Δ.
+      script: scripts/min_distance_ratio/mpmath_ulp_polish.py
+      cli_args: ["--dps", "80", "--max-iter", "30"]
+      timeout_seconds: 300
+      result_file: results/min_distance_ratio/mpmath_ulp_polish_result.json
+      result_parser: json_score_payload
 
 11:
   slug: tammes-n50
@@ -131,6 +142,18 @@
       cli_args: ["--problem-id", "11"]
       timeout_seconds: 120
       result_file: results/tammes/verify_seed_result.json
+      result_parser: json_score_payload
+    mpmath_ulp_polish:
+      # Phase 2a dual-gate ULP polish (einstein.ulp_polish). Maximises the exact
+      # min pairwise distance by ±ulp coordinate steps gated on BOTH mpmath-exact
+      # and arena-float64. On the Hardin-Sloane seed it reclaims ~2 ulps
+      # (+2.2e-16) of sub-line-search slack — triple-verified, but ≪ the ~3.5e-13
+      # gap to arena #1, so the float64 ceiling stands. Slow (1225-pair mpmath
+      # per coordinate); keep --max-iter modest.
+      script: scripts/tammes/mpmath_ulp_polish.py
+      cli_args: ["--dps", "80", "--max-iter", "10"]
+      timeout_seconds: 600
+      result_file: results/tammes/mpmath_ulp_polish_result.json
       result_parser: json_score_payload
 
 15:
