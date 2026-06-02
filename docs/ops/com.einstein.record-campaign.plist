@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- macOS launchd template for the autonomous record campaign (Phase 4).
+     Replace __PROJECT_ROOT__ with the cb worktree path before installing.
+     See docs/ops/record-campaign.md for the install + kill-switch walkthrough.
+     SHIPS WITH EINSTEIN_AUTO_SUBMIT=0 (dry-run safe). Flip to "1" only after the
+     24h dry-run gate (Goal 4) — that is the high-blast-radius switch. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.einstein.record-campaign</string>
+
+  <!-- Daily-rotated app log: one file per day under mb/logs/. launchd-level
+       stdout/stderr go to the StandardOutPath/StandardErrorPath below. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd "__PROJECT_ROOT__" &amp;&amp; uv run python scripts/autonomous_loop.py --max-problems 3 --skip-if-recent 25 --discipline-once &gt;&gt; "__PROJECT_ROOT__/../mb/logs/record-campaign-$(date +%Y-%m-%d).log" 2&gt;&amp;1</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__PROJECT_ROOT__</string>
+
+  <!-- Every 30 minutes. The concurrency lockfile + --skip-if-recent 25 prevent
+       clobbering an in-flight cycle. -->
+  <key>StartInterval</key>
+  <integer>1800</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>__PROJECT_ROOT__/../mb/logs/record-campaign.launchd.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>__PROJECT_ROOT__/../mb/logs/record-campaign.launchd.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+
+    <!-- Kill switches (axioms.md). All three revert behavior cleanly. -->
+    <!-- AUTO_SUBMIT=0 → dry-run; no arena submissions. Flip to "1" post-gate. -->
+    <key>EINSTEIN_AUTO_SUBMIT</key>
+    <string>0</string>
+    <!-- Bandit default-on; "0" reverts to static technique selection. -->
+    <key>EINSTEIN_BANDIT</key>
+    <string>1</string>
+    <!-- Inner agent on for the autonomous loop; "0" disables dispatch. -->
+    <key>EINSTEIN_INNER_AGENT</key>
+    <string>1</string>
+    <!-- Parallel attempts off by default (K=1); raise only after cost review. -->
+    <key>EINSTEIN_PARALLEL_K</key>
+    <string>1</string>
+  </dict>
+
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+</dict>
+</plist>
