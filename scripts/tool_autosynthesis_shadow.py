@@ -140,8 +140,15 @@ def run_cli(
     questions_dir: Path = DEFAULT_QUESTIONS_DIR,
     n_cycles: int = 10,
     execute: bool = False,
+    write_body: bool = False,
 ) -> int:
-    """Run the CLI. Dry-run prints; execute mode runs the real shadow."""
+    """Run the CLI. Dry-run prints; execute mode runs the real shadow.
+
+    `write_body=True` opts into the LLM body-writer (Goal 2/3): the draft
+    arrives with a real body instead of the NotImplementedError stub, and the
+    validator adds the smoke-dispatch step that fails a stub-that-slipped-
+    through before it reaches shadow.
+    """
     if not execute:
         print(dry_run_summary(cycle_log=cycle_log, questions_dir=questions_dir, n_cycles=n_cycles))
         return 0
@@ -151,8 +158,15 @@ def run_cli(
         log.error("no threshold-passing gaps — refusing to execute shadow")
         return 1
     top = gaps[0]
-    proposal = make_code_edit_proposal(top)
-    log.info("drafted proposal id=%s for gap %s", proposal.id, top.canonical)
+    proposal = make_code_edit_proposal(
+        top, write_body=write_body, repo_root=_REPO if write_body else None
+    )
+    log.info(
+        "drafted proposal id=%s for gap %s (proposer=%s)",
+        proposal.id,
+        top.canonical,
+        proposal.proposer_id,
+    )
 
     # Validator pre-check on the draft body (write to a temp path).
     import tempfile
@@ -161,7 +175,7 @@ def run_cli(
         target = Path(tmp) / "scripts" / "proposed" / Path(proposal.target_path).name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(proposal.proposed_diff)
-        report = validate_proposed_tool(target, repo_root=Path(tmp))
+        report = validate_proposed_tool(target, repo_root=Path(tmp), smoke_dispatch=write_body)
         log.info("validator: passed=%s steps=%s", report.passed, [s.name for s in report.steps])
         if not report.passed:
             audit = DEFAULT_MB / "proposals" / "pending" / proposal.id / "validation.json"
@@ -211,6 +225,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--dry-run", action="store_true", help="default mode — print the plan without execution"
     )
+    parser.add_argument(
+        "--write-body",
+        action="store_true",
+        help="opt into the LLM body-writer (Goal 2/3): draft a real body + smoke-dispatch validate",
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -223,6 +242,7 @@ def main(argv: list[str] | None = None) -> int:
         questions_dir=args.questions_dir,
         n_cycles=args.n_cycles,
         execute=args.execute,
+        write_body=args.write_body,
     )
 
 

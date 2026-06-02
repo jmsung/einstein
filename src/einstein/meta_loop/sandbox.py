@@ -159,6 +159,49 @@ def _check_import(target: Path, runner) -> StepResult:
     )
 
 
+def _check_smoke_dispatch(target: Path, runner) -> StepResult:
+    """Call the target function once and assert it is not a stub.
+
+    Imports the draft in a subprocess, looks up the function named after the
+    slug (`<stem>` → `<stem-with-dashes-as-underscores>`), and calls it with
+    no args. Fails IFF the call raises `NotImplementedError` (still a stub) or
+    the function is absent. ANY other exception passes — the body exists, and
+    whether it computes a *correct* score is the shadow A/B's job, not the
+    smoke gate's. This is the one validator step the body-writer adds: it
+    catches "the LLM emitted a stub anyway" before a body-written draft ever
+    reaches shadow.
+    """
+    py_id = target.stem.replace("-", "_")
+    code = (
+        "import importlib.util, sys\n"
+        f"spec = importlib.util.spec_from_file_location('proposed_tool', r'{target}')\n"
+        "if spec is None or spec.loader is None:\n"
+        "    print('SMOKE: spec None', file=sys.stderr); sys.exit(2)\n"
+        "mod = importlib.util.module_from_spec(spec)\n"
+        "sys.modules['proposed_tool'] = mod\n"
+        "spec.loader.exec_module(mod)\n"
+        f"fn = getattr(mod, '{py_id}', None)\n"
+        "if fn is None:\n"
+        f"    print('SMOKE: no function named {py_id}', file=sys.stderr); sys.exit(2)\n"
+        "try:\n"
+        "    fn()\n"
+        "except NotImplementedError:\n"
+        "    print('SMOKE: NotImplementedError — still a stub', file=sys.stderr); sys.exit(1)\n"
+        "except Exception as e:\n"
+        "    print(f'SMOKE: body raised {type(e).__name__} (not a stub) — ok'); sys.exit(0)\n"
+        "print('SMOKE: body returned without NotImplementedError — ok')\n"
+        "sys.exit(0)\n"
+    )
+    res = runner([sys.executable, "-c", code], cwd=None, timeout=30)
+    return StepResult(
+        name="smoke_dispatch",
+        ok=res.ok,
+        stdout=res.stdout,
+        stderr=res.stderr,
+        returncode=res.returncode,
+    )
+
+
 def _check_pytest(target: Path, repo_root: Path, runner) -> StepResult:
     """Run `tests/proposed/test_<tool>.py` if it exists; skip otherwise."""
     slug = target.stem
@@ -184,6 +227,7 @@ def validate_proposed_tool(
     *,
     repo_root: Path | None = None,
     runner=None,
+    smoke_dispatch: bool = False,
 ) -> ValidationReport:
     """Run ruff + import + colocated pytest on the proposed tool.
 
@@ -195,9 +239,17 @@ def validate_proposed_tool(
             → `<repo>`).
         runner: subprocess wrapper, injectable for tests. Same signature
             as `_run` above.
+        smoke_dispatch: when True, add the smoke-dispatch step — call the
+            target function once and fail iff it raises `NotImplementedError`
+            (still a stub). Default False keeps the Phase-1 stub flow
+            unchanged: a `NotImplementedError` stub is a valid draft there,
+            blocked from promotion by the shadow A/B's findings gate, not by
+            the validator. The body-writer flow (Goal 4) sets this True so a
+            stub-that-slipped-through never reaches shadow.
 
-    Never dispatches the tool against a live problem. The validator
-    deliberately stays inside the static/import/unit-test envelope.
+    Never dispatches the tool against a live problem. The smoke-dispatch step
+    calls the function with no args in a subprocess — it does NOT run the tool
+    against a problem manifest or write any result file.
     """
     if not target.is_file():
         raise FileNotFoundError(f"target_path={target!r} not found")
@@ -207,6 +259,8 @@ def validate_proposed_tool(
     report.steps.append(_check_ruff(target, r))
     report.steps.append(_check_import(target, r))
     report.steps.append(_check_pytest(target, root, r))
+    if smoke_dispatch:
+        report.steps.append(_check_smoke_dispatch(target, r))
     return report
 
 
