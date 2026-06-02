@@ -23,8 +23,12 @@ optional feasibility predicate, and how candidate ulp moves are generated. The
 accept logic and the sweep engine are invariant. Merit functions are always
 "higher is better"; a minimization problem negates its objective.
 
-Used by: P14 (circle_packing_square), P18 (circles_rectangle), P11 (tammes),
-P5 (min_distance_ratio). See each ``scripts/<problem>/mpmath_ulp_polish.py``.
+Used by: P14 (circle_packing_square), P11 (tammes), P5 (min_distance_ratio).
+See each ``scripts/<problem>/mpmath_ulp_polish.py``. The technique has a
+soundness boundary — it does NOT apply to P18 (tolerance-band seed), P17
+(penalty-shaped score), or P22/P23 (O(n^2) mpmath); see
+``docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md`` and the three
+``dead-end-ulp-polish-*`` findings for why.
 """
 
 from __future__ import annotations
@@ -42,8 +46,11 @@ def ulp_neighbors(x: float, steps: tuple[int, ...] = (-2, -1, 1, 2)) -> list[flo
 
     Bit-level integer arithmetic on the IEEE-754 representation — NOT
     multiplicative scaling. ``x * (1 + 1e-16)`` is not 1 ulp. The int64
-    reinterpretation of float64 is monotone for finite same-sign values, which
-    is all a coordinate polisher ever deals with.
+    reinterpretation of float64 is monotone in *magnitude* for finite values:
+    for ``x < 0`` a ``+1``-bit step makes ``x`` more negative. The step→sign
+    mapping is irrelevant to correctness — every candidate is independently
+    gated and ranked by its exact merit (negative coordinates occur in the P5
+    and P11 seeds, and are handled by the per-candidate gate, not by the step).
     """
     bits = struct.unpack("<q", struct.pack("<d", x))[0]
     out = []

@@ -24,9 +24,8 @@ fits.
 ## Why it failed — three independent obstructions
 
 1. **No in-repo seed.** Neither problem has `scripts/<problem>/seeds/best.json`;
-   the only solutions live in the private `mb/` tree (P22
-   `solution-best-2.001403089191293.json`; P23 `chronos_id2082_score2.0.json`,
-   `squeeze_delta1e-07_score2.0000026873.json`). The polish/dispatch contract
+   the only solutions live in the private `mb/` tree (the CHRONOS score-2 config
+   and a near-floor "squeeze" variant for each). The polish/dispatch contract
    requires a deterministic in-repo seed (same discipline as `verify_seed`), so
    there is nothing to wire against without a seed-backfill commit.
 
