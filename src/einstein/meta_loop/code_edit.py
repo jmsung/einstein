@@ -318,6 +318,11 @@ def make_code_edit_proposal(
     *,
     now: dt.datetime | None = None,
     confidence: str = Confidence.LOW.value,
+    write_body: bool = False,
+    repo_root: Path | None = None,
+    manifest_path: Path | None = None,
+    body_proposer: "BodyWriterProposer | None" = None,
+    prompt_path: Path | None = None,
 ) -> Proposal:
     """Build a `code_edit` Proposal from a threshold-passing ToolGap.
 
@@ -325,9 +330,17 @@ def make_code_edit_proposal(
     `apply_proposal_to_worktree` (in `shadow.py`) writes the body to
     `scripts/proposed/<slug>.py` and commits in the arm worktree.
 
+    By default the body is the `NotImplementedError` stub (the safe Phase-1
+    contract). With `write_body=True` the LLM body-writer (Goal 2) replaces
+    the stub with a real body, gathering context from the cited problems'
+    rank-current scripts. `repo_root` is required in that mode (it's where
+    `gather_context` reads the examples). If the body-writer abstains, the
+    stub is kept and the proposer_id stays `tool-autosynthesis-v0`.
+
     Raises `ProposalValidationError` if the gap doesn't actually clear the
     recurrence threshold (≥3 cycles, ≥2 problems) — the proposer should
-    not fire on noise.
+    not fire on noise. Raises `ValueError` if `write_body=True` without a
+    `repo_root`. Propagates `BodyWriterError` if the LLM call itself fails.
     """
     if not gap.meets_threshold():
         raise ProposalValidationError(
@@ -338,6 +351,36 @@ def make_code_edit_proposal(
     slug = _slug_for_gap(gap)
     target = f"{DRAFT_DIR}/{slug}.py"
     body = _render_draft_body(gap, slug=slug, drafted=now.strftime("%Y-%m-%d"))
+
+    proposer_id = PROPOSER_ID
+    predicted_regressions = [
+        "draft body raises NotImplementedError — strategy_picker that "
+        "selects it before promotion will dispatch-fail",
+    ]
+    if write_body:
+        if repo_root is None:
+            raise ValueError("write_body=True requires repo_root (for gather_context)")
+        # Lazy import to keep the module-level import graph identical to Phase 1.
+        from . import code_edit_context
+
+        ctx = code_edit_context.gather_context(
+            gap, repo_root=repo_root, manifest_path=manifest_path
+        )
+        new_body = write_body_llm(
+            gap,
+            ctx,
+            stub_body=body,
+            proposer=body_proposer,
+            prompt_path=prompt_path,
+        )
+        if new_body is not None:
+            body = new_body
+            proposer_id = BODY_WRITER_PROPOSER_ID
+            predicted_regressions = [
+                "LLM-written body may compute a wrong score — caught by shadow "
+                "A/B (no finding produced) + triple-verify before any submission",
+            ]
+
     pid = make_proposal_id(
         proposal_type=ProposalType.CODE_EDIT.value,
         target_path=target,
@@ -350,10 +393,7 @@ def make_code_edit_proposal(
         proposed_diff=body,
         evidence_cycles=list(gap.citing_cycles),
         expected_metric_delta={"tool_invoked_cycles_a": 1.0},
-        predicted_regressions=[
-            "draft body raises NotImplementedError — strategy_picker that "
-            "selects it before promotion will dispatch-fail",
-        ],
+        predicted_regressions=predicted_regressions,
         confidence=confidence,
         requires_shadow=True,
         rationale=(
@@ -361,7 +401,7 @@ def make_code_edit_proposal(
             f"{gap.cycle_count} cycles / {gap.problem_count} problems; "
             f"manifest doesn't wire a {slug} script."
         ),
-        proposer_id=PROPOSER_ID,
+        proposer_id=proposer_id,
         created_at=now,
     )
 

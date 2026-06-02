@@ -157,3 +157,97 @@ def test_body_writer_prompt_file_exists() -> None:
     text = code_edit.BODY_WRITER_PROMPT_PATH.read_text()
     assert "ABSTAIN" in text
     assert "citation block" in text.lower()
+
+
+# ---------------- Goal 3: make_code_edit_proposal(write_body=True) ----------------
+
+from einstein.meta_loop.proposals import (  # noqa: E402
+    ProposalStore,
+    ProposalType,
+)
+from einstein.meta_loop.shadow import _parse_problem_ids_from_body  # noqa: E402
+
+
+def _real_body_proposer(inp: BodyWriterInput) -> str:
+    return (
+        "```python\n"
+        "import json\n\n\n"
+        f"def {inp.py_identifier}(*args, **kwargs):\n"
+        "    return 0.5\n\n\n"
+        'if __name__ == "__main__":\n'
+        f"    print(json.dumps({{'score': {inp.py_identifier}()}}))\n"
+        "```"
+    )
+
+
+def test_make_proposal_write_body_replaces_stub(tmp_path: Path) -> None:
+    p = make_code_edit_proposal(
+        _gap(),
+        now=_now(),
+        write_body=True,
+        repo_root=tmp_path,  # empty repo → no examples, but the proposer is stubbed
+        body_proposer=_real_body_proposer,
+    )
+    assert "NotImplementedError" not in p.proposed_diff
+    assert "return 0.5" in p.proposed_diff
+    assert p.proposer_id == code_edit.BODY_WRITER_PROPOSER_ID
+    # The regression prediction reflects the body-written risk, not the stub's.
+    assert any("wrong score" in r for r in p.predicted_regressions)
+    p._validate()
+
+
+def test_make_proposal_write_body_preserves_cite_block(tmp_path: Path) -> None:
+    """The spliced body must keep the cite block graduation parses."""
+    p = make_code_edit_proposal(
+        _gap(),
+        now=_now(),
+        write_body=True,
+        repo_root=tmp_path,
+        body_proposer=_real_body_proposer,
+    )
+    pids = _parse_problem_ids_from_body(p.proposed_diff)
+    assert pids == ["P11", "P14"]  # sorted, from the cite block
+
+
+def test_make_proposal_write_body_abstain_keeps_stub(tmp_path: Path) -> None:
+    p = make_code_edit_proposal(
+        _gap(),
+        now=_now(),
+        write_body=True,
+        repo_root=tmp_path,
+        body_proposer=lambda inp: ABSTAIN,
+    )
+    assert "NotImplementedError" in p.proposed_diff
+    assert p.proposer_id == code_edit.PROPOSER_ID
+
+
+def test_make_proposal_write_body_requires_repo_root() -> None:
+    with pytest.raises(ValueError, match="repo_root"):
+        make_code_edit_proposal(_gap(), now=_now(), write_body=True)
+
+
+def test_make_proposal_default_still_stub(tmp_path: Path) -> None:
+    p = make_code_edit_proposal(_gap(), now=_now())
+    assert "NotImplementedError" in p.proposed_diff
+    assert p.proposer_id == code_edit.PROPOSER_ID
+
+
+def test_write_body_proposal_store_round_trip(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    p = make_code_edit_proposal(
+        _gap(),
+        now=_now(),
+        write_body=True,
+        repo_root=repo,
+        body_proposer=_real_body_proposer,
+    )
+    store = ProposalStore(tmp_path / "proposals")
+    path = store.write_pending(p)
+    assert path.is_file()
+    rt = store.list_pending()[0]
+    assert rt.id == p.id
+    assert rt.type == ProposalType.CODE_EDIT.value
+    assert rt.proposer_id == code_edit.BODY_WRITER_PROPOSER_ID
+    assert "return 0.5" in rt.proposed_diff
+    assert "NotImplementedError" not in rt.proposed_diff
