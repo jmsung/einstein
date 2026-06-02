@@ -57,11 +57,20 @@ slack and the body is correct.
   every float64-ceiling packing problem the accept test must run the arena's *own*
   float64 arithmetic as the binding gate, with mpmath as the honesty cross-check — not
   the reverse.
-- **Enables**: the body generalizes verbatim to the float64-ceiling family
-  (P5/P11/P17/P18/P22/P23, Phase 2a) — only the evaluator import and the score
-  direction change; the dual-gate accept logic is invariant.
+- **Enables**: the body generalizes to the float64-ceiling family — the
+  dual-gate accept logic is invariant; only the evaluator import and score
+  direction change. **Phase 2a outcome (2026-06-01):** the engine was extracted
+  to `src/einstein/ulp_polish.py` and wired to P11 + P5 (both confirmed at the
+  float64 ceiling, 0 submittable). The "verbatim to all of P5/P11/P17/P18/P22/P23"
+  optimism was **too broad** — the technique has a soundness boundary. It applies
+  only to **small-n (n ≲ 50), continuous-objective, strict-feasible-seed**
+  problems. Out of scope by construction (not tuning):
+  [P18 tolerance-band seed](dead-end-ulp-polish-tolerance-band-seed-p18.md),
+  [P17 penalty-shaped score](dead-end-ulp-polish-no-seed-penalty-score-p17.md),
+  [P22/P23 O(n²) mpmath at n=841/4321](dead-end-ulp-polish-scale-limit-kissing-p22-p23.md).
 
 ## See also
 
 - [dead-end-newton-max-strict-tol-lockout-p14](dead-end-newton-max-strict-tol-lockout-p14.md) — the strict-tol-unsafe optimizer this one replaces.
 - [mpmath-ulp-polish technique](../techniques/mpmath-ulp-polish.md) — the procedure; this finding adds the dual-gate refinement for arena-float64-scored problems.
+- `src/einstein/ulp_polish.py` — the Phase-2a generic engine extracted from this finding's body.
