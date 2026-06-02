@@ -22,9 +22,13 @@ LLM-free for the boilerplate stage.
 from __future__ import annotations
 
 import datetime as dt
+import logging
 import re
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
+from .code_edit_context import CodeEditContext
 from .proposals import (
     Confidence,
     Proposal,
@@ -34,7 +38,22 @@ from .proposals import (
 )
 from .tool_gaps import ToolGap
 
+log = logging.getLogger("meta_loop.code_edit")
+
 PROPOSER_ID = "tool-autosynthesis-v0"
+
+# Provenance tag when the body was filled by the LLM body-writer (Goal 2/3),
+# distinct from the stub proposer above. The audit trail keeps them separate.
+BODY_WRITER_PROPOSER_ID = "tool-autosynthesis-body-writer-v1"
+
+# The body-writer system prompt lives in a file so it can be A/B'd and
+# shadow-compared without a code edit (mirrors propose.DEFAULT_PROMPT_PATH).
+# cb root = parents[3] (src/einstein/meta_loop/code_edit.py).
+_REPO = Path(__file__).resolve().parents[3]
+BODY_WRITER_PROMPT_PATH = _REPO / "docs" / "agent" / "proposer_prompts" / "body-writer-v1.md"
+
+# Sentinel the LLM emits when it cannot honestly write a body.
+ABSTAIN = "ABSTAIN"
 
 # Where drafts live (repo-relative). `apply_proposal_to_worktree` in
 # `shadow.py` writes the file here in the arm worktree.
@@ -135,6 +154,165 @@ if __name__ == "__main__":
 '''
 
 
+# ---------------- LLM body-writer (Goal 2) ----------------
+
+
+class BodyWriterError(RuntimeError):
+    """The body-writer LLM call failed (auth/quota/timeout/non-zero)."""
+
+
+@dataclass
+class BodyWriterInput:
+    """Context handed to a body-writer proposer callable."""
+
+    gap: ToolGap
+    context: CodeEditContext
+    stub_body: str  # the full stub file (docstring + NotImplementedError body)
+    py_identifier: str
+    prompt_path: Path = BODY_WRITER_PROMPT_PATH
+
+
+# A swappable proposer: takes a BodyWriterInput, returns the raw LLM text
+# (a ```python fenced body, or the ABSTAIN sentinel). Tests inject a stub.
+BodyWriterProposer = Callable[["BodyWriterInput"], str]
+
+
+# The leading module docstring is the first triple-quoted string. We splice
+# the LLM body AFTER it so the cite block stays byte-for-byte (the promotion
+# gate parses `- problems: [...]` from it). See code-edit-body-writer-design.md.
+def _split_module_docstring(stub: str) -> tuple[str, str]:
+    """Return (docstring_block, remainder).
+
+    `docstring_block` is the leading triple-quoted module docstring including
+    its closing quotes and the trailing newline. `remainder` is everything
+    after — the part the body-writer replaces. Raises ValueError if the stub
+    doesn't open with a module docstring (it always does, by
+    `_render_draft_body` construction).
+    """
+    if not stub.startswith('"""'):
+        raise ValueError("stub does not open with a module docstring")
+    close = stub.find('"""', 3)
+    if close == -1:
+        raise ValueError("unterminated module docstring in stub")
+    end = close + 3
+    # Include the trailing newline after the closing quotes, if present.
+    if end < len(stub) and stub[end] == "\n":
+        end += 1
+    return stub[:end], stub[end:]
+
+
+_PY_FENCE_RE = re.compile(r"```(?:python)?\s*\n(.*?)\n```", re.DOTALL)
+
+
+def _extract_code_block(text: str) -> str | None:
+    """Pull the post-docstring body out of the LLM response.
+
+    Returns None if the model abstained (`ABSTAIN` sentinel) or emitted
+    nothing usable. Prefers a fenced ```python block; falls back to the whole
+    response when no fence is present (some models drop it).
+    """
+    if not text:
+        return None
+    if text.strip() == ABSTAIN:
+        return None
+    m = _PY_FENCE_RE.search(text)
+    body = (m.group(1) if m else text).strip()
+    if not body or body == ABSTAIN:
+        return None
+    return body
+
+
+def _render_body_writer_prompt(inp: BodyWriterInput) -> str:
+    system = Path(inp.prompt_path).read_text().rstrip()
+    return (
+        system
+        + "\n\n--- GAP + EVIDENCE ---\n"
+        + inp.context.render_prompt_context()
+        + "\n\n--- EXISTING DRAFT (docstring is immutable; replace the body below it) ---\n"
+        + f"```python\n{inp.stub_body}\n```\n"
+        + f"\nEmit the post-docstring body that defines `{inp.py_identifier}`.\n"
+    )
+
+
+def _default_body_writer(inp: BodyWriterInput) -> str:
+    """Shell out via `claude_headless` to fill the body. Lazy-imports the tool.
+
+    Token budget is capped at the wrapper's default; the context gatherer
+    already truncates inputs to the ~30K-token envelope.
+    """
+    import importlib.util as _ilu
+    import sys as _sys
+
+    tools_dir = _REPO / "docs" / "tools"
+    if str(tools_dir) not in _sys.path:
+        _sys.path.insert(0, str(tools_dir))
+    spec = _ilu.find_spec("claude_headless")
+    if spec is None or spec.loader is None:
+        raise BodyWriterError(f"claude_headless not importable from {tools_dir}")
+    claude_headless = _ilu.module_from_spec(spec)
+    # Register before exec so module-level @dataclass can resolve __module__
+    # (dataclasses looks up sys.modules[cls.__module__]).
+    _sys.modules[spec.name] = claude_headless
+    spec.loader.exec_module(claude_headless)
+
+    result = claude_headless.run(
+        prompt=_render_body_writer_prompt(inp),
+        allowed_tools=["Read", "Grep", "Glob"],
+        output_format="text",
+        timeout_seconds=600,
+        add_dirs=[_REPO / "docs", _REPO / "scripts", _REPO / "src"],
+    )
+    if not result.ok:
+        raise BodyWriterError(
+            f"body-writer LLM call failed: kind={result.error_kind} "
+            f"message={result.error_message!r}"
+        )
+    return result.stdout
+
+
+def write_body_llm(
+    gap: ToolGap,
+    context: CodeEditContext,
+    *,
+    stub_body: str,
+    proposer: BodyWriterProposer | None = None,
+    prompt_path: Path | None = None,
+) -> str | None:
+    """Ask the body-writer to replace the stub's body, preserving the docstring.
+
+    Splices the LLM-generated post-docstring body onto the stub's leading
+    module docstring (which carries the immutable cite block). Returns the
+    full new file body, or None if the LLM abstained / emitted nothing usable
+    (caller keeps the stub).
+
+    Args:
+        gap: the gap the draft is for (provenance + threshold already checked).
+        context: gathered evidence from `code_edit_context.gather_context`.
+        stub_body: the full stub file from `_render_draft_body`.
+        proposer: injectable callable for tests; defaults to the claude_headless
+            body-writer.
+        prompt_path: system-prompt override (A/B without code edit).
+
+    Raises:
+        BodyWriterError: the LLM call itself failed (distinct from abstain).
+    """
+    proposer = proposer or _default_body_writer
+    docstring_block, _ = _split_module_docstring(stub_body)
+    inp = BodyWriterInput(
+        gap=gap,
+        context=context,
+        stub_body=stub_body,
+        py_identifier=context.py_identifier,
+        prompt_path=prompt_path or BODY_WRITER_PROMPT_PATH,
+    )
+    raw = proposer(inp)
+    body = _extract_code_block(raw)
+    if body is None:
+        log.info("body-writer abstained for gap %r — keeping stub", gap.canonical)
+        return None
+    return docstring_block + "\n" + body + "\n"
+
+
 # ---------------- proposal helpers ----------------
 
 
@@ -143,6 +321,11 @@ def make_code_edit_proposal(
     *,
     now: dt.datetime | None = None,
     confidence: str = Confidence.LOW.value,
+    write_body: bool = False,
+    repo_root: Path | None = None,
+    manifest_path: Path | None = None,
+    body_proposer: "BodyWriterProposer | None" = None,
+    prompt_path: Path | None = None,
 ) -> Proposal:
     """Build a `code_edit` Proposal from a threshold-passing ToolGap.
 
@@ -150,9 +333,17 @@ def make_code_edit_proposal(
     `apply_proposal_to_worktree` (in `shadow.py`) writes the body to
     `scripts/proposed/<slug>.py` and commits in the arm worktree.
 
+    By default the body is the `NotImplementedError` stub (the safe Phase-1
+    contract). With `write_body=True` the LLM body-writer (Goal 2) replaces
+    the stub with a real body, gathering context from the cited problems'
+    rank-current scripts. `repo_root` is required in that mode (it's where
+    `gather_context` reads the examples). If the body-writer abstains, the
+    stub is kept and the proposer_id stays `tool-autosynthesis-v0`.
+
     Raises `ProposalValidationError` if the gap doesn't actually clear the
     recurrence threshold (≥3 cycles, ≥2 problems) — the proposer should
-    not fire on noise.
+    not fire on noise. Raises `ValueError` if `write_body=True` without a
+    `repo_root`. Propagates `BodyWriterError` if the LLM call itself fails.
     """
     if not gap.meets_threshold():
         raise ProposalValidationError(
@@ -163,6 +354,42 @@ def make_code_edit_proposal(
     slug = _slug_for_gap(gap)
     target = f"{DRAFT_DIR}/{slug}.py"
     body = _render_draft_body(gap, slug=slug, drafted=now.strftime("%Y-%m-%d"))
+
+    proposer_id = PROPOSER_ID
+    predicted_regressions = [
+        "draft body raises NotImplementedError — strategy_picker that "
+        "selects it before promotion will dispatch-fail",
+    ]
+    if write_body:
+        if repo_root is None:
+            raise ValueError("write_body=True requires repo_root (for gather_context)")
+        # Lazy import to keep the module-level import graph identical to Phase 1.
+        from . import code_edit_context
+
+        ctx = code_edit_context.gather_context(
+            gap, repo_root=repo_root, manifest_path=manifest_path
+        )
+        # Lock the target function name to the authoritative slug (the same one
+        # used for the filename and thus for sandbox smoke-dispatch's lookup),
+        # so the LLM defines the exact name the smoke gate calls. gather_context
+        # derives py_identifier independently; they coincide today but this
+        # keeps all three call sites (filename, prompt, smoke gate) in lockstep.
+        ctx.py_identifier = _python_identifier(slug)
+        new_body = write_body_llm(
+            gap,
+            ctx,
+            stub_body=body,
+            proposer=body_proposer,
+            prompt_path=prompt_path,
+        )
+        if new_body is not None:
+            body = new_body
+            proposer_id = BODY_WRITER_PROPOSER_ID
+            predicted_regressions = [
+                "LLM-written body may compute a wrong score — caught by shadow "
+                "A/B (no finding produced) + triple-verify before any submission",
+            ]
+
     pid = make_proposal_id(
         proposal_type=ProposalType.CODE_EDIT.value,
         target_path=target,
@@ -175,10 +402,7 @@ def make_code_edit_proposal(
         proposed_diff=body,
         evidence_cycles=list(gap.citing_cycles),
         expected_metric_delta={"tool_invoked_cycles_a": 1.0},
-        predicted_regressions=[
-            "draft body raises NotImplementedError — strategy_picker that "
-            "selects it before promotion will dispatch-fail",
-        ],
+        predicted_regressions=predicted_regressions,
         confidence=confidence,
         requires_shadow=True,
         rationale=(
@@ -186,7 +410,7 @@ def make_code_edit_proposal(
             f"{gap.cycle_count} cycles / {gap.problem_count} problems; "
             f"manifest doesn't wire a {slug} script."
         ),
-        proposer_id=PROPOSER_ID,
+        proposer_id=proposer_id,
         created_at=now,
     )
 
@@ -223,8 +447,14 @@ def apply_code_edit_to_worktree(
 
 
 __all__ = [
+    "ABSTAIN",
+    "BODY_WRITER_PROMPT_PATH",
+    "BODY_WRITER_PROPOSER_ID",
     "DRAFT_DIR",
     "PROPOSER_ID",
+    "BodyWriterError",
+    "BodyWriterInput",
     "apply_code_edit_to_worktree",
     "make_code_edit_proposal",
+    "write_body_llm",
 ]

@@ -144,6 +144,32 @@ and refuses to hallucinate the body. The shadow A/B's A-arm (treatment)
 then has the chance to flesh it out from inside a real cycle, or the
 human writes the body during the human-approval step.
 
+### Opt-in body-writer (`write_body=True`) — `js/feat/code-edit-body-writer`
+
+Once Phases 1a/1b/2a wrote ~10 real optimizer bodies under
+`scripts/<problem>/`, the LLM gained structural examples to learn from, so
+the stub is no longer the only honest option. `make_code_edit_proposal(gap,
+write_body=True, repo_root=...)` swaps the `NotImplementedError` stub for an
+LLM-written body:
+
+1. `code_edit_context.gather_context(gap)` assembles the evidence — the cited
+   problems' rank-current manifest scripts (head-truncated to a ~30K-token
+   budget), the technique page, and the originating questions.
+2. `code_edit.write_body_llm(gap, ctx, stub_body=...)` calls the body-writer
+   (default: `claude_headless` + `docs/agent/proposer_prompts/body-writer-v1.md`;
+   swappable for tests). It **splices the LLM body onto the stub's leading
+   module docstring**, so the cite block stays byte-for-byte immutable — the
+   LLM never sees a path to rewrite the `- problems: [...]` line that
+   `_apply_code_edit_graduation` parses. The proposer can emit `ABSTAIN` to
+   keep the stub (skip > speculative edit, now at the *body* level).
+
+The default stays `write_body=False` (the safe stub). The risk delta — a body
+that runs but computes a *wrong* score — is absorbed by the **smoke-dispatch**
+validator step (Goal 4: fails iff the body still raises `NotImplementedError`)
+plus the shadow A/B (no finding produced) plus triple-verify before any
+submission. Full rationale + the SkillClaw / AlphaZero-coding-agents anchors:
+[code-edit-body-writer-design.md](code-edit-body-writer-design.md).
+
 ## Sandbox validator spec (Goal 3)
 
 `validate_proposed_tool(path) -> ValidationReport` runs:
@@ -154,8 +180,15 @@ human writes the body during the human-approval step.
    "import importlib.util; ..."`), catching `ImportError` / `SyntaxError`.
 3. **Pytest** any colocated `tests/proposed/test_<tool>.py` (skip if
    absent — the draft can be unit-test-less at first).
-4. **NEVER dispatch** the tool against a live problem. The validator is
-   pure static + import + unit-test checks, no autonomous_loop invocation.
+4. **Smoke-dispatch** (opt-in, `smoke_dispatch=True` — the body-writer flow
+   sets it): call the target function once in a subprocess; fail iff it
+   raises `NotImplementedError` (still a stub) or the function is absent. Any
+   *other* exception passes — correctness is the shadow A/B's job, not the
+   smoke gate's. Default-off so the Phase-1 stub flow (where a
+   `NotImplementedError` stub is a *valid* draft) is unchanged.
+5. **NEVER dispatch** the tool against a live problem. Even smoke-dispatch
+   only calls the function with no args — it never runs the tool against a
+   problem manifest or writes a result file. No autonomous_loop invocation.
 
 Report serializes to `mb/proposals/pending/<id>/validation.json`. Failure
 at any stage blocks the shadow A/B from running — same pattern as
@@ -524,6 +557,9 @@ cross-system status at
 
 ## See also
 
+- [[code-edit-body-writer-design]] — the opt-in LLM body-writer
+  (`write_body=True`) that fills the stub once real example bodies exist;
+  this finding's natural sequel.
 - [[meta-loop-design-from-literature]] — the L1 design that introduced
   the proposal type system.
 - [[recursive-meta-design]] — the highest-blast-radius proposal type's
