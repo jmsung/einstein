@@ -50,24 +50,22 @@ def test_p14_slsqp_polish_explicit_resolves():
     assert result.optimizer == "slsqp_polish"
 
 
-def test_p14_newton_max_still_available_but_strict():
-    """newton_max is kept (not removed) but its cli_args force --pair-gap 0
-    so even an explicit pick honors axiom A1."""
+def test_p14_newton_max_dropped():
+    """newton_max was DROPPED from the manifest (manifest-coverage-sprint Goal 6
+    Q-B, 2026-06-01): it emitted `sum_r` (not `score`) to a gitignored path and
+    defaulted to the rejected --pair-gap=-9e-10 exploit. slsqp_polish +
+    mpmath_ulp_polish cover P14. An explicit `newton_max` pick now falls back to
+    the default (slsqp_polish) rather than resolving a broken entry."""
     from einstein.optimizer_dispatch import dispatch, load_manifest
 
-    # Explicit pick still resolves
-    result = dispatch(problem_id=14, strategy="newton_max", dry_run=True)
-    assert result.optimizer == "newton_max"
-
-    # And the cli_args force strict-tol
     manifest = load_manifest()
-    p14 = manifest[14]
-    newton_args = p14["optimizers"]["newton_max"]["cli_args"]
-    assert "--pair-gap" in newton_args
-    pair_gap_idx = newton_args.index("--pair-gap")
-    assert (
-        newton_args[pair_gap_idx + 1] == "0"
-    ), f"newton_max --pair-gap must be '0' (strict); got {newton_args[pair_gap_idx + 1]!r}"
+    p14_optimizers = manifest[14]["optimizers"]
+    assert "newton_max" not in p14_optimizers, "newton_max should be dropped from the manifest"
+    assert set(p14_optimizers) == {"slsqp_polish", "mpmath_ulp_polish"}
+
+    # Explicit pick of the removed strategy falls back to the strict-tol default.
+    result = dispatch(problem_id=14, strategy="newton_max", dry_run=True)
+    assert result.optimizer == "slsqp_polish"
 
 
 # ---------------- seed file ----------------
