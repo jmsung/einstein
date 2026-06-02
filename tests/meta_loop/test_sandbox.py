@@ -190,3 +190,81 @@ def test_validation_report_passed_skipped_counts_as_ok() -> None:
         steps=[StepResult(name="ruff", ok=True), StepResult(name="pytest", ok=False, skipped=True)],
     )
     assert rep.passed
+
+
+# ---------------- Goal 4: smoke-dispatch ----------------
+
+from einstein.meta_loop.sandbox import _check_smoke_dispatch, _run  # noqa: E402
+
+_STUB_BODY = (
+    "def mpmath_ulp_polish(*args, **kwargs):\n"
+    "    raise NotImplementedError('still a stub')\n\n\n"
+    'if __name__ == "__main__":\n'
+    "    mpmath_ulp_polish()\n"
+)
+_REAL_BODY = (
+    "def mpmath_ulp_polish(*args, **kwargs):\n"
+    "    return 0.5\n\n\n"
+    'if __name__ == "__main__":\n'
+    "    print(mpmath_ulp_polish())\n"
+)
+
+
+def _smoke_aware_runner():
+    """Fake runner that distinguishes the smoke step from the import step by
+    inspecting the `-c` code for the SMOKE marker."""
+    recorded = []
+
+    def runner(args, *, cwd=None, timeout=30):
+        recorded.append(args)
+        if "ruff" in args:
+            return _ok()
+        if "pytest" in args:
+            return _ok()
+        if any("-c" == a for a in args):
+            code = args[args.index("-c") + 1]
+            if "SMOKE" in code:
+                return _ok("SMOKE ok\n")  # pretend the body is real
+            return _ok()  # import
+        raise AssertionError(f"unhandled: {args}")
+
+    return runner, recorded
+
+
+def test_smoke_step_fails_on_stub(tmp_path: Path) -> None:
+    """Real subprocess: a NotImplementedError stub fails smoke-dispatch."""
+    target = _write_target(tmp_path, body=_STUB_BODY)
+    step = _check_smoke_dispatch(target, _run)
+    assert step.name == "smoke_dispatch"
+    assert step.ok is False
+    assert "stub" in step.stderr.lower()
+
+
+def test_smoke_step_passes_on_real_body(tmp_path: Path) -> None:
+    """Real subprocess: a non-stub body passes smoke-dispatch."""
+    target = _write_target(tmp_path, body=_REAL_BODY)
+    step = _check_smoke_dispatch(target, _run)
+    assert step.ok is True
+
+
+def test_smoke_step_fails_when_function_absent(tmp_path: Path) -> None:
+    target = _write_target(tmp_path, body="x = 1\n")  # no mpmath_ulp_polish fn
+    step = _check_smoke_dispatch(target, _run)
+    assert step.ok is False
+    assert "no function" in step.stderr.lower()
+
+
+def test_smoke_disabled_by_default(tmp_path: Path) -> None:
+    """Default (Phase-1) flow: no smoke step, stub stays a valid draft."""
+    target = _write_target(tmp_path, body=_STUB_BODY)
+    runner, _ = _smoke_aware_runner()
+    rep = validate_proposed_tool(target, repo_root=tmp_path, runner=runner)
+    assert [s.name for s in rep.steps] == ["ruff", "import", "pytest"]
+
+
+def test_smoke_enabled_adds_fourth_step(tmp_path: Path) -> None:
+    target = _write_target(tmp_path, body=_REAL_BODY)
+    runner, _ = _smoke_aware_runner()
+    rep = validate_proposed_tool(target, repo_root=tmp_path, runner=runner, smoke_dispatch=True)
+    assert [s.name for s in rep.steps] == ["ruff", "import", "pytest", "smoke_dispatch"]
+    assert rep.passed
