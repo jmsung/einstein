@@ -130,6 +130,34 @@
       result_file: results/tammes/verify_seed_result.json
       result_parser: json_score_payload
 
+15:
+  slug: heilbronn-triangles
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == AlphaEvolve §6.48 construction (0.036529889880030156), the tied
+      # SOTA basin. mpmath 60-dps Newton showed ceiling +6.25e-17; ~18.8k trials
+      # found no novel basin. Scored via arena_score(data["points"]).
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "15"]
+      timeout_seconds: 120
+      result_file: results/heilbronn_triangles/verify_seed_result.json
+      result_parser: json_score_payload
+
+16:
+  slug: heilbronn-convex
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == JSAgent distinct-basin (0.027835580459939436), rank #2, +9e-9
+      # above the tied group. Multi-seed BH sub-basin; #1 blocked by the
+      # minImprovement proximity filter. Scored via arena_score(data["points"]).
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "16"]
+      timeout_seconds: 120
+      result_file: results/heilbronn_convex/verify_seed_result.json
+      result_parser: json_score_payload
+
 18:
   slug: circles-rectangle
   default: verify_seed
