@@ -250,6 +250,9 @@ def _default_body_writer(inp: BodyWriterInput) -> str:
     if spec is None or spec.loader is None:
         raise BodyWriterError(f"claude_headless not importable from {tools_dir}")
     claude_headless = _ilu.module_from_spec(spec)
+    # Register before exec so module-level @dataclass can resolve __module__
+    # (dataclasses looks up sys.modules[cls.__module__]).
+    _sys.modules[spec.name] = claude_headless
     spec.loader.exec_module(claude_headless)
 
     result = claude_headless.run(
