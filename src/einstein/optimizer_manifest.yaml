@@ -61,3 +61,43 @@
       timeout_seconds: 60
       result_file: results/p22_kissing_d12/recon_result.json
       result_parser: json_score_payload
+
+# ---------------------------------------------------------------------------
+# verify_seed wirings (manifest-coverage-sprint, 2026-06-01).
+#
+# `verify_seed` is the rank-current dispatch emitter for basin-locked problems:
+# it loads the best in-repo seed (scripts/<problem>/seeds/best.json[.gz]) and
+# re-scores it through the audited arena evaluator — triple-verify checks #1+#2
+# in one — then emits json_score_payload. This turns the long-standing
+# `dispatch: no-manifest-entry` rows into real, triple-verified dispatches. The
+# heavy search optimizers stay in scripts/<problem>/ for Phase-2 record runs.
+# See scripts/verify_seed.py (SPECS registry) and the Goal-0 audit.
+# ---------------------------------------------------------------------------
+
+2:
+  slug: first-autocorrelation
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # NOTE: best in-repo seed is the n=30000 basin (1.50286286). The arena-#1
+      # n=90000 solution (1.502861628) was never backed up cleanly — a seed
+      # backfill gap tracked in the deferral finding. Dispatch is still real;
+      # the loop just won't see the absolute best until the 90k seed lands.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "2"]
+      timeout_seconds: 120
+      result_file: results/first_autocorrelation/verify_seed_result.json
+      result_parser: json_score_payload
+
+4:
+  slug: third-autocorrelation
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == arena-#1 (1.45252115504688), the n=100000 block-repeat-cascade
+      # equioscillation basin. Re-score reproduces it exactly.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "4"]
+      timeout_seconds: 120
+      result_file: results/third_autocorrelation/verify_seed_result.json
+      result_parser: json_score_payload
