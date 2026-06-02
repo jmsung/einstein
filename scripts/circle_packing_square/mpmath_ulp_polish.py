@@ -45,9 +45,9 @@ Usage (standalone):
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import logging
-import struct
 import sys
 from pathlib import Path
 
@@ -63,6 +63,9 @@ from einstein.circle_packing_square.evaluator import (  # noqa: E402
     SQUARE_SIDE,
     evaluate_strict,
 )
+from einstein.ulp_polish import to_mp as _to_mp_generic  # noqa: E402
+from einstein.ulp_polish import ulp_neighbors  # noqa: E402
+from einstein.ulp_polish import ulp_polish as _ulp_polish_generic  # noqa: E402
 
 DEFAULT_SEED = _REPO / "scripts" / "circle_packing_square" / "seeds" / "p14_canonical.json"
 DEFAULT_OUTPUT = _REPO / "results" / "circle_packing_square" / "mpmath_ulp_polish_result.json"
@@ -70,33 +73,10 @@ DEFAULT_OUTPUT = _REPO / "results" / "circle_packing_square" / "mpmath_ulp_polis
 log = logging.getLogger("mpmath_ulp_polish")
 
 
-def ulp_neighbors(x: float, steps: tuple[int, ...] = (-2, -1, 1, 2)) -> list[float]:
-    """Return the float64 values ``steps`` ulps away from ``x``.
-
-    Bit-level integer arithmetic on the IEEE-754 representation — NOT
-    multiplicative scaling. ``x * (1 + 1e-16)`` is not 1 ulp (lesson from
-    the technique page). Handles the sign boundary correctly because the
-    int64 reinterpretation of float64 is monotone for x ≥ 0 and we only
-    ever deal with coordinates in [0, 1].
-    """
-    bits = struct.unpack("<q", struct.pack("<d", x))[0]
-    out = []
-    for s in steps:
-        nb = bits + s
-        out.append(struct.unpack("<d", struct.pack("<q", nb))[0])
-    return out
-
-
-def _to_mp(circles: np.ndarray) -> list[list[mp.mpf]]:
-    """Exact-binary-precision copy of the configuration.
-
-    ``mp.mpf(float(v))`` converts the Python float to its *exact* binary value
-    (the same bits the arena verifier reads). ``mp.mpf(repr(v))`` would instead
-    parse the shortest round-trip *decimal*, drifting ~0.1 ULP per coordinate —
-    fatal for a sub-ULP polisher, since the gate would then certify a
-    decimal-rounded copy rather than the configuration actually scored.
-    """
-    return [[mp.mpf(float(v)) for v in row] for row in circles]
+# ``ulp_neighbors`` and ``_to_mp`` are the generic ulp primitives, now extracted
+# to ``einstein.ulp_polish`` (Phase 2a). Kept under the module-local name so the
+# P14 helpers and tests reference one source of truth.
+_to_mp = _to_mp_generic
 
 
 def _circle_gap_min(mpc: list[list[mp.mpf]], i: int) -> mp.mpf:
@@ -183,81 +163,56 @@ def mpmath_ulp_polish(
     Returns:
         (polished_circles (26,3) float64, info dict).
     """
-    mp.mp.dps = dps
     circles = np.array(initial_circles, dtype=np.float64).copy()
     assert circles.shape == (N_CIRCLES, 3), f"got {circles.shape}"
 
-    start_score = _sum_r(circles)
-    n_accept = 0
-    sweeps = 0
+    # --- adapter onto the generic dual-gate engine (einstein.ulp_polish) ---
+    #
+    # P14 maximises Σ rᵢ. Every candidate only *grows* circle i's radius, so the
+    # exact Σ rᵢ (merit_mp) strictly increases for any feasible move and the
+    # float64 sum never decreases (a single radius ulp ~1e-17 sits below the
+    # sum's ulp, so it ties rather than ticks). The binding gate is therefore
+    # `feasible` — the dual float64-strict + mpmath-exact disjointness check for
+    # the changed circle — exactly as the original per-circle body did. Ranking
+    # by merit_mp == ranking by largest feasible radius.
 
-    def feasible_after(i: int, cand: tuple[float, float, float]) -> bool:
-        # Tentatively apply the candidate, run the dual gate, restore.
-        saved = circles[i].copy()
-        circles[i] = cand
-        ok = _dual_feasible(circles, i)
-        circles[i] = saved
-        return ok
+    def merit_f64(c: np.ndarray) -> float:
+        return _sum_r(c)
 
-    for sweep in range(max_iter):
-        sweeps = sweep + 1
-        improved = False
+    def merit_mp(c: np.ndarray, _dps: int) -> mp.mpf:
+        return mp.fsum(mp.mpf(float(r)) for r in c[:, 2])
 
-        # Score (= Σ rᵢ) depends only on radii, and we only ever propose a
-        # *larger* radius, so any feasible candidate strictly increases exact
-        # Σ rᵢ. We therefore rank feasible candidates by largest radius (most
-        # growth) and accept the best — NOT by whether the float64 *sum* ticked
-        # up, because a single radius ulp (~1e-17) is far below the sum's ulp
-        # (~4e-16) and would be spuriously rejected until it happened to
-        # accumulate past a sum-ulp boundary. The float64 score is reported at
-        # the end; the descent itself works in radius-space.
+    def candidates_for(c: np.ndarray, i: int):
+        cx0, cy0, r0 = c[i]
+        # 1-coord pass: pure radius growth (lands only on exact slack).
+        for r_new in ulp_neighbors(r0, steps):
+            if r_new > r0:
+                cand = c.copy()
+                cand[i] = (cx0, cy0, r_new)
+                yield cand
+        # 2-coord pass: centre nudge + radius growth.
+        for axis in (0, 1):
+            c_base = (cx0, cy0)[axis]
+            for c_new in ulp_neighbors(c_base, center_steps):
+                for r_new in ulp_neighbors(r0, steps):
+                    if r_new <= r0:
+                        continue
+                    cand = c.copy()
+                    cand[i] = (c_new, cy0, r_new) if axis == 0 else (cx0, c_new, r_new)
+                    yield cand
 
-        # ---- 1-coord pass: pure radius growth (lands only on exact slack) ----
-        for i in range(N_CIRCLES):
-            cx, cy, r = circles[i]
-            best = None  # (r_new, cand)
-            for r_new in ulp_neighbors(r, steps):
-                if r_new <= r:
-                    continue
-                cand = (cx, cy, r_new)
-                if feasible_after(i, cand) and (best is None or r_new > best[0]):
-                    best = (r_new, cand)
-            if best is not None:
-                circles[i] = best[1]
-                n_accept += 1
-                improved = True
-
-        # ---- 2-coord pass: centre nudge + radius growth ----
-        for i in range(N_CIRCLES):
-            cx0, cy0, r0 = circles[i]
-            best = None  # (r_new, cand)
-            for axis in (0, 1):  # cx, then cy
-                c_base = (cx0, cy0)[axis]
-                for c_new in ulp_neighbors(c_base, center_steps):
-                    for r_new in ulp_neighbors(r0, steps):
-                        if r_new <= r0:
-                            continue
-                        cand = (c_new, cy0, r_new) if axis == 0 else (cx0, c_new, r_new)
-                        if feasible_after(i, cand) and (best is None or r_new > best[0]):
-                            best = (r_new, cand)
-            if best is not None:
-                circles[i] = best[1]
-                n_accept += 1
-                improved = True
-
-        if not improved:
-            break
-
-    final_score = _sum_r(circles)
-    info = {
-        "score": final_score,
-        "start_score": start_score,
-        "delta": final_score - start_score,
-        "n_accept": n_accept,
-        "sweeps": sweeps,
-        "dps": dps,
-    }
-    return circles, info
+    polished, info_obj = _ulp_polish_generic(
+        circles,
+        keys=range(N_CIRCLES),
+        candidates_for=candidates_for,
+        merit_f64=merit_f64,
+        merit_mp=merit_mp,
+        report_f64=_sum_r,
+        feasible=_dual_feasible,  # per-circle dual float64+mpmath disjointness
+        dps=dps,
+        max_iter=max_iter,
+    )
+    return polished, dataclasses.asdict(info_obj)
 
 
 def _load_seed(path: Path) -> list[list[float]]:
