@@ -116,6 +116,20 @@
       result_file: results/min_distance_ratio/verify_seed_result.json
       result_parser: json_score_payload
 
+11:
+  slug: tammes-n50
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the conjectured Hardin-Sloane n=50 optimum (0.5134720846805645),
+      # tied rank #2 with KawaiiCorgi. Confirmed float64 ceiling by 2 Modal A100
+      # campaigns; no novel basin, #1 unreachable. Dispatch is real, no Δ.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "11"]
+      timeout_seconds: 120
+      result_file: results/tammes/verify_seed_result.json
+      result_parser: json_score_payload
+
 18:
   slug: circles-rectangle
   default: verify_seed
