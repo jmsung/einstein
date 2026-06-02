@@ -187,6 +187,10 @@ def _check_smoke_dispatch(target: Path, runner) -> StepResult:
         "    fn()\n"
         "except NotImplementedError:\n"
         "    print('SMOKE: NotImplementedError — still a stub', file=sys.stderr); sys.exit(1)\n"
+        # The fn is called with zero args. A real optimizer body may require
+        # args (it does its work in __main__ via argparse), so a TypeError /
+        # other exception here is EXPECTED and treated as pass — the gate only
+        # asserts "not a NotImplementedError stub", not "runs clean with no args".
         "except Exception as e:\n"
         "    print(f'SMOKE: body raised {type(e).__name__} (not a stub) — ok'); sys.exit(0)\n"
         "print('SMOKE: body returned without NotImplementedError — ok')\n"

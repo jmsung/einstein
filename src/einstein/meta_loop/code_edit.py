@@ -369,6 +369,12 @@ def make_code_edit_proposal(
         ctx = code_edit_context.gather_context(
             gap, repo_root=repo_root, manifest_path=manifest_path
         )
+        # Lock the target function name to the authoritative slug (the same one
+        # used for the filename and thus for sandbox smoke-dispatch's lookup),
+        # so the LLM defines the exact name the smoke gate calls. gather_context
+        # derives py_identifier independently; they coincide today but this
+        # keeps all three call sites (filename, prompt, smoke gate) in lockstep.
+        ctx.py_identifier = _python_identifier(slug)
         new_body = write_body_llm(
             gap,
             ctx,
