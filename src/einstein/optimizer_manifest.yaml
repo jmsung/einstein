@@ -174,3 +174,17 @@
       timeout_seconds: 120
       result_file: results/circles_rectangle/verify_seed_result.json
       result_parser: json_score_payload
+
+19:
+  slug: difference-bases
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the 7-way SOTA-tie set (score_set → 2.639027469506608), the
+      # B = A ⊕ 8011·{0,1,4,6} Kronecker construction. Full w=3 BnB sweep
+      # (1.22T nodes, 0 hits) confirmed the tie unbreakable. Dispatch is real.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "19"]
+      timeout_seconds: 120
+      result_file: results/difference_bases/verify_seed_result.json
+      result_parser: json_score_payload

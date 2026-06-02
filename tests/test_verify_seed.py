@@ -40,6 +40,7 @@ EXPECTED: dict[int, float] = {
     15: 0.036529889880030156,
     16: 0.027835580459939436,
     18: 2.365832383977751,
+    19: 2.639027469506608,
 }
 
 WIRED = sorted(set(EXPECTED) & set(verify_seed.SPECS))
