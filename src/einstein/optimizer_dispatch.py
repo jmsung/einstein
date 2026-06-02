@@ -21,13 +21,13 @@ Manifest schema (`src/einstein/optimizer_manifest.yaml`):
 
     14:
       slug: circle-packing-square
-      default: newton_max         # optional — used when strategy=None
+      default: slsqp_polish       # optional — used when strategy=None
       optimizers:
-        newton_max:
-          script: scripts/circle_packing_square/newton_max.py
-          cli_args: ["--seed", "42"]
-          timeout_seconds: 1800
-          result_file: results/circle_packing_square/newton_max_result.json
+        slsqp_polish:
+          script: scripts/circle_packing_square/slsqp_polish.py
+          cli_args: []
+          timeout_seconds: 300
+          result_file: results/circle_packing_square/slsqp_polish_result.json
           result_parser: json_score_payload
 
 `dispatch()` is the only public entry. Everything else is implementation

@@ -71,4 +71,3 @@ A wiring task (NOT research, and outside the autonomous agent's `src/`+`scripts/
 write scope): add the CLI entrypoint to `optimizer_dispatch.py`, reconcile the
 `newton_max` manifest entry, then re-run a P14 cycle through the sanctioned
 command and confirm a non-stale `slsqp_polish_result.json` with a fresh mtime.
-</content>

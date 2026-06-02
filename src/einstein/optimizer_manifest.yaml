@@ -10,9 +10,12 @@
 # `score` (float) and optional `payload` (dict). Recommended for new
 # wirings — keeps the contract simple.
 #
-# Stub state (2026-05-24): only 2 example entries to exercise the dispatch
-# infrastructure. Other 15 live problems will be added incrementally as
-# their scripts are refactored to emit json_score_payload result files.
+# Coverage (2026-06-01, manifest-coverage-sprint): 10 problems wired —
+# P14 (slsqp_polish + mpmath_ulp_polish), P22 (stub), and 8 basin-locked
+# problems (P2,4,5,11,15,16,18,19) via the generic verify_seed emitter. The
+# remaining live problems are added incrementally as their scripts emit
+# json_score_payload result files; P3/P10/P12 are deferred pending a clean
+# in-repo seed (see docs/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md).
 
 14:
   slug: circle-packing-square
@@ -167,7 +170,7 @@
       # (perimeter ≤ 4.0): score 2.365832383977751. The raw backup sits 1.98e-9
       # over our local PERIMETER_TOL=1e-12 though arena accepts it — a documented
       # local↔arena perimeter-tol drift; uniform-shrink is the rank-current op
-      # (see findings/uniform-radius-shrink-fallback). Δ from the shrink is
+      # (see techniques/uniform-radius-shrink-fallback). Δ from the shrink is
       # 1.23e-9, far below minImprovement, so non-submittable.
       script: scripts/verify_seed.py
       cli_args: ["--problem-id", "18"]
