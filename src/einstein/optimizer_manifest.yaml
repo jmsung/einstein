@@ -101,3 +101,34 @@
       timeout_seconds: 120
       result_file: results/third_autocorrelation/verify_seed_result.json
       result_parser: json_score_payload
+
+5:
+  slug: min-distance-ratio
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the proven-global (22,8) Cantrell config (12.88922990769401).
+      # Rank #4 frozen: the basin floor is 2.35e-11 below arena #1, blocked by
+      # the minImprovement gate. Dispatch is real; no path to a submittable Δ.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "5"]
+      timeout_seconds: 120
+      result_file: results/min_distance_ratio/verify_seed_result.json
+      result_parser: json_score_payload
+
+18:
+  slug: circles-rectangle
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed is the rank-#1 (tied) config uniformly shrunk to strict-valid
+      # (perimeter ≤ 4.0): score 2.365832383977751. The raw backup sits 1.98e-9
+      # over our local PERIMETER_TOL=1e-12 though arena accepts it — a documented
+      # local↔arena perimeter-tol drift; uniform-shrink is the rank-current op
+      # (see findings/uniform-radius-shrink-fallback). Δ from the shrink is
+      # 1.23e-9, far below minImprovement, so non-submittable.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "18"]
+      timeout_seconds: 120
+      result_file: results/circles_rectangle/verify_seed_result.json
+      result_parser: json_score_payload

@@ -35,6 +35,8 @@ _spec.loader.exec_module(verify_seed)  # type: ignore[union-attr]
 EXPECTED: dict[int, float] = {
     2: 1.5028628585991939,
     4: 1.4525211550468840,
+    5: 12.88922990769401,
+    18: 2.365832383977751,
 }
 
 WIRED = sorted(set(EXPECTED) & set(verify_seed.SPECS))
