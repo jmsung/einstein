@@ -62,3 +62,11 @@ Add a `--seed-name` parameter to `mpmath_ulp_polish.py` (or just override `--see
 on the command line — the script already accepts `--seed`), run once, triple-verify,
 file the finding. ~30s of compute. Not in scope for the cycle-54 autonomous attempt
 because the manifest dispatch path uses the canonical seed only.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"float64 ceiling" OR all:"basin rigidity" OR all:"mpmath-ulp-polish from the AE-tied seed reveal") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*
