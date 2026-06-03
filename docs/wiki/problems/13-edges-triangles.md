@@ -5,6 +5,7 @@ drafted: 2026-05-02
 problem_id: 13
 arena_url: https://einsteinarena.com/problems/edges-triangles
 status: blocked
+in_active_queue: false
 score_current: -0.711709188
 tier: S
 concepts_invoked: [flag-algebra.md, turan-density.md, parameterization-selection.md, equioscillation.md, basin-rigidity.md]
