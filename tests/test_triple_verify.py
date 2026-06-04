@@ -26,9 +26,14 @@ from einstein.triple_verify.core import (  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def _clean_registry():
+    # Snapshot the real (import-time) registrations, run the test against an
+    # empty registry, then restore — so this module's clearing can't wipe the
+    # per-problem registrations the other test modules depend on.
+    saved = dict(core._REGISTRY)
     core.clear_registry()
     yield
     core.clear_registry()
+    core._REGISTRY.update(saved)
 
 
 # ---------------- Tolerance ----------------

@@ -38,11 +38,13 @@ class Tolerance:
     rel_tol: float = 1e-8
 
     def agree(self, a: float, b: float) -> bool:
-        if a == b:
-            return True
-        # Non-finite numbers (inf / nan) never "agree" unless bit-identical.
+        # Non-finite numbers (nan, ±inf) never agree — even inf == inf. A score
+        # of ±inf signals infeasibility / no-coverage, not a real number, so it
+        # must fail the gate rather than "agree with itself".
         if not (_finite(a) and _finite(b)):
             return False
+        if a == b:
+            return True
         return abs(a - b) <= max(self.abs_tol, self.rel_tol * max(abs(a), abs(b)))
 
 
