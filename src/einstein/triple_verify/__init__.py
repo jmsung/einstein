@@ -39,6 +39,7 @@ from .core import (
     register,
     registered_ids,
     run,
+    run_payload,
     verify,
 )
 
@@ -52,5 +53,6 @@ __all__ = [
     "register",
     "registered_ids",
     "run",
+    "run_payload",
     "verify",
 ]

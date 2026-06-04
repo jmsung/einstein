@@ -232,16 +232,31 @@ def _load_seed(path: Path) -> dict:
     return data
 
 
+def run_payload(problem_id: int, payload: dict) -> TripleVerifyResult:
+    """Verify an in-memory solution dict (the shape ``autonomous_loop`` holds).
+
+    Looks up the registered verifier and returns its verdict. An unregistered
+    problem returns ``passed=False, reason="not_registered"`` — never a silent
+    pass. ``payload`` may carry a ``{"payload": {...}}`` wrapper (the
+    ``json_score_payload`` result-file shape); it is unwrapped to the bare
+    solution dict the scorers expect.
+    """
+    verifier = get_verifier(problem_id)
+    if verifier is None:
+        return TripleVerifyResult(passed=False, problem_id=problem_id, reason="not_registered")
+    seed = payload
+    if isinstance(seed, dict) and isinstance(seed.get("payload"), dict):
+        seed = seed["payload"]
+    return verify(seed, verifier)
+
+
 def run(problem_id: int, solution_path: str | Path) -> TripleVerifyResult:
-    """Dispatch entry point read by ``autonomous_loop.py``.
+    """Dispatch entry point for a solution file on disk.
 
-    Loads the solution at ``solution_path``, looks up the registered verifier,
-    and returns its verdict. An unregistered problem returns
-    ``passed=False, reason="not_registered"`` — never a silent pass.
-
-    ``solution_path`` may carry a ``{"payload": {...}}`` wrapper (the shape
-    written by ``verify_seed.py`` / ``json_score_payload`` result files); the
-    payload is unwrapped to the bare solution dict the scorers expect.
+    Loads the solution at ``solution_path`` (transparently gunzips ``.gz``),
+    then delegates to :func:`run_payload`. An unregistered problem returns
+    ``passed=False, reason="not_registered"``; a load failure returns
+    ``passed=False, reason="solution load failed: …"``.
     """
     verifier = get_verifier(problem_id)
     if verifier is None:
@@ -255,6 +270,4 @@ def run(problem_id: int, solution_path: str | Path) -> TripleVerifyResult:
             reason=f"solution load failed: {e}",
             tolerance=verifier.tolerance,
         )
-    if "payload" in seed and isinstance(seed["payload"], dict):
-        seed = seed["payload"]
-    return verify(seed, verifier)
+    return run_payload(problem_id, seed)

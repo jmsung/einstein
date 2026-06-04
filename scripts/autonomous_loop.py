@@ -827,19 +827,24 @@ def _call_auto_submit(
     auto_submitter: Callable[..., object] | None,
     notes_parts: list[str],
     notifier: Callable[..., bool] | None = None,
+    triple_verifier: Callable[[int, dict], object] | None = None,
 ) -> str | None:
     """Run the A2 auto-submit gate chain. Returns an outcome override
     ("improved-and-submitted") if the gate chain accepted, else None.
 
-    Triple-verify is hardcoded `passed=False` — per-problem verifiers land
-    separately. The audit row in `mb/logs/auto-submit.md` records every
-    decision regardless of acceptance.
+    Gate 2 (triple-verify) now reads a REAL per-problem verdict from
+    `einstein.triple_verify.run_payload(problem_id, payload)` (axiom A1, the
+    `triple_verify/` package). A problem with no registration verifies as
+    `passed=False, reason="not_registered"` — gate 2 hard-rejects it, never a
+    silent pass. The three numbers + verdict are appended to `notes_parts` and
+    the audit row in `mb/logs/auto-submit.md` records every decision.
 
     On `submitted=True`, fires a macOS notification (Goal 7.8c). The
     notifier is a test seam — defaults to `notify_milestone.notify_arena_record`.
     Notification failures are silent (best-effort UX, never load-bearing).
 
-    Mutates `notes_parts` in place with the auto-submit decision tag.
+    Mutates `notes_parts` in place with the triple-verify + auto-submit tags.
+    `triple_verifier` is a test seam (defaults to the real run_payload).
     """
     if auto_submitter is None:
         try:
@@ -848,11 +853,24 @@ def _call_auto_submit(
             auto_submitter = _real_submit
         except ImportError:
             return None
+
+    # Gate 2 input: the real per-problem triple-verify verdict.
+    if triple_verifier is None:
+        from einstein.triple_verify import run_payload as triple_verifier
+    tv_result = triple_verifier(problem.problem_id, payload)
+    tv_dict = tv_result.as_dict()
+    verdict = "pass" if tv_dict.get("passed") else "fail"
+    nums = " ".join(f"{k}={tv_dict[k]:.14g}" for k in ("fast", "exact", "cross") if k in tv_dict)
+    note = tv_dict.get("note", "")
+    notes_parts.append(
+        f"triple-verify={verdict}" + (f" [{nums}]" if nums else "") + (f" ({note})" if note else "")
+    )
+
     sub_result = auto_submitter(
         problem.problem_id,
         payload,
         score,
-        triple_verify={"passed": False, "note": "triple-verify not yet wired"},
+        triple_verify=tv_dict,
     )
     if getattr(sub_result, "submitted", False):
         notes_parts.append("auto-submit: SUBMITTED")
@@ -1433,9 +1451,9 @@ def inner_attempt(
                 outcome = "no-change"
 
             # A3: hand the candidate to auto_submit's gate chain (shared with
-            # the LLM path via `_call_auto_submit`). Triple-verify is NOT yet
-            # implemented per-problem; passed=False rejects every candidate
-            # at the verify gate but still writes the audit row.
+            # the LLM path via `_call_auto_submit`). Gate 2 now reads the real
+            # per-problem triple-verify verdict; an unregistered problem
+            # verifies as `not_registered` → rejected, audit row still written.
             if (
                 result.score is not None
                 and getattr(result, "payload", None) is not None
