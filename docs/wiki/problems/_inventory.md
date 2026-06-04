@@ -35,9 +35,9 @@ The **synthesis** at the bottom — top reusable concepts, top techniques, tier-
 | ID | Slug | Status | Richness | Coverage | Tier | Wisdom hook (one phrase) |
 |---|---|---|---|---|---|---|
 | 1 | erdos-overlap | #2, frozen | 2 | 2 | C | Bilinear minimax defeats SDP; Remez-optimal equioscillation is plateau |
-| 2 | first-autocorrelation | #1, conquered | 3 | 3 | S | Peak-locking via exp(v); v² parameterization escapes |
-| 3 | second-autocorrelation | #1, conquered | 3 | 2.5 | S | High-resolution downsampling creates distinct basins; resolution non-monotonic |
-| 4 | third-autocorrelation | #1, conquered | 3 | 3 | S | Larger-n escape breaks piecewise-constant equioscillation traps |
+| 2 | first-autocorrelation | #3, displaced (was #1) | 3 | 3 | S | Peak-locking via exp(v); v² parameterization escapes |
+| 3 | second-autocorrelation | #3, displaced (was #1) | 3 | 2.5 | S | High-resolution downsampling creates distinct basins; resolution non-monotonic |
+| 4 | third-autocorrelation | #2, displaced (was #1) | 3 | 3 | S | Larger-n escape breaks piecewise-constant equioscillation traps |
 | 5 | min-distance-ratio | #4, frozen | 2 | 2 | B | minImprovement guards block both self-improvement and first-time claims |
 | 6 | kissing-d11 | #1, unbeatable | 3 | 3 | S | Fractal perturbation landscape; contribution-weighted multi-scale essential |
 | 7 | prime-number-theorem | #1, conquered | 1.5 | 2.5 | A | Sieve theory is LP in disguise; IPM + warm-start cutting-plane |
@@ -74,7 +74,7 @@ The **synthesis** at the bottom — top reusable concepts, top techniques, tier-
 
 ### Problem 2 — First Autocorrelation Inequality
 - **Statement**: Minimize max(f★f) / (∫f)² for non-negative f on [−1/4, 1/4].
-- **Status**: Rank #1, conquered. Score 1.502861628 (Δ 1.23e-6 from 9-way tie, 2026-04-15).
+- **Status**: ~~Rank #1, conquered~~ **Displaced to #3 (2026-06-03 leaderboard check).** JSAgent 1.5028610916; arena #1 OrganonAgent 1.5028609074 (gap to beat: −1.84e-7, just above 1e-7 strict-improve). See [findings/autocorrelation-family-displaced-2026-06](../findings/autocorrelation-family-displaced-2026-06.md).
 - **Concepts invoked**: Autocorrelation, Fourier analysis, functional analysis, equioscillation, Sidon sets, Chebyshev polynomials, piecewise-constant basins, discretization escape, parameterization selection.
 - **Techniques attempted**: Cutting-plane LP (Kolountzakis–Matolcsi), Adam peak-flattening, larger-n cascade (30k→90k), smooth-max L-BFGS with β-cascade, **v² parameterization breakthrough vs exp(v) peak-lock**, Fourier parameterization, multi-active subgradient, Frank–Wolfe.
 - **Personas that fired**: Riemann (equioscillation, Chebyshev), Hilbert (functional reformulation), Tao (harmonic analysis), Cohn (LP).
@@ -85,7 +85,7 @@ The **synthesis** at the bottom — top reusable concepts, top techniques, tier-
 
 ### Problem 3 — Second Autocorrelation Inequality
 - **Statement**: Maximize C = ‖f★f‖₂² / (‖f★f‖₁ · ‖f★f‖∞) for non-negative f.
-- **Status**: Rank #1, conquered. Score 0.962214 (Δ 1.5e-4 from ClaudeExplorer SOTA, 2026-04-10).
+- **Status**: ~~Rank #1, conquered~~ **Displaced to #3 (2026-06-03 leaderboard check).** JSAgent 0.9622135 (tied with alpha_omega); arena #1 ClaudeExplorer 0.9626433 (gap to beat: +4.30e-4 — substantial, ~3× our prior tie-break Δ). See [findings/autocorrelation-family-displaced-2026-06](../findings/autocorrelation-family-displaced-2026-06.md).
 - **Concepts invoked**: Autoconvolution, **cross-resolution basin transfer**, Dinkelbach fractional programming, functional analysis, Sidon sets, **discretization non-monotonicity**.
 - **Techniques attempted**: Dinkelbach cascade on average-pooled high-resolution source, Adam smooth-max, **cross-resolution structure transplant (1.6M → 100k basin jump)**, Fourier parameterization, multi-scale polishing.
 - **Personas that fired**: Riemann (functional reformulation), Hilbert (fractional programming bounds), Tao (harmonic structure).
@@ -96,7 +96,7 @@ The **synthesis** at the bottom — top reusable concepts, top techniques, tier-
 
 ### Problem 4 — Third Autocorrelation Inequality
 - **Statement**: Minimize C = |max(f★f)| / (∫f)² where f can be negative on [−1/4, 1/4].
-- **Status**: Rank #1, conquered. Score 1.452521155 (Δ 1.52e-3 from 3-way tie, 2026-04-08).
+- **Status**: ~~Rank #1, conquered~~ **Displaced to #2 (2026-06-03 leaderboard check).** JSAgent 1.4525212 (tied with alpha_omega); arena #1 OrganonAgent 1.4523043 (gap to beat: −2.17e-4 — substantial, ~7× smaller minimum than prior SOTA). See [findings/autocorrelation-family-displaced-2026-06](../findings/autocorrelation-family-displaced-2026-06.md).
 - **Concepts invoked**: Autocorrelation, larger-n escape, equioscillation, piecewise-constant basin-locking, Chebyshev optimality, smooth-max approximation, β-cascade annealing.
 - **Techniques attempted**: Block-repeat upsample cascade (400 → 100k), tiny noise perturbation, smooth-max L-BFGS with β ∈ [1e4, 1e10], progressive larger-n refinement.
 - **Personas that fired**: Riemann (equioscillation), Tao (discrete/continuous shift).
@@ -358,4 +358,4 @@ These get thin `wiki/problems/<id>.md` index pages and nothing more.
 - **Generation method**: Explore subagent (2026-05-02), structured prompt, output verbatim with light editorial framing.
 - **Audit hook**: claims about rank/score/frozen-state are from `problem-evaluation.md`. Wisdom hooks paraphrase the source strategies — confirm against the cited finding/strategy file before taking them as gospel.
 
-*Last updated: 2026-05-02*
+*Last updated: 2026-05-02* (P2/P3/P4 status refreshed 2026-06-03 — see [findings/autocorrelation-family-displaced-2026-06](../findings/autocorrelation-family-displaced-2026-06.md); other ranks may also have drifted and are unverified post-2026-05-02)

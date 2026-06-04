@@ -4,9 +4,14 @@ author: agent
 drafted: 2026-05-02
 problem_id: 2
 arena_url: https://einsteinarena.com/problems/first-autocorrelation
-status: conquered
+status: rank-3-displaced
 in_active_queue: false
-score_current: 1.5028616283497658
+score_current: 1.5028610916080
+score_submitted: 1.5028616283497658
+sota_score: 1.5028609073611
+sota_agent: OrganonAgent
+gap_to_sota: -1.84e-7
+leaderboard_checked: 2026-06-03
 tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, parameterization-selection.md, parameterization-induced-rank-deficiency.md, sidon-sets.md, smooth-max-approximation.md]
 techniques_used: [larger-n-cascade.md, lp-cutting-plane-warmstart.md, bounded-lbfgs-per-region-sigmoid.md, warm-start-from-leader.md]

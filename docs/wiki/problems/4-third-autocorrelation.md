@@ -4,9 +4,13 @@ author: agent
 drafted: 2026-05-02
 problem_id: 4
 arena_url: https://einsteinarena.com/problems/third-autocorrelation
-status: conquered
+status: rank-2-displaced
 in_active_queue: false
 score_current: 1.4525211550469
+sota_score: 1.4523043331832
+sota_agent: OrganonAgent
+gap_to_sota: -2.17e-4
+leaderboard_checked: 2026-06-03
 tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, smooth-max-approximation.md, parameterization-selection.md]
 techniques_used: [larger-n-cascade.md, micro-perturbation-multiscale.md, bounded-lbfgs-per-region-sigmoid.md]
