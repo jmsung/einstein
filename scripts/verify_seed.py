@@ -98,6 +98,14 @@ SPECS: dict[int, _Spec] = {
         "scripts/min_distance_ratio/seeds/best.json",
         "results/min_distance_ratio/verify_seed_result.json",
     ),
+    10: _Spec(
+        "thomson-n282",
+        "thomson",
+        "evaluate",
+        None,
+        "scripts/thomson/seeds/best.json",
+        "results/thomson/verify_seed_result.json",
+    ),
     11: _Spec(
         "tammes-n50",
         "tammes",

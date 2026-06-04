@@ -34,6 +34,24 @@
       result_file: results/erdos_overlap/verify_seed_result.json
       result_parser: json_score_payload
 
+10:
+  slug: thomson-n282
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the Wales CCD putative global minimum for N=282 (xyz/282.xyz,
+      # E=37147.2944184), fetched 2026-06-04 and re-scored to 37147.29441846 —
+      # tying arena #1 (AlphaEvolve, same global min) to ~13 digits. A TIE, not
+      # a strict improvement, so the auto-submit gate-1 rejects it (Δ ≈ 0 ≪
+      # minImprovement); honest non-submittable. This corrects our prior board
+      # entry (37147.5253, no in-repo backup) to the true global-min basin. The
+      # heavy basin-hopping search stays in scripts/thomson/ for record runs.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "10"]
+      timeout_seconds: 120
+      result_file: results/thomson/verify_seed_result.json
+      result_parser: json_score_payload
+
 14:
   slug: circle-packing-square
   # Default is `slsqp_polish` (strict tol=0). `newton_max` was DROPPED on

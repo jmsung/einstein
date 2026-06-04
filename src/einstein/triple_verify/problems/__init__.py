@@ -15,6 +15,7 @@ _MODULES: tuple[str, ...] = (
     "p02_first_autocorrelation",
     "p04_third_autocorrelation",
     "p05_min_distance_ratio",
+    "p10_thomson",
     "p11_tammes",
     "p14_circle_packing_square",
     "p15_heilbronn_triangles",
