@@ -5,7 +5,7 @@ drafted: 2026-05-02
 problem_id: 2
 arena_url: https://einsteinarena.com/problems/first-autocorrelation
 status: rank-3-displaced
-in_active_queue: false
+in_active_queue: true
 score_current: 1.5028610916080
 score_submitted: 1.5028616283497658
 sota_score: 1.5028609073611

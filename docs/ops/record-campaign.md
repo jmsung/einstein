@@ -15,9 +15,16 @@ whole page before flipping `EINSTEIN_AUTO_SUBMIT=1`.
 
 | File | Role |
 |---|---|
-| `com.einstein.record-campaign.plist` | launchd template: `autonomous_loop.py --max-problems 3` every 30 min, daily-rotated log. Ships `EINSTEIN_AUTO_SUBMIT=0`. |
-| `record-campaign-input-set.md` | Goal 0 audit — the 5 problems (P5, P11, P14, P15, P19) the campaign targets, with inclusion criteria. |
+| `com.einstein.record-campaign.plist` | launchd template: `autonomous_loop.py --max-problems N` every 30 min, daily-rotated log. Ships `EINSTEIN_AUTO_SUBMIT=0`. **Set `--max-problems ≥ 11`** to touch the whole post-Phase-6 queue per tick (or accept tail lag — see input-set doc, lesson 2). |
+| `record-campaign-input-set.md` | Goal 0 audit. **As of 2026-06-04 (Phase 6) the input set is 11 problems** (P1/P2/P3/P4/P5/P10/P11/P12/P14/P15/P19) — see the "2026-06-04 re-audit" section there. (Phase-4 original was the 5 converged P5/P11/P14/P15/P19.) |
 | `../../scripts/record_campaign_monitor.py` | Health monitor — alerts on triple-verify mismatch, dispatch-failure streaks, or auto-submit over cap. |
+
+> **2026-06-04 (Phase 6):** triple-verify is now wired into gate 2
+> (`autonomous_loop.py:859`), so flipping `AUTO_SUBMIT=1` is no longer a
+> structural no-op. **But a Phase-6 campaign still produces 0 records** —
+> `verify_seed` only re-scores fixed seeds (tie/sub-SOTA). Only re-run live
+> after **Phase 7** lands a triple-verified Δ over arena #1. Seeds are public in
+> cb by default; an *unsubmitted novel record* seed stays mb-only until submitted.
 
 ## The two phases (do not skip the dry-run)
 

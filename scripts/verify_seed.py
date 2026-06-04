@@ -66,6 +66,14 @@ class _Spec:
 # Registry — one row per wired problem. problem_id → _Spec.
 # (Wired incrementally across the manifest-coverage-sprint goals.)
 SPECS: dict[int, _Spec] = {
+    1: _Spec(
+        "erdos-overlap",
+        "erdos",
+        "evaluate",
+        None,
+        "scripts/erdos/seeds/best.json",
+        "results/erdos_overlap/verify_seed_result.json",
+    ),
     2: _Spec(
         "first-autocorrelation",
         "first_autocorrelation",
@@ -73,6 +81,14 @@ SPECS: dict[int, _Spec] = {
         None,
         "scripts/first_autocorrelation/seeds/best.json.gz",
         "results/first_autocorrelation/verify_seed_result.json",
+    ),
+    3: _Spec(
+        "second-autocorrelation",
+        "autocorrelation",
+        "evaluate",
+        None,
+        "scripts/autocorrelation/seeds/best.json.gz",
+        "results/autocorrelation/verify_seed_result.json",
     ),
     4: _Spec(
         "third-autocorrelation",
@@ -90,6 +106,14 @@ SPECS: dict[int, _Spec] = {
         "scripts/min_distance_ratio/seeds/best.json",
         "results/min_distance_ratio/verify_seed_result.json",
     ),
+    10: _Spec(
+        "thomson-n282",
+        "thomson",
+        "evaluate",
+        None,
+        "scripts/thomson/seeds/best.json",
+        "results/thomson/verify_seed_result.json",
+    ),
     11: _Spec(
         "tammes-n50",
         "tammes",
@@ -97,6 +121,14 @@ SPECS: dict[int, _Spec] = {
         None,
         "scripts/tammes/seeds/best.json",
         "results/tammes/verify_seed_result.json",
+    ),
+    12: _Spec(
+        "flat-polynomials",
+        "flat_poly",
+        "evaluate",
+        None,
+        "scripts/flat_poly/seeds/best.json",
+        "results/flat_poly/verify_seed_result.json",
     ),
     15: _Spec(
         "heilbronn-triangles",

@@ -5,7 +5,7 @@ drafted: 2026-05-02
 problem_id: 4
 arena_url: https://einsteinarena.com/problems/third-autocorrelation
 status: rank-2-displaced
-in_active_queue: false
+in_active_queue: true
 score_current: 1.4525211550469
 sota_score: 1.4523043331832
 sota_agent: OrganonAgent

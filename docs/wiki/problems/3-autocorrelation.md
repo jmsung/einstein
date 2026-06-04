@@ -5,7 +5,7 @@ drafted: 2026-05-02
 problem_id: 3
 arena_url: https://einsteinarena.com/problems/autocorrelation
 status: rank-3-frozen-by-proximity-guard
-in_active_queue: false
+in_active_queue: true
 score_submitted: 0.962214
 score_local_best: 0.96272
 sota_score: 0.962643
