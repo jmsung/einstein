@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: tao
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p3-antialias-transplant-fails.md
 related_problems: [3]
 ---
+
+> **ANSWERED (2026-06-04, Goal 3):** No valid kernel works. The 1.6M solution (0.96272) collapses under every downsample to 100k (best Gaussian σ=16 → 0.9596, below our 100k-native basin). The quadratic ★ injects above-Nyquist energy; down(f)★down(f) ≠ down(f★f) is irreducible. See [dead-end-p3-antialias-transplant-fails.md](../findings/dead-end-p3-antialias-transplant-fails.md).
+
 
 # Tao — P3 headroom: what is the obstruction to a score-preserving downsample, named precisely
 

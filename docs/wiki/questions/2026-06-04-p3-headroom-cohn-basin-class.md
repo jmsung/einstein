@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: cohn
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p3-antialias-transplant-fails.md
 related_problems: [3]
 ---
+
+> **ANSWERED (2026-06-04, Goal 3):** P3 is NOT literature-capped — Rechnitzer 2026 bounds a different quantity (inf‖f★f‖₂²≈0.5746). But all 11 agents cluster at the SOTA ceiling ~0.96264; the math ceiling in (0.96264,1.0] is unpinned. See [dead-end-p3-antialias-transplant-fails.md](../findings/dead-end-p3-antialias-transplant-fails.md).
+
 
 # Cohn — P3 headroom: characterise the construction class and bound the ceiling
 

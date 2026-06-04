@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: hilbert
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p3-antialias-transplant-fails.md
 related_problems: [3]
 ---
+
+> **ANSWERED (2026-06-04, Goal 3):** Predicate stated: a P3 candidate must have a score stable under re-discretisation (different phase / 200k↓100k) to < minImprovement — a score that RISES at higher resolution is inflated and rejected. See [dead-end-p3-antialias-transplant-fails.md](../findings/dead-end-p3-antialias-transplant-fails.md).
+
 
 # Hilbert — P3 headroom: the right submission-safety axiom and the Rayleigh-quotient frame
 
