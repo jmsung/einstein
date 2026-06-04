@@ -20,6 +20,7 @@ _MODULES: tuple[str, ...] = (
     "p16_heilbronn_convex",
     "p18_circles_rectangle",
     "p19_difference_bases",
+    "p22_kissing_d12",
 )
 
 for _m in _MODULES:
