@@ -1907,6 +1907,84 @@ def test_call_auto_submit_does_not_fire_notifier_on_reject() -> None:
     assert "auto-submit-rejected@triple-verify-failed" in " ".join(notes)
 
 
+def test_call_auto_submit_forwards_triple_verify_verdict() -> None:
+    """Gate 2 input now comes from the real triple-verify (the seam stands in):
+    a passing verdict is forwarded to auto_submit and surfaced in the notes
+    with the three numbers."""
+    from types import SimpleNamespace
+
+    problem = al.Problem(
+        problem_id=19,
+        slug="difference-bases",
+        tier="A",
+        status="rank-1-tied",
+        score_current=2.639,
+        path=Path("/x"),
+    )
+    seen_tv: list = []
+
+    def fake_submit(problem_id, payload, score, *, triple_verify, **kw):
+        seen_tv.append(triple_verify)
+        return SimpleNamespace(submitted=False, rejected_at_gate="no-improvement")
+
+    def fake_verifier(problem_id, payload):
+        return SimpleNamespace(
+            as_dict=lambda: {
+                "passed": True,
+                "fast": 2.639,
+                "exact": 2.639,
+                "cross": 2.639,
+                "note": "3-way agreement",
+            }
+        )
+
+    notes: list[str] = []
+    al._call_auto_submit(
+        problem=problem,
+        score=2.639,
+        payload={"set": [0, 1, 2]},
+        auto_submitter=fake_submit,
+        notes_parts=notes,
+        triple_verifier=fake_verifier,
+    )
+    assert seen_tv[0]["passed"] is True  # the real verdict is forwarded to gate 2
+    joined = " ".join(notes)
+    assert "triple-verify=pass" in joined and "fast=2.639" in joined
+
+
+def test_call_auto_submit_unregistered_problem_rejects() -> None:
+    """A problem with no triple-verify registration verifies as not_registered
+    → passed=False forwarded to gate 2 (never a silent pass). Uses the real
+    run_payload (default seam)."""
+    from types import SimpleNamespace
+
+    problem = al.Problem(
+        problem_id=99,
+        slug="unregistered",
+        tier="C",
+        status="x",
+        score_current=1.0,
+        path=Path("/x"),
+    )
+    seen_tv: list = []
+
+    def fake_submit(problem_id, payload, score, *, triple_verify, **kw):
+        seen_tv.append(triple_verify)
+        return SimpleNamespace(submitted=False, rejected_at_gate="triple-verify-failed")
+
+    notes: list[str] = []
+    al._call_auto_submit(
+        problem=problem,
+        score=1.0,
+        payload={"whatever": 1},
+        auto_submitter=fake_submit,
+        notes_parts=notes,
+    )
+    assert seen_tv[0]["passed"] is False
+    assert seen_tv[0]["note"] == "not_registered"
+    assert "triple-verify=fail" in " ".join(notes)
+
+
 def test_call_auto_submit_notifier_failure_is_silent() -> None:
     """Notifier raising/returning False must not break the call chain."""
     from types import SimpleNamespace
