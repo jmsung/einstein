@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: archimedes
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/p10-wales-global-min-hessian-certificate.md
 related_problems: [10]
 ---
+
+> **ANSWERED (2026-06-04, Goal 5):** Certified. Projected Hessian at the Wales config has 3 rotational zero modes + 561 strictly positive eigenvalues (λ_min non-gauge = 3.41, zero negative modes) → strict local min. Our worse #6 submission should be swapped for the Wales seed (tied-SOTA, human-approval). See [p10-wales-global-min-hessian-certificate.md](../findings/p10-wales-global-min-hessian-certificate.md).
+
 
 # P10 (Thomson n=282) — Archimedes: what verifiable test turns "20 years unbeaten" into a certified strict local minimum, and is our submitted basin just the wrong one?
 

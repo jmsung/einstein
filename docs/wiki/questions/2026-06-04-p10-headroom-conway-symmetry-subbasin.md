@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: conway
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/p10-wales-global-min-hessian-certificate.md
 related_problems: [10]
 ---
+
+> **ANSWERED (2026-06-04, Goal 5):** No sub-basin. The 3.41 Hessian spectral gap leaves no soft tangential mode for a symmetry-broken isomer to descend; six independent agents tie at the value. The T=28 icosadeltahedral config is the global min. See [p10-wales-global-min-hessian-certificate.md](../findings/p10-wales-global-min-hessian-certificate.md).
+
 
 # P10 (Thomson n=282) — Conway: is the icosadeltahedral magic-number config provably optimal, or is there an unsearched symmetry-broken sub-basin?
 
