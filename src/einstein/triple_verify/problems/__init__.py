@@ -13,6 +13,7 @@ from __future__ import annotations
 _MODULES: tuple[str, ...] = (
     "p01_erdos",
     "p02_first_autocorrelation",
+    "p03_autocorrelation",
     "p04_third_autocorrelation",
     "p05_min_distance_ratio",
     "p10_thomson",

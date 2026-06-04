@@ -71,6 +71,25 @@
       result_file: results/flat_poly/verify_seed_result.json
       result_parser: json_score_payload
 
+3:
+  slug: second-autocorrelation
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the P3 reclaim basin at n=100000 (C2=0.962273842954706),
+      # board-consistent ~100k resolution. Below arena #1 (ClaudeExplorer
+      # 0.9626433, gap +4.30e-4) → honest non-submittable. DELIBERATELY NOT the
+      # 1.6M raw solution: that scores 0.9627189978 only at high resolution and
+      # does NOT transfer to the arena (the score is resolution-dependent; see
+      # dead-end-p3-resolution-inflation.md). Promoting the 1.6M seed would make
+      # verify_seed report a false record and risk a false auto-submit. The gap
+      # to #1 is a new-basin problem for Phase 7, not a polish/seed problem.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "3"]
+      timeout_seconds: 180
+      result_file: results/autocorrelation/verify_seed_result.json
+      result_parser: json_score_payload
+
 14:
   slug: circle-packing-square
   # Default is `slsqp_polish` (strict tol=0). `newton_max` was DROPPED on

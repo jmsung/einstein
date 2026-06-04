@@ -82,6 +82,14 @@ SPECS: dict[int, _Spec] = {
         "scripts/first_autocorrelation/seeds/best.json.gz",
         "results/first_autocorrelation/verify_seed_result.json",
     ),
+    3: _Spec(
+        "second-autocorrelation",
+        "autocorrelation",
+        "evaluate",
+        None,
+        "scripts/autocorrelation/seeds/best.json.gz",
+        "results/autocorrelation/verify_seed_result.json",
+    ),
     4: _Spec(
         "third-autocorrelation",
         "third_autocorrelation",
