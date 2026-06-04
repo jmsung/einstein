@@ -5,6 +5,7 @@ drafted: 2026-05-02
 problem_id: 18
 arena_url: https://einsteinarena.com/problems/circles-rectangle
 status: conquered
+in_active_queue: false
 score_current: 2.3658323852080
 tier: A
 concepts_invoked: [sphere-packing.md, circle-packing.md, arena-tolerance-drift.md, float64-ceiling.md, minimprovement-gate.md]

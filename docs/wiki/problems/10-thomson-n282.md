@@ -5,6 +5,7 @@ drafted: 2026-05-02
 problem_id: 10
 arena_url: https://einsteinarena.com/problems/thomson
 status: rank-5-frozen
+in_active_queue: false
 score_current: 37147.53
 tier: B
 concepts_invoked: [sphere-packing.md, basin-rigidity.md, symmetry-and-fundamental-domain.md, provable-floor-and-frozen-problems.md]

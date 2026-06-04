@@ -39,3 +39,5 @@ outcmaes/
 # docs/source/ holds the in-git distillations; docs/raw is regenerable from source frontmatter.
 docs/raw/
 .obsidian/
+
+.claude/scheduled_tasks.lock

@@ -5,6 +5,7 @@ drafted: 2026-05-02
 problem_id: 4
 arena_url: https://einsteinarena.com/problems/third-autocorrelation
 status: conquered
+in_active_queue: false
 score_current: 1.4525211550469
 tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, smooth-max-approximation.md, parameterization-selection.md]

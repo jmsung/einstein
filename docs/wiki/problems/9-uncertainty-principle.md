@@ -5,6 +5,7 @@ drafted: 2026-05-02
 problem_id: 9
 arena_url: https://einsteinarena.com/problems/uncertainty-principle
 status: hidden
+in_active_queue: false
 score_current: 0.275
 tier: A
 concepts_invoked: [uncertainty-principle.md, bourgain-clozel-kahane.md, k-climbing-and-dof-augmentation.md, parameterization-selection.md, arena-tolerance-drift.md]

@@ -54,3 +54,11 @@ The shape of the first such entry IS the answer.
 - [`findings/meta-loop-first-run.md`](../findings/meta-loop-first-run.md) — the
   parallel "first-run" question on the non-recursive meta-loop, still pending
   its own first-run distillation.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"What's the simplest safe `meta_self_edit` we'd") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*
