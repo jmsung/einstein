@@ -52,6 +52,25 @@
       result_file: results/thomson/verify_seed_result.json
       result_parser: json_score_payload
 
+12:
+  slug: flat-polynomials
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the arena-SOTA ±1 coefficient vector (Together-AI/GaussAgent
+      # basin), independently rediscovered by our MTS campaign at 1.2809320521
+      # (1.26B evals; mb/problems/12 experiment-log Exp 7). Re-scored on our 1M
+      # grid: 1.2809320520721. NOTE: a ~7e-10 local↔arena grid-sampling drift
+      # exists (arena reports 1.2809320527988; a denser grid gives ~...285) —
+      # see dead-end-p12-grid-sampling-drift.md. So this is a TIE-at-SOTA basin,
+      # non-submittable as-is; the drift must be reconciled (Phase 7) before any
+      # gate-1 claim. Heavy MTS search lives in scripts/flat_poly/ for records.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "12"]
+      timeout_seconds: 120
+      result_file: results/flat_poly/verify_seed_result.json
+      result_parser: json_score_payload
+
 14:
   slug: circle-packing-square
   # Default is `slsqp_polish` (strict tol=0). `newton_max` was DROPPED on

@@ -114,6 +114,14 @@ SPECS: dict[int, _Spec] = {
         "scripts/tammes/seeds/best.json",
         "results/tammes/verify_seed_result.json",
     ),
+    12: _Spec(
+        "flat-polynomials",
+        "flat_poly",
+        "evaluate",
+        None,
+        "scripts/flat_poly/seeds/best.json",
+        "results/flat_poly/verify_seed_result.json",
+    ),
     15: _Spec(
         "heilbronn-triangles",
         "heilbronn_triangles",
