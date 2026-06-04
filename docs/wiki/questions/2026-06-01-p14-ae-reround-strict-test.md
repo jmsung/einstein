@@ -86,3 +86,11 @@ just running the snippet against that JSON.
 - [p14-slack-budget-middle-prediction-confirmed](../findings/p14-slack-budget-middle-prediction-confirmed.md)
 - [p14-mpmath-slack-budget-analysis](../findings/p14-mpmath-slack-budget-analysis.md)
 - [arena-tolerance-drift](../concepts/arena-tolerance-drift.md)
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"lphaEvolve's published n=26 config pass `evaluate_strict") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

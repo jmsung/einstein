@@ -47,3 +47,11 @@ A follow-up branch (NOT this plumbing branch): for each, re-run the recipe from
 the experiment-log, triple-verify, write `solution-best.json`, drop the seed into
 `scripts/<problem>/seeds/`, add the registry + test row. P10/P12 may need a short
 compute run; P2/P3 just need the high-n solution re-materialized.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"basin rigidity" OR all:"float64 ceiling" OR all:"we backfill clean in-repo seeds for") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

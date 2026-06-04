@@ -5,6 +5,7 @@ drafted: 2026-05-02
 problem_id: 2
 arena_url: https://einsteinarena.com/problems/first-autocorrelation
 status: conquered
+in_active_queue: false
 score_current: 1.5028616283497658
 tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, parameterization-selection.md, parameterization-induced-rank-deficiency.md, sidon-sets.md, smooth-max-approximation.md]

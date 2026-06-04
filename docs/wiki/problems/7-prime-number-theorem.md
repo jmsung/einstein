@@ -5,6 +5,7 @@ drafted: 2026-05-02
 problem_id: 7
 arena_url: https://einsteinarena.com/problems/prime-number-theorem
 status: conquered
+in_active_queue: false
 score_current: 0.994847
 tier: A
 concepts_invoked: [sieve-theory-as-lp.md, lp-duality.md, n-extension-monotonicity.md, arena-tolerance-drift.md]

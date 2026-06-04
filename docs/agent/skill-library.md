@@ -27,27 +27,27 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 |---|---|---|---|---|---|---|
 | `parallel-tempering-sa.md` | kissing / Coulomb | 5 | 3 | 2 | 2026-04-25 | 0.60 |
 | `mpmath-ulp-polish.md` | float64-ceiling family | 10 | 6 | 5 | 2026-06-01 | 0.60 |
-| `slsqp-active-pair-polish.md` | packing / kissing | 16 | 4 | 1 | 2026-05-28 | 0.25 |
-| `arena-tolerance-slsqp.md` | packing | 13 | 3 | 1 | 2026-05-28 | 0.23 |
-| `larger-n-cascade.md` | autocorrelation | 16 | 4 | 2 | 2026-05-28 | 0.25 |
-| `cross-resolution-basin-transfer.md` | autocorrelation | 8 | 1 | 1 | 2026-05-28 | 0.12 |
+| `slsqp-active-pair-polish.md` | packing / kissing | 25 | 6 | 1 | 2026-06-03 | 0.24 |
+| `arena-tolerance-slsqp.md` | packing | 34 | 9 | 1 | 2026-06-03 | 0.26 |
+| `larger-n-cascade.md` | autocorrelation | 18 | 4 | 2 | 2026-06-02 | 0.22 |
+| `cross-resolution-basin-transfer.md` | autocorrelation | 9 | 1 | 1 | 2026-06-02 | 0.11 |
 | `bounded-lbfgs-per-region-sigmoid.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `boundary-snap-for-kinks.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `first-order-link-tangent-test.md` | kissing-tight | 2 | 1 | 1 | 2026-04-25 | 0.50 |
 | `kronecker-search-decomposition.md` | discrete-combinatorics | 2 | 0 | 2 | 2026-05-02 | 0.00 |
 | `bnb-exhaustive-w3.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-09 | 0.00 |
 | `lp-cutting-plane-warmstart.md` | sieve | 2 | 2 | 1 | 2026-04-15 | 1.00 |
-| `dinkelbach-fractional-programming.md` | autocorrelation-ratio | 9 | 1 | 0 | 2026-05-28 | 0.11 |
+| `dinkelbach-fractional-programming.md` | autocorrelation-ratio | 10 | 1 | 0 | 2026-06-02 | 0.10 |
 | `gap-space-parameterization.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |
 | `k-climbing.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |
 | `multistart-with-rotation-lottery.md` | packing | 8 | 1 | 2 | 2026-05-28 | 0.12 |
-| `basin-hopping-multistart.md` | packing / extremal | 18 | 4 | 2 | 2026-05-28 | 0.22 |
-| `uniform-radius-shrink-fallback.md` | packing | 6 | 1 | 0 | 2026-05-28 | 0.17 |
+| `basin-hopping-multistart.md` | packing / extremal | 25 | 4 | 2 | 2026-06-03 | 0.16 |
+| `uniform-radius-shrink-fallback.md` | packing | 12 | 1 | 0 | 2026-06-03 | 0.08 |
 | `micro-perturbation-multiscale.md` | kissing | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `cma-es-with-warmstart.md` | exploration | 3 | 1 | 1 | 2026-04-19 | 0.33 |
 | `memetic-tabu-search.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-02 | 0.00 |
 | `sdp-flag-algebra.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
-| `remez-equioscillation-diagnostic.md` | autocorrelation | 5 | 0 | 2 | 2026-05-28 | 0.00 |
+| `remez-equioscillation-diagnostic.md` | autocorrelation | 6 | 0 | 2 | 2026-06-02 | 0.00 |
 | `warm-start-from-leader.md` | universal | 11 | 6 | 3 | 2026-05-02 | 0.55 |
 | `greedy-insert-cd-redistribute.md` | extremal-graph | 1 | 1 | 0 | 2026-04-09 | 1.00 |
 | `gpu-decision-framework.md` | meta | 5 | (meta) | 2 | 2026-04-25 | (n/a) |

@@ -5,6 +5,7 @@ drafted: 2026-05-02
 problem_id: 12
 arena_url: https://einsteinarena.com/problems/flat-polynomials
 status: rank-8
+in_active_queue: false
 score_current: 1.3539
 tier: B
 concepts_invoked: [discretization-as-structure.md, basin-rigidity.md, probabilistic-method.md]
