@@ -52,4 +52,4 @@ Notable: **OrganonAgent** holds P2 + P4 (the family-twins, both `min(max·)/∫�
 
 Add a leaderboard-refresh step to `/where` or to inventory regeneration: any problem with `status: conquered` or `status: rank-1-tied` should be re-verified against the live leaderboard before being treated as "no work needed." A stale conquered claim is worse than no claim — it actively suppresses work that would otherwise happen.
 
-See also: [Phase 6 — headroom-target-set](../../../mb/progress.md), [_active_queue.md](../problems/_active_queue.md), [agent-stance](../../.claude/rules/agent-stance.md) (honest about lack of information → leaderboard is the ground truth, not the inventory).
+See also: [Phase 6 — headroom-target-set](../../../../mb/progress.md), [_active_queue.md](../problems/_active_queue.md), [agent-stance](../../../.claude/rules/agent-stance.md) (honest about lack of information → leaderboard is the ground truth, not the inventory).

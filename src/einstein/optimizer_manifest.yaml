@@ -10,12 +10,11 @@
 # `score` (float) and optional `payload` (dict). Recommended for new
 # wirings — keeps the contract simple.
 #
-# Coverage (2026-06-01, manifest-coverage-sprint): 10 problems wired —
-# P14 (slsqp_polish + mpmath_ulp_polish), P22 (stub), and 8 basin-locked
-# problems (P2,4,5,11,15,16,18,19) via the generic verify_seed emitter. The
-# remaining live problems are added incrementally as their scripts emit
-# json_score_payload result files; P3/P10/P12 are deferred pending a clean
-# in-repo seed (see docs/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md).
+# Coverage (2026-06-04, Phase 6 headroom-target-set): 14 problems wired —
+# P14 (slsqp_polish + mpmath_ulp_polish), P22 (stub), 8 basin-locked problems
+# (P2,4,5,11,15,16,18,19) via the generic verify_seed emitter, and the Phase-6
+# headroom additions P1,3,10,12 (verify_seed + in-repo seed + triple-verify).
+# Every wired id has a triple-verify registration (registry-coverage CI gate).
 
 1:
   slug: erdos-overlap
@@ -23,7 +22,7 @@
   optimizers:
     verify_seed:
       # Seed == our genuine best basin (0.38087031047814435, n=600), promoted
-      # from the mb v2 backup — ~1.08e-9 BELOW arena #1 (0.3808703105862), so we
+      # from the mb v2 backup — ~1.08e-10 BELOW arena #1 (0.3808703105862), so we
       # are effectively tied-SOTA at the Remez/minimax plateau and the Δ is far
       # below minImprovement=1e-7 (non-submittable; honest-zero expected). The
       # heavy Remez-bilinear-minimax + cutting-plane LP search lives in
