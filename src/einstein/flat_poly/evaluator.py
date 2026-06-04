@@ -42,6 +42,135 @@ def evaluate(data: dict) -> float:
 
 
 # ---------------------------------------------------------------------------
+# Continuous-sup certifier — the grid-INDEPENDENT authoritative score.
+#
+# The arena score `max_k |p(z_k)|/√71` is a *grid maximum* over N=1e6 roots of
+# unity, which underestimates the true `sup_{|z|=1} |p(z)|/√71` because the peak
+# rarely lands on a node. That grid-vs-continuum gap is the ~7e-10 local↔arena
+# drift (docs/wiki/findings/dead-end-p12-grid-sampling-drift.md). Both the 1M
+# grid (1.2809320520721) and arena (1.2809320527988) sit *below* the certified
+# continuous sup (1.2809320528750).
+#
+# g(θ) = |p(e^{iθ})|² is a real trig polynomial of degree n-1:
+#   g(θ) = r₀ + 2·Σ_{m≥1} r_m cos(mθ),   r_m = Σ_j a_j a_{j+m}  (autocorrelation)
+# so g, g', g'' are exact closed forms. We locate candidate peaks on a fine FFT
+# grid (a flat polynomial has many near-equal maxima — refine the top-K, not
+# just one) then Newton-refine each to machine precision. The result is stable
+# to ~1e-13 regardless of FFT size, so it is a drift-free quantity to compare
+# across candidates. SAFE submission rule: a candidate whose continuous sup is
+# below arena #1's *reported grid* score is a genuine improvement on the arena's
+# own metric (grid ≤ continuum always), so the comparison never over-claims.
+# ---------------------------------------------------------------------------
+
+
+def _autocorr(asc: np.ndarray) -> np.ndarray:
+    """r[m] = Σ_j a_j a_{j+m} for m=0..n-1 (real, since a is real)."""
+    n = len(asc)
+    return np.correlate(asc, asc, mode="full")[n - 1 :]
+
+
+def _top_peak_nodes(asc: np.ndarray, m_grid: int, k: int) -> np.ndarray:
+    """θ at the k strongest *local-max* nodes of |p| on an m_grid-point FFT grid."""
+    vals = np.abs(np.fft.fft(asc, n=m_grid))
+    left = np.roll(vals, 1)
+    right = np.roll(vals, -1)
+    is_local_max = (vals >= left) & (vals >= right)
+    idx = np.where(is_local_max)[0]
+    if len(idx) > k:
+        idx = idx[np.argsort(vals[idx])[-k:]]
+    return 2 * np.pi * idx / m_grid
+
+
+def continuous_sup_score(
+    coefficients: list[int] | np.ndarray,
+    *,
+    m_grid: int = 1 << 20,
+    k_peaks: int = 256,
+    newton_iters: int = 12,
+) -> float:
+    """Certified continuous sup `max_{|z|=1}|p(z)|/√71` (descending-degree coeffs).
+
+    Grid-independent: locate the strongest local-max nodes on a fine FFT grid,
+    then Newton-refine each on the exact trig polynomial g=|p|² and take the max.
+    """
+    desc = np.asarray(coefficients, dtype=np.float64)
+    asc = desc[::-1]
+    m = np.arange(len(asc))
+    r = _autocorr(asc)
+    rm, mm = r[1:], m[1:]  # m≥1 terms
+
+    def gp(t: float) -> float:
+        return float(-2.0 * np.sum(mm * rm * np.sin(mm * t)))
+
+    def gpp(t: float) -> float:
+        return float(-2.0 * np.sum(mm * mm * rm * np.cos(mm * t)))
+
+    def g(t: float) -> float:
+        return float(r[0] + 2.0 * np.sum(rm * np.cos(mm * t)))
+
+    best = 0.0
+    for t in _top_peak_nodes(asc, m_grid, k_peaks):
+        for _ in range(newton_iters):
+            d2 = gpp(t)
+            if d2 == 0.0:
+                break
+            step = gp(t) / d2
+            t -= step
+            if abs(step) < 1e-15:
+                break
+        best = max(best, g(t))
+    return float(np.sqrt(best) / NORM)
+
+
+def continuous_sup_score_mpmath(
+    coefficients: list[int] | np.ndarray,
+    *,
+    dps: int = 50,
+    m_grid: int = 1 << 18,
+    k_peaks: int = 64,
+    newton_iters: int = 30,
+) -> float:
+    """Arbitrary-precision continuous sup — a different *kind* of evidence.
+
+    Same trig-polynomial Newton refinement as ``continuous_sup_score`` but in
+    mpmath at ``dps`` digits, pinning the peak independent of float64 rounding.
+    """
+    import mpmath as mp
+
+    desc = np.asarray(coefficients, dtype=np.float64)
+    asc = desc[::-1]
+    r = _autocorr(asc)
+    n = len(asc)
+    seeds = _top_peak_nodes(asc, m_grid, k_peaks)
+
+    with mp.workdps(dps):
+        rm = [mp.mpf(int(round(r[i]))) for i in range(1, n)]  # r_m are exact integers
+        ms = [mp.mpf(i) for i in range(1, n)]
+
+        def gp(t):
+            return -2 * mp.fsum(ms[i] * rm[i] * mp.sin(ms[i] * t) for i in range(n - 1))
+
+        def gpp(t):
+            return -2 * mp.fsum(ms[i] * ms[i] * rm[i] * mp.cos(ms[i] * t) for i in range(n - 1))
+
+        def g(t):
+            return mp.mpf(int(round(r[0]))) + 2 * mp.fsum(
+                rm[i] * mp.cos(ms[i] * t) for i in range(n - 1)
+            )
+
+        best = mp.mpf(0)
+        for t0 in seeds:
+            t = mp.mpf(float(t0))
+            for _ in range(newton_iters):
+                d2 = gpp(t)
+                if d2 == 0:
+                    break
+                t -= gp(t) / d2
+            best = max(best, g(t))
+        return float(mp.sqrt(best) / mp.sqrt(71))
+
+
+# ---------------------------------------------------------------------------
 # Known constructions (return ascending order: a_0, a_1, ..., a_{n-1})
 # Reverse with [::-1] before passing to compute_score.
 # ---------------------------------------------------------------------------

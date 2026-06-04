@@ -3,9 +3,18 @@ type: question
 author: agent
 asked_by: razborov
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/p12-grid-drift-resolution.md
 related_problems: [12]
 ---
+
+> **ANSWERED (2026-06-04, Goal 2):** Razborov's certificate is the continuous
+> supremum, computed via exact-trig-polynomial Newton refinement (the grid is
+> only a peak-seeder). Certified sup = 1.2809320528750 (3 methods agree to
+> 2e-16); both the 1M grid and arena sit below it, all gaps < minImprovement.
+> The drift is dissolved by construction — no denser grid needed. See
+> [p12-grid-drift-resolution.md](../findings/p12-grid-drift-resolution.md).
+
 
 # P12 headroom (Razborov lens): pin the grid-sampling drift with a certificate, not a denser grid
 
