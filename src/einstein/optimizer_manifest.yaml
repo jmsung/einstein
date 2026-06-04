@@ -10,12 +10,84 @@
 # `score` (float) and optional `payload` (dict). Recommended for new
 # wirings — keeps the contract simple.
 #
-# Coverage (2026-06-01, manifest-coverage-sprint): 10 problems wired —
-# P14 (slsqp_polish + mpmath_ulp_polish), P22 (stub), and 8 basin-locked
-# problems (P2,4,5,11,15,16,18,19) via the generic verify_seed emitter. The
-# remaining live problems are added incrementally as their scripts emit
-# json_score_payload result files; P3/P10/P12 are deferred pending a clean
-# in-repo seed (see docs/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md).
+# Coverage (2026-06-04, Phase 6 headroom-target-set): 14 problems wired —
+# P14 (slsqp_polish + mpmath_ulp_polish), P22 (stub), 8 basin-locked problems
+# (P2,4,5,11,15,16,18,19) via the generic verify_seed emitter, and the Phase-6
+# headroom additions P1,3,10,12 (verify_seed + in-repo seed + triple-verify).
+# Every wired id has a triple-verify registration (registry-coverage CI gate).
+
+1:
+  slug: erdos-overlap
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == our genuine best basin (0.38087031047814435, n=600), promoted
+      # from the mb v2 backup — ~1.08e-10 BELOW arena #1 (0.3808703105862), so we
+      # are effectively tied-SOTA at the Remez/minimax plateau and the Δ is far
+      # below minImprovement=1e-7 (non-submittable; honest-zero expected). The
+      # heavy Remez-bilinear-minimax + cutting-plane LP search lives in
+      # scripts/erdos/ for record campaigns; this is the rank-current dispatch.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "1"]
+      timeout_seconds: 120
+      result_file: results/erdos_overlap/verify_seed_result.json
+      result_parser: json_score_payload
+
+10:
+  slug: thomson-n282
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the Wales CCD putative global minimum for N=282 (xyz/282.xyz,
+      # E=37147.2944184), fetched 2026-06-04 and re-scored to 37147.29441846 —
+      # tying arena #1 (AlphaEvolve, same global min) to ~13 digits. A TIE, not
+      # a strict improvement, so the auto-submit gate-1 rejects it (Δ ≈ 0 ≪
+      # minImprovement); honest non-submittable. This corrects our prior board
+      # entry (37147.5253, no in-repo backup) to the true global-min basin. The
+      # heavy basin-hopping search stays in scripts/thomson/ for record runs.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "10"]
+      timeout_seconds: 120
+      result_file: results/thomson/verify_seed_result.json
+      result_parser: json_score_payload
+
+12:
+  slug: flat-polynomials
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the arena-SOTA ±1 coefficient vector (Together-AI/GaussAgent
+      # basin), independently rediscovered by our MTS campaign at 1.2809320521
+      # (1.26B evals; mb/problems/12 experiment-log Exp 7). Re-scored on our 1M
+      # grid: 1.2809320520721. NOTE: a ~7e-10 local↔arena grid-sampling drift
+      # exists (arena reports 1.2809320527988; a denser grid gives ~...285) —
+      # see dead-end-p12-grid-sampling-drift.md. So this is a TIE-at-SOTA basin,
+      # non-submittable as-is; the drift must be reconciled (Phase 7) before any
+      # gate-1 claim. Heavy MTS search lives in scripts/flat_poly/ for records.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "12"]
+      timeout_seconds: 120
+      result_file: results/flat_poly/verify_seed_result.json
+      result_parser: json_score_payload
+
+3:
+  slug: second-autocorrelation
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == the P3 reclaim basin at n=100000 (C2=0.962273842954706),
+      # board-consistent ~100k resolution. Below arena #1 (ClaudeExplorer
+      # 0.9626433, gap +4.30e-4) → honest non-submittable. DELIBERATELY NOT the
+      # 1.6M raw solution: that scores 0.9627189978 only at high resolution and
+      # does NOT transfer to the arena (the score is resolution-dependent; see
+      # dead-end-p3-resolution-inflation.md). Promoting the 1.6M seed would make
+      # verify_seed report a false record and risk a false auto-submit. The gap
+      # to #1 is a new-basin problem for Phase 7, not a polish/seed problem.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "3"]
+      timeout_seconds: 180
+      result_file: results/autocorrelation/verify_seed_result.json
+      result_parser: json_score_payload
 
 14:
   slug: circle-packing-square
