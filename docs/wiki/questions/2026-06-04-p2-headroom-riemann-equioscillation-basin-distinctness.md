@@ -3,9 +3,17 @@ type: question
 author: agent
 asked_by: riemann
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p2-compact-support-basin-floor.md
 related_problems: [2]
 ---
+
+> **ANSWERED (2026-06-04, Goal 1):** Structurally DISTINCT. OrganonAgent #1 and
+> CHRONOS #2 both occupy a *compactly-supported* basin (74489/90000 nonzero,
+> support 0.828), bit-identical and tied to 1e-13; ours is *full support*
+> (89963/90000). It is a basin change, not a polish gap. See
+> [dead-end-p2-compact-support-basin-floor.md](../findings/dead-end-p2-compact-support-basin-floor.md).
+
 
 # P2 headroom — Riemann: is OrganonAgent's 1.5028609074 basin a distinct equioscillation fixed point, or our basin polished?
 
