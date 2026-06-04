@@ -98,7 +98,9 @@ It alerts on:
 
 - **(a) triple-verify mismatch** — a genuine evaluator disagreement (axiom A1),
   or the `mb/.inner-agent-disabled` sentinel being present.
-- **(b) ≥5 consecutive `blocked` cycles on one problem** — the loop is stuck.
+- **(b) ≥5 consecutive dispatch-failure cycles on one problem** — the loop is
+  stuck. Detected from the cycle-log NOTES markers (`dispatch-failed` /
+  `no-manifest-entry`) or an `outcome: blocked`.
 - **(c) auto-submit rate over the daily cap** — more `submitted` rows today than
   the cap (default 5).
 

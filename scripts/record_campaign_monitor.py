@@ -106,22 +106,34 @@ def parse_auto_submit_rows(text: str) -> list[dict]:
     return out
 
 
-def parse_cycle_outcomes(text: str) -> list[tuple[str, str]]:
-    """Return ``[(problem, outcome), ...]`` in cycle order from the cycle log.
+# Cycle-log column layout (0-indexed, after stripping the leading/trailing `|`):
+#   0:# 1:problem 2:score 3:hours 4:compute 5:wiki_cites 6:findings+ 7:concepts+
+#   8:author_mix 9:OUTCOME 10:notes [11:cites_src — added 2026-05-25, optional]
+# Columns 0-9 are pipe-free; only `notes` (and the free-text after it) can carry
+# embedded `|`. So `outcome` MUST be anchored from the LEFT (index 9) — reading
+# `cells[-2]` returns `notes` or `cites_src` on 11/12-column rows (the bug
+# code-review caught: the detector then never sees the real outcome).
+_OUTCOME_COL = 9
+_MIN_CYCLE_COLS = 11  # through `notes`
 
-    The cycle-log schema puts ``problem`` in column 2 and ``outcome`` in the
-    second-to-last column (``notes`` is last). Header rows (first cell ``#``)
-    are skipped.
+
+def parse_cycle_outcomes(text: str) -> list[tuple[str, str, str]]:
+    """Return ``[(problem, outcome, notes), ...]`` in cycle order from the log.
+
+    ``outcome`` is left-anchored at column 9; ``notes`` is everything from column
+    10 onward joined back (so embedded pipes and the optional trailing
+    ``cites_src`` column don't corrupt it). Header rows are skipped.
     """
-    out: list[tuple[str, str]] = []
+    out: list[tuple[str, str, str]] = []
     for cells in _table_rows(text):
         if cells[0] in {"#", "Column"}:  # header rows
             continue
-        if len(cells) < 4:
+        if len(cells) < _MIN_CYCLE_COLS:
             continue
         problem = cells[1]
-        outcome = cells[-2]
-        out.append((problem, outcome))
+        outcome = cells[_OUTCOME_COL]
+        notes = " | ".join(cells[_OUTCOME_COL + 1 :])
+        out.append((problem, outcome, notes))
     return out
 
 
@@ -171,20 +183,38 @@ def check_triple_verify(rows: list[dict], *, sentinel_present: bool) -> list[Ale
     return alerts
 
 
-def check_dispatch_failures(
-    outcomes: list[tuple[str, str]], *, threshold: int = DEFAULT_DISPATCH_THRESHOLD
-) -> list[Alert]:
-    """Alert when a problem accrues ``threshold`` consecutive ``blocked`` cycles.
+# How autonomous_loop records a dispatch failure: `exit="dispatch-failed"` /
+# `exit="no-manifest-entry"`, surfaced in the cycle-log NOTES as
+# `dispatch-failed: …` / `dispatch: no-manifest-entry` (outcome stays
+# `fanout-no-completion` / `scaffold-no-attempt` / `no-change`). It is NOT
+# `outcome=="blocked"` — matching that string would never fire on real data.
+# `blocked` is kept as a defensive secondary match (a documented schema outcome).
+_DISPATCH_FAILURE_MARKERS = ("dispatch-failed", "no-manifest-entry")
 
-    "Consecutive" is over the cycle order; a cycle on a different problem resets
-    the run for the prior problem.
+
+def _is_dispatch_failure(outcome: str, notes: str) -> bool:
+    if outcome.strip().lower() == "blocked":
+        return True
+    blob = notes.lower()
+    return any(m in blob for m in _DISPATCH_FAILURE_MARKERS)
+
+
+def check_dispatch_failures(
+    outcomes: list[tuple[str, str, str]], *, threshold: int = DEFAULT_DISPATCH_THRESHOLD
+) -> list[Alert]:
+    """Alert when a problem accrues ``threshold`` consecutive dispatch-failure cycles.
+
+    A dispatch failure is detected from the cycle-log NOTES markers
+    (``dispatch-failed`` / ``no-manifest-entry``) or an ``outcome == "blocked"``.
+    "Consecutive" is over cycle order; a non-failure cycle (or a cycle on a
+    different problem) resets the run for the prior problem.
     """
     alerts: list[Alert] = []
     run_problem: str | None = None
     run_len = 0
     fired: set[str] = set()
-    for problem, outcome in outcomes:
-        if outcome == "blocked":
+    for problem, outcome, notes in outcomes:
+        if _is_dispatch_failure(outcome, notes):
             if problem == run_problem:
                 run_len += 1
             else:
@@ -197,7 +227,7 @@ def check_dispatch_failures(
                 Alert(
                     kind="dispatch-failures",
                     severity="warning",
-                    message=f"{run_problem}: {run_len} consecutive blocked cycles (≥{threshold})",
+                    message=f"{run_problem}: {run_len} consecutive dispatch-failure cycles (≥{threshold})",
                     detail={"problem": run_problem, "run": run_len},
                 )
             )
@@ -252,12 +282,21 @@ def run_checks(
 
 
 def _load_notify():
-    """Import notify_milestone.py by path (docs/tools is not a package)."""
+    """Import notify_milestone.py by path (docs/tools is not a package).
+
+    Returns ``None`` if the module can't be loaded — the monitor must still
+    surface alerts (exit code + log) even when the notification helper is
+    unavailable, so loader failure degrades rather than crashes.
+    """
     path = _REPO / "docs" / "tools" / "notify_milestone.py"
-    spec = importlib.util.spec_from_file_location("notify_milestone", path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    try:
+        spec = importlib.util.spec_from_file_location("notify_milestone", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception as e:  # noqa: BLE001 — best-effort; logged, never fatal
+        log.warning("notify_milestone unavailable (%s) — alerts logged only", e)
+        return None
 
 
 def fire_alerts(alerts: list[Alert], *, runner=None) -> None:
@@ -269,6 +308,8 @@ def fire_alerts(alerts: list[Alert], *, runner=None) -> None:
     if not alerts:
         return
     notify = _load_notify()
+    if notify is None:
+        return
     for a in alerts:
         notify.notify(
             title=f"Record campaign — {a.kind} ({a.severity})",
@@ -287,7 +328,7 @@ def _read(path: Path) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    p = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
+    p = argparse.ArgumentParser(description=(__doc__ or "").split("\n", 1)[0])
     p.add_argument("--auto-submit", type=Path, default=DEFAULT_AUTO_SUBMIT)
     p.add_argument("--cycle-log", type=Path, default=DEFAULT_CYCLE_LOG)
     p.add_argument("--sentinel", type=Path, default=DEFAULT_SENTINEL)

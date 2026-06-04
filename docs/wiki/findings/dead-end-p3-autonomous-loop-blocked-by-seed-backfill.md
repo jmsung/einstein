@@ -9,7 +9,7 @@ cites:
   - docs/wiki/findings/dead-end-p2-autonomous-loop-blocked-by-seed-backfill.md
   - docs/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md
   - docs/wiki/findings/verify-seed-dispatch-pattern.md
-  - docs/wiki/problems/3-second-autocorrelation.md
+  - docs/wiki/problems/3-autocorrelation.md
   - src/einstein/optimizer_manifest.yaml
   - docs/agent/cycle-log.md
 ---

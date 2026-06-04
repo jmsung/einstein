@@ -82,27 +82,37 @@ def test_sentinel_present_always_alerts():
 
 # ---------------- dispatch failures ----------------
 
+# Production-shaped: 12 columns (trailing `cites_src`), dispatch failures marked
+# in NOTES (not outcome=="blocked"), and one row with embedded `|` in notes.
 CYCLE_FIXTURE = """## Cycles
 
-| # | problem | s | h | c | wc | f | co | am | outcome | notes |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | P5 min-distance-ratio | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | dispatch error |
-| 2 | P5 min-distance-ratio | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | dispatch error |
-| 3 | P5 min-distance-ratio | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | dispatch error |
-| 4 | P5 min-distance-ratio | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | dispatch error |
-| 5 | P5 min-distance-ratio | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | dispatch error |
-| 6 | P11 tammes-n50 | a | 1 | x | 0 | 0 | 0 | a:1 | improved | ok |
+| # | problem | start → end | hours | compute | wiki cites | findings+ | concepts+ | author mix | outcome | notes | cites_src |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | P5-min-distance-ratio | none | 0 | none-strategy-only | 0 | 0 | 0 | a:1/h:0/hyb:0 | fanout-no-completion | autonomous_loop inner_attempt — dispatch-failed: optimizer exited with code 1 | 0 |
+| 2 | P5-min-distance-ratio | none | 0 | none-strategy-only | 0 | 0 | 0 | a:1/h:0/hyb:0 | scaffold-no-attempt | autonomous_loop — category=packing; dispatch: no-manifest-entry | 0 |
+| 3 | P5-min-distance-ratio | none | 0 | none-strategy-only | 0 | 0 | 0 | a:1/h:0/hyb:0 | fanout-no-completion | dispatch-failed: optimizer exited with code 1 | 0 |
+| 4 | P5-min-distance-ratio | none | 0 | none-strategy-only | 0 | 0 | 0 | a:1/h:0/hyb:0 | fanout-no-completion | dispatch-failed: code 1 | 0 |
+| 5 | P5-min-distance-ratio | none | 0 | none-strategy-only | 0 | 0 | 0 | a:1/h:0/hyb:0 | fanout-no-completion | dispatch-failed: code 1 | 0 |
+| 6 | P11-tammes-n50 | 0.5 → 0.5 | 0 | local-cpu+llm | 0 | 0 | 0 | a:1/h:0/hyb:0 | converged | reproduced; gap arena#1 (\\|R\\|,\\|A\\|) ~5e-15 | 0 |
 """
 
 
-def test_parse_cycle_outcomes_order():
+def test_parse_cycle_outcomes_left_anchored_on_12_col():
+    # outcome must come from column 9, NOT cells[-2] (which is cites_src/notes
+    # on a 12-column production row) — this is the bug code-review caught.
     outcomes = mon.parse_cycle_outcomes(CYCLE_FIXTURE)
-    assert outcomes[0] == ("P5 min-distance-ratio", "blocked")
-    assert outcomes[-1] == ("P11 tammes-n50", "improved")
+    p, outcome, notes = outcomes[0]
+    assert p == "P5-min-distance-ratio"
+    assert outcome == "fanout-no-completion"
+    assert "dispatch-failed" in notes
+    # last row: 12 cols + embedded pipes in notes; outcome still parses cleanly.
+    assert outcomes[-1][:2] == ("P11-tammes-n50", "converged")
     assert len(outcomes) == 6
 
 
 def test_dispatch_failures_five_in_a_row_alerts():
+    # 5 consecutive P5 cycles with dispatch-failure NOTES markers (outcome is
+    # fanout-no-completion / scaffold-no-attempt, never "blocked").
     outcomes = mon.parse_cycle_outcomes(CYCLE_FIXTURE)
     alerts = mon.check_dispatch_failures(outcomes, threshold=5)
     assert len(alerts) == 1
@@ -115,17 +125,26 @@ def test_dispatch_failures_below_threshold_quiet():
     assert mon.check_dispatch_failures(outcomes, threshold=6) == []
 
 
+def test_converged_is_not_a_dispatch_failure():
+    # A healthy `converged` cycle (the dominant production outcome) must NOT
+    # count as a dispatch failure — else the detector fires on normal operation.
+    assert mon._is_dispatch_failure("converged", "reproduced; gap ~5e-15") is False
+    assert mon._is_dispatch_failure("no-change", "auto-submit-rejected@kill-switch") is False
+    assert mon._is_dispatch_failure("fanout-no-completion", "dispatch-failed: code 1") is True
+    assert mon._is_dispatch_failure("blocked", "anything") is True
+
+
 def test_dispatch_failures_run_broken_by_other_problem():
     text = (
         "| # | problem | s | h | c | wc | f | co | am | outcome | notes |\n"
         "|---|---|---|---|---|---|---|---|---|---|---|\n"
-        "| 1 | P5 x | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | e |\n"
-        "| 2 | P5 x | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | e |\n"
-        "| 3 | P11 y | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | e |\n"
-        "| 4 | P5 x | a | 1 | x | 0 | 0 | 0 | a:1 | blocked | e |\n"
+        "| 1 | P5 x | a | 1 | x | 0 | 0 | 0 | a:1 | fanout-no-completion | dispatch-failed: e |\n"
+        "| 2 | P5 x | a | 1 | x | 0 | 0 | 0 | a:1 | fanout-no-completion | dispatch-failed: e |\n"
+        "| 3 | P11 y | a | 1 | x | 0 | 0 | 0 | a:1 | fanout-no-completion | dispatch-failed: e |\n"
+        "| 4 | P5 x | a | 1 | x | 0 | 0 | 0 | a:1 | fanout-no-completion | dispatch-failed: e |\n"
     )
     outcomes = mon.parse_cycle_outcomes(text)
-    # P5 has 2 then 1 consecutive (interrupted by P11) — never 5 in a row.
+    # P5 has 2 then 1 consecutive (interrupted by P11) — never 3 in a row.
     assert mon.check_dispatch_failures(outcomes, threshold=3) == []
 
 
