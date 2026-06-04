@@ -25,9 +25,9 @@ JSAgent's current attempt set. **This page is a curated view; the source of trut
 | ID | Title | Inventory status | Inventory tier |
 |---|---|---|---|
 | P1 | Erdős Minimum Overlap | #2, frozen | C |
-| P2 | First Autocorrelation | #1, conquered | S |
-| P3 | Second Autocorrelation | #1, conquered | S |
-| P4 | Third Autocorrelation | #1, conquered | S |
+| P2 | First Autocorrelation | #3, displaced (gap −1.84e-7) | S |
+| P3 | Second Autocorrelation | #3, displaced (gap +4.30e-4) | S |
+| P4 | Third Autocorrelation | #2, displaced (gap −2.17e-4) | S |
 | P5 | Min Distance Ratio | #4, frozen | B |
 | P7 | Prime Number Theorem | #1, conquered | A |
 | P9 | Uncertainty Principle | #1 local, hidden | A |
