@@ -66,6 +66,14 @@ class _Spec:
 # Registry — one row per wired problem. problem_id → _Spec.
 # (Wired incrementally across the manifest-coverage-sprint goals.)
 SPECS: dict[int, _Spec] = {
+    1: _Spec(
+        "erdos-overlap",
+        "erdos",
+        "evaluate",
+        None,
+        "scripts/erdos/seeds/best.json",
+        "results/erdos_overlap/verify_seed_result.json",
+    ),
     2: _Spec(
         "first-autocorrelation",
         "first_autocorrelation",

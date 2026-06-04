@@ -17,6 +17,23 @@
 # json_score_payload result files; P3/P10/P12 are deferred pending a clean
 # in-repo seed (see docs/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md).
 
+1:
+  slug: erdos-overlap
+  default: verify_seed
+  optimizers:
+    verify_seed:
+      # Seed == our genuine best basin (0.38087031047814435, n=600), promoted
+      # from the mb v2 backup — ~1.08e-9 BELOW arena #1 (0.3808703105862), so we
+      # are effectively tied-SOTA at the Remez/minimax plateau and the Δ is far
+      # below minImprovement=1e-7 (non-submittable; honest-zero expected). The
+      # heavy Remez-bilinear-minimax + cutting-plane LP search lives in
+      # scripts/erdos/ for record campaigns; this is the rank-current dispatch.
+      script: scripts/verify_seed.py
+      cli_args: ["--problem-id", "1"]
+      timeout_seconds: 120
+      result_file: results/erdos_overlap/verify_seed_result.json
+      result_parser: json_score_payload
+
 14:
   slug: circle-packing-square
   # Default is `slsqp_polish` (strict tol=0). `newton_max` was DROPPED on
