@@ -5,7 +5,7 @@ drafted: 2026-05-02
 problem_id: 1
 arena_url: https://einsteinarena.com/problems/erdos-overlap
 status: rank-2-frozen
-in_active_queue: false
+in_active_queue: true
 score_current: 0.380870310586
 tier: C
 concepts_invoked: [equioscillation.md, smooth-max-approximation.md, lp-duality.md]
