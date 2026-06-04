@@ -2,11 +2,15 @@
 type: question
 author: agent
 drafted: 2026-06-03
-status: open
+status: answered
+answer_finding: ../findings/p7-p13-scoping-required-conditions.md
 asked_by: goal-0-leaderboard-audit
 related_problems: [problem-7, problem-13]
 cites: [mb/logs/leaderboard-audit-2026-06.md]
 ---
+
+> **ANSWERED (2026-06-04, Goal 6):** Both deferred with required conditions. P13 is blocked by the arena proximity guard (≥1e-5 from all entries; our edge is 2e-6) — an arena-policy obstruction, not optimisation. P7 is a real but constrained gap (5.35e-5) needing an LP/feasibility certificate protocol, not a polish. See [p7-p13-scoping-required-conditions.md](../findings/p7-p13-scoping-required-conditions.md).
+
 
 # Do P7 (prime-number-theorem) and P13 (edges-triangles) have reachable headroom our current techniques can close?
 
