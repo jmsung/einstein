@@ -866,11 +866,24 @@ def _call_auto_submit(
         f"triple-verify={verdict}" + (f" [{nums}]" if nums else "") + (f" ({note})" if note else "")
     )
 
+    # Per-problem optimisation direction is REQUIRED for gate 5 to compare our
+    # score against arena #1 in the right direction. Fail closed: if a problem
+    # whose verdict PASSED triple-verify has no known direction, refuse to
+    # submit rather than guess — guessing caused the 2026-06-04 P2 wrong-
+    # direction submission (see findings/dead-end-auto-submit-direction-sign.md).
+    from einstein.auto_submit import PROBLEM_MINIMIZE
+
+    minimize = PROBLEM_MINIMIZE.get(problem.problem_id)
+    if minimize is None and tv_dict.get("passed"):
+        notes_parts.append("auto-submit-skipped@direction-unknown")
+        return None
+
     sub_result = auto_submitter(
         problem.problem_id,
         payload,
         score,
         triple_verify=tv_dict,
+        minimize=bool(minimize),
     )
     if getattr(sub_result, "submitted", False):
         notes_parts.append("auto-submit: SUBMITTED")

@@ -48,6 +48,37 @@ ARENA_API_BASE = "https://einsteinarena.com/api"
 
 KILL_SWITCH_ENV = "EINSTEIN_AUTO_SUBMIT"  # set to "0" to disable
 
+# Per-problem optimisation direction. True = minimise (a LOWER arena score
+# wins), False = maximise (a HIGHER arena score wins). Source: each problem's
+# evaluator docstring (arena-verifier convention). This is the single source of
+# truth gate 5 needs — `try_submit(minimize=...)` is meaningless without it.
+#
+# Why this exists: on 2026-06-04 the autonomous loop submitted a *worse* P2
+# score (1.5028628585992 > arena #1 1.5028609073611, and P2 is minimise) as a
+# "new record" twice, because the caller never passed `minimize`, so gate 5
+# defaulted to maximise. Callers MUST look the direction up here and fail closed
+# when a problem is absent (never guess). See
+# docs/wiki/findings/dead-end-auto-submit-direction-sign.md.
+PROBLEM_MINIMIZE: dict[int, bool] = {
+    1: True,  # erdos-overlap          — "Lower C is better"
+    2: True,  # first-autocorrelation  — "Minimize C(f) = max(f★f)/(∫f)²"
+    3: False,  # second-autocorrelation — "Higher C is better"
+    4: True,  # third-autocorrelation  — max(f★f)/(∫f)², minimise (P2 family)
+    5: True,  # min-distance-ratio     — "Minimizing Max/Min Distance Ratio"
+    7: False,  # prime-number-theorem   — "Higher S is better"
+    9: True,  # uncertainty-principle  — "Minimize a ... uncertainty bound"
+    10: True,  # thomson-n282           — "Lower score is better"
+    11: False,  # tammes-n50             — "maximize min distance"
+    12: True,  # flat-polynomials       — "Lower score is better"
+    13: False,  # edges-triangles        — "higher (less negative) is better"
+    14: False,  # circle-packing-square  — "Maximize Σ r_i"
+    15: False,  # heilbronn-triangles    — "maximize the ... min triangle area"
+    16: False,  # heilbronn-convex       — "maximize the area of the smallest triangle"
+    18: False,  # circles-rectangle      — "maximizing the sum of radii"
+    19: True,  # difference-bases       — "minimizing |B|²/v"
+    22: True,  # kissing-d12            — "Lower score is better"
+}
+
 AUDIT_LOG_HEADER = (
     "| timestamp_utc | problem_id | score | decision | reason | "
     "http_status | arena_id |\n"
@@ -335,8 +366,7 @@ def try_submit(
     return _record(
         submitted=True,
         gate=None,
-        reason=f"new arena record: {score:.14g} beats #1={arena_top1_score:.14g} "
-        f"by {delta:.3g}",
+        reason=f"new arena record: {score:.14g} beats #1={arena_top1_score:.14g} by {delta:.3g}",
         submission=sub,
         arena_top1=arena_top1_score,
     )
