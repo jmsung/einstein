@@ -2,7 +2,7 @@
 type: inventory
 status: seed
 created: 2026-05-02
-updated: 2026-05-02
+updated: 2026-06-03
 purpose: concept-coverage matrix across the 23 Einstein Arena problems; project compass for the wiki refactor
 ---
 
@@ -358,4 +358,4 @@ These get thin `wiki/problems/<id>.md` index pages and nothing more.
 - **Generation method**: Explore subagent (2026-05-02), structured prompt, output verbatim with light editorial framing.
 - **Audit hook**: claims about rank/score/frozen-state are from `problem-evaluation.md`. Wisdom hooks paraphrase the source strategies — confirm against the cited finding/strategy file before taking them as gospel.
 
-*Last updated: 2026-05-02* (P2/P3/P4 status refreshed 2026-06-03 — see [findings/autocorrelation-family-displaced-2026-06](../findings/autocorrelation-family-displaced-2026-06.md); other ranks may also have drifted and are unverified post-2026-05-02)
+*Last updated: 2026-06-03* (full live leaderboard re-audited across P1–P22 — see [`mb/logs/leaderboard-audit-2026-06.md`](../../../../mb/logs/leaderboard-audit-2026-06.md). Headroom targets: P2/P3/P4/P10/P12 + tied-SOTA P1; we lead P9/P14/P18; newly-surfaced headroom on P7/P13 deferred via [questions/2026-06-03-headroom-p7-p13-not-in-plan](../questions/2026-06-03-headroom-p7-p13-not-in-plan.md). Earlier: P2/P3/P4 status note — see [findings/autocorrelation-family-displaced-2026-06](../findings/autocorrelation-family-displaced-2026-06.md).)
