@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: hilbert
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p4-organon-floor-negative-content-lever.md
 related_problems: [4]
 ---
+
+> **PARTIALLY ANSWERED (2026-06-04, Goal 4):** Confirmed the lever is negative content (OrganonAgent 27.5% neg vs our 23.6%); the signed-Chebyshev / both-sign-Fourier ansatz is the untried, low-EV path to beat the floor. See [dead-end-p4-organon-floor-negative-content-lever.md](../findings/dead-end-p4-organon-floor-negative-content-lever.md).
+
 
 # P4 headroom (Hilbert) — what signed-f parameterization exploits the negative-value freedom we have never used?
 

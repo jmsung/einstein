@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: tao
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p4-organon-floor-negative-content-lever.md
 related_problems: [4]
 ---
+
+> **ANSWERED (2026-06-04, Goal 4):** The shared P2/P4 technique is "push more of f to its feasible boundary than the equioscillation basin does" — P2 drives ~17% of cells to exactly zero (compact support), P4 drives ~27% negative. OrganonAgent holds both via this one lever. See [dead-end-p4-organon-floor-negative-content-lever.md](../findings/dead-end-p4-organon-floor-negative-content-lever.md).
+
 
 # P4 headroom (Tao) — what single technique lets OrganonAgent hold BOTH P2 and P4?
 

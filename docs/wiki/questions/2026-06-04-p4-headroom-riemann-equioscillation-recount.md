@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: riemann
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p4-organon-floor-negative-content-lever.md
 related_problems: [4]
 ---
+
+> **ANSWERED (2026-06-04, Goal 4):** Our P4 basin (23.6% negative) is less-negative than OrganonAgent’s (27.5%); both full support n=100k. The gap is negative-content, not equioscillation recount. See [dead-end-p4-organon-floor-negative-content-lever.md](../findings/dead-end-p4-organon-floor-negative-content-lever.md).
+
 
 # P4 headroom (Riemann) — does the OrganonAgent basin re-equioscillate at a different active-position count?
 

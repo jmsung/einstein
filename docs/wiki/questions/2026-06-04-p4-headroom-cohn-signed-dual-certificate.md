@@ -3,9 +3,13 @@ type: question
 author: agent
 asked_by: cohn
 drafted: 2026-06-04
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p4-organon-floor-negative-content-lever.md
 related_problems: [4]
 ---
+
+> **OPEN (noted 2026-06-04, Goal 4):** A signed-f LP/SDP dual certificate would decide whether 1.4523043332 is the continuous infimum (polish/frozen) vs has headroom. Not built this branch; the floor is empirically confirmed (leader basin polishes to itself). See [dead-end-p4-organon-floor-negative-content-lever.md](../findings/dead-end-p4-organon-floor-negative-content-lever.md).
+
 
 # P4 headroom (Cohn) — is there a signed-f LP/SDP dual that lower-bounds C₃ and tells us if 1.4523 is near-optimal?
 
