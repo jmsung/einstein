@@ -85,9 +85,9 @@ are at parity-or-floor under current technique. New records need new
 - **Phase 8 candidate B (research):** construction-search for new basins —
   compact-support-targeting for P2, signed-Chebyshev for P4, 100k-native
   Dinkelbach for P3 — explicitly low-EV; pursue only as a learning exercise.
-- **Phase 8 candidate C (cheap rank points):** the two human-approval submissions
-  this branch surfaced — P10 Wales-seed swap (worse #6 → tied #1) — pending
-  human sign-off (tied-SOTA, not auto-submittable).
+- **Phase 8 candidate C (cheap rank points) — DONE:** the P10 Wales-seed swap
+  (worse #6 → tied #1) was human-approved and submitted (arena id 2321,
+  tied-SOTA, not auto-submittable so it went via the human-approval path).
 
 Recommendation: **A**, then revisit B/C. The campaign's value was wisdom +
 safety, exactly as the repo's "math wisdom, not arena rank" goal intends.

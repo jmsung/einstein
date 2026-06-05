@@ -61,12 +61,14 @@ Wales database plus six independent modern searches have not found a lower one.
 - **Any auto-submittable record.** Beating 37147.2944185 by ≥ minImprovement is
   not achievable; the minimum is found.
 
-## Actionable (human-approval, NOT auto-submit)
-Our *submitted* P10 solution is the worse downgrade basin (37147.5253067, rank
-#6); we hold the Wales seed (37147.294418462) which would move us to tied-#1.
+## Action taken (human-approved tied-SOTA submission)
+Our prior *submitted* P10 solution was the worse downgrade basin (37147.5253067,
+rank #6); we hold the Wales seed (37147.294418462) which moves us to tied-#1.
 This is a **tied-SOTA submission** (ties arena #1, does not strictly beat it), so
-the auto-submit gate correctly will not fire it — it needs human approval per the
-axioms "tied-SOTA floor" non-auto case. Flagged for the human; the seed is in
+the auto-submit gate correctly will NOT fire it — it needs human approval per the
+axioms "tied-SOTA floor" non-auto case. **On explicit human approval (2026-06-04)
+the Wales seed was submitted** (arena id 2321, HTTP 201, status pending at submit
+time; audit row in `mb/logs/auto-submit.md`). The seed is in
 `scripts/thomson/seeds/best.json`.
 
 ## Method note (reusable)
