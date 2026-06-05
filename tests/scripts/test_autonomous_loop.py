@@ -2018,6 +2018,108 @@ def test_call_auto_submit_notifier_failure_is_silent() -> None:
     assert "SUBMITTED" in " ".join(notes)
 
 
+def test_call_auto_submit_passes_minimize_direction() -> None:
+    """Regression for the 2026-06-04 P2 wrong-direction submission: the caller
+    MUST forward each problem's optimisation direction to gate 5. P2 is a
+    minimise problem, so the submitter must receive minimize=True."""
+    from types import SimpleNamespace
+
+    problem = al.Problem(
+        problem_id=2,
+        slug="first-autocorrelation",
+        tier="A",
+        status="rank-3",
+        score_current=1.5028610916080,
+        path=Path("/x"),
+    )
+    seen_kw: list = []
+
+    def fake_submit(problem_id, payload, score, *, triple_verify, **kw):
+        seen_kw.append(kw)
+        return SimpleNamespace(submitted=False, rejected_at_gate="no-improvement")
+
+    def fake_verifier(problem_id, payload):
+        return SimpleNamespace(as_dict=lambda: {"passed": True})
+
+    al._call_auto_submit(
+        problem=problem,
+        score=1.5028610916080,
+        payload={"values": [1.0]},
+        auto_submitter=fake_submit,
+        notes_parts=[],
+        triple_verifier=fake_verifier,
+    )
+    assert seen_kw[0].get("minimize") is True
+
+
+def test_call_auto_submit_passes_maximize_direction() -> None:
+    """P14 (circle-packing) is a maximise problem → submitter gets minimize=False."""
+    from types import SimpleNamespace
+
+    problem = al.Problem(
+        problem_id=14,
+        slug="circle-packing-square",
+        tier="A",
+        status="rank-1",
+        score_current=2.636,
+        path=Path("/x"),
+    )
+    seen_kw: list = []
+
+    def fake_submit(problem_id, payload, score, *, triple_verify, **kw):
+        seen_kw.append(kw)
+        return SimpleNamespace(submitted=False, rejected_at_gate="no-improvement")
+
+    def fake_verifier(problem_id, payload):
+        return SimpleNamespace(as_dict=lambda: {"passed": True})
+
+    al._call_auto_submit(
+        problem=problem,
+        score=2.636,
+        payload={"x": 1},
+        auto_submitter=fake_submit,
+        notes_parts=[],
+        triple_verifier=fake_verifier,
+    )
+    assert seen_kw[0].get("minimize") is False
+
+
+def test_call_auto_submit_unknown_direction_fails_closed() -> None:
+    """A problem that PASSES triple-verify but has no known direction must NOT
+    be submitted — fail closed, never guess the direction."""
+    from types import SimpleNamespace
+
+    problem = al.Problem(
+        problem_id=999,
+        slug="unknown-direction",
+        tier="C",
+        status="x",
+        score_current=1.0,
+        path=Path("/x"),
+    )
+    submit_calls: list = []
+
+    def fake_submit(problem_id, payload, score, *, triple_verify, **kw):
+        submit_calls.append((problem_id, kw))
+        return SimpleNamespace(submitted=True)
+
+    def fake_verifier(problem_id, payload):
+        return SimpleNamespace(as_dict=lambda: {"passed": True})
+
+    notes: list[str] = []
+    outcome = al._call_auto_submit(
+        problem=problem,
+        score=1.0,
+        payload={"x": 1},
+        auto_submitter=fake_submit,
+        notes_parts=notes,
+        triple_verifier=fake_verifier,
+    )
+    assert outcome is None
+    assert submit_calls == []  # submitter never reached
+    assert "auto-submit-skipped@direction-unknown" in " ".join(notes)
+
+
 # ---------------- Goal 8: pre-cycle synthesis hook ----------------
 
 
