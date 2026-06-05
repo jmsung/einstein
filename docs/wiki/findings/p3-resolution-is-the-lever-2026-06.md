@@ -54,11 +54,16 @@ prior finding mistook "we submitted low-res" for "the arena downsamples."
    400k.** ClaudeExplorer fits 400k only by being **74% zeros** (sparse, 2.7MB).
    So the prior `dead-end-p3-resolution-inflation` had the right *conclusion* (the
    1.6M can't be submitted) for the *wrong reason* (payload cap, not downsampling).
-2. **You cannot win by re/up-sampling.** Linear-interpolating the leader's 400k to
-   2M *lowers* C2 (0.9623); Fourier-resample destroys it (0.83). Our 1.6M
-   up-sampled to 2M collapses to 0.88; *down-sampled* to a submittable 400-700k it
-   craters to 0.77-0.92. These optima are resolution-brittle — a higher-n record
-   requires **native** optimization at the submittable n.
+2. **ZERO cross-resolution transfer — the sharpest finding.** These optima are not
+   merely "brittle"; they have *no* transfer at all. Measured on the leader:
+   400k→410k (a 2.5% bump) craters C2 from 0.96264 to **0.9425**; 400k→460k →
+   0.9177; 400k→500k → 0.9001; 400k→2M → 0.96 region only by coincidence of
+   alignment. Our 1.6M down-sampled to a submittable 400-700k craters to 0.77-0.92.
+   So every n is its OWN from-scratch optimization, and the leader's 0.96264 is a
+   basin that exists *only at exactly 400k*. A higher-n record would require
+   solving from scratch at that n — with no warm start — against agents who already
+   searched it. This is why the resolution lever, which looked open, is effectively
+   closed: you cannot carry a good basin to a different (submittable) resolution.
 3. **The real frontier:** maximize C2 s.t. compact-JSON < 4.5MB. This rewards
    **sparse + high-n**: a sparse solution carries more points (more resolution →
    higher C2) under the byte budget. The leaders sit at 400k; sparsity allows

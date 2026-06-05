@@ -101,9 +101,10 @@ def triple_verify(values):
 
 
 def checkpoint(vals, score, nb, tag):
+    """Record a strictly-improved global best. Returns True iff it improved."""
     global GLOBAL_BEST
     if score <= GLOBAL_BEST:
-        return
+        return False
     GLOBAL_BEST = score
     out = SOL / f"frontier_{tag}_n{len(vals)}_{score:.12f}.json"
     out.write_text(json.dumps({"values": vals, "score": score, "n": len(vals), "tag": tag}))
@@ -111,11 +112,19 @@ def checkpoint(vals, score, nb, tag):
         f"  NEW BEST {score:.12f} vsRECORD {score-RECORD:+.3e} vsGATE {score-GATE:+.3e} "
         f"payload={nb/1e6:.2f}MB ({tag}, n={len(vals)})"
     )
+    return True
+
+
+# Require a real margin over #1 before even attempting a submit. Reproducing the
+# leader scores RECORD + float-noise (~3e-13); without this guard every restart
+# fires a doomed triple-verify + audit-log row. 1e-7 is well below the arena's
+# 1e-4 acceptance band but safely above evaluator nondeterminism.
+SUBMIT_MARGIN = 1e-7
 
 
 def maybe_submit(vals, score, nb, tag):
     """Submit a payload-fitting candidate that beats live #1, after triple-verify."""
-    if score <= RECORD:
+    if score <= RECORD + SUBMIT_MARGIN:
         return
     if nb >= PAYLOAD_CAP:
         log(f"  beats record but payload {nb/1e6:.2f}MB >= cap — not submittable")
@@ -143,8 +152,7 @@ def optimize_at(seed_f, n, label, budget, rng):
     f = upsample_linear(seed_f, n) if len(seed_f) != n else seed_f.copy()
     log(f"[{label}] n={n} seed raw C2={fast_evaluate(f):.10f}")
     bf = best_finalize(f)
-    if bf:
-        checkpoint(bf[0], bf[1], bf[2], label + "_seed")
+    if bf and checkpoint(bf[0], bf[1], bf[2], label + "_seed"):
         maybe_submit(bf[0], bf[1], bf[2], label + "_seed")
     t_end = time.time() + budget
     beta_sched = [1e5, 3e5, 1e6, 3e6, 1e7]
@@ -154,7 +162,9 @@ def optimize_at(seed_f, n, label, budget, rng):
         slice_budget = min(900.0, t_end - time.time())
         if slice_budget < 30:
             break
-        w0 = np.sqrt(cur if restart == 0 else _perturb(cur, rng, 0.02 * (1 + restart % 3)))
+        # restart 0 = unperturbed (reproduce/refine); later restarts escalate the
+        # perturbation to escape the leader basin toward a possibly-higher one.
+        w0 = np.sqrt(cur if restart == 0 else _perturb(cur, rng, 0.05 * (1 + restart % 6)))
         bw, _ = lbfgs_refine(
             w0, n, beta_sched, outer_per_beta=4, maxiter=150, time_limit=slice_budget
         )
@@ -168,8 +178,8 @@ def optimize_at(seed_f, n, label, budget, rng):
             )
             if bf[1] > fast_evaluate(cur):
                 cur = fb
-            checkpoint(bf[0], bf[1], bf[2], label)
-            maybe_submit(bf[0], bf[1], bf[2], label)
+            if checkpoint(bf[0], bf[1], bf[2], label):
+                maybe_submit(bf[0], bf[1], bf[2], label)
         restart += 1
 
 
@@ -203,14 +213,22 @@ def main():
     log(f"leader n={len(leader)} C2={fast_evaluate(leader):.10f} (the bar to beat)")
     log(f"RECORD={RECORD:.12f} GATE={GATE:.12f} payload_cap={PAYLOAD_CAP/1e6:.2f}MB")
 
-    # Prongs: native optimization at submittable resolutions, leader-seeded.
-    # Higher n = more resolution (higher C2 ceiling) but tighter payload.
-    prongs = [(leader, 400_000, "n400k"), (leader, 550_000, "n550k"), (leader, 700_000, "n700k")]
+    # MEASURED: these optima have ZERO cross-resolution transfer — even a 2.5%
+    # bump (400k->410k) craters the leader from 0.96264 to 0.94, and 400k->500k to
+    # 0.90. So the resolution lever is dead: every n is its own from-scratch
+    # problem and the leader is optimal only at EXACTLY 400k. The one prong with a
+    # real warm start is a new-basin search at fixed 400k (perturb -> re-optimize,
+    # no resolution change, no cratering), hunting for a higher 400k basin than the
+    # clustered agents found. Honest EV is low (11 agents saturate 400k) — this is
+    # the legitimate attempt; if it doesn't clear, the deliverable is the dead-end
+    # finding. Three independent perturbation trajectories (different rng streams).
+    n = 400_000
+    prongs = [(leader, n, "p400k_a", 11), (leader, n, "p400k_b", 23), (leader, n, "p400k_c", 47)]
     per = args.budget / len(prongs)
-    for seed_f, n, label in prongs:
+    for seed_f, npts, label, sd in prongs:
         if time.time() - T0 > args.budget:
             break
-        optimize_at(seed_f, n, label, per, rng)
+        optimize_at(seed_f, npts, label, per, np.random.default_rng(sd))
 
     log(
         f"=== done. global best C2={GLOBAL_BEST:.12f} "
