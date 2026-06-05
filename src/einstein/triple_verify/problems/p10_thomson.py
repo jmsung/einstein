@@ -17,6 +17,13 @@ the third check is high-precision arithmetic per the triple-verify fallback.
 A Riemannian-gradient KKT stationarity check (the seed is a genuine critical
 point of the constrained energy) lives in tests/thomson/test_triple_verify.py
 as a structural cross-check.
+
+OPTIMALITY CERTIFICATE (companion, not part of the score agreement): the three
+checks above verify the *energy value*; whether the config is a strict local
+*minimum* is certified separately by the projected-Hessian floor test in
+``einstein.thomson.hessian_certificate.certify_local_min`` (λ_min gap ≈3.41, 3
+rotational zero modes, 0 negative modes). See
+docs/wiki/findings/p10-wales-global-min-hessian-certificate.md.
 """
 
 from __future__ import annotations

@@ -1,34 +1,42 @@
-"""P12 — flat polynomials. Three-way verify of max|p(z)|/√71 over the unit circle.
+"""P12 — flat polynomials. Three-way verify of the CONTINUOUS sup of |p(z)|/√71.
 
-Score = max_k |p(z_k)| / √71 for z_k the N=1e6 N-th roots of unity, p the ±1
-coefficient polynomial (descending degree), lower better. Three routes:
+Score = sup_{|z|=1} |p(z)| / √71, p the ±1 coefficient polynomial (descending
+degree), lower better. Reconciled 2026-06-04 (Phase 7, Goal 2) to certify the
+grid-INDEPENDENT continuous supremum rather than the arena's 1e6-point grid max.
 
-  fast  — ``compute_score``  (np.poly1d Horner eval on the 1M grid — the arena
-          evaluator path)
-  exact — np.fft.fft of the coefficients at the same 1M roots of unity (a
-          different algorithm reaching the identical point set; agrees ~2e-16)
-  cross — mpmath dps=40 evaluation of |p| at the float64 argmax grid point (a
-          different *kind*: arbitrary precision pins the peak; agrees ~4e-16)
+Why the change: the arena score is a grid maximum, which underestimates the true
+sup because the peak rarely lands on a node. That grid-vs-continuum gap is the
+~7e-10 local↔arena drift (docs/wiki/findings/dead-end-p12-grid-sampling-drift.md
+and its resolution finding/p12-grid-drift-resolution.md). Verifying the grid
+quantity made the three checks agree on a number that *isn't* what the arena
+reports. The continuous sup is drift-free: g(θ)=|p(e^{iθ})|² is an exact degree
+n-1 trig polynomial, so peaks Newton-refine to machine precision, and all three
+routes agree to ~2e-16. The 1e6 grid remains a fast pre-filter (see
+`compute_score`), not the authoritative score.
 
-NOTE — local↔arena grid-sampling drift: the score is a *grid maximum*, not the
-continuous sup. A denser/shifted grid (4e6 points) gives ~1.28093205285 and the
-arena reports 1.2809320527988 for these same coefficients, while our 1M grid
-gives 1.2809320520721 — a ~7e-10 drift documented in
-docs/wiki/findings/dead-end-p12-grid-sampling-drift.md. The three checks here
-verify the evaluator computes *its defined 1M-grid quantity* correctly; the
-drift is a separate (real) caveat any submission claim must reconcile.
+Three routes (all target the continuous sup):
+
+  fast  — FFT(2²⁰)-seeded float64 Newton on g=|p|² (``continuous_sup_score``)
+  exact — denser FFT(2²²) seeding + more candidate peaks (different params/path;
+          catches a peak the coarser seeding might miss)
+  cross — mpmath dps=50 Newton refinement (a different *kind*: arbitrary
+          precision pins the peak independent of float64 rounding)
+
+For the SOTA seed: 1M grid 1.2809320520721, arena 1.2809320527988, certified
+continuous sup 1.2809320528750 — both grids sit below the true sup, all gaps
+< minImprovement (1e-8). SAFE submission rule (see resolution finding): compare a
+candidate's continuous sup against arena #1's reported grid score — since grid ≤
+continuum always, a continuous sup below the arena grid value is a genuine
+improvement on the arena's own metric and never over-claims.
 """
 
 from __future__ import annotations
 
-import mpmath as mp
 import numpy as np
 
-from einstein.flat_poly.evaluator import NORM, compute_score
+from einstein.flat_poly.evaluator import continuous_sup_score, continuous_sup_score_mpmath
 
 from ..core import Tolerance, register
-
-_N = 1_000_000
 
 
 def _coeffs(seed: dict) -> np.ndarray:
@@ -40,31 +48,22 @@ def _coeffs(seed: dict) -> np.ndarray:
 
 def _fast(seed: dict) -> float:
     _coeffs(seed)  # enforce the arena contract before scoring
-    return float(compute_score(seed["coefficients"]))
+    return continuous_sup_score(seed["coefficients"])
 
 
 def _exact(seed: dict) -> float:
-    """FFT of the ascending-power coeffs at the N-th roots of unity — a
-    different algorithm reaching the same grid as np.poly1d."""
-    desc = _coeffs(seed)
-    asc = desc[::-1]  # a[j] = coeff of z^j
-    vals = np.fft.fft(asc, n=_N)  # |FFT|_k = |p(z_k)| on the same point set
-    return float(np.max(np.abs(vals)) / NORM)
+    """Denser FFT seeding + more peaks — independent of the fast path's grid."""
+    _coeffs(seed)
+    return continuous_sup_score(seed["coefficients"], m_grid=1 << 22, k_peaks=512)
 
 
-def _cross(seed: dict, dps: int = 40) -> float:
-    """mpmath |p| at the float64 argmax grid point (arbitrary precision)."""
-    desc = _coeffs(seed)
-    z = np.exp(2j * np.pi * np.arange(_N) / _N)
-    k = int(np.argmax(np.abs(np.poly1d(desc)(z))))
-    mp.mp.dps = dps
-    zk = mp.e ** (2j * mp.pi * mp.mpf(k) / _N)
-    deg = len(desc) - 1
-    pz = mp.fsum(mp.mpf(int(c)) * zk ** (deg - i) for i, c in enumerate(desc))
-    return float(abs(pz) / mp.sqrt(71))
+def _cross(seed: dict) -> float:
+    """Arbitrary-precision continuous sup — a different kind of evidence."""
+    _coeffs(seed)
+    return continuous_sup_score_mpmath(seed["coefficients"])
 
 
-# SOTA seed: fast/fft/mpmath agree to <1e-15 on the 1M-grid max (1.28093205207).
+# SOTA seed: all three certify the continuous sup 1.2809320528750 to ~2e-16.
 register(
     12,
     fast=_fast,
