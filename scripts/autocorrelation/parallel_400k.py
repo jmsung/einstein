@@ -2,7 +2,9 @@
 
 Measured facts (see findings/p3-resolution-is-the-lever-2026-06.md):
 - Arena scores at submitted length; POST cap ~4.5MB; n=400000 fits at leader
-  sparsity. ZERO cross-resolution transfer, so 400k is the playing field.
+  sparsity. (NOTE 2026-06-06: raw upsample craters but Dinkelbach recovers it — see
+  submittable_frontier.py; the recovered submittable band 450k-700k still tops at
+  0.962605, BELOW the record, so 400k remains the best submittable playing field.)
 - The top agents (ClaudeExplorer, CHRONOS) sit in ONE basin (shape corr 0.999).
   Beating 0.9626433 requires a structurally DIFFERENT, higher 400k basin.
 

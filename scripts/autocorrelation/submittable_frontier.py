@@ -224,7 +224,8 @@ def main():
     # lever is cross-resolution transfer to the PAYLOAD FRONTIER: upsample leader to
     # the largest submittable n (4.5MB cap fits ~700-800k at leader sparsity) then a
     # long Dinkelbach polish. Expected ~0.96267-0.96270 (between 400k and 1.6M),
-    # above the record AND under the cap. Three submittable high-res prongs.
+    # above the record AND under the cap. Six submittable-band prongs (450k-700k).
+    # RESULT 2026-06-06: band tops at 0.962605 (-3.8e-5), below the record.
     prongs = [
         (leader, 450_000, "x450k", 11),
         (leader, 500_000, "x500k", 23),

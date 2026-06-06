@@ -72,6 +72,14 @@ prior finding mistook "we submitted low-res" for "the arena downsamples."
    0.9626433 takes #1. The arena `minImprovement`=1e-4 appears NOT to be a
    cross-agent acceptance gate (else CHRONOS couldn't sit 2.4e-6 from #1).
 
+> **EV CLOSED (2026-06-06):** the "submittable ~700k" lever below was tested and
+> resolved NEGATIVE. A 6-way cross-resolution-transfer sweep (450k–700k, long
+> Dinkelbach) tops at **0.962605, −3.8e-5 below the record**; the leader's native
+> 400k beats the transfer at every submittable n. See
+> `p3-constant-literature-frontier-2026-06.md` → "Decisive payload-frontier sweep".
+> The campaign closed as honest-zero. The section below is the *pre-sweep* framing,
+> kept for the reasoning trail.
+
 ## What this rules in / out
 - **RULES IN:** native optimization at the *submittable* resolution (n≈550-700k,
   sparse, under the 4.5MB cap) as the live record lever. The leaders stopped at

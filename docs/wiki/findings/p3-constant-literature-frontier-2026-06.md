@@ -74,7 +74,7 @@ inequality constant** — an actively-researched open problem. The frontier:
      if higher, a chase is justified. But a *rigorous* `sup R < 1` is an open problem;
      only a non-rigorous numerical estimate is realistically buildable.
   2. Number-theoretic construction-driven seeds (Sidon/Beatty/modular) — ~10% odds
-     of a distinct higher basin (`dead-end-p3-jaech-cascade` residue path 1).
+     of a distinct higher basin (`dead-end-p3-jaech-cascade-extended` residue path 1).
 
 ## Decisive payload-frontier sweep (2026-06-06)
 Cross-resolution transfer (upsample leader + long Dinkelbach — the method that made
