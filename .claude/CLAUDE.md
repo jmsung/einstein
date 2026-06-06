@@ -24,6 +24,7 @@ Math wisdom is the goal — not arena rank. Submission is verification only. No 
 │   ├── math-solving-protocol.md    (always loads)
 │   ├── council-dispatch.md         (always loads)
 │   ├── self-improvement-loop.md    (always loads)
+│   ├── wall-hit-escalation.md      (always loads)
 │   ├── ask-the-question-first.md   (always loads)
 │   ├── triple-verify.md            (always loads)
 │   ├── failure-is-a-finding.md     (always loads)
