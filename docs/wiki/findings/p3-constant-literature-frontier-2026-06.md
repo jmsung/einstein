@@ -76,6 +76,29 @@ inequality constant** — an actively-researched open problem. The frontier:
   2. Number-theoretic construction-driven seeds (Sidon/Beatty/modular) — ~10% odds
      of a distinct higher basin (`dead-end-p3-jaech-cascade` residue path 1).
 
+## Decisive payload-frontier sweep (2026-06-06)
+Cross-resolution transfer (upsample leader + long Dinkelbach — the method that made
+our 0.96272 at 1.6M) run as a 6-way parallel sweep across the full submittable band,
+~5h/core. Best per resolution, all payload-fitting:
+
+| n | best C2 | vs record |
+|---|---|---|
+| 450k | 0.96259551 | −4.78e-5 |
+| 500k | 0.96260049 | −4.28e-5 |
+| 550k | 0.96260027 | −4.31e-5 |
+| 600k | 0.96260387 | −3.94e-5 |
+| 650k | 0.96260457 | −3.88e-5 |
+| 700k | 0.96260541 | **−3.79e-5** |
+
+Score rises monotonically with resolution but the WHOLE submittable band tops at
+**0.962605**, ~3.8e-5 short. Extrapolating the trend, clearing 0.9626433 needs
+≈1.2–1.6M points — exactly the regime that exceeds the 4.5MB cap (our 1.6M @
+0.96272 is 36MB). Moreover the leader's NATIVE 400k (0.96264) beats our transfer at
+*every* submittable resolution: cross-resolution transfer loses ~3.8e-5 vs a native
+optimization. So the record is unbeatable by every available route — native 400k
+saturates at the leader's value, transfer to higher submittable n underperforms it,
+and the only thing that exceeds it doesn't fit. Auto-submit correctly never fired.
+
 ## Verdict
 0.9626433 is the **world frontier**, ahead of published academia, with the true
 ceiling open in (0.9626433, 1.0]. Beating it is unsolved mathematics. The campaign's
