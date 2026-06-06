@@ -19,27 +19,28 @@ from pathlib import Path
 
 import numpy as np
 
-from einstein.third_autocorrelation.optimizer import signed_descent, upsample
+from einstein.third_autocorrelation.optimizer import arena_c, signed_descent, upsample
 
-LEADER = Path(
-    ".mb/problems/4-third-autocorrelation/solutions/sol-organon-rank1-p4-1.4523043332.json"
+ANCHOR_N400 = Path(
+    ".mb/problems/4-third-autocorrelation/solutions/rank01_DarwinAgent8427_n400.json"
 )
 LEADER_C = 1.4523043331832
 TARGET = LEADER_C - 1e-4  # 1.4522043... — the real arena record threshold
 LEVELS = [800, 1600, 3200, 6400, 12800, 25600, 51200, 100000]
 OUT = Path("results/problem-4-third-autocorrelation")
-N_RUNS = 20
-# per-level noise scale (fraction of std) is sampled from this set each level;
-# larger noise lets a run jump to a different branch instead of refining in place.
-NOISE_CHOICES = [1e-6, 1e-5, 1e-4, 3e-4, 1e-3, 3e-3]
+N_RUNS = 12
+# TINY per-level noise only. The proven recipe stays in-basin (1e-6) and unlocks
+# DoF; larger noise kicks to worse basins (a branch with ≤3e-4 → 1.4533, neg
+# 20%). Branch diversity comes from the SEED of the tiny noise — the same anchor
+# gave leader 1.45230 and ours 1.45250, so tiny-noise escape is seed-sensitive.
+NOISE_CHOICES = [1e-6, 3e-6, 1e-5]
 
 
 def betas_for(n: int) -> list[float]:
+    # full cascade at every level; →1e10 at the final n (proven recipe strength)
     if n >= 100000:
-        return [1e5, 3e5, 1e6, 3e6, 1e7, 3e7, 1e8, 3e8, 1e9, 1e10]
-    if n >= 12800:
-        return [1e4, 1e5, 1e6, 1e7, 1e8]
-    return [1e4, 3e4, 1e5, 1e6, 1e7]
+        return [1e4, 3e4, 1e5, 3e5, 1e6, 3e6, 1e7, 3e7, 1e8, 3e8, 1e9, 1e10]
+    return [1e4, 3e4, 1e5, 3e5, 1e6, 3e6, 1e7, 3e7]
 
 
 def block_repeat(v: np.ndarray, n: int) -> np.ndarray:
@@ -50,12 +51,9 @@ def block_repeat(v: np.ndarray, n: int) -> np.ndarray:
 
 
 def make_anchor() -> np.ndarray:
-    """Shared n=400 anchor: leader downsampled to 400 then polished (~1.45404)."""
-    lead = np.array(json.load(open(LEADER))["values"], float)
-    blk = len(lead) // 400
-    seed = lead[: blk * 400].reshape(400, blk).mean(axis=1)
-    v, c = signed_descent(seed, [1e4, 1e5, 1e6, 1e7, 1e8], 800, 0.8, 0.0, 0.0)
-    print(f"anchor n=400: C={c:.10f}", flush=True)
+    """Shared n=400 anchor: the true arena n=400 SOTA tie (C=1.45403793, neg 20.2%)."""
+    v = np.array(json.load(open(ANCHOR_N400))["values"], float)
+    print(f"anchor n=400 (SOTA): C={arena_c(v):.10f}", flush=True)
     return v
 
 
@@ -67,7 +65,7 @@ def run_branch(anchor: np.ndarray, seed: int) -> tuple[np.ndarray, float, list]:
         v = block_repeat(v, n)
         scale = float(rng.choice(NOISE_CHOICES))
         v = v + rng.normal(scale=scale * v.std(), size=n)
-        v, c = signed_descent(v, betas_for(n), 600 if n < 100000 else 900, 0.8, 0.0, 0.0)
+        v, c = signed_descent(v, betas_for(n), 1000 if n < 100000 else 1500, 0.8, 0.0, 0.0)
         trace.append({"n": n, "scale": scale, "C": c})
     return v, c, trace
 
