@@ -28,6 +28,26 @@ from einstein.third_autocorrelation.optimizer import arena_c, signed_descent, up
 LEADER_C = 1.4523043331832
 TARGET = LEADER_C - 1e-4  # 1.4522043...
 LEVELS = [800, 1600, 3200, 6400, 12800, 25600, 51200, 100000]
+# finer cascade (≈×√2 steps): more gradual DoF unlocking → more chances for the
+# polish to build beneficial sign fragmentation (the leader's lever).
+LEVELS_FINE = [
+    566,
+    800,
+    1131,
+    1600,
+    2263,
+    3200,
+    4525,
+    6400,
+    9051,
+    12800,
+    18102,
+    25600,
+    36204,
+    51200,
+    72408,
+    100000,
+]
 
 
 def load_seed(path: str) -> np.ndarray:
@@ -57,19 +77,20 @@ def triple_verify(f: np.ndarray) -> dict:
     m = 2 * n - 1
     F = np.fft.rfft(f, n=1 << (m - 1).bit_length())
     c3 = abs((np.fft.irfft(F * F)[:m] * dx).max()) / (f.sum() * dx) ** 2
+    spread = float(max(c1, c2, c3) - min(c1, c2, c3))
     return {
-        "c_arena": c1,
-        "c_scipy": c2,
-        "c_rfft": c3,
-        "spread": max(c1, c2, c3) - min(c1, c2, c3),
-        "passed": (max(c1, c2, c3) - min(c1, c2, c3)) < 1e-9,
+        "c_arena": float(c1),
+        "c_scipy": float(c2),
+        "c_rfft": float(c3),
+        "spread": spread,
+        "passed": bool(spread < 1e-9),
     }
 
 
-def escape(seed: np.ndarray, n_seeds: int, iters_mid: int, iters_top: int, base_seed: int):
+def escape(seed, n_seeds, iters_mid, iters_top, base_seed, levels=LEVELS):
     v = seed.copy()
     start_n = len(v)
-    for n in LEVELS:
+    for n in levels:
         if n <= start_n:
             continue
         vup = block_repeat(v, n)
@@ -95,6 +116,7 @@ def main():
     p.add_argument("--iters-mid", type=int, default=1500)
     p.add_argument("--iters-top", type=int, default=2000)
     p.add_argument("--base-seed", type=int, default=0)
+    p.add_argument("--fine", action="store_true", help="use the finer ≈×√2 level cascade")
     args = p.parse_args()
 
     seed = load_seed(args.seed)
@@ -103,7 +125,8 @@ def main():
         flush=True,
     )
     t0 = time.time()
-    v, c = escape(seed, args.seeds, args.iters_mid, args.iters_top, args.base_seed)
+    levels = LEVELS_FINE if args.fine else LEVELS
+    v, c = escape(seed, args.seeds, args.iters_mid, args.iters_top, args.base_seed, levels)
     tv = triple_verify(v)
     print(f"\nESCAPED n=100000: C={c:.13f}  ({time.time() - t0:.0f}s)")
     print(
