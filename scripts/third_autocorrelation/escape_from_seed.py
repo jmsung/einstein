@@ -87,7 +87,14 @@ def triple_verify(f: np.ndarray) -> dict:
     }
 
 
-def escape(seed, n_seeds, iters_mid, iters_top, base_seed, levels=LEVELS):
+# noise scales swept per intermediate level in --greedy mode. The right noise is
+# what lets BENEFICIAL sign fragmentation form during the escape (1e-6 locks into
+# our low-neg basin); too-large noise destroys structure. Greedy-keep-best per
+# level explores the fragmentation-building path the leader found.
+NOISE_SCALES = [1e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3]
+
+
+def escape(seed, n_seeds, iters_mid, iters_top, base_seed, levels=LEVELS, greedy=False):
     v = seed.copy()
     start_n = len(v)
     for n in levels:
@@ -97,14 +104,19 @@ def escape(seed, n_seeds, iters_mid, iters_top, base_seed, levels=LEVELS):
         best_v, best_c = None, float("inf")
         sigma = vup.std()
         iters = iters_top if n >= 100000 else iters_mid
-        for s in range(n_seeds):
-            rng = np.random.default_rng(base_seed + 1000 * int(np.log2(n)) + s)
-            init = vup + rng.normal(scale=1e-6 * sigma, size=n)
-            cand_v, cand_c = signed_descent(init, betas_for(n), iters, 0.8, 0.0, 0.0)
-            if cand_c < best_c:
-                best_v, best_c = cand_v, cand_c
+        # greedy: sweep noise scales at intermediate levels (basin selection);
+        # at the top level just refine from the single best-scale init.
+        scales = NOISE_SCALES if (greedy and n < 100000) else [1e-6]
+        for scale in scales:
+            for s in range(n_seeds):
+                rng = np.random.default_rng(base_seed + 1000 * int(np.log2(n)) + 7 * s)
+                init = vup + rng.normal(scale=scale * sigma, size=n)
+                cand_v, cand_c = signed_descent(init, betas_for(n), iters, 0.8, 0.0, 0.0)
+                if cand_c < best_c:
+                    best_v, best_c, best_scale = cand_v, cand_c, scale
         v = best_v
-        print(f"  n={n:6d}: C={best_c:.13f}  neg={(v < 0).mean() * 100:.1f}%", flush=True)
+        tag = f" scale={best_scale:.0e}" if greedy and n < 100000 else ""
+        print(f"  n={n:6d}: C={best_c:.13f}  neg={(v < 0).mean() * 100:.1f}%{tag}", flush=True)
     return v, arena_c(v)
 
 
@@ -117,6 +129,7 @@ def main():
     p.add_argument("--iters-top", type=int, default=2000)
     p.add_argument("--base-seed", type=int, default=0)
     p.add_argument("--fine", action="store_true", help="use the finer ≈×√2 level cascade")
+    p.add_argument("--greedy", action="store_true", help="sweep noise scales per level, keep best")
     args = p.parse_args()
 
     seed = load_seed(args.seed)
@@ -126,7 +139,9 @@ def main():
     )
     t0 = time.time()
     levels = LEVELS_FINE if args.fine else LEVELS
-    v, c = escape(seed, args.seeds, args.iters_mid, args.iters_top, args.base_seed, levels)
+    v, c = escape(
+        seed, args.seeds, args.iters_mid, args.iters_top, args.base_seed, levels, args.greedy
+    )
     tv = triple_verify(v)
     print(f"\nESCAPED n=100000: C={c:.13f}  ({time.time() - t0:.0f}s)")
     print(
