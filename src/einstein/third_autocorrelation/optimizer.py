@@ -219,6 +219,50 @@ def signed_descent(init_v, betas, iters, lr, neg_target, neg_base):
 # --------------------------------------------------------------------------- #
 
 
+def frozen_sign_descent(s, v_init, betas, iters, lr=0.8):
+    """Optimise magnitudes with the sign pattern FROZEN: f = s ⊙ v².
+
+    Council consensus (Tao/Hilbert/Hadamard): continuous descent can't cross
+    sign-change barriers, so it's trapped in its starting sign topology. By
+    fixing the sign field ``s`` (∈ {−1,+1}^n, an IMPOSED fragmentation pattern)
+    and optimising only the nonneg magnitudes ``v²``, the optimiser walks into
+    the basin of that sign topology — including high-fragmentation basins that
+    free descent never selects. Returns ``(f_best, C_best)``.
+    """
+    s_t = torch.tensor(np.asarray(s, dtype=np.float64))
+    v = torch.tensor(np.abs(np.asarray(v_init, dtype=np.float64)) + 1e-6, requires_grad=True)
+    best_c, best_f = float("inf"), None
+    for beta in betas:
+        opt = torch.optim.LBFGS(
+            [v],
+            lr=lr,
+            max_iter=iters,
+            tolerance_grad=1e-14,
+            tolerance_change=1e-16,
+            history_size=100,
+            line_search_fn="strong_wolfe",
+        )
+
+        def closure():
+            opt.zero_grad()
+            f = s_t * v**2
+            n = f.shape[-1]
+            dx = 0.5 / n
+            conv = autoconv_fft(f) * dx
+            loss = smooth_max(conv, beta) / ((f.sum() * dx) ** 2)
+            loss.backward()
+            return loss
+
+        opt.step(closure)
+        f_np = (s_t * v.detach() ** 2).cpu().numpy()
+        if f_np.sum() < 0:
+            f_np = -f_np
+        c = arena_c(f_np)
+        if c < best_c:
+            best_c, best_f = c, f_np.copy()
+    return best_f, best_c
+
+
 def _conv_matrix(f: np.ndarray) -> np.ndarray:
     """Dense (2n-1)×n Toeplitz matrix A with (A g)[k] = (f★g)[k] = Σ_i f[i] g[k-i]."""
     n = len(f)
