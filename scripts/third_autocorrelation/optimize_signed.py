@@ -29,14 +29,12 @@ import time
 from pathlib import Path
 
 import numpy as np
-import torch
 
 from einstein.third_autocorrelation.optimizer import (
     both_sign_fourier_init,
-    exact_score,
     load_warmstart,
     lowpass_envelope,
-    surrogate_with_neg,
+    signed_descent,
     upsample,
 )
 
@@ -45,8 +43,16 @@ LEADER = MB / "sol-organon-rank1-p4-1.4523043332.json"
 OURS = MB / "solution-feat-third-autocorrelation-1.4525211550469.json"
 
 
-def make_init(mode: str, n: int, neg_bias: float, env_keep: int, rng) -> np.ndarray:
-    """Build a fresh signed initial condition per the chosen mode."""
+def make_init(
+    mode: str, n: int, neg_bias: float, env_keep: int, detail_scale: float, rng
+) -> np.ndarray:
+    """Build a fresh signed initial condition per the chosen mode.
+
+    ``detail_scale`` (frag modes only) sizes the high-frequency perturbation as a
+    fraction of the envelope's typical magnitude. Small (≈0.03) keeps the start
+    near the reference basin so the cascade can descend; large destroys the
+    envelope. ``neg_bias`` controls only the cold Fourier ansatz.
+    """
     if mode == "fourier-cold":
         return both_sign_fourier_init(n, n_modes=max(20, n // 200), neg_bias=neg_bias, rng=rng)
     ref = LEADER if mode == "leader-frag" else OURS
@@ -54,46 +60,9 @@ def make_init(mode: str, n: int, neg_bias: float, env_keep: int, rng) -> np.ndar
     if len(v) != n:
         v = upsample(v, n)
     env = lowpass_envelope(v, keep=env_keep)
-    # Fresh high-frequency signed perturbation on the shared envelope.
-    detail = rng.normal(scale=neg_bias * np.abs(env).mean(), size=n)
+    # Fresh small high-frequency signed perturbation on the shared envelope.
+    detail = rng.normal(scale=detail_scale * np.abs(env).mean(), size=n)
     return env + detail
-
-
-def neg_weight_schedule(stage: int, n_stages: int, base: float) -> float:
-    """Linear anneal of the negative-content nudge to 0 over the cascade."""
-    if base <= 0.0:
-        return 0.0
-    return base * max(0.0, 1.0 - stage / max(1, n_stages - 1))
-
-
-def run_one(n, init_v, betas, iters, lr, neg_target, neg_base):
-    f = torch.tensor(init_v.copy(), dtype=torch.float64, requires_grad=True)
-    best_c = exact_score(f)
-    best_v = f.detach().cpu().numpy().copy()
-    for stage, beta in enumerate(betas):
-        nw = neg_weight_schedule(stage, len(betas), neg_base)
-        opt = torch.optim.LBFGS(
-            [f],
-            lr=lr,
-            max_iter=iters,
-            tolerance_grad=1e-14,
-            tolerance_change=1e-16,
-            history_size=100,
-            line_search_fn="strong_wolfe",
-        )
-
-        def closure():
-            opt.zero_grad()
-            loss = surrogate_with_neg(f, beta, fft=True, neg_target=neg_target, neg_weight=nw)
-            loss.backward()
-            return loss
-
-        opt.step(closure)
-        c = exact_score(f)
-        if c < best_c:
-            best_c = c
-            best_v = f.detach().cpu().numpy().copy()
-    return best_v, best_c
 
 
 def optimize(args):
@@ -102,9 +71,9 @@ def optimize(args):
     best_v = None
     for r in range(args.restarts):
         rng = np.random.default_rng(args.seed + r)
-        init_v = make_init(args.init, args.n, args.neg_bias, args.env_keep, rng)
+        init_v = make_init(args.init, args.n, args.neg_bias, args.env_keep, args.detail_scale, rng)
         t0 = time.time()
-        v, c = run_one(args.n, init_v, betas, args.iters, args.lr, args.neg_target, args.neg_weight)
+        v, c = signed_descent(init_v, betas, args.iters, args.lr, args.neg_target, args.neg_weight)
         frac = float((v < 0).mean())
         print(
             f"  restart {r:2d}: C={c:.13f}  neg={frac * 100:5.2f}%  ({time.time() - t0:.1f}s)",
@@ -128,8 +97,11 @@ def main():
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--neg-target", type=float, default=0.30, help="Target negative fraction")
     p.add_argument("--neg-weight", type=float, default=2.0, help="Nudge weight (anneals to 0)")
-    p.add_argument("--neg-bias", type=float, default=0.4, help="Init negative bias / detail scale")
-    p.add_argument("--env-keep", type=int, default=64, help="rFFT modes kept for the envelope")
+    p.add_argument("--neg-bias", type=float, default=0.4, help="Cold-Fourier negative bias")
+    p.add_argument("--env-keep", type=int, default=2048, help="rFFT modes kept for the envelope")
+    p.add_argument(
+        "--detail-scale", type=float, default=0.03, help="Frag perturbation size (frac of envelope)"
+    )
     p.add_argument("--out", type=Path, default=None)
     args = p.parse_args()
 

@@ -153,3 +153,46 @@ def surrogate_with_neg(
     frac = soft_neg_fraction(f, neg_sharpness)
     deficit = torch.relu(torch.as_tensor(neg_target, dtype=f.dtype) - frac)
     return base + neg_weight * deficit**2
+
+
+def neg_weight_schedule(stage: int, n_stages: int, base: float) -> float:
+    """Linear anneal of the negative-content nudge to 0 over the β-cascade."""
+    if base <= 0.0:
+        return 0.0
+    return base * max(0.0, 1.0 - stage / max(1, n_stages - 1))
+
+
+def signed_descent(init_v, betas, iters, lr, neg_target, neg_base):
+    """Run the smooth-max L-BFGS β-cascade on a signed init.
+
+    The negative-content nudge weight anneals to 0 across the cascade so the
+    final stages optimise the true arena objective. Returns ``(best_v, best_C)``
+    where best is the lowest arena-exact C seen across all stages.
+    """
+    f = torch.tensor(np.asarray(init_v, dtype=np.float64).copy(), requires_grad=True)
+    best_c = exact_score(f)
+    best_v = f.detach().cpu().numpy().copy()
+    for stage, beta in enumerate(betas):
+        nw = neg_weight_schedule(stage, len(betas), neg_base)
+        opt = torch.optim.LBFGS(
+            [f],
+            lr=lr,
+            max_iter=iters,
+            tolerance_grad=1e-14,
+            tolerance_change=1e-16,
+            history_size=100,
+            line_search_fn="strong_wolfe",
+        )
+
+        def closure():
+            opt.zero_grad()
+            loss = surrogate_with_neg(f, beta, fft=True, neg_target=neg_target, neg_weight=nw)
+            loss.backward()
+            return loss
+
+        opt.step(closure)
+        c = exact_score(f)
+        if c < best_c:
+            best_c = c
+            best_v = f.detach().cpu().numpy().copy()
+    return best_v, best_c
