@@ -2,10 +2,11 @@
 type: technique
 author: agent
 drafted: 2026-05-02
-status: draft-skeleton
+status: tried-trivial-result
+result: "Executed 2026-06-05 — tractable relaxations (Toeplitz–Carathéodory diagonal, Lasserre L2, T≤16) do NOT beat the trivial S*≤1. See findings/dead-end-p3-sdp-upper-bound-trivial.md."
 related_problems: [P3]
 related_concepts: [autocorrelation-inequality.md, lp-duality.md]
-related_findings: [p3-closed-form-baseline-landscape.md, dead-end-p3-jaech-cascade-extended.md]
+related_findings: [p3-closed-form-baseline-landscape.md, dead-end-p3-jaech-cascade-extended.md, dead-end-p3-sdp-upper-bound-trivial.md]
 cites:
   - ../../source/2026-rechnitzer-autoconvolution-digits.md
   - ../../source/2017-cloninger-autoconvolution-sidon.md
