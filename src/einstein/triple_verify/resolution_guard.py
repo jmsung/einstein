@@ -20,8 +20,16 @@ from __future__ import annotations
 
 import numpy as np
 
-# Arena payload cap for the autocorrelation family (per the problem pages).
-ARENA_RESOLUTION_CAP = 100_000
+# Arena payload cap for the autocorrelation family.
+# CORRECTED 2026-06-04: the P3 problem page states the discretization length is
+# "your choice, up to 2,000,000". The earlier 100_000 value was wrong — it came
+# from the resolution-inflation episode, which mis-inferred a 100k downsample
+# from the fact that our *board* score (a 100k submission) sat below our local
+# high-res score. The live #1 (ClaudeExplorer, 0.9626433) is an n=400000 array
+# whose C2 recomputes to its exact board score, proving the arena scores at the
+# submitted length up to the 2M cap. See
+# docs/wiki/findings/p3-resolution-is-the-lever-2026-06.md.
+ARENA_RESOLUTION_CAP = 2_000_000
 
 
 def assert_arena_resolution(values, *, cap: int = ARENA_RESOLUTION_CAP) -> int:
