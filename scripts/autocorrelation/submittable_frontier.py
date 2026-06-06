@@ -200,6 +200,9 @@ def main():
     ap.add_argument("--budget", type=float, default=36000.0)
     ap.add_argument("--log", type=str, default=str(SOL.parent / "frontier.log"))
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument(
+        "--only-n", type=int, default=0, help="run a single resolution n (parallel mode)"
+    )
     args = ap.parse_args()
     LOG_FH = open(args.log, "a")
     rng = np.random.default_rng(args.seed)
@@ -213,22 +216,38 @@ def main():
     log(f"leader n={len(leader)} C2={fast_evaluate(leader):.10f} (the bar to beat)")
     log(f"RECORD={RECORD:.12f} GATE={GATE:.12f} payload_cap={PAYLOAD_CAP/1e6:.2f}MB")
 
-    # MEASURED: these optima have ZERO cross-resolution transfer — even a 2.5%
-    # bump (400k->410k) craters the leader from 0.96264 to 0.94, and 400k->500k to
-    # 0.90. So the resolution lever is dead: every n is its own from-scratch
-    # problem and the leader is optimal only at EXACTLY 400k. The one prong with a
-    # real warm start is a new-basin search at fixed 400k (perturb -> re-optimize,
-    # no resolution change, no cratering), hunting for a higher 400k basin than the
-    # clustered agents found. Honest EV is low (11 agents saturate 400k) — this is
-    # the legitimate attempt; if it doesn't clear, the deliverable is the dead-end
-    # finding. Three independent perturbation trajectories (different rng streams).
-    n = 400_000
-    prongs = [(leader, n, "p400k_a", 11), (leader, n, "p400k_b", 23), (leader, n, "p400k_c", 47)]
-    per = args.budget / len(prongs)
-    for seed_f, npts, label, sd in prongs:
-        if time.time() - T0 > args.budget:
-            break
-        optimize_at(seed_f, npts, label, per, np.random.default_rng(sd))
+    # CORRECTED 2026-06-05: raw upsample craters (400k->600k ~0.90), BUT Dinkelbach
+    # RECOVERS the crater and then climbs ABOVE the source — proven: our 0.96272
+    # came from upsampling the leader 400k -> 1.6M + Dinkelbach (gained +7.6e-5 over
+    # 0.96264). The earlier "zero transfer" read was from raw upsample alone; with a
+    # long Dinkelbach polish the basin tracks upward with resolution. So the live
+    # lever is cross-resolution transfer to the PAYLOAD FRONTIER: upsample leader to
+    # the largest submittable n (4.5MB cap fits ~700-800k at leader sparsity) then a
+    # long Dinkelbach polish. Expected ~0.96267-0.96270 (between 400k and 1.6M),
+    # above the record AND under the cap. Three submittable high-res prongs.
+    prongs = [
+        (leader, 450_000, "x450k", 11),
+        (leader, 500_000, "x500k", 23),
+        (leader, 550_000, "x550k", 47),
+        (leader, 600_000, "x600k", 71),
+        (leader, 650_000, "x650k", 97),
+        (leader, 700_000, "x700k", 131),
+    ]
+    if args.only_n:
+        # parallel mode: this process owns one resolution for the whole budget
+        optimize_at(
+            leader,
+            args.only_n,
+            f"x{args.only_n//1000}k",
+            args.budget,
+            np.random.default_rng(args.seed),
+        )
+    else:
+        per = args.budget / len(prongs)
+        for seed_f, npts, label, sd in prongs:
+            if time.time() - T0 > args.budget:
+                break
+            optimize_at(seed_f, npts, label, per, np.random.default_rng(sd))
 
     log(
         f"=== done. global best C2={GLOBAL_BEST:.12f} "
