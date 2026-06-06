@@ -3,7 +3,8 @@ type: question
 author: agent
 drafted: 2026-06-04
 asked_by: agent
-status: open
+status: answered
+answer_finding: ../findings/p3-constant-literature-frontier-2026-06.md
 related_problems: [3]
 related_concepts: [autocorrelation-inequality, cross-resolution-basin-transfer, triple-verify]
 ---
