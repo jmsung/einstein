@@ -17,6 +17,14 @@ import torch
 from .evaluator import verify_and_compute
 
 
+def arena_c(f: np.ndarray) -> float:
+    """Arena-exact C(f) from a numpy array (positive-peak autoconvolution ratio)."""
+    n = len(f)
+    dx = 0.5 / n
+    conv = np.convolve(f, f, mode="full") * dx
+    return float(abs(conv.max()) / (f.sum() * dx) ** 2)
+
+
 def load_warmstart(path: str | Path) -> np.ndarray:
     """Load a JSON solution file and return its values as a float64 array."""
     with open(path) as fh:
@@ -196,3 +204,72 @@ def signed_descent(init_v, betas, iters, lr, neg_target, neg_base):
             best_c = c
             best_v = f.detach().cpu().numpy().copy()
     return best_v, best_c
+
+
+# --------------------------------------------------------------------------- #
+# Kolountzakis–Matolcsi LP fixed-point (Goal 5).
+#
+# The record-producing method in the signed-autoconvolution literature
+# (Matolcsi–Vinuesa 2010, arXiv:0907.1379 §4). f★g is bilinear, so with f fixed
+# the peak constraint (f★g)[k] ≤ M is LINEAR in g. We maximise Σg subject to it
+# (g=f is always feasible), then line-search a move toward g. This descends the
+# minimax the smooth-max gradient stalls on when the active set is broad (P4's
+# leader has ~92% of conv positions within 1e-6 of the peak). One-sided ≤ M only
+# (variant b: negative excursions of f★g are free) — the signed advantage.
+# --------------------------------------------------------------------------- #
+
+
+def _conv_matrix(f: np.ndarray) -> np.ndarray:
+    """Dense (2n-1)×n Toeplitz matrix A with (A g)[k] = (f★g)[k] = Σ_i f[i] g[k-i]."""
+    n = len(f)
+    A = np.zeros((2 * n - 1, n), dtype=np.float64)
+    for j in range(n):
+        A[j : j + n, j] = f
+    return A
+
+
+def lp_fixed_point(
+    f0: np.ndarray, max_iter: int = 40, n_tsteps: int = 24, tol: float = 1e-12
+) -> tuple[np.ndarray, float]:
+    """Run the LP fixed-point descent on the arena-exact C. Returns (f_best, C).
+
+    At each step: solve the LP for g, then line-search t∈(0,1] on the exact
+    arena C of (1-t)f + t·g, keeping the best. Stops when C stops improving.
+    """
+    from scipy.optimize import linprog
+
+    f = np.asarray(f0, dtype=np.float64).copy()
+    if f.sum() < 0:  # C is sign-invariant; work with ∫f > 0
+        f = -f
+    best_c = arena_c(f)
+    for _ in range(max_iter):
+        n = len(f)
+        A = _conv_matrix(f)  # (2n-1, n)
+        m = float(np.convolve(f, f, mode="full").max())  # current positive peak
+        # maximise Σg  ⇔  minimise -Σg, s.t. A g ≤ m·1
+        res = linprog(
+            c=-np.ones(n),
+            A_ub=A,
+            b_ub=np.full(2 * n - 1, m),
+            bounds=[(None, None)] * n,
+            method="highs",
+        )
+        if not res.success:
+            break
+        g = res.x
+        if g.sum() <= 0:
+            break
+        # line-search the exact C along f → g
+        improved = False
+        for t in np.linspace(1.0 / n_tsteps, 1.0, n_tsteps):
+            h = (1.0 - t) * f + t * g
+            if h.sum() <= 0:
+                continue
+            c = arena_c(h)
+            if c < best_c - tol:
+                best_c, best_h = c, h
+                improved = True
+        if not improved:
+            break
+        f = best_h
+    return f, best_c

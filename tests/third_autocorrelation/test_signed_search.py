@@ -87,3 +87,25 @@ def test_surrogate_with_neg_zero_weight_matches_plain() -> None:
     a = surrogate(f, 1e4, fft=True)
     b = surrogate_with_neg(f, 1e4, fft=True, neg_target=0.5, neg_weight=0.0)
     assert torch.allclose(a, b)
+
+
+def test_arena_c_matches_evaluator() -> None:
+    """arena_c (numpy) must equal the arena verify_and_compute on the same f."""
+    rng = np.random.default_rng(11)
+    f = rng.normal(0.5, 1.0, 300)
+    from einstein.third_autocorrelation.optimizer import arena_c
+
+    assert abs(arena_c(f) - verify_and_compute(f.tolist())) < 1e-12
+
+
+def test_lp_fixed_point_descends() -> None:
+    """LP fixed-point must not increase C and must return a positive-integral f."""
+    from einstein.third_autocorrelation.optimizer import arena_c, lp_fixed_point
+
+    rng = np.random.default_rng(12)
+    f0 = np.abs(rng.normal(1.0, 0.3, 120)) + 0.05  # nonneg-ish start, n small for speed
+    c0 = arena_c(f0)
+    f, c = lp_fixed_point(f0, max_iter=8, n_tsteps=12)
+    assert c <= c0 + 1e-12
+    assert f.sum() > 0
+    assert len(f) == len(f0)
