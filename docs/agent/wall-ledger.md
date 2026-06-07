@@ -21,6 +21,19 @@ compute rediscovering it.
 |---|---|---|---|---|---|---|---|
 | 2026-06-06 | P4 third-autocorrelation | Basin is a **discrete, broadband, aperiodic sign topology**; continuous descent is trapped in its starting sign homotopy class and no low-dim ansatz can represent the optimal sign field | smooth-max polish, basin-hop, LP fixed-point, diverse-seed escape, larger-n cascade, neg-content nudge, greedy-noise, fine cascade, frozen-sign + periodic sweep, sign-flip hop, spectral Fourier sign-texture (all cap ~1.4525 or worse; leader=1.4523, target=1.4522) | wiki: equioscillation, Cohn/LP-duality, P2 compact-support family; council: Tao+Hilbert+Hadamard (converged: discrete sign topology) + Cohn (dual) | (a) `frozen_sign_descent` f=s·v² validated; (b) Cohn signed dual SDP; (c) escape topology sampling | **no record yet** — all construction/ansatz/local moves ruled out; dual collapses to ~1.0 (loose); record requires the *specific* sign topology seeded directly (it is incompressible, cannot be parameterized or locally searched) | `findings/p4-basin-is-discrete-sign-topology.md`, `findings/p4-fragmentation-not-fraction-shared-envelope.md`, `findings/dead-end-p4-negative-content-ceiling.md` |
 
+### Update 2026-06-06 (post-council moves, all ruled out)
+After the council re-dispatch, implemented and ruled out every proposed move:
+frozen-sign + periodic frag sweep (→2.5), discrete sign-flip hop from leader (all
+edits worse, ~1.49), spectral Fourier sign-texture (leader-seeded → 1.60: sign
+field is **incompressible**), Cohn signed dual SDP (collapses to ~1.0: loose), and
+**sign-topology crossover** of the leader×ours parents (→1.49–1.50: the topology
+is **non-recombinable** — autoconvolution is global, splicing breaks coherence).
+Net: the optimal P4 sign topology is incompressible, non-recombinable, and a
+strong local optimum — reachable only by its own dedicated search or a direct
+seed. Independent construction/search is exhausted. **Resolving move: obtain the
+record's sign pattern (seed) and escape it with `escape_from_seed.py` /
+`frozen_sign_descent`.**
+
 ## Lesson distilled (meta)
 The dominant time-sink is **brute-forcing past a wall instead of escalating to wisdom
 at the 2nd failure.** The council diagnoses obstructions and rules out whole families
