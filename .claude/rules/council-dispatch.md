@@ -31,6 +31,6 @@ When starting a hard problem (recon phase), dispatch a council of mathematician 
 
 **Meta-coaches** (always available, dispatched when *stuck on protocol* not *stuck on math*): Polya (heuristics), Hadamard (inverse framing), Grothendieck (right framework), Atiyah (cross-field), Wiles (depth/persistence).
 
-**Cost budget**: ~$X tokens per problem for the full council. Run ONCE per problem during recon, not on every iteration. Re-dispatch only if the problem category shifts or new evidence arrives.
+**Cost budget**: ~$X tokens per problem for the full council. Run ONCE per problem during recon, not on every iteration. Re-dispatch when: the problem category shifts, new evidence arrives, **OR you hit a wall** (per [wall-hit-escalation](wall-hit-escalation.md) — 2 failed attempts / retuned method ≥2× / >30 min with no gain). A wall is a *re-trigger*, not a recon-only event: seed the re-dispatch with the attempts that failed and why, and ask each persona for ONE concrete NEW move outside the failed class. The P4 record-breakthrough session proved the cost of NOT re-dispatching — 10+ brute-force variants over hours where a wall-triggered council would have ruled out the families in minutes.
 
 See also: [docs/wiki/personas/](../../docs/wiki/personas/), [self-improvement-loop](self-improvement-loop.md), [ask-the-question-first](ask-the-question-first.md).
