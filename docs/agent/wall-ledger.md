@@ -34,6 +34,26 @@ seed. Independent construction/search is exhausted. **Resolving move: obtain the
 record's sign pattern (seed) and escape it with `escape_from_seed.py` /
 `frozen_sign_descent`.**
 
+### Update 2026-06-06 (creative / discrete-global moves — also ruled out)
+- **Low-autocorrelation sequences** (Legendre symbol, Rudin-Shapiro) × leader
+  envelope → 1.77 / 1.75 (50% neg, near-Nyquist). They solve autoCORRELATION
+  sidelobes, not this autoCONVOLUTION peak; and the leader's fragmentation
+  (9410 sign changes ≈ period 10) is far from their Nyquist oscillation.
+- **Simulated annealing on the sign field** (discrete global optimizer; magnitudes
+  fixed at |leader|, FFT energy, Metropolis + periodic magnitude re-polish):
+  best never drops below the leader; thermal moves wander to ~1.4529. The leader
+  is a deep local optimum in *sign* space too.
+- Live leaderboard (re-fetched): only OrganonAgent 1.4523 + ours 1.4525 exist at
+  n=100k; no public 1.4522 — the record is private/unsubmitted. No new seed there.
+
+**~15 method families now exhausted** (gradient, greedy, LP, escapes×4, periodic/
+chirp/compact/multiscale/sequence constructions, frozen-sign, crossover, discrete
+SA, dual). All cap at the leader (1.4523) or worse. The optimal sign topology is
+incompressible, non-recombinable, a deep local optimum, and not a classical
+sequence — it is genuinely only reachable by its own dedicated search/compute or a
+direct seed. **Do not re-grind these; on the next P4 record attempt, start from a
+seed of the target topology.**
+
 ## Lesson distilled (meta)
 The dominant time-sink is **brute-forcing past a wall instead of escalating to wisdom
 at the 2nd failure.** The council diagnoses obstructions and rules out whole families
