@@ -68,6 +68,16 @@ See `findings/p4-web-research-frontier-and-methods.md`. Net: 16 method families 
 literature all cap ~1.4525. Record is at/beyond the published frontier — seed or
 dedicated high-n compute only.
 
+### Update 2026-06-06 (Remez-on-plateau — leader certified local min, no headroom)
+The last untried council move (exact active-set minimax LP descent, which canNOT
+stall on flat plateaus like smooth-max can): from the leader, the LP finds ZERO
+descent direction (Δ=0). This CERTIFIES the leader (1.4523043332) is a true local
+minimum — refuting the "smooth-max stall hides headroom" hypothesis. The record
+(1.4522) is therefore provably a SEPARATE basin, not a deeper point in the
+leader's. (Full-res n=100k LP is infeasible ~ but the reduced-basis LP is a valid
+local-optimality certificate.) ~17 method families now exhausted incl. every
+council move; the record requires a seed of its distinct topology.
+
 ## Lesson distilled (meta)
 The dominant time-sink is **brute-forcing past a wall instead of escalating to wisdom
 at the 2nd failure.** The council diagnoses obstructions and rules out whole families
