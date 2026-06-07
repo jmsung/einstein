@@ -46,7 +46,7 @@ Every hard math problem in this repo follows this loop. It's drawn from how the 
 - Open every problem branch with steps 1–4 in writing. Don't run code until step 7.
 - The `/goal` skill produces the plan; this protocol fills it.
 - Each step has a deliverable (a wiki entry, a tracking entry, a code commit).
-- If the loop is stuck between any two steps for >2 hours, that's the signal to do step 5 (research) — gap-detect was insufficient.
+- If the loop is stuck — **2 failed attempts, a method retuned ≥2×, or >30 min with no metric gain** — STOP and run the [wall-hit-escalation](wall-hit-escalation.md): grep the wall-ledger, re-query the wiki, and RE-DISPATCH the council seeded with what failed. Do not launch another brute-force variant first. (Stuck is not "do step 5 eventually" — it is a refusing trigger.)
 - Step 9 is mandatory. Without look-back, no compounding.
 - Step 10 is mandatory. Failures without articulated why are wasted compute.
 

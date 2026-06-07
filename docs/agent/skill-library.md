@@ -29,7 +29,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `mpmath-ulp-polish.md` | float64-ceiling family | 10 | 6 | 5 | 2026-06-01 | 0.60 |
 | `slsqp-active-pair-polish.md` | packing / kissing | 25 | 6 | 1 | 2026-06-03 | 0.24 |
 | `arena-tolerance-slsqp.md` | packing | 34 | 9 | 1 | 2026-06-03 | 0.26 |
-| `larger-n-cascade.md` | autocorrelation | 18 | 4 | 2 | 2026-06-02 | 0.22 |
+| `larger-n-cascade.md` | autocorrelation | 19 | 4 | 3 | 2026-06-06 | 0.21 |
 | `cross-resolution-basin-transfer.md` | autocorrelation | 9 | 1 | 1 | 2026-06-02 | 0.11 |
 | `bounded-lbfgs-per-region-sigmoid.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `boundary-snap-for-kinks.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |

@@ -72,3 +72,14 @@ gap. This is the family technique the displacement finding asked about.
   only two agents reach it — but this is the one untried lever. A Cohn signed-f
   LP/SDP dual certificate would decide whether 1.4523 is the continuous infimum.
 - Honest-zero for this branch; the negative-content lever is the wisdom.
+
+## RESOLVED (2026-06-06, branch js/feat/p4-record-breakthrough)
+The "untried lever" above was tried and is now closed — see
+[dead-end-p4-negative-content-ceiling](dead-end-p4-negative-content-ceiling.md).
+Forcing the negative fraction past 27.5% (annealed nudge, n=100000, leader
+warm-start) **monotonically WORSENS C** (27.5%→1.4523058 best, 29.5%→1.4564);
+cold both-sign Fourier lands ~1.49. The negative content is a *saturated basin
+coordinate at its optimum*, not a lever with headroom. The framing in this page
+("push more of f to its feasible boundary") correctly *describes* the gap but
+wrongly implies headroom — there is none above the leader's fraction. The only
+remaining lever is the signed-f dual certificate (research, deferred).
