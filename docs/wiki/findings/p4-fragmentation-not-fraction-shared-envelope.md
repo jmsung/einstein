@@ -63,5 +63,5 @@ agree to 2.2e-16 (1 ulp) for both solutions. Scores are real.
 - A perturbative high-frequency signed search seeded on the shared envelope,
   rewarding mid-domain sign flips, aiming below 1.4523043332.
 - A signed-f dual certificate (still open,
-  `2026-05-26-p4-signed-variant-lower-bound-certificate.md`) to decide whether
+  `2026-06-04-p4-headroom-cohn-signed-dual-certificate.md`) to decide whether
   1.4523 is the continuous infimum or has headroom worth the search.

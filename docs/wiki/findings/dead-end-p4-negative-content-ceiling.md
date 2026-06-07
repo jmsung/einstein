@@ -10,7 +10,7 @@ cites:
   - ../problems/4-third-autocorrelation.md
   - ../findings/dead-end-p4-organon-floor-negative-content-lever.md
   - ../findings/p4-fragmentation-not-fraction-shared-envelope.md
-  - ../questions/2026-05-26-p4-signed-variant-lower-bound-certificate.md
+  - ../questions/2026-06-04-p4-headroom-cohn-signed-dual-certificate.md
   - scripts/third_autocorrelation/campaign_signed.py
 ---
 
@@ -59,7 +59,7 @@ side is exhausted for the smooth-max optimizer family.
 ## What might still work (the only remaining lever — not an optimizer run)
 - A **signed-f dual certificate** (Cohn-style LP/SDP) to decide whether
   1.4523043332 is the continuous infimum. The signed case currently sits on no
-  known lower bound (`2026-05-26-p4-signed-variant-lower-bound-certificate`); the
+  known lower bound (`2026-06-04-p4-headroom-cohn-signed-dual-certificate`); the
   f≥0 majorant apparatus loses the ∫f=‖f‖₁ pairing. This is research requiring
   unbuilt LP/SDP wiring — deferred. If 1.4523 is provably the infimum, P4 is
   closed; if a gap remains, the certificate's dual points at the structure to

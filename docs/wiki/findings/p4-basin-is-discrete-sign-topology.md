@@ -12,7 +12,7 @@ cites:
   - ../findings/p4-fragmentation-not-fraction-shared-envelope.md
   - ../findings/dead-end-p4-negative-content-ceiling.md
   - ../concepts/equioscillation.md
-  - scripts/third_autocorrelation/frozen_sign_descent
+  - src/einstein/third_autocorrelation/optimizer.py
   - scripts/third_autocorrelation/signed_dual_bound.py
 ---
 
