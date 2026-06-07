@@ -54,6 +54,20 @@ sequence — it is genuinely only reachable by its own dedicated search/compute 
 direct seed. **Do not re-grind these; on the next P4 record attempt, start from a
 seed of the target topology.**
 
+### Update 2026-06-06 (web research + record-method families — also ruled out)
+Deep web research: NO published value < 1.4523 (leader method unpublished; our wall
+IS the public frontier). Implemented the two record-family leads:
+- **Two-sided signed LP–Frank–Wolfe** (MV/AlphaEvolve): 1.4620 — worse. Constraining
+  the "free" negative excursions (−M ≤ conv) is counterproductive for variant (b);
+  our original one-sided LP was correct.
+- **Tabu-SAW steepest descent** (LABS/merit-factor SOTA): 1.5135 at n=2000 — no
+  better basin than the equioscillation/escape family. Scale wall: moderate-n = the
+  equioscillation basin; the better basins are intrinsically high-n and not reachable
+  by efficient discrete search.
+See `findings/p4-web-research-frontier-and-methods.md`. Net: 16 method families +
+literature all cap ~1.4525. Record is at/beyond the published frontier — seed or
+dedicated high-n compute only.
+
 ## Lesson distilled (meta)
 The dominant time-sink is **brute-forcing past a wall instead of escalating to wisdom
 at the 2nd failure.** The council diagnoses obstructions and rules out whole families
