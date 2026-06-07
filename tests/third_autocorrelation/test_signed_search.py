@@ -109,3 +109,22 @@ def test_lp_fixed_point_descends() -> None:
     assert c <= c0 + 1e-12
     assert f.sum() > 0
     assert len(f) == len(f0)
+
+
+def test_frozen_sign_descent_returns_consistent_f() -> None:
+    """frozen_sign_descent returns f whose arena_c matches the returned C, and f
+    carries the imposed sign pattern (the invariant sign_anneal must respect)."""
+    from einstein.third_autocorrelation.optimizer import arena_c, frozen_sign_descent
+
+    rng = np.random.default_rng(21)
+    n = 600
+    s = np.sign(rng.normal(0.3, 1.0, n))
+    s[s == 0] = 1.0
+    v0 = np.abs(rng.normal(1.0, 0.3, n)) + 0.1
+    f, c = frozen_sign_descent(s, v0, [1e4, 1e6, 1e8], 80)
+    # returned C is the arena_c of the returned f (sign-invariant: ±f allowed)
+    assert abs(arena_c(f) - c) < 1e-9
+    # f = s·v² up to the global sign flip frozen_sign_descent applies for ∫f>0
+    assert np.array_equal(np.sign(f[f != 0]), s[f != 0]) or np.array_equal(
+        np.sign(f[f != 0]), -s[f != 0]
+    )

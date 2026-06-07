@@ -83,9 +83,11 @@ def main():
                 best_s, best_mag, best_c = s.copy(), mag.copy(), cur
         if (step + 1) % REPOLISH_EVERY == 0:
             # re-polish magnitudes for the current sign field, then continue
-            fp, cp = frozen_sign_descent(s, mag, [1e7, 1e8, 1e9, 1e10], 200)
+            # frozen_sign_descent optimizes f = s·v², so pass v=√mag and read back
+            # the magnitude as |fp| (NOT √|fp|) — keeps C_of(s, mag)=arena_c(s·mag) valid.
+            fp, cp = frozen_sign_descent(s, np.sqrt(mag), [1e7, 1e8, 1e9, 1e10], 200)
             if cp < cur:
-                mag = np.sqrt(np.abs(fp))
+                mag = np.abs(fp)
                 s = np.sign(fp)
                 s[s == 0] = 1.0
                 cur = cp
