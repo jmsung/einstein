@@ -116,6 +116,75 @@ def window_mask(n: int, width: int) -> np.ndarray:
     return m
 
 
+def vsq_from_f(f: np.ndarray) -> np.ndarray:
+    """Warm-start the square parameterization from an f array: ``v = sqrt(f)``.
+
+    Unlike ``to_v`` (for ``f = exp(v)``, which can't represent zeros), this is the
+    inverse of ``f = v**2`` and preserves exact zeros — masked-out cells stay
+    ``v=0``, the gradient fixed point that locks compact support.
+    """
+    return np.sqrt(np.maximum(f.astype(np.float64), 0.0))
+
+
+def prune_smallest(v: np.ndarray, mask: np.ndarray, target_support: int) -> np.ndarray:
+    """Return a new 0/1 mask keeping the ``target_support`` largest-|v| *active* cells.
+
+    Data-driven, monotone support shrink: only cells currently active in ``mask`` are
+    candidates (already-pruned cells are never resurrected — ``v=0`` there is a
+    gradient fixed point), and the smallest-magnitude active cells are zeroed. This is
+    the key difference from ``window_mask``: the optimizer chooses *which* cells die,
+    not a pre-imposed contiguous interval. No-op when ``target_support`` ≥ current
+    support.
+    """
+    active = np.flatnonzero(mask)
+    if target_support >= active.size:
+        return mask.copy()
+    keep = active[np.argsort(np.abs(v[active]))][-target_support:]
+    new_mask = np.zeros_like(mask, dtype=bool)
+    new_mask[keep] = True
+    return new_mask
+
+
+def self_pruning_search(
+    f_init: np.ndarray,
+    betas: list[float],
+    support_schedule: list[int],
+    *,
+    max_iter: int = 2000,
+    history_size: int = 200,
+) -> tuple[np.ndarray, float, list[dict]]:
+    """Warm self-pruning support-shrinking schedule (Goal 2b/2c).
+
+    Start from a near-converged *full-support* ``f_init`` (warm — block-repeat
+    coarse→fine, as our 1.5028610 basin was found). At each target support level:
+    prune the smallest-|v| active cells (``prune_smallest``), then re-optimize
+    ``v**2`` L-BFGS warm-started from the current ``v`` (``lbfgs_vsq``), letting
+    peak-locking drive further cells to exactly zero. Tracks the best arena-exact C
+    across all levels.
+
+    Reconciles the two P2 dead-ends: pure polish can't *change* support
+    (``dead-end-p2-compact-support-basin-floor``) and cold seeds can't reach
+    competitive scores (``dead-end-p2-cold-seed-fixed-window``). This path is warm
+    enough to be competitive *and* actively shrinking support.
+    """
+    v = vsq_from_f(f_init)
+    mask = f_init > 0.0
+    best_f: np.ndarray | None = None
+    best_c = float("inf")
+    trace: list[dict] = []
+
+    for target in support_schedule:
+        mask = prune_smallest(v, mask, target)
+        f_opt, c = lbfgs_vsq(v, betas, mask=mask, max_iter=max_iter, history_size=history_size)
+        v = vsq_from_f(f_opt)  # warm-start the next level from this level's optimum
+        mask = f_opt > 0.0  # absorb any cells peak-locking zeroed beyond the target
+        trace.append({"target": target, "support": int(np.count_nonzero(f_opt > 0.0)), "score": c})
+        if c < best_c:
+            best_c, best_f = c, f_opt.copy()
+
+    return best_f, best_c, trace
+
+
 def score_vsq_masked(v: np.ndarray, mask: np.ndarray) -> float:
     """Arena-exact C of ``f = mask * v**2`` (independent code path from the surrogate)."""
     f = mask.astype(np.float64) * (v.astype(np.float64) ** 2)
