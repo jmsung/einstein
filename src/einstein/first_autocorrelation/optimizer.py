@@ -8,6 +8,7 @@ non-negativity. FFT-based autoconvolution keeps per-step cost ``O(n log n)``.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -152,6 +153,7 @@ def self_pruning_search(
     *,
     max_iter: int = 2000,
     history_size: int = 200,
+    on_level: Callable[[dict], None] | None = None,
 ) -> tuple[np.ndarray, float, list[dict]]:
     """Warm self-pruning support-shrinking schedule (Goal 2b/2c).
 
@@ -166,6 +168,9 @@ def self_pruning_search(
     (``dead-end-p2-compact-support-basin-floor``) and cold seeds can't reach
     competitive scores (``dead-end-p2-cold-seed-fixed-window``). This path is warm
     enough to be competitive *and* actively shrinking support.
+
+    ``on_level`` is an optional callback invoked with each level's trace row as soon
+    as that level finishes — for streaming progress on the multi-hour real run.
     """
     v = vsq_from_f(f_init)
     mask = f_init > 0.0
@@ -178,7 +183,10 @@ def self_pruning_search(
         f_opt, c = lbfgs_vsq(v, betas, mask=mask, max_iter=max_iter, history_size=history_size)
         v = vsq_from_f(f_opt)  # warm-start the next level from this level's optimum
         mask = f_opt > 0.0  # absorb any cells peak-locking zeroed beyond the target
-        trace.append({"target": target, "support": int(np.count_nonzero(f_opt > 0.0)), "score": c})
+        row = {"target": target, "support": int(np.count_nonzero(f_opt > 0.0)), "score": c}
+        trace.append(row)
+        if on_level is not None:
+            on_level(row)
         if c < best_c:
             best_c, best_f = c, f_opt.copy()
 

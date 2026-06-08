@@ -74,6 +74,15 @@ def run_one(args: dict) -> dict:
 
     torch.set_num_threads(1)  # one BLAS thread per worker; parallelism is across chains
 
+    tag = args["tag"]
+
+    def on_level(row: dict) -> None:
+        print(
+            f"      [{tag:>24}] target={row['target']:6d} "
+            f"supp={row['support']:6d} C={row['score']:.13f}",
+            flush=True,
+        )
+
     f_init = args["f_init"]
     best_f, best_c, trace = self_pruning_search(
         f_init,
@@ -81,6 +90,7 @@ def run_one(args: dict) -> dict:
         args["schedule"],
         max_iter=args["max_iter"],
         history_size=args["history_size"],
+        on_level=on_level,
     )
     return {
         "tag": args["tag"],
