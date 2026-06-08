@@ -78,6 +78,100 @@ def surrogate_v(v: torch.Tensor, beta: float, *, fft: bool = True) -> torch.Tens
     return smooth_max(ratios, beta)
 
 
+def surrogate_vsq(
+    v: torch.Tensor, beta: float, *, mask: torch.Tensor | None = None, fft: bool = True
+) -> torch.Tensor:
+    """Differentiable surrogate of C(f) with f = v**2 (square parameterization).
+
+    Unlike ``exp(v)`` (always positive ⇒ full support), ``v**2`` admits exact
+    zeros at ``v=0`` where the gradient also vanishes — so a cell can lock at
+    exactly zero. This is the parameterization that can reach a *compact-support*
+    basin. With ``mask`` (a 0/1 tensor), ``f = mask * v**2`` is zero outside the
+    mask and the gradient there is identically zero, so the support stays compact
+    under optimization. Scale-invariant.
+    """
+    f = v * v
+    if mask is not None:
+        f = f * mask
+    n = f.shape[-1]
+    dx = 0.5 / n
+    conv = autoconv_fft(f) if fft else autoconv_direct(f)
+    integral_sum = f.sum()
+    ratios = conv / (integral_sum * integral_sum * dx)
+    return smooth_max(ratios, beta)
+
+
+def window_mask(n: int, width: int) -> np.ndarray:
+    """A contiguous, centred 0/1 support window of ``width`` cells in ``n``.
+
+    Support *position* is irrelevant to C (shifting f shifts the autoconvolution
+    but preserves its max, ∫f and dx), so a centred window covers every distinct
+    compact-support family — the schedule only needs to vary ``width``.
+    """
+    if not 0 < width <= n:
+        raise ValueError(f"width {width} out of range (0, {n}]")
+    m = np.zeros(n, dtype=bool)
+    lo = (n - width) // 2
+    m[lo : lo + width] = True
+    return m
+
+
+def score_vsq_masked(v: np.ndarray, mask: np.ndarray) -> float:
+    """Arena-exact C of ``f = mask * v**2`` (independent code path from the surrogate)."""
+    f = mask.astype(np.float64) * (v.astype(np.float64) ** 2)
+    return float(verify_and_compute(f.tolist()))
+
+
+def lbfgs_vsq(
+    v_init: np.ndarray,
+    betas: list[float],
+    *,
+    mask: np.ndarray | None = None,
+    max_iter: int = 2000,
+    lr: float = 1.0,
+    history_size: int = 200,
+) -> tuple[np.ndarray, float]:
+    """Run a v**2 smooth-max L-BFGS β-cascade; return ``(f, exact_C)``.
+
+    Optimizes on CPU float64 (sequential L-BFGS — GPU sits idle; see
+    compute-router). ``mask`` keeps the support compact throughout. Returns the
+    best arena-exact score across the cascade, not the surrogate value.
+    """
+    v = torch.tensor(v_init.copy(), dtype=torch.float64, requires_grad=True)
+    mask_t = None if mask is None else torch.tensor(mask, dtype=torch.float64)
+    mask_np = None if mask is None else mask.astype(np.float64)
+    best_c = float("inf")
+    best_f = None
+
+    for beta in betas:
+        opt = torch.optim.LBFGS(
+            [v],
+            lr=lr,
+            max_iter=max_iter,
+            tolerance_grad=1e-15,
+            tolerance_change=1e-20,
+            history_size=history_size,
+            line_search_fn="strong_wolfe",
+        )
+
+        def closure():
+            opt.zero_grad()
+            loss = surrogate_vsq(v, beta, mask=mask_t)
+            loss.backward()
+            return loss
+
+        opt.step(closure)
+        f_np = (v.detach().cpu().numpy() ** 2).astype(np.float64)
+        if mask_np is not None:
+            f_np = f_np * mask_np
+        c = float(verify_and_compute(f_np.tolist()))
+        if c < best_c:
+            best_c = c
+            best_f = f_np.copy()
+
+    return best_f, best_c
+
+
 def exact_score_v(v: torch.Tensor) -> float:
     """Compute the arena-exact C from a torch tensor parameter v (f = exp(v))."""
     f_np = np.exp(v.detach().cpu().numpy()).astype(np.float64)
