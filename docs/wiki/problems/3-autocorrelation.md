@@ -47,9 +47,11 @@ High-resolution solutions downsampled to target resolution create structurally n
 - [dinkelbach-fractional-programming.md](../techniques/dinkelbach-fractional-programming.md)
 - [larger-n-cascade.md](../techniques/larger-n-cascade.md)
 - [gpu-decision-framework.md](../techniques/gpu-decision-framework.md)
+- [warm-self-pruning-compact-support.md](../techniques/warm-self-pruning-compact-support.md) — **direct transfer candidate (untried on P3).** P3 shares P2's dead-cell Hessian fingerprint (verified n=80); if the P3 SOTA is compact-support, warm self-pruning from a full-support basin is the operator that set the P2 record.
 
 ## Findings
 - [optimizer-recipes.md](../findings/optimizer-recipes.md)
+- [p2-warm-self-pruning-beats-record.md](../findings/p2-warm-self-pruning-beats-record.md) — the P2 record (1.5028609→1.5028506) via warm self-pruning; same family, the obvious next probe here.
 - [gpu-modal-compute.md](../findings/gpu-modal-compute.md)
 - [p2-peak-locking-hessian-mechanism.md](../findings/p2-peak-locking-hessian-mechanism.md) — same Hessian fingerprint observed: at $n=80, \beta=200$ from a sparse seed, exp(v) and v³ both peak-lock with 32 dead cells producing 32 near-zero Hessian eigenvalues; v² escapes (0 near-zero eigs). Mechanism is objective-shape agnostic.
 - [p3-closed-form-baseline-landscape.md](../findings/p3-closed-form-baseline-landscape.md) — closed-form simple-construction baselines vs. the empirical ceiling and trivial bound for P3
