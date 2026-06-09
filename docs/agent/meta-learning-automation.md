@@ -1,8 +1,10 @@
 # Meta-learning automation — turning the self-improvement loop from discretionary to enforced
 
-**Status:** plan (drafted 2026-06-08). This branch (`js/feat/meta-learning-automation`)
-implements **Phase 0 + 1 + 4**. Phase 2 (headless inner agent) and Phase 3 (scheduler)
-are deferred to follow-on branches.
+**Status:** Phase 0+1+4 done (`js/feat/meta-learning-automation`, PR #122);
+**Phase 2 done** (`js/feat/meta-learning-inner-agent`, 2026-06-09) — the headless
+inner agent is instrumented + reliability-fixed + cost-proven, verdict **CONDITIONAL
+GO** for Phase 3 (`docs/wiki/findings/inner-agent-first-run.md`). Phase 3 (scheduler)
+remains a follow-on, gated on this branch's two entry conditions.
 
 **Audience:** this is an *agent-process* design doc, not math wisdom — hence `docs/agent/`
 (next to `cycle-log.md` / `skill-library.md` it governs), not `docs/wiki/`.
@@ -60,7 +62,16 @@ unattended use) and "detect/capture" was discretionary (this branch makes it a g
 
 ## The four gaps and their fixes
 
-### Gap 1 — `inner_attempt()`'s LLM path is wired but unproven for unattended use (Phase 2, deferred)
+### Gap 1 — `inner_attempt()`'s LLM path is wired but unproven for unattended use (Phase 2, DONE 2026-06-09)
+**Resolved on `js/feat/meta-learning-inner-agent`:** added per-cycle telemetry
+(`inner_agent_telemetry.py`), fixed the dominant failure mode (cited_sources
+strict-parse → 40% fallback, now lenient-drop), pinned the capture-gate base
+per-cycle, and added exact token+cost accounting via the json envelope. An
+8-cycle pilot passed every quantitative criterion (0% fallback, 100% parse, 0
+timeouts, 0 crashes, ~$0.27/cycle) → **CONDITIONAL GO** for Phase 3
+(`docs/wiki/findings/inner-agent-first-run.md`, bar in
+`docs/agent/inner-agent-readiness.md`). Original framing below.
+
 `inner_attempt(problem)` already has a **headless Claude Code agent** path
 (`_try_llm_path` → `claude_headless`, landed on feat-autonomous-loop Goal 7.7): it renders
 the inner-agent prompt, runs the math-solving-protocol via `claude -p`, parses the
@@ -112,8 +123,10 @@ policing:
 - **Phase 0 — `Stop` capture-gate hook.** Cheapest, biggest behavior shift. (this branch)
 - **Phase 1 — signal taxonomy + auto-route** in `record_cycle_row`. (this branch)
 - **Phase 4 — anti-bloat lint** (finding-TTL / near-duplicate merge) + metrics view. (this branch)
-- **Phase 2 — wire `inner_attempt()`** to a headless agent. (follow-on branch)
-- **Phase 3 — cron scheduler** for the unattended loop. (follow-on branch, after Phase 2)
+- **Phase 2 — prove `inner_attempt()`'s headless agent** for unattended use. ✅ DONE
+  (`js/feat/meta-learning-inner-agent`, CONDITIONAL GO).
+- **Phase 3 — cron scheduler** for the unattended loop. (follow-on; gated on Phase 2's
+  two entry conditions: a non-frozen pilot + human R8 spot-check.)
 
 ## How we'll know it's actually compounding (measure it, or it's theater)
 
