@@ -18,7 +18,7 @@ loop described in [`mb/active/feat-autonomous-loop.md`](../../../mb/active/feat-
 | [`concept-search-terms.yaml`](concept-search-terms.yaml) | Slug → literature-vocabulary mapping consumed by `seed_ingest propose`. Curated; agent-coined slugs that have no literature analog get an empty list (intentionally-unmapped). |
 | [`strategy_picker.py`](strategy_picker.py) | Reads `docs/agent/skill-library.md` + problem category, applies the autoresearch 1+1 rule (prior + novel). Also exports `convergence_detect()`. |
 | [`calibrate.sh`](calibrate.sh) | Device-agnostic recalibration wrapper: runs `scripts/local_benchmark.py`, prints drift vs prior, prints sample router invocations. |
-| [`cycle_runner.sh`](cycle_runner.sh) | Per-cycle discipline wrapper. Run after every cycle: `refresh_qmd` → `wiki_graph --file-questions` → `gap_search` → promotion-log check. |
+| [`cycle_runner.sh`](cycle_runner.sh) | Per-cycle discipline wrapper. Run after every cycle: `refresh_qmd` → `wiki_graph --file-questions` → `gap_search` → `wiki_lint` → `compounding_metrics --write` → promotion-log check. |
 | [`monitor.py`](monitor.py) | Read-only progress dashboard. Parses `docs/agent/cycle-log.md` and prints totals, outcomes, recent cycles. |
 | [`claude_headless.py`](claude_headless.py) | Shared wrapper for non-interactive Claude Code invocations. Used by the inner-agent inside each cycle. |
 | [`inner_agent_prompt.py`](inner_agent_prompt.py) | Builds the inner-agent prompt template (problem context + wiki excerpts + budget). |
@@ -30,7 +30,9 @@ loop described in [`mb/active/feat-autonomous-loop.md`](../../../mb/active/feat-
 | [`llm_distill.py`](llm_distill.py) | Lower-level LLM distillation primitive used by `distill_paper` + `seed_ingest` apply step. |
 | [`select_top.py`](select_top.py) | Pick the top-N candidates from a `*-candidates.json` (used inside the seed-ingest pipeline). |
 | [`seed-authors.yaml`](seed-authors.yaml) | Author-list seed for `seed_ingest propose` (broad-stroke literature sweep). |
-| [`wiki_lint.py`](wiki_lint.py) | Wiki health lint — cite hygiene, broken refs, orphans, attribution. Hard fails drop the inner-agent sentinel via `cycle_runner.sh`. |
+| [`wiki_lint.py`](wiki_lint.py) | Wiki health lint — cite hygiene, broken refs, orphans, attribution, plus anti-bloat surface (near-duplicate / stale-uncited, advisory). Hard fails drop the inner-agent sentinel via `cycle_runner.sh`. |
+| [`capture_gate.py`](capture_gate.py) | Capture-gate check for the `Stop` hook (`.claude/hooks/capture-gate.sh`): no clean cycle end without a new cycle-log row + a cited new/edited findings/concepts page (Phase 0 of meta-learning-automation). |
+| [`compounding_metrics.py`](compounding_metrics.py) | Compute the auto compounding-metrics block (records, time-to-record, technique hit-rate, cite-reuse) and splice it into `docs/agent/metrics.md` with `--write` (Phase 4). |
 
 The top-level orchestrator lives one directory up at
 [`scripts/autonomous_loop.py`](../../scripts/autonomous_loop.py) — see
@@ -74,7 +76,9 @@ The top-level orchestrator lives one directory up at
 │     b. wiki_graph.py --file-questions                          │
 │                               — surface fresh gap questions    │
 │     c. gap_search.py          — enrich open questions w/ arxiv │
-│     d. promotion-log check    — surface findings cited ≥3x     │
+│     d. wiki_lint.py           — structural health + anti-bloat │
+│     e. compounding_metrics.py — refresh auto block in metrics  │
+│     f. promotion-log check    — surface findings cited ≥3x     │
 └────────────────────────────────────────────────────────────────┘
 ```
 
