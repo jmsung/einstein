@@ -53,6 +53,29 @@ If any holds, the next action is the escalation — NOT another run.
   ([the missing-info ladder](../../CLAUDE.md)).
 - Hitting a wall and NOT writing a ledger row — the next agent re-grinds it.
 
+## Floor claims need an untried operator OR a proof (don't close honest-zero prematurely)
+
+Before declaring **"this is the floor / honest-zero / the record is unbeatable"** on a
+record attempt, run this check — it is a *refusing* gate, like the escalation above:
+
+1. **Is the "floor" just an N-agent empirical tie?** Several independent solutions
+   converging to the same score is evidence of a **sharp shared basin**, not a proof of
+   global optimality. Same-method searchers share parameterizations and operators, so
+   they fall into the same basin — the tie measures the basin's attractor, not the
+   absence of other basins. (Concept: [n-agent-tie-not-global-min](../../docs/wiki/concepts/n-agent-tie-not-global-min.md).)
+2. **Is there a search operator no one in the tie has tried?** A different
+   parameterization (`exp(v)`→`v²`), a topology move (support shrink/grow, symmetry
+   break), a different regime (warm vs cold). **If yes, the floor is unproven — the
+   untried operator is the next attempt, not the dead-end.**
+3. **Only a genuine proof** (a dual certificate / LP/SDP bound matching the value)
+   warrants "this is the floor." An empirical tie never is.
+
+**Triggering incident (2026-06-08):** P2's record was a 2-agent tie to 1e-13, recorded
+in the wiki as "almost certainly the global minimum" with EV set to honest-zero. One
+untried operator — warm data-driven self-pruning — beat it by 1.03e-5 (a verified arena
+record). The discouraging prior was wrong on exactly this point. Had the agent honored
+"floor confirmed" without asking "what operator is untried?", the record never happens.
+
 ## The honesty check
 
 If a session spent > ~1 hour or > 3 compute launches making no progress and produced

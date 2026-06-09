@@ -41,6 +41,17 @@ cites: [...]
 - The next door, given this obstruction.
 ```
 
+**The "What might still work" section is load-bearing — not garnish.** It is where the
+next cycle's breakthrough is pre-written. **Triggering incident (2026-06-08):** the P2
+arena record (1.5028609 → 1.5028506, the branch's first record) came *verbatim* from
+the "what might still work" of a dead-end finding written 4 days earlier
+(`dead-end-p2-cold-seed-fixed-window.md` → warm self-pruning). The agent did not invent
+the move that session; it executed a prescription the failure-log discipline had already
+written down. So: when you write a dead-end, spend real effort on the next-door section —
+name a *concrete, untried* operator, not a vague "try harder." And when you *start* a
+problem, read the prior dead-ends' next-door sections first — the breakthrough may already
+be on the page. See [n-agent-tie-not-global-min](../../docs/wiki/concepts/n-agent-tie-not-global-min.md).
+
 **Filename pattern:** `docs/wiki/findings/dead-end-<approach>-<problem-or-class>.md`
 
 **Threshold:** A "failure worth a finding" is one that would have been worth trying — i.e., the approach was reasonable a priori. Trivial misconfigurations don't qualify. The test: would a peer mathematician/agent have considered this approach and learned something from why it didn't work?
