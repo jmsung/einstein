@@ -34,3 +34,18 @@ These four catch the failure modes called out in `agent/README.md`:
 ## Recent cycles
 
 (Empty — first cycle starts post-merge.)
+
+<!-- compounding:start -->
+## Compounding metrics (auto — Phase 4)
+
+_Computed by `docs/tools/compounding_metrics.py`. The signal of a loop that compounds, not just runs._
+
+| Metric | Value | Reading |
+|---|---|---|
+| Records achieved | 0 | problems that reached a record |
+| Median time-to-record | n/a cycles | ↓ over time = compounding |
+| Technique hit-rate (top3/tried) | 28% | ↑ = picks getting better |
+| Cite-reuse rate | 84% (49/58) | ↑ = cycles standing on prior cites |
+| % cycles recall-preceded-win | n/a (needs instrumentation) | honest gap — not faked |
+
+<!-- compounding:end -->

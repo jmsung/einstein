@@ -5,12 +5,11 @@ not in index.md), broken cites (frontmatter cite paths that don't
 resolve), and body link gaps (`[[cross-dir/foo]]` wiki links without
 matching cites: entries).
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
-
-import pytest
 
 _REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO / "docs" / "tools"))
@@ -46,7 +45,7 @@ def test_check_orphans_skips_index_readme_and_underscored(tmp_path: Path) -> Non
     (wiki / "index.md").write_text("# Index")
     (wiki / "README.md").write_text("# Readme")
     (wiki / "concepts" / "_synthesis.md").write_text("---\ntype: concept\n---")
-    (wiki / "home.md").write_text("# Home")   # also commonly an index variant
+    (wiki / "home.md").write_text("# Home")  # also commonly an index variant
     orphans = wiki_lint.check_orphans(wiki)
     # These housekeeping pages should never be flagged
     assert all("index" not in p.name for p in orphans)
@@ -119,8 +118,7 @@ def test_check_body_link_gaps_ignores_same_dir_links(tmp_path: Path) -> None:
     """Sibling references like [[other-concept]] in same dir don't need cites."""
     wiki = _make_wiki(tmp_path)
     (wiki / "concepts" / "foo.md").write_text(
-        "---\ntype: concept\ncites: []\n---\n"
-        "# foo\nSee [[other-concept]] in the same directory.\n"
+        "---\ntype: concept\ncites: []\n---\n# foo\nSee [[other-concept]] in the same directory.\n"
     )
     (wiki / "concepts" / "other-concept.md").write_text("# other")
     gaps = wiki_lint.check_body_link_gaps(wiki)
@@ -164,3 +162,75 @@ def test_run_returns_zero_when_lax_even_with_findings(tmp_path: Path) -> None:
     (wiki / "concepts" / "orphan.md").write_text("---\ntype: concept\n---\n# x")
     rc = wiki_lint.run(wiki, strict=False)
     assert rc == 0
+
+
+# ---------------- anti-bloat checks (Phase 4 of meta-learning-automation) ----
+
+
+def _finding(words: str, *, drafted: str | None = None, cites: str = "") -> str:
+    fm = "---\ntype: finding\nauthor: agent\n"
+    if drafted:
+        fm += f"drafted: {drafted}\n"
+    if cites:
+        fm += f"cites:\n  - {cites}\n"
+    fm += "---\n"
+    return fm + "# F\n" + words + "\n"
+
+
+def test_near_duplicates_flags_high_overlap(tmp_path: Path) -> None:
+    wiki = _make_wiki(tmp_path)
+    shared = "warm self pruning compact support basin floor parameterization rank deficiency"
+    (wiki / "findings" / "a.md").write_text(_finding(shared + " alpha extra one"))
+    (wiki / "findings" / "b.md").write_text(_finding(shared + " alpha extra one"))
+    (wiki / "findings" / "c.md").write_text(
+        _finding("completely different content sphere packing kissing number lattice")
+    )
+    dups = wiki_lint.check_near_duplicates(wiki, threshold=0.8)
+    names = {(d.page_a.name, d.page_b.name) for d in dups}
+    assert ("a.md", "b.md") in names
+    assert all("c.md" not in pair for pair in names)
+
+
+def test_near_duplicates_respects_threshold(tmp_path: Path) -> None:
+    wiki = _make_wiki(tmp_path)
+    (wiki / "findings" / "a.md").write_text(_finding("alpha beta gamma delta epsilon"))
+    (wiki / "findings" / "b.md").write_text(_finding("alpha beta zeta theta iota kappa"))
+    assert wiki_lint.check_near_duplicates(wiki, threshold=0.9) == []
+
+
+def test_stale_uncited_flags_old_and_unreferenced(tmp_path: Path) -> None:
+    wiki = _make_wiki(tmp_path)
+    (wiki / "findings" / "old.md").write_text(
+        _finding("lonely old finding text", drafted="2026-01-01")
+    )
+    stale = wiki_lint.check_stale_uncited(wiki, ttl_days=120, today="2026-06-08")
+    assert [s.page.name for s in stale] == ["old.md"]
+    assert stale[0].age_days > 120
+
+
+def test_stale_uncited_skips_recent_and_reused(tmp_path: Path) -> None:
+    wiki = _make_wiki(tmp_path)
+    # recent → not stale
+    (wiki / "findings" / "recent.md").write_text(_finding("recent text", drafted="2026-06-01"))
+    # old but cited by another page → reused, not bloat
+    (wiki / "findings" / "old-cited.md").write_text(
+        _finding("old but useful", drafted="2026-01-01")
+    )
+    (wiki / "concepts" / "ref.md").write_text(
+        "---\ntype: concept\nauthor: agent\ncites:\n  - ../findings/old-cited.md\n---\n# ref\n"
+    )
+    stale = wiki_lint.check_stale_uncited(wiki, ttl_days=120, today="2026-06-08")
+    assert stale == []
+
+
+def test_anti_bloat_excluded_from_strict_failure(tmp_path: Path) -> None:
+    """Near-dup / stale are advisory: they must NOT make strict mode fail."""
+    wiki = _make_wiki(tmp_path)
+    (wiki / "index.md").write_text("# Index")
+    dup = "shared tokens one two three four five six seven eight nine"
+    (wiki / "findings" / "a.md").write_text(_finding(dup))
+    (wiki / "findings" / "b.md").write_text(_finding(dup))
+    # index references both → no orphans; no broken cites; no body gaps.
+    (wiki / "index.md").write_text("# Index\n- [a](findings/a.md)\n- [b](findings/b.md)\n")
+    assert wiki_lint.check_near_duplicates(wiki, threshold=0.8)  # dups exist
+    assert wiki_lint.run(wiki, strict=True) == 0  # but strict still passes
