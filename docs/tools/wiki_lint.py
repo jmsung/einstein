@@ -271,19 +271,25 @@ class StaleFinding:
 
 def _inbound_cite_targets(wiki: Path) -> set[Path]:
     """Every cite/body-link target that resolves inside wiki/ — the set of pages
-    that ARE referenced by at least one other page."""
+    referenced by *another* page. Self-references are excluded so a self-citing
+    stale finding can't escape the stale-uncited check."""
     referenced: set[Path] = set()
     for p in _wiki_pages(wiki):
+        src = p.resolve()
         text = p.read_text()
         for c in _extract_cites(text):
             if c.startswith("http") or "*" in c:
                 continue
-            referenced.add((p.parent / c).resolve())
+            t = (p.parent / c).resolve()
+            if t != src:
+                referenced.add(t)
         body = text[m.end() :] if (m := _FM_RE.match(text)) else text
         for link in _BODY_LINK_RE.findall(body):
             link = link.strip()
             link = link if link.endswith(".md") else link + ".md"
-            referenced.add((p.parent / link).resolve())
+            t = (p.parent / link).resolve()
+            if t != src:
+                referenced.add(t)
     return referenced
 
 

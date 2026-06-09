@@ -232,9 +232,11 @@ def write_block(metrics: Path, block: str) -> None:
     """Idempotently splice `block` into metrics between the markers; append if absent."""
     text = metrics.read_text() if metrics.exists() else "# Metrics\n"
     if START_MARKER in text and END_MARKER in text:
+        # Replacement via a function so `block` is treated literally — a metric
+        # value containing a backslash would otherwise be read as a re escape.
         text = re.sub(
             re.escape(START_MARKER) + r".*?" + re.escape(END_MARKER),
-            block,
+            lambda _m: block,
             text,
             flags=re.DOTALL,
         )
