@@ -1068,6 +1068,32 @@ def _run_pre_cycle_synthesis(
         return None
 
 
+def _current_head(repo: Path = _REPO) -> str | None:
+    """Resolve the cb worktree's current HEAD sha, or None if unavailable.
+
+    Phase 2 Goal 2: used as the per-cycle capture-gate base. The inner
+    `claude -p` session inherits `EINSTEIN_CAPTURE_GATE_BASE=<this sha>` so its
+    Stop-hook capture-gate (`.claude/hooks/capture-gate.sh`) scopes to *this*
+    cycle's writes — diffs since pre-cycle HEAD — rather than the whole
+    branch-vs-main accumulation (which would pass trivially once the branch
+    already has one captured cycle). Best-effort: any git failure → None →
+    the gate falls back to its `main` default.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+        log.debug("capture-gate base resolve failed: %s", e)
+        return None
+    sha = out.stdout.strip()
+    return sha or None
+
+
 def _try_llm_path(
     *,
     problem: Problem,
@@ -1244,12 +1270,24 @@ def _try_llm_path(
         "Task",
     ]
 
+    # Phase 2 Goal 2: scope the inner session's capture-gate to THIS cycle by
+    # pinning EINSTEIN_CAPTURE_GATE_BASE to the pre-cycle HEAD. Without this the
+    # gate diffs against `main` and passes trivially once the branch already
+    # has one captured cycle — every later cycle could skip its capture. Merged
+    # over os.environ by claude_headless, so the operator's EINSTEIN_CAPTURE_GATE
+    # mode (warn/block/off) is preserved.
+    run_env: dict[str, str] | None = None
+    gate_base = _current_head()
+    if gate_base:
+        run_env = {"EINSTEIN_CAPTURE_GATE_BASE": gate_base}
+
     try:
         run_result = headless_runner(
             prompt,
             allowed_tools=allowed_tools,
             timeout_seconds=timeout_seconds,
             add_dirs=[DEFAULT_MB_DIR],
+            env=run_env,
         )
     except Exception as e:
         log.warning("claude_headless raised unexpectedly: %s — falling back", e)

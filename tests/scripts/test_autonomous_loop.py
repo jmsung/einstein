@@ -2651,6 +2651,69 @@ def test_llm_path_telemetry_recorder_failure_never_breaks_cycle(tmp_path: Path) 
 
 
 # ============================================================================
+# Phase 2 Goal 2 (js/feat/meta-learning-inner-agent) — per-cycle capture-gate base
+# ============================================================================
+
+
+def test_llm_path_pins_capture_gate_base_to_pre_cycle_head(tmp_path, monkeypatch) -> None:
+    """_try_llm_path passes env EINSTEIN_CAPTURE_GATE_BASE = current HEAD to the
+    headless runner so the inner session's capture-gate scopes to this cycle."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="slsqp", score=2.6)
+    monkeypatch.setattr(al, "_current_head", lambda *_a, **_k: "deadbeefcafe")
+
+    al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=seams["recorder"],
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=lambda *a, **k: None,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert len(seams["runner_calls"]) == 1
+    env = seams["runner_calls"][0]["env"]
+    assert env == {"EINSTEIN_CAPTURE_GATE_BASE": "deadbeefcafe"}
+
+
+def test_llm_path_omits_gate_base_when_head_unresolvable(tmp_path, monkeypatch) -> None:
+    """If HEAD can't be resolved (not a git repo), env is None — the gate falls
+    back to its `main` default rather than pinning a bogus base."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="nm", score=2.6)
+    monkeypatch.setattr(al, "_current_head", lambda *_a, **_k: None)
+
+    al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=seams["recorder"],
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=lambda *a, **k: None,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert seams["runner_calls"][0]["env"] is None
+
+
+def test_current_head_returns_sha_in_real_repo() -> None:
+    """_current_head resolves a 40-char sha in this actual git repo."""
+    sha = al._current_head()
+    assert sha is not None
+    assert len(sha) == 40
+    assert all(c in "0123456789abcdef" for c in sha)
+
+
+# ============================================================================
 # Goal 2 (js/feat/parallel-attempts) — EINSTEIN_PARALLEL_K wiring
 # ============================================================================
 
