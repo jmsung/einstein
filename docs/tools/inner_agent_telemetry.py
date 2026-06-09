@@ -71,7 +71,8 @@ class CycleTelemetry:
     wall_clock_s: float = 0.0
     input_tokens: int = 0
     output_tokens: int = 0
-    token_source: str = "estimate"  # "estimate" | "exact" (exact lands in Goal 3)
+    token_source: str = "estimate"  # "estimate" | "exact" (json-envelope, Goal 3)
+    cost_usd: float = 0.0  # exact total_cost_usd from the json envelope (Goal 3)
     ts: str = ""
 
     @property
@@ -95,6 +96,7 @@ def record_cycle(
     input_tokens: int = 0,
     output_tokens: int = 0,
     token_source: str = "estimate",
+    cost_usd: float = 0.0,
     ts: str | None = None,
 ) -> CycleTelemetry:
     """Append one telemetry record to the JSONL ledger; return the record.
@@ -113,6 +115,7 @@ def record_cycle(
         input_tokens=int(input_tokens),
         output_tokens=int(output_tokens),
         token_source=token_source,
+        cost_usd=float(cost_usd),
         ts=ts if ts is not None else _now_iso(),
     )
     p = Path(telemetry_path)
@@ -162,6 +165,8 @@ class TelemetrySummary:
     parse_ok: int = 0
     timeouts: int = 0
     total_tokens: int = 0
+    total_cost_usd: float = 0.0
+    exact_cost_cycles: int = 0  # llm cycles with a real cost_usd (>0)
     wall_clock_total_s: float = 0.0
     error_kind_counts: dict[str, int] = field(default_factory=dict)
 
@@ -203,6 +208,14 @@ class TelemetrySummary:
             return 0.0
         return self.wall_clock_total_s / self.cycles
 
+    @property
+    def mean_cost_per_llm_cycle(self) -> float:
+        """$/cycle over cycles with an exact cost (Goal 3). 0.0 if none had
+        exact cost (e.g. all token_source=estimate, pre-json-mode)."""
+        if self.exact_cost_cycles == 0:
+            return 0.0
+        return self.total_cost_usd / self.exact_cost_cycles
+
 
 def summarize(records: list[CycleTelemetry]) -> TelemetrySummary:
     """Fold records into the readiness-criteria summary (R2–R5)."""
@@ -213,6 +226,9 @@ def summarize(records: list[CycleTelemetry]) -> TelemetrySummary:
         if r.path_taken == "llm":
             s.llm_cycles += 1
             s.total_tokens += r.total_tokens
+            if r.cost_usd > 0:
+                s.total_cost_usd += r.cost_usd
+                s.exact_cost_cycles += 1
         else:
             s.fallback_cycles += 1
             if r.llm_error_kind:
@@ -259,6 +275,10 @@ def _cli(argv: list[str] | None = None) -> int:
         print(f"R3 parse_success    = {s.parse_success_rate:.3f}  (GO ≥ 0.90)")
         print(f"R4 timeout_rate     = {s.timeout_rate:.3f}  (GO ≤ 0.10)")
         print(f"R5 mean_tokens/llm  = {s.mean_tokens_per_llm_cycle:.0f}  (GO ≤ 250000)")
+        print(
+            f"   mean_$/llm_cycle  = ${s.mean_cost_per_llm_cycle:.4f}  "
+            f"(over {s.exact_cost_cycles} exact-cost cycles; total ${s.total_cost_usd:.4f})"
+        )
         print(f"   mean_wall_clock  = {s.mean_wall_clock_s:.1f}s")
         if s.error_kind_counts:
             kinds = ", ".join(f"{k}={v}" for k, v in sorted(s.error_kind_counts.items()))

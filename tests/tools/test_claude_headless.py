@@ -209,3 +209,58 @@ def test_run_uses_custom_claude_bin():
         ch.run("PROMPT", claude_bin="/opt/custom/claude")
     cmd = mock_run.call_args[0][0]
     assert cmd[0] == "/opt/custom/claude"
+
+
+# ---------------- json envelope: exact usage + cost (Phase 2 Goal 3) ----------------
+
+
+_JSON_ENVELOPE = (
+    '{"type":"result","subtype":"success","is_error":false,'
+    '"result":"{\\"strategy\\":\\"slsqp\\"}",'
+    '"total_cost_usd":0.0421,'
+    '"usage":{"input_tokens":6300,"output_tokens":210,"cache_read_input_tokens":0}}'
+)
+
+
+def test_run_json_mode_unwraps_result_and_extracts_usage():
+    """json output → stdout is the agent reply text; exact tokens + cost set."""
+    fake = MagicMock(returncode=0, stdout=_JSON_ENVELOPE, stderr="")
+    with patch.object(ch.subprocess, "run", return_value=fake):
+        result = ch.run("PROMPT", output_format="json")
+    assert result.ok
+    assert result.stdout == '{"strategy":"slsqp"}'  # unwrapped result field
+    assert result.input_tokens == 6300
+    assert result.output_tokens == 210
+    assert result.cost_usd == 0.0421
+
+
+def test_run_json_mode_is_error_envelope_maps_to_failure():
+    fake = MagicMock(
+        returncode=0,
+        stdout='{"type":"result","is_error":true,"result":"model refused"}',
+        stderr="",
+    )
+    with patch.object(ch.subprocess, "run", return_value=fake):
+        result = ch.run("PROMPT", output_format="json")
+    assert not result.ok
+    assert result.error_kind == "non-zero"
+
+
+def test_run_json_mode_unparseable_envelope_degrades_to_raw_stdout():
+    """A non-envelope stdout in json mode → raw stdout, usage None (graceful)."""
+    fake = MagicMock(returncode=0, stdout="not json at all", stderr="")
+    with patch.object(ch.subprocess, "run", return_value=fake):
+        result = ch.run("PROMPT", output_format="json")
+    assert result.ok
+    assert result.stdout == "not json at all"
+    assert result.input_tokens is None
+    assert result.cost_usd is None
+
+
+def test_text_mode_leaves_usage_none():
+    fake = MagicMock(returncode=0, stdout='{"strategy":"x"}', stderr="")
+    with patch.object(ch.subprocess, "run", return_value=fake):
+        result = ch.run("PROMPT")  # default text mode
+    assert result.ok
+    assert result.input_tokens is None
+    assert result.output_tokens is None

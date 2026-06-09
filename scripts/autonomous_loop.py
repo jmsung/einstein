@@ -326,6 +326,27 @@ def _bandit_enabled() -> bool:
     return os.environ.get("EINSTEIN_BANDIT", "").strip().lower() not in _BANDIT_FALSY
 
 
+DEFAULT_MAX_COST_PER_CYCLE_USD = 5.0
+
+
+def _max_cost_per_cycle_usd() -> float:
+    """Per-cycle cost ceiling for the runaway-cost guardrail (Phase 2 Goal 3).
+
+    A single inner cycle costing more than this is anomalous (the observed
+    pilot mean was ~$0.01-0.10); exceeding it logs a WARNING so a human
+    notices a runaway loop. The HARD daily ceiling stays the token-budget gate
+    (`inner_agent_gates`, 5M tokens/day). Override via env
+    `EINSTEIN_MAX_COST_PER_CYCLE_USD`; set 0 to disable the warning.
+    """
+    raw = os.environ.get("EINSTEIN_MAX_COST_PER_CYCLE_USD", "").strip()
+    if not raw:
+        return DEFAULT_MAX_COST_PER_CYCLE_USD
+    try:
+        return float(raw)
+    except ValueError:
+        return DEFAULT_MAX_COST_PER_CYCLE_USD
+
+
 def _bandit_seed(problem_id: int, attempt_index: int) -> int:
     """Deterministic per (problem, attempt) seed so cycles are reproducible.
 
@@ -1148,6 +1169,8 @@ def _try_llm_path(
         parse_ok: bool = False,
         input_tokens: int = 0,
         output_tokens: int = 0,
+        token_source: str = "estimate",
+        cost_usd: float = 0.0,
     ) -> None:
         if telemetry_recorder is None:
             return
@@ -1162,7 +1185,8 @@ def _try_llm_path(
                 wall_clock_s=round(time.monotonic() - t_start, 3),
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
-                token_source="estimate",
+                token_source=token_source,
+                cost_usd=cost_usd,
             )
         except Exception as e:  # noqa: BLE001 — telemetry is never load-bearing
             log.warning("telemetry recorder failed: %s (continuing)", e)
@@ -1288,6 +1312,8 @@ def _try_llm_path(
             timeout_seconds=timeout_seconds,
             add_dirs=[DEFAULT_MB_DIR],
             env=run_env,
+            # Phase 2 Goal 3: json envelope carries exact usage + total_cost_usd.
+            output_format="json",
         )
     except Exception as e:
         log.warning("claude_headless raised unexpectedly: %s — falling back", e)
@@ -1311,18 +1337,36 @@ def _try_llm_path(
         _emit("fallback", error_kind="parse-error")
         return None
 
-    # Estimate token usage from char counts (rough 4 chars / token). The
-    # exact count would require `claude -p --output-format json` and
-    # envelope parsing, which is a heavier path. Estimate is good enough
-    # for the daily-budget gate.
-    input_estimate = len(prompt) // 4
-    output_estimate = len(run_result.stdout) // 4
+    # Token + cost accounting. Phase 2 Goal 3: prefer the EXACT counts from the
+    # json envelope (claude_headless populates input_tokens/output_tokens/
+    # cost_usd in json mode); fall back to the rough chars//4 estimate when
+    # they're absent (text mode / test seams without usage fields).
+    exact_in = getattr(run_result, "input_tokens", None)
+    exact_out = getattr(run_result, "output_tokens", None)
+    cost_usd = getattr(run_result, "cost_usd", None) or 0.0
+    if exact_in is not None and exact_out is not None:
+        input_tokens, output_tokens = int(exact_in), int(exact_out)
+        token_source = "exact"
+    else:
+        input_tokens = len(prompt) // 4
+        output_tokens = len(run_result.stdout) // 4
+        token_source = "estimate"
+    # Runaway-cost guardrail: flag an anomalously expensive cycle for review.
+    ceiling = _max_cost_per_cycle_usd()
+    if ceiling > 0 and cost_usd > ceiling:
+        log.warning(
+            "inner cycle cost $%.4f exceeded per-cycle ceiling $%.2f (P%d) — "
+            "review for a runaway loop",
+            cost_usd,
+            ceiling,
+            problem.problem_id,
+        )
     if budget_recorder is not None:
         try:
             budget_recorder(
                 budget_path,
-                input_tokens=input_estimate,
-                output_tokens=output_estimate,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
             )
         except Exception as e:
             log.warning("budget recorder failed: %s (continuing)", e)
@@ -1334,8 +1378,10 @@ def _try_llm_path(
     _emit(
         "llm",
         parse_ok=True,
-        input_tokens=input_estimate,
-        output_tokens=output_estimate,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        token_source=token_source,
+        cost_usd=cost_usd,
     )
 
     # Build the cycle-log result dict
@@ -1348,7 +1394,9 @@ def _try_llm_path(
     if bandit_notes_parts:
         notes_parts.extend(bandit_notes_parts)
     notes_parts.append(f"llm-strategy={response.strategy}")
-    notes_parts.append(f"tokens=in:{input_estimate}/out:{output_estimate}")
+    notes_parts.append(f"tokens={token_source}:in:{input_tokens}/out:{output_tokens}")
+    if cost_usd:
+        notes_parts.append(f"cost=${cost_usd:.4f}")
 
     start_score = problem.score_current
     end_score: float | str = (

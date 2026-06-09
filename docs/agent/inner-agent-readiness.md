@@ -58,9 +58,12 @@ by the A2 6-gate chain and its own kill switch (`EINSTEIN_AUTO_SUBMIT=0`).
 These are the reasons the path is currently *unproven* rather than *failing* — we cannot yet
 measure most of the criteria below:
 
-1. **No exact token/cost accounting.** Usage is estimated as `len(text) // 4` chars→tokens
-   (`_try_llm_path:1226`). The daily-budget gate runs on estimates; `$/cycle` cannot be
-   reported truthfully without `claude -p --output-format json` envelope parsing.
+1. ~~**No exact token/cost accounting.**~~ **CLOSED (Goal 3):** `claude_headless` now
+   parses the `--output-format json` envelope for exact `input_tokens` / `output_tokens` /
+   `total_cost_usd`; `_try_llm_path` records them (`token_source="exact"`) and falls back to
+   the `len//4` estimate only when absent. First live measurement: **~$0.56/cycle** on P14
+   (Opus 4.7, cache-warm — exact `input_tokens` is tiny because the prompt is mostly
+   cache-read).
 2. **No wall-clock telemetry.** The result dict hard-codes `"hours": 0.0` with a comment
    admitting it is unknown. Timeout-rate and per-cycle latency are unobservable.
 3. **No per-cycle outcome ledger.** Whether a cycle took the LLM path or fell back, and why,
@@ -81,7 +84,7 @@ modes; Goal 4 extends to ≥ 8 for the verdict). Each criterion lists how it is 
 | R2 | **Fallback rate** — fraction of attempted LLM cycles that fall back to mechanical. | ≤ 20% (≥ 4/5 take the LLM path) | Goal-1 per-cycle outcome ledger |
 | R3 | **Parse success** — of `claude_headless` runs returning `ok=True`, fraction whose stdout passes `parse_response`. | ≥ 90% | ledger: parse-ok / ok-runs |
 | R4 | **Timeout rate** — fraction of cycles hitting the 1800s wall-clock cap. | ≤ 10%; ideally 0 | ledger: `error_kind="timeout"` |
-| R5 | **Cost ceiling** — measured tokens/cycle (exact, post-Goal-1), and the implied $/cycle. | ≤ 250k tokens/cycle (so the 5M/day budget sustains ≥ 20 cycles); $/cycle recorded, no hard $ cap yet | exact token accounting (Goal 3) |
+| R5 | **Cost ceiling** — exact tokens/cycle + $/cycle (Goal 3, json envelope). | ≤ 250k tokens/cycle (5M/day budget = hard ceiling); per-cycle runaway-cost warning at `EINSTEIN_MAX_COST_PER_CYCLE_USD` (default $5) | exact token+cost accounting (live: ~$0.56/cycle) |
 | R6 | **Budget gate holds** — across repeated cycles the daily ledger accumulates correctly and `precheck` refuses once the cap is crossed. | gate fires at cap, never over-spends | Goal-3 repeated-cycle test |
 | R7 | **Capture-gate passes each cycle** — every LLM cycle produces a cycle-log row AND ≥1 cited/verified `findings/` or `concepts/` page (Phase-0 gate, per-cycle base scoping from Goal 2). | 100% (it is a hard gate) | capture-gate hook exit + Goal-2 scoping |
 | R8 | **Capture quality (not spam)** — a human spot-check of the pilot's findings finds them cited, grounded, and non-duplicative (anti-bloat lint clean). | ≥ 90% of captures judged keep-worthy; lint passes | human review + `wiki_lint` anti-bloat |

@@ -2714,6 +2714,100 @@ def test_current_head_returns_sha_in_real_repo() -> None:
 
 
 # ============================================================================
+# Phase 2 Goal 3 (js/feat/meta-learning-inner-agent) — exact tokens + cost
+# ============================================================================
+
+
+def _runner_with_usage(input_tokens, output_tokens, cost_usd):
+    from types import SimpleNamespace
+
+    def runner(prompt, **kw):
+        return SimpleNamespace(
+            ok=True,
+            stdout='{"strategy":"slsqp"}',
+            stderr="",
+            returncode=0,
+            error_kind="",
+            error_message="",
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cost_usd=cost_usd,
+        )
+
+    return runner
+
+
+def test_llm_path_uses_exact_tokens_and_cost_from_envelope(tmp_path, monkeypatch) -> None:
+    """When the headless result carries usage fields (json mode), telemetry +
+    budget record the EXACT counts with token_source=exact and the cost."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="slsqp", score=2.6)
+    monkeypatch.setattr(al, "_current_head", lambda *_a, **_k: "abc")
+    tele_rec: list[dict] = []
+    budget_rec: list[dict] = []
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=_runner_with_usage(6300, 210, 0.0421),
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=lambda path, **kw: budget_rec.append(kw),
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=lambda path, **kw: tele_rec.append(kw),
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is not None
+    assert tele_rec[0]["token_source"] == "exact"
+    assert tele_rec[0]["input_tokens"] == 6300
+    assert tele_rec[0]["output_tokens"] == 210
+    assert tele_rec[0]["cost_usd"] == 0.0421
+    # budget ledger gets the exact counts, not the chars//4 estimate
+    assert budget_rec[0]["input_tokens"] == 6300
+    # notes carry the source + cost
+    assert "tokens=exact:in:6300/out:210" in res["notes"]
+    assert "cost=$0.0421" in res["notes"]
+
+
+def test_llm_path_falls_back_to_estimate_without_usage_fields(tmp_path, monkeypatch) -> None:
+    """A runner whose result lacks usage fields → token_source=estimate."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="nm", score=2.6)  # fake_run_result has no usage
+    monkeypatch.setattr(al, "_current_head", lambda *_a, **_k: "abc")
+    tele_rec: list[dict] = []
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=lambda *a, **k: None,
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=lambda path, **kw: tele_rec.append(kw),
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is not None
+    assert tele_rec[0]["token_source"] == "estimate"
+    assert tele_rec[0]["cost_usd"] == 0.0
+
+
+def test_max_cost_per_cycle_env_override(monkeypatch) -> None:
+    monkeypatch.delenv("EINSTEIN_MAX_COST_PER_CYCLE_USD", raising=False)
+    assert al._max_cost_per_cycle_usd() == al.DEFAULT_MAX_COST_PER_CYCLE_USD
+    monkeypatch.setenv("EINSTEIN_MAX_COST_PER_CYCLE_USD", "12.5")
+    assert al._max_cost_per_cycle_usd() == 12.5
+    monkeypatch.setenv("EINSTEIN_MAX_COST_PER_CYCLE_USD", "garbage")
+    assert al._max_cost_per_cycle_usd() == al.DEFAULT_MAX_COST_PER_CYCLE_USD
+
+
+# ============================================================================
 # Goal 2 (js/feat/parallel-attempts) — EINSTEIN_PARALLEL_K wiring
 # ============================================================================
 

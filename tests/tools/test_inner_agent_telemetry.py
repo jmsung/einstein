@@ -151,3 +151,39 @@ def test_summarize_mean_tokens_only_over_llm_cycles() -> None:
     s = iat.summarize(recs)
     assert s.total_tokens == 14000
     assert s.mean_tokens_per_llm_cycle == 7000.0
+
+
+def test_summarize_cost_only_over_exact_cost_cycles() -> None:
+    """$/cycle averages only cycles that carry an exact cost (>0); estimate-only
+    cycles (cost_usd=0) don't dilute the mean."""
+    recs = [
+        _rec(path_taken="llm", parse_ok=True, token_source="exact", cost_usd=0.04),
+        _rec(path_taken="llm", parse_ok=True, token_source="exact", cost_usd=0.06),
+        _rec(path_taken="llm", parse_ok=True, token_source="estimate", cost_usd=0.0),
+    ]
+    s = iat.summarize(recs)
+    assert s.exact_cost_cycles == 2
+    assert abs(s.total_cost_usd - 0.10) < 1e-9
+    assert abs(s.mean_cost_per_llm_cycle - 0.05) < 1e-9
+
+
+def test_summarize_cost_zero_when_no_exact_cost() -> None:
+    s = iat.summarize([_rec(path_taken="llm", parse_ok=True, cost_usd=0.0)])
+    assert s.exact_cost_cycles == 0
+    assert s.mean_cost_per_llm_cycle == 0.0
+
+
+def test_record_cycle_round_trips_cost_and_source(tmp_path: Path) -> None:
+    p = tmp_path / "tele.jsonl"
+    iat.record_cycle(
+        p,
+        problem_id=2,
+        attempt_index=1,
+        path_taken="llm",
+        parse_ok=True,
+        token_source="exact",
+        cost_usd=0.0421,
+    )
+    rec = iat.read_records(p)[0]
+    assert rec.token_source == "exact"
+    assert rec.cost_usd == 0.0421
