@@ -47,7 +47,7 @@ automatic capture doesn't degrade into spam.
 
 | Layer | File | Status |
 |---|---|---|
-| Outer loop over 23 problems | `scripts/autonomous_loop.py` | ✅ queue/filter/sort/record — **`inner_attempt()` is a placeholder** |
+| Outer loop over 23 problems | `scripts/autonomous_loop.py` | ✅ queue/filter/sort/record — **`inner_attempt()` has a wired LLM inner-agent path** (`_try_llm_path` → `claude_headless`, from feat-autonomous-loop Goal 7.7), **not yet proven for unattended use** |
 | Capture + index discipline | `docs/tools/cycle_runner.sh` | ✅ refresh_qmd → wiki_graph gap-detect → gap_search → promotion check |
 | Measurement | `docs/agent/{cycle-log,skill-library,metrics,promotion-log}.md` | ✅ |
 | Recall | qmd + REFUSING cycle-start query (`cycle-discipline`) + council seeding | ✅ |
@@ -55,16 +55,19 @@ automatic capture doesn't degrade into spam.
 | Knowledge | `docs/wiki/{concepts,techniques,findings,rules}` | ✅ |
 
 The closed loop: **select → recall → attempt → detect-signal → capture → index → prune.**
-Every arrow has an owner *except* "attempt" (placeholder) and "detect/capture"
-(discretionary).
+Every arrow has an owner; "attempt" has a wired LLM inner-agent path (not yet proven for
+unattended use) and "detect/capture" was discretionary (this branch makes it a gate).
 
 ## The four gaps and their fixes
 
-### Gap 1 — `inner_attempt()` is a stub (Phase 2, deferred)
-The outer loop cannot solve problems unattended because the inner solve isn't wired to an
-agent. Fix: wire `inner_attempt(problem)` to a **headless Claude Code agent** (`claude -p`
-/ Agent SDK) that runs the math-solving-protocol for one problem in its own worktree and
-returns a structured result. Biggest effort; its own branch; must land before Phase 3.
+### Gap 1 — `inner_attempt()`'s LLM path is wired but unproven for unattended use (Phase 2, deferred)
+`inner_attempt(problem)` already has a **headless Claude Code agent** path
+(`_try_llm_path` → `claude_headless`, landed on feat-autonomous-loop Goal 7.7): it renders
+the inner-agent prompt, runs the math-solving-protocol via `claude -p`, parses the
+structured reply, and threads score/payload to auto-submit. What remains (Phase 2) is
+*proving it for unattended use* — sustained reliability, cost/budget behavior, and quality
+of the agent's captures across many cycles. Until then the loop is operated attended. Its
+own branch; must be proven before Phase 3.
 
 ### Gap 2 — capture is discretionary (Phase 0, THIS branch — highest leverage)
 Add a **`Stop` hook** (`.claude/hooks/capture-gate.sh`, mirroring `wall-detector.sh`) that

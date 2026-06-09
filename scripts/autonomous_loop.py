@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """autonomous_loop.py — outer loop over the 23 Einstein Arena problems.
 
-Architecture (this file = OUTER loop only; the inner attempt is filled
-by Goal 4):
+Architecture (this file = OUTER loop; the inner attempt has a wired LLM path,
+`_try_llm_path` → `claude_headless`, with a mechanical fallback):
 
     1. Load problem queue (docs/wiki/problems/*.md frontmatter)
     2. Filter by status (skip blocked / hidden / shelved / frozen / conquered)
     3. Sort by tier (S>A>B>C) then problem_id ascending
     4. For each problem in the queue:
-       a. inner_attempt(problem)  — placeholder for Goal 4
-       b. record_cycle_row(...)   — append to docs/agent/cycle-log.md
-       c. cycle_runner.sh(cycle_id, problem)  — discipline (refresh_qmd,
-          wiki_graph, gap_search, promotion check)
+       a. inner_attempt(problem)  — LLM agent (gated) or mechanical fallback
+       b. _route_cycle_signals(...) — classify + route this cycle's signals
+       c. record_cycle_row(...)   — append to docs/agent/cycle-log.md
+       d. cycle_runner.sh(cycle_id, problem)  — discipline (refresh_qmd,
+          wiki_graph, gap_search, wiki_lint, compounding_metrics, promotion)
 
 Usage:
     uv run python scripts/autonomous_loop.py --one-problem
