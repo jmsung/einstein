@@ -15,6 +15,7 @@ monotone support shrink), plus the `self_pruning_search` orchestration.
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from einstein.first_autocorrelation.optimizer import (
     prune_smallest,
@@ -77,3 +78,10 @@ def test_self_pruning_search_shrinks_support_warm() -> None:
     assert supports == sorted(supports, reverse=True)
     # best_f is compact (some cells exactly zero) — the whole point
     assert np.count_nonzero(best_f == 0.0) > 0
+
+
+def test_self_pruning_search_rejects_empty_schedule() -> None:
+    # an empty schedule (e.g. floor_support >= n) would otherwise return best_f=None
+    # and crash downstream with an opaque TypeError — fail loudly instead.
+    with pytest.raises(ValueError, match="non-empty"):
+        self_pruning_search(np.ones(64), betas=[1e5], support_schedule=[])

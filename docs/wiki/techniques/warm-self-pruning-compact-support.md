@@ -15,8 +15,8 @@ cites:
   - ../findings/p2-warm-self-pruning-beats-record.md
   - ../findings/p2-peak-locking-hessian-mechanism.md
   - ../findings/dead-end-p2-cold-seed-fixed-window.md
-  - ../../scripts/first_autocorrelation/self_pruning_search.py
-  - ../../src/einstein/first_autocorrelation/optimizer.py
+  - scripts/first_autocorrelation/self_pruning_search.py
+  - src/einstein/first_autocorrelation/optimizer.py
 ---
 
 # Warm data-driven self-pruning for compact-support optima
@@ -69,10 +69,10 @@ verified objective-shape-agnostic on P2/P3.
 
 ## Implementation
 
-- Primitives in [`optimizer.py`](../../src/einstein/first_autocorrelation/optimizer.py):
+- Primitives in [`optimizer.py`](../../../src/einstein/first_autocorrelation/optimizer.py):
   `vsq_from_f`, `prune_smallest`, `self_pruning_search` (with an `on_level` streaming
   callback), reusing `surrogate_vsq` / `lbfgs_vsq` / `score_vsq_masked`.
-- Entry point [`self_pruning_search.py`](../../scripts/first_autocorrelation/self_pruning_search.py):
+- Entry point [`self_pruning_search.py`](../../../scripts/first_autocorrelation/self_pruning_search.py):
   multiprocess over warm-starts, 1 BLAS thread/worker (A4), live per-level logging.
 - Compute: sequential L-BFGS ⇒ **local CPU**; GPU sits idle. ~10 min per warm chain
   at n=90000.

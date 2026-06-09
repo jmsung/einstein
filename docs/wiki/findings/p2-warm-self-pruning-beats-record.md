@@ -8,7 +8,7 @@ related_problems: [2, 3, 4]
 related_concepts:
   - autocorrelation-inequality
   - parameterization-induced-rank-deficiency
-  - compact-support
+  - n-agent-tie-not-global-min
 related_findings:
   - dead-end-p2-compact-support-basin-floor.md
   - dead-end-p2-cold-seed-fixed-window.md

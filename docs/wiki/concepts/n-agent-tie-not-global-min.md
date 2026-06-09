@@ -79,7 +79,7 @@ is an N-agent tie, ask the falsifying question:
 - Treating leaderboard consensus as a stopping criterion. Consensus among
   same-method searchers is not optimality.
 - Closing a problem as honest-zero while an untried operator is on the table — that
-  is the [wall-hit](../../.claude/rules/wall-hit-escalation.md) anti-pattern wearing
+  is the [wall-hit](../../../.claude/rules/wall-hit-escalation.md) anti-pattern wearing
   a respectable disguise ("the floor is confirmed").
 
 ## See also

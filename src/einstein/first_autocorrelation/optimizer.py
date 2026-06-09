@@ -172,6 +172,8 @@ def self_pruning_search(
     ``on_level`` is an optional callback invoked with each level's trace row as soon
     as that level finishes — for streaming progress on the multi-hour real run.
     """
+    if not support_schedule:
+        raise ValueError("support_schedule must be non-empty")
     v = vsq_from_f(f_init)
     mask = f_init > 0.0
     best_f: np.ndarray | None = None

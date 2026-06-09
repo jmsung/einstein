@@ -119,6 +119,8 @@ def triple_verify_best(f: np.ndarray) -> tuple[bool, str, float]:
 
     r = core.verify({"values": f.tolist()}, core.get_verifier(2))
     nums = [r.fast, r.exact, r.cross]
+    if any(x is None for x in nums):  # a verifier was unavailable / raised
+        return r.passed, f"{r.reason} (incomplete numbers: {nums})", float("inf")
     delta = max(abs(a - b) for i, a in enumerate(nums) for b in nums[i + 1 :])
     return r.passed, r.reason, delta
 
@@ -143,6 +145,8 @@ def main() -> None:
 
     n = args.n
     schedule = build_schedule(n, args.floor_support, args.steps)
+    if not schedule:
+        ap.error(f"--floor-support {args.floor_support} >= --n {n}: empty support schedule")
     tasks = []
     for path in args.warmstarts:
         f = load_warmstart(path)

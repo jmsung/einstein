@@ -25,8 +25,8 @@ Goal 1 built the compact-support-targeting search the branch envisioned: contigu
 **window mask** (`f = mask · v²`, support compact by construction) + **cold-seed
 multistart** (smooth bumps — cos/parab/gauss/uniform/bimodal — NOT warm-started
 from our full-support basin), over a support-width schedule. Code:
-[`compact_support_search.py`](../../scripts/first_autocorrelation/compact_support_search.py),
-primitives in [`optimizer.py`](../../src/einstein/first_autocorrelation/optimizer.py).
+[`compact_support_search.py`](../../../scripts/first_autocorrelation/compact_support_search.py),
+primitives in [`optimizer.py`](../../../src/einstein/first_autocorrelation/optimizer.py).
 
 Diagnostic at the real grid n=90000, full β-cascade to 1e13, 3000 L-BFGS iters
 (~10 min/task), one cold cos seed per width:
