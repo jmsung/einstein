@@ -127,9 +127,17 @@ weak one's drift, which is why the quality gates are not optional.
 
 ## Open questions
 
-- What exactly counts as "verified" for the capture-gate's cite requirement (triple-verify
-  pass? any cite? a cite to `source/`)? — resolve in Phase 0.
-- Should the `Stop` hook hard-block or warn-then-log on first offense? Hard-block risks
-  trapping a session mid-debug. — resolve in Phase 0.
+- ~~What exactly counts as "verified" for the capture-gate's cite requirement (triple-verify
+  pass? any cite? a cite to `source/`)?~~ **Resolved (Phase 0):** *any cite* — a non-empty
+  `cites:` frontmatter list (canonical; 99/100 findings use it) OR an inline
+  `docs/source/`/`docs/wiki/`/URL/arxiv reference. Triple-verify gates *submission*, not
+  *capture*; the anti-bloat lint (Phase 4) + human promotion gate are the bloat counters, so
+  the capture cite-bar stays low to avoid trapping honest dead-ends. (`docs/tools/capture_gate.py::has_cite`.)
+- ~~Should the `Stop` hook hard-block or warn-then-log on first offense?~~ **Resolved (Phase 0):**
+  mode is `EINSTEIN_CAPTURE_GATE` = `warn` (default) | `block` | `off`. Default `warn` on first
+  rollout (non-trapping nag). `block` honors the Stop-hook `stop_hook_active` guard so it blocks
+  at most once per stop-chain — never traps a session mid-debug. Per-cycle scoping via
+  `EINSTEIN_CAPTURE_GATE_BASE` (default `main`; the autonomous loop sets it to pre-cycle HEAD).
+  (`.claude/hooks/capture-gate.sh`.)
 - Signal-detection false-positive rate: how to keep `record_cycle_row` from over-firing the
   "promote" action. — resolve in Phase 1.
