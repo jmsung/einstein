@@ -53,6 +53,10 @@ DEFAULT_BUDGET_PATH = DEFAULT_MB_DIR / "logs" / "inner-agent-budget.md"
 DEFAULT_SENTINEL_PATH = DEFAULT_MB_DIR / ".inner-agent-disabled"
 # Goal 4 of js/feat/research-synthesis: per-cycle citation sidecar.
 DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
+# Phase 1 of js/feat/meta-learning-automation: signal-taxonomy destinations.
+DEFAULT_CAPTURE_QUEUE = DEFAULT_MB_DIR / "logs" / "capture-queue.jsonl"
+DEFAULT_PROMOTION_LOG = _REPO / "docs" / "agent" / "promotion-log.md"
+DEFAULT_PROPOSALS_ROOT = DEFAULT_MB_DIR / "proposals"
 
 # Goal 8 of js/feat/research-synthesis: the rule_edit marker that toggles
 # the pre-cycle synthesis step. When this exact heading is present in
@@ -1623,6 +1627,52 @@ def _shell_cycle_runner(cycle_id: int, problem_slug: str) -> int:
     ).returncode
 
 
+def _route_cycle_signals(
+    result: dict,
+    problem: Problem,
+    cycle_id: int,
+    *,
+    capture_queue: Path = DEFAULT_CAPTURE_QUEUE,
+    promotion_log: Path = DEFAULT_PROMOTION_LOG,
+    proposals_root: Path = DEFAULT_PROPOSALS_ROOT,
+) -> str:
+    """Classify this cycle's signals and route each to its destination.
+
+    Returns a `signals=<names>` suffix for the notes column (empty if none
+    fired). Best-effort: any error is logged and swallowed so signal routing
+    never breaks a cycle.
+
+    The live path passes the conservative context — `mechanism_problem_count`
+    defaults to 1 and `prior_floor` is unset — so the human-gated `promote`
+    and `rule_edit` actions stay dormant until richer cross-cycle context is
+    threaded in (the Phase-1 over-firing guard). The full taxonomy is exercised
+    by `signal_taxonomy` directly + its tests.
+    """
+    try:
+        from einstein.meta_loop.proposals import ProposalStore
+        from einstein.meta_loop.signal_taxonomy import (
+            classify_signals,
+            route_signals,
+        )
+
+        signals = classify_signals(result)
+        if not signals:
+            return ""
+        store = ProposalStore(proposals_root) if proposals_root else None
+        route_signals(
+            signals,
+            capture_queue=capture_queue,
+            promotion_log=promotion_log,
+            proposal_store=store,
+            cycle_id=cycle_id,
+            problem=problem.display,
+        )
+        return "signals=" + ",".join(s.name for s in signals)
+    except Exception as e:  # pragma: no cover — defensive; never break the cycle
+        log.warning("signal routing failed: %s (continuing)", e)
+        return ""
+
+
 def _run_one_cycle(
     problem: Problem,
     *,
@@ -1718,6 +1768,20 @@ def _run_one_cycle(
                 outcome=result["outcome"],
                 notes=result["notes"],
             )
+
+    # Phase 1 (meta-learning-automation): classify the cycle's high-value
+    # signals and auto-route each to its capture destination. Best-effort —
+    # the taxonomy must never break the cycle. The `signals=` notes suffix
+    # lands in the row below so the cycle-log shows what was routed.
+    signal_suffix = _route_cycle_signals(result, problem, cycle_id)
+    if signal_suffix and "signals=" not in result["notes"]:
+        result = {**result, "notes": result["notes"] + "; " + signal_suffix}
+        cycle_result = CycleResult(
+            cycle_id=cycle_id,
+            problem=problem,
+            outcome=result["outcome"],
+            notes=result["notes"],
+        )
 
     row = format_cycle_log_row(
         cycle_id=cycle_id,

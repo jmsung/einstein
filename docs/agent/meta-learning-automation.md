@@ -139,5 +139,11 @@ weak one's drift, which is why the quality gates are not optional.
   at most once per stop-chain — never traps a session mid-debug. Per-cycle scoping via
   `EINSTEIN_CAPTURE_GATE_BASE` (default `main`; the autonomous loop sets it to pre-cycle HEAD).
   (`.claude/hooks/capture-gate.sh`.)
-- Signal-detection false-positive rate: how to keep `record_cycle_row` from over-firing the
-  "promote" action. — resolve in Phase 1.
+- ~~Signal-detection false-positive rate: how to keep `record_cycle_row` from over-firing the
+  "promote" action.~~ **Resolved (Phase 1):** the human-gated `promote` (cross-problem
+  mechanism) fires only at `mechanism_problem_count ≥ 2`, and the live loop passes the
+  conservative default `1`, so it stays dormant until a real cross-cycle counter feeds it;
+  routing additionally dedupes both the promotion-log candidate and the `rule_edit` proposal
+  against what already exists. Routing never auto-promotes and never fabricates finding prose
+  — the Phase-0 capture-gate enforces the prose got written.
+  (`src/einstein/meta_loop/signal_taxonomy.py`, `scripts/autonomous_loop.py::_route_cycle_signals`.)
