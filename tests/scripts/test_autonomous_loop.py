@@ -2505,6 +2505,152 @@ def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypat
 
 
 # ============================================================================
+# Phase 2 Goal 1 (js/feat/meta-learning-inner-agent) — per-cycle telemetry
+# ============================================================================
+
+
+def _telemetry_seam():
+    """Return (recorder, captured_list) — a fake telemetry recorder that
+    captures kwargs instead of writing to disk."""
+    captured: list[dict] = []
+
+    def recorder(path, **kw):
+        captured.append({"path": path, **kw})
+        return None
+
+    return recorder, captured
+
+
+def test_llm_path_emits_telemetry_on_success(tmp_path: Path) -> None:
+    """A clean LLM cycle emits one telemetry record path_taken=llm, parse_ok,
+    positive token estimates + a measured wall-clock; and the result dict's
+    `hours` is the measured wall-clock (no longer hard-coded 0.0)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="slsqp", score=2.6, converged=False)
+    recorder, captured = _telemetry_seam()
+    tele_path = tmp_path / "tele.jsonl"
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=2,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=seams["recorder"],
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=recorder,
+        telemetry_path=tele_path,
+    )
+    assert res is not None
+    assert len(captured) == 1
+    rec = captured[0]
+    assert rec["path"] == tele_path
+    assert rec["path_taken"] == "llm"
+    assert rec["llm_error_kind"] == ""
+    assert rec["parse_ok"] is True
+    assert rec["attempt_index"] == 2
+    assert rec["input_tokens"] > 0
+    assert rec["wall_clock_s"] >= 0.0
+    # hours column is now the measured wall-clock, not the old 0.0 sentinel.
+    assert res["hours"] == round(rec["wall_clock_s"] / 3600.0, 4)
+
+
+def test_llm_path_emits_fallback_telemetry_on_unavailable(tmp_path: Path) -> None:
+    """claude_headless ok=False(error_kind=unavailable) → telemetry records a
+    fallback with that exact error_kind, and parse is never attempted."""
+    from types import SimpleNamespace
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    recorder, captured = _telemetry_seam()
+
+    def unavailable_runner(prompt, **kw):
+        return SimpleNamespace(
+            ok=False, error_kind="unavailable", error_message="429", stdout="", stderr=""
+        )
+
+    def boom_parser(_t):
+        raise AssertionError("parser must not run when claude is unavailable")
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=unavailable_runner,
+        prompt_renderer=lambda **kw: "PROMPT",
+        response_parser=boom_parser,
+        budget_recorder=lambda *a, **k: None,
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=recorder,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is None  # fell back
+    assert len(captured) == 1
+    assert captured[0]["path_taken"] == "fallback"
+    assert captured[0]["llm_error_kind"] == "unavailable"
+    assert captured[0]["parse_ok"] is False
+
+
+def test_llm_path_emits_fallback_telemetry_on_parse_error(tmp_path: Path) -> None:
+    """A parse failure on otherwise-ok output records error_kind=parse-error."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams()
+    recorder, captured = _telemetry_seam()
+
+    def bad_parser(_t):
+        raise ValueError("not json")
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=bad_parser,
+        budget_recorder=lambda *a, **k: None,
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=recorder,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is None
+    assert len(captured) == 1
+    assert captured[0]["path_taken"] == "fallback"
+    assert captured[0]["llm_error_kind"] == "parse-error"
+
+
+def test_llm_path_telemetry_recorder_failure_never_breaks_cycle(tmp_path: Path) -> None:
+    """A raising telemetry recorder must not break the LLM result (best-effort)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="nm", score=2.6)
+
+    def boom_recorder(path, **kw):
+        raise RuntimeError("disk full")
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=seams["recorder"],
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=boom_recorder,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is not None  # cycle still succeeds despite telemetry failure
+    assert res["compute"] == "local-cpu+llm"
+
+
+# ============================================================================
 # Goal 2 (js/feat/parallel-attempts) — EINSTEIN_PARALLEL_K wiring
 # ============================================================================
 

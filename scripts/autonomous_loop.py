@@ -52,6 +52,8 @@ DEFAULT_LOCKFILE = _REPO / ".autonomous-loop.lock"
 DEFAULT_MB_DIR = _REPO.parent / "mb"
 DEFAULT_BUDGET_PATH = DEFAULT_MB_DIR / "logs" / "inner-agent-budget.md"
 DEFAULT_SENTINEL_PATH = DEFAULT_MB_DIR / ".inner-agent-disabled"
+# Phase 2 Goal 1 of js/feat/meta-learning-inner-agent: per-LLM-cycle telemetry.
+DEFAULT_TELEMETRY_PATH = DEFAULT_MB_DIR / "logs" / "inner-agent-telemetry.jsonl"
 # Goal 4 of js/feat/research-synthesis: per-cycle citation sidecar.
 DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
 # Phase 1 of js/feat/meta-learning-automation: signal-taxonomy destinations.
@@ -1079,6 +1081,8 @@ def _try_llm_path(
     budget_path: Path = DEFAULT_BUDGET_PATH,
     skill_library: Path = DEFAULT_SKILL_LIBRARY,
     timeout_seconds: int = 1800,
+    telemetry_recorder: Callable[..., object] | None = None,
+    telemetry_path: Path = DEFAULT_TELEMETRY_PATH,
 ) -> dict | None:
     """Best-effort LLM cycle (Goal 7.7).
 
@@ -1092,7 +1096,51 @@ def _try_llm_path(
 
     Returns None on any failure — caller falls back to mechanical. Failure
     paths logged at WARNING; we never raise from this function.
+
+    Phase 2 Goal 1: every exit emits one `inner_agent_telemetry` record
+    (path taken, error kind, parse-ok, wall-clock, estimated tokens) so the
+    readiness criteria in `docs/agent/inner-agent-readiness.md` are
+    measurable. `telemetry_recorder` is a test seam; None → auto-import the
+    real `record_cycle` (mirrors `budget_recorder`).
     """
+    # Telemetry scaffolding — bound before the components import so even an
+    # import-error fallback is recorded. `_emit` is best-effort: telemetry
+    # must never break a cycle.
+    t_start = time.monotonic()
+    if telemetry_recorder is None:
+        try:
+            from inner_agent_telemetry import record_cycle as _real_tele
+
+            telemetry_recorder = _real_tele
+        except ImportError:
+            telemetry_recorder = None
+
+    def _emit(
+        path_taken: str,
+        *,
+        error_kind: str = "",
+        parse_ok: bool = False,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+    ) -> None:
+        if telemetry_recorder is None:
+            return
+        try:
+            telemetry_recorder(
+                telemetry_path,
+                problem_id=problem.problem_id,
+                attempt_index=attempt_index,
+                path_taken=path_taken,
+                llm_error_kind=error_kind,
+                parse_ok=parse_ok,
+                wall_clock_s=round(time.monotonic() - t_start, 3),
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                token_source="estimate",
+            )
+        except Exception as e:  # noqa: BLE001 — telemetry is never load-bearing
+            log.warning("telemetry recorder failed: %s (continuing)", e)
+
     try:
         if prompt_renderer is None:
             from inner_agent_prompt import render_prompt as _real_render
@@ -1115,6 +1163,7 @@ def _try_llm_path(
                 budget_recorder = None
     except ImportError as e:
         log.warning("LLM path components unavailable (%s) — falling back", e)
+        _emit("fallback", error_kind="import-error")
         return None
 
     category = (
@@ -1174,6 +1223,7 @@ def _try_llm_path(
         )
     except Exception as e:
         log.warning("render_prompt failed: %s — falling back", e)
+        _emit("fallback", error_kind="render-error")
         return None
 
     # Tool allow-list reflects what the agent actually needs to run the
@@ -1203,20 +1253,24 @@ def _try_llm_path(
         )
     except Exception as e:
         log.warning("claude_headless raised unexpectedly: %s — falling back", e)
+        _emit("fallback", error_kind="headless-exception")
         return None
 
     if not getattr(run_result, "ok", False):
+        run_error_kind = getattr(run_result, "error_kind", "") or "non-zero"
         log.warning(
             "claude_headless not ok: kind=%s msg=%s — falling back",
-            getattr(run_result, "error_kind", "?"),
+            run_error_kind,
             getattr(run_result, "error_message", "?"),
         )
+        _emit("fallback", error_kind=run_error_kind)
         return None
 
     try:
         response = response_parser(run_result.stdout)
     except Exception as e:
         log.warning("inner_agent_output.parse_response failed: %s — falling back", e)
+        _emit("fallback", error_kind="parse-error")
         return None
 
     # Estimate token usage from char counts (rough 4 chars / token). The
@@ -1234,6 +1288,17 @@ def _try_llm_path(
             )
         except Exception as e:
             log.warning("budget recorder failed: %s (continuing)", e)
+
+    # Telemetry: the LLM path produced a parsed result. Emit before building
+    # the row so the wall-clock reflects the claude -p call, not the
+    # post-processing (auto_submit etc.).
+    elapsed_s = time.monotonic() - t_start
+    _emit(
+        "llm",
+        parse_ok=True,
+        input_tokens=input_estimate,
+        output_tokens=output_estimate,
+    )
 
     # Build the cycle-log result dict
     notes_parts: list[str] = []
@@ -1288,10 +1353,9 @@ def _try_llm_path(
     return {
         "start_score": start_score if start_score is not None else "none",
         "end_score": end_score,
-        # claude_headless doesn't expose wall-clock directly; rough estimate
-        # via wall-clock measurement is a follow-up. 0.0 is honest about
-        # "unknown" until the headless wrapper surfaces timing.
-        "hours": 0.0,
+        # Phase 2 Goal 1: measured wall-clock for the LLM cycle (claude -p call
+        # plus this function's bookkeeping), in hours, for the cycle-log column.
+        "hours": round(elapsed_s / 3600.0, 4),
         "compute": "local-cpu+llm",
         "wiki_citations": 0,
         "findings_added": 1 if response.dead_end_finding else 0,
@@ -1319,6 +1383,8 @@ def inner_attempt(
     response_parser: Callable[[str], object] | None = None,
     budget_recorder: Callable[..., object] | None = None,
     budget_path: Path = DEFAULT_BUDGET_PATH,
+    telemetry_recorder: Callable[..., object] | None = None,
+    telemetry_path: Path = DEFAULT_TELEMETRY_PATH,
 ) -> dict:
     """Reflection chain for one cycle attempt.
 
@@ -1355,6 +1421,8 @@ def inner_attempt(
             budget_recorder=budget_recorder,
             budget_path=budget_path,
             skill_library=skill_library,
+            telemetry_recorder=telemetry_recorder,
+            telemetry_path=telemetry_path,
         )
         if llm_result is not None:
             return llm_result
