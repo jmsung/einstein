@@ -103,6 +103,7 @@ spikiness (max/mean ≈ 179) comparable to organon's (6334 runs, ≈ 95).
 
 ## Status
 
-Submitted arena_id 2335 (2026-06-08, gated auto-submit path, human-confirmed).
-Server-side verification pending at write time; live-board confirmation to follow.
+**Verified — new arena #1.** Submitted arena_id 2335 (2026-06-08, gated auto-submit
+path, human-confirmed); arena server-side evaluation returned **1.5028506180033636**
+(matching our local score to 1e-16 — no evaluator drift), now the live P2 leader.
 Solution backed up: `mb/problems/2-first-autocorrelation/solutions/solution-selfprune-1.502850618003.json`.
