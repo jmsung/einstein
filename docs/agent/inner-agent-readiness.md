@@ -25,7 +25,7 @@ run_one_visit(problem)                          scripts/autonomous_loop.py
   └─ for attempt in 1..max_attempts:
         └─ _run_one_cycle → inner_attempt(llm_enabled=…)
               └─ if llm_enabled and not dry_run:
-                    _try_llm_path(problem, …)   scripts/autonomous_loop.py:1069
+                    _try_llm_path(problem, …)   scripts/autonomous_loop.py:1118
                       1. render_prompt()        docs/tools/inner_agent_prompt.py
                       2. claude_headless.run()  docs/tools/claude_headless.py
                            claude -p --model claude-opus-4-7[1m]
@@ -35,7 +35,7 @@ run_one_visit(problem)                          scripts/autonomous_loop.py
                            --add-dir <mb>   timeout=1800s
                       3. parse_response()       docs/tools/inner_agent_output.py
                       4. record_token_usage()   docs/tools/inner_agent_gates.py
-                      5. if score+payload → _call_auto_submit (A2 gate chain)
+                      5. if score+payload → _call_auto_submit (auto-submit gate chain)
                       6. build cycle-log result dict
                     → returns None on ANY failure → mechanical fallback
         └─ convergence_detect() decides stop/continue
@@ -51,7 +51,8 @@ open question is whether it is *rare and cheap enough* and whether the captures 
 **Gates already in place:** kill switch (`EINSTEIN_INNER_AGENT=0`), regression sentinel
 (`mb/.inner-agent-disabled`), daily token budget (`DEFAULT_DAILY_TOKEN_CAP = 5_000_000`),
 network reachability (arxiv + arena), thermal throttle. Auto-submit is independently gated
-by the A2 6-gate chain and its own kill switch (`EINSTEIN_AUTO_SUBMIT=0`).
+by the 6-gate auto-submit chain (axioms.md "Submission policy") and its own kill switch
+(`EINSTEIN_AUTO_SUBMIT=0`).
 
 ## Known instrumentation gaps (what Goal 1 must close before the bar is measurable)
 
@@ -88,7 +89,7 @@ modes; Goal 4 extends to ≥ 8 for the verdict). Each criterion lists how it is 
 | R6 | **Budget gate holds** — across repeated cycles the daily ledger accumulates correctly and `precheck` refuses once the cap is crossed. | gate fires at cap, never over-spends | Goal-3 repeated-cycle test |
 | R7 | **Capture-gate passes each cycle** — every LLM cycle produces a cycle-log row AND ≥1 cited/verified `findings/` or `concepts/` page (Phase-0 gate, per-cycle base scoping from Goal 2). | 100% (it is a hard gate) | capture-gate hook exit + Goal-2 scoping |
 | R8 | **Capture quality (not spam)** — a human spot-check of the pilot's findings finds them cited, grounded, and non-duplicative (anti-bloat lint clean). | ≥ 90% of captures judged keep-worthy; lint passes | human review + `wiki_lint` anti-bloat |
-| R9 | **Auto-submit safety** — with `EINSTEIN_AUTO_SUBMIT=0` no submission occurs; with it armed, only A2-gate-passing records submit, all logged. | 0 spurious submits; audit log complete | `mb/logs/auto-submit.md` |
+| R9 | **Auto-submit safety** — with `EINSTEIN_AUTO_SUBMIT=0` no submission occurs; with it armed, only gate-passing records submit, all logged. | 0 spurious submits; audit log complete | `mb/logs/auto-submit.md` |
 
 ## What a NO-GO looks like
 
@@ -102,4 +103,4 @@ it routes back to a fix + re-pilot, and the failure modes get dead-end findings.
 - `docs/agent/meta-learning-automation.md` — Gap 1 / Phase 2 in the full design.
 - `scripts/autonomous_loop.py` — `_try_llm_path`, `inner_attempt`, `run_one_visit`.
 - `docs/tools/{claude_headless,inner_agent_prompt,inner_agent_output,inner_agent_gates}.py`.
-- `.claude/rules/axioms.md` — A2 auto-submit gate chain.
+- `.claude/rules/axioms.md` — "Submission policy" auto-submit gate chain.
