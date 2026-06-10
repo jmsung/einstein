@@ -326,6 +326,40 @@ def _make_paths(tmp_path: Path) -> dict:
     }
 
 
+def test_precheck_budget_gate_flips_across_repeated_cycles(tmp_path: Path):
+    """Phase 2 Goal 3: simulate repeated cycles accumulating tokens; precheck
+    proceeds under the cap and flips to skip once the daily total crosses it."""
+    paths = _make_paths(tmp_path)
+    cap = 1000
+    today = dt.date(2026, 6, 9)
+    # 4 cycles of 200 tokens each = 800 < cap → all proceed.
+    for _ in range(4):
+        iag.record_token_usage(
+            paths["budget_path"], input_tokens=150, output_tokens=50, today=today
+        )
+        decision = iag.precheck(
+            env={},
+            daily_cap=cap,
+            skip_reachability=True,
+            skip_thermal=True,
+            today=today,
+            **paths,
+        )
+        assert decision.action == "proceed"
+    # 5th cycle pushes total to 1000 (== cap) → next precheck skips (not < cap).
+    iag.record_token_usage(paths["budget_path"], input_tokens=150, output_tokens=50, today=today)
+    decision = iag.precheck(
+        env={},
+        daily_cap=cap,
+        skip_reachability=True,
+        skip_thermal=True,
+        today=today,
+        **paths,
+    )
+    assert decision.action == "skip"
+    assert "daily token budget hit" in decision.reason
+
+
 def test_precheck_proceed_happy_path(tmp_path: Path):
     decision = iag.precheck(
         env={},

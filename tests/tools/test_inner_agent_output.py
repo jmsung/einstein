@@ -289,12 +289,26 @@ def test_cited_sources_absent_defaults_to_empty_list():
     assert resp.cited_sources == []
 
 
-def test_cited_sources_wrong_prefix_rejected():
-    """Each entry must start with docs/source/ — anything else is a typo/hallucination."""
+def test_cited_sources_wrong_prefix_dropped_not_rejected():
+    """Phase 2 Goal 1: a non-docs/source/ entry is DROPPED (kept valid ones),
+    not rejected — a stray citation must never force a mechanical fallback.
+    Pilot cycle 1 fell back precisely because this used to raise."""
+    payload = dict(VALID_RESPONSE)
+    payload["cited_sources"] = [
+        "docs/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md",  # dropped
+        "docs/source/2026-lee-meta-harness.md",  # kept
+    ]
+    resp = iao.parse_response(json.dumps(payload))
+    assert resp.cited_sources == ["docs/source/2026-lee-meta-harness.md"]
+
+
+def test_cited_sources_all_wrong_prefix_yields_empty_but_valid():
+    """All-bad cited_sources → empty list, but the response still parses."""
     payload = dict(VALID_RESPONSE)
     payload["cited_sources"] = ["docs/wiki/concepts/equioscillation.md"]
-    with pytest.raises(iao.InnerAgentOutputError, match="cited_sources"):
-        iao.parse_response(json.dumps(payload))
+    resp = iao.parse_response(json.dumps(payload))
+    assert resp.cited_sources == []
+    assert resp.strategy  # rest of the response is intact
 
 
 def test_cited_sources_not_list_rejected():

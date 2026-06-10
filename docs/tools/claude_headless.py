@@ -82,7 +82,14 @@ def _is_unavailable(text: str) -> bool:
 
 @dataclass
 class HeadlessResult:
-    """One headless invocation's outcome."""
+    """One headless invocation's outcome.
+
+    When invoked with `output_format="json"`, `stdout` is rewritten to the
+    agent's `result` text (so downstream parsers see the reply, not the
+    envelope) and the exact usage fields below are populated from the
+    envelope. In text mode they stay None and callers estimate from char
+    counts. (Phase 2 Goal 3 — exact token/cost accounting.)
+    """
 
     ok: bool
     stdout: str = ""
@@ -91,6 +98,9 @@ class HeadlessResult:
     cmd: list[str] = field(default_factory=list)
     error_kind: str = ""  # "" | "unavailable" | "timeout" | "non-zero"
     error_message: str = ""
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cost_usd: float | None = None
 
     def raise_for_error(self, exc_cls: type[Exception] = ClaudeHeadlessError) -> None:
         """Raise `exc_cls(error_message)` if not ok. No-op otherwise.
@@ -111,6 +121,49 @@ def _decode(b: bytes | str | None) -> str:
     if isinstance(b, str):
         return b
     return b.decode(errors="replace")
+
+
+@dataclass
+class _Envelope:
+    """Parsed `claude -p --output-format json` result envelope."""
+
+    result_text: str
+    input_tokens: int | None
+    output_tokens: int | None
+    cost_usd: float | None
+    is_error: bool
+
+
+def _parse_json_envelope(stdout: str) -> _Envelope | None:
+    """Extract `result` text + exact usage/cost from the json envelope.
+
+    The `--output-format json` envelope is a single object with a `result`
+    string (the agent's reply), a `usage` block (input/output tokens), and
+    `total_cost_usd`. Returns None if stdout isn't a parseable envelope, so
+    the caller can fall back to treating stdout as raw text.
+    """
+    import json
+
+    try:
+        obj = json.loads(stdout.strip())
+    except (json.JSONDecodeError, AttributeError):
+        return None
+    if not isinstance(obj, dict) or "result" not in obj:
+        return None
+    usage = obj.get("usage") or {}
+    inp = usage.get("input_tokens")
+    out = usage.get("output_tokens")
+    return _Envelope(
+        result_text=str(obj.get("result", "")),
+        input_tokens=int(inp) if isinstance(inp, (int, float)) else None,
+        output_tokens=int(out) if isinstance(out, (int, float)) else None,
+        cost_usd=(
+            float(obj["total_cost_usd"])
+            if isinstance(obj.get("total_cost_usd"), (int, float))
+            else None
+        ),
+        is_error=bool(obj.get("is_error", False)),
+    )
 
 
 def run(
@@ -264,6 +317,34 @@ def run(
             error_kind="non-zero",
             error_message=f"claude -p exit {proc.returncode}: {detail}",
         )
+
+    # JSON mode: unwrap the envelope so stdout is the agent's reply and the
+    # exact usage/cost are surfaced. A non-parseable envelope degrades to raw
+    # stdout (usage None) rather than failing the run.
+    if output_format == "json":
+        env = _parse_json_envelope(stdout)
+        if env is not None:
+            if env.is_error:
+                return HeadlessResult(
+                    ok=False,
+                    cmd=cmd,
+                    stdout=env.result_text or stdout,
+                    stderr=stderr,
+                    returncode=proc.returncode,
+                    error_kind="non-zero",
+                    error_message=f"claude -p json envelope reported is_error: {env.result_text[:300]}",
+                )
+            return HeadlessResult(
+                ok=True,
+                cmd=cmd,
+                stdout=env.result_text,
+                stderr=stderr,
+                returncode=0,
+                input_tokens=env.input_tokens,
+                output_tokens=env.output_tokens,
+                cost_usd=env.cost_usd,
+            )
+        log.warning("json output requested but envelope unparseable — using raw stdout")
 
     return HeadlessResult(
         ok=True,
