@@ -259,9 +259,10 @@ def surface_cross_pollination(cycle_log: Path, *, window: int = 50) -> int:
         return 0
     try:
         rows = parse_cycle_log(cycle_log)[-window:]
-    except OSError:
+        n = count_cross_problem_rediscoveries(rows)
+    except Exception as e:  # noqa: BLE001 — surfacing must never fail a run
+        log.warning("cross-pollination surfacing failed: %s", e)
         return 0
-    n = count_cross_problem_rediscoveries(rows)
     log.info(
         "cross-pollination: %d technique(s) span ≥2 problems in the last %d cycles",
         n,
@@ -299,7 +300,7 @@ def build_queue_by_priority(
     skill_library: Path = DEFAULT_SKILL_LIBRARY,
     cycle_log: Path = DEFAULT_CYCLE_LOG,
     cache_path: Path | None = None,
-    fetcher: Callable[[int], float | None] | None = None,
+    fetcher: Callable[[int], tuple[float | None, float | None]] | None = None,
 ) -> list[Problem]:
     """Phase 3 Goal 1: queue ranked by headroom × hit-rate × staleness.
 
@@ -2395,7 +2396,7 @@ def run_queue(
     llm_enabled: bool | None = None,
     problem_ids: list[int] | None = None,
     by_priority: bool = False,
-    headroom_fetcher: Callable[[int], float | None] | None = None,
+    headroom_fetcher: Callable[[int], tuple[float | None, float | None]] | None = None,
 ) -> list[CycleResult]:
     """Walk the queue: one visit (up to N cycles) per distinct problem.
 

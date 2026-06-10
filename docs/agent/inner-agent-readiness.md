@@ -25,7 +25,7 @@ run_one_visit(problem)                          scripts/autonomous_loop.py
   └─ for attempt in 1..max_attempts:
         └─ _run_one_cycle → inner_attempt(llm_enabled=…)
               └─ if llm_enabled and not dry_run:
-                    _try_llm_path(problem, …)   scripts/autonomous_loop.py:1118
+                    _try_llm_path(problem, …)   scripts/autonomous_loop.py:1256
                       1. render_prompt()        docs/tools/inner_agent_prompt.py
                       2. claude_headless.run()  docs/tools/claude_headless.py
                            claude -p --model claude-opus-4-7[1m]

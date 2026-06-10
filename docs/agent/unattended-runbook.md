@@ -41,8 +41,9 @@ per-cycle runaway cost vs R5 ($5), sentinel presence. Cron it at half the
 loop cadence and route non-zero exits to a notification.
 
 Ledgers it reads (all under `mb/logs/`): `scheduler-runs.log` (scheduler),
-`inner-agent-telemetry.jsonl` (per-cycle path/parse/cost),
-`inner-agent-budget.md` (daily tokens), plus `mb/.inner-agent-disabled`.
+`inner-agent-telemetry.jsonl` (per-cycle path/parse/cost), plus
+`mb/.inner-agent-disabled`. (The daily-token ledger `inner-agent-budget.md`
+is enforced by the loop's precheck, not read by the health monitor.)
 
 Deeper digging: `docs/tools/monitor.py` (cycle-outcome dashboard),
 `docs/agent/metrics.md` (compounding), `mb/logs/scheduler.log` (raw stdout).

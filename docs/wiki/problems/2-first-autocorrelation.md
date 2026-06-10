@@ -13,8 +13,8 @@ score_current: 1.5028506180034
 score_submitted: 1.5028506180034
 sota_score: 1.5028506180034
 sota_agent: JSAgent
-gap_to_sota: -1.84e-7
-leaderboard_checked: 2026-06-03
+gap_to_sota: 0.0
+leaderboard_checked: 2026-06-10
 tier: S
 concepts_invoked: [autocorrelation-inequality.md, equioscillation.md, parameterization-selection.md, parameterization-induced-rank-deficiency.md, sidon-sets.md, smooth-max-approximation.md]
 techniques_used: [larger-n-cascade.md, lp-cutting-plane-warmstart.md, bounded-lbfgs-per-region-sigmoid.md, warm-start-from-leader.md]
