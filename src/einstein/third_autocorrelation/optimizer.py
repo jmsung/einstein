@@ -207,6 +207,162 @@ def signed_descent(init_v, betas, iters, lr, neg_target, neg_base):
 
 
 # --------------------------------------------------------------------------- #
+# Warm self-pruning support-shrinking search (js/feat/p4-warm-pruning-transfer).
+#
+# P2's record operator (findings/p2-warm-self-pruning-beats-record) ported to
+# the signed P4 objective. Two load-bearing differences from the P2 kernel:
+#   1. f = mask * w with w UNCONSTRAINED-SIGN (not mask * v**2) — the masked
+#      re-opt may re-fragment signs inside the surviving support, which is the
+#      move-class argument against the discrete-sign-topology obstruction
+#      (findings/p4-basin-is-discrete-sign-topology).
+#   2. No leader support target — the P4 leader is full-support, so the
+#      schedule floor is a free hyperparameter.
+# --------------------------------------------------------------------------- #
+
+
+def neg_run_count(f: np.ndarray) -> int:
+    """Number of contiguous runs of f < 0 — the sign-fragmentation diagnostic.
+
+    The leader's edge over our basin is fragmentation (4705 runs vs our 823) on
+    a shared envelope (findings/p4-fragmentation-not-fraction-shared-envelope).
+    """
+    neg = np.asarray(f) < 0.0
+    if not neg.any():
+        return 0
+    return int(neg[0]) + int(np.count_nonzero(~neg[:-1] & neg[1:]))
+
+
+def prune_smallest(w: np.ndarray, mask: np.ndarray, target_support: int) -> np.ndarray:
+    """Return a new 0/1 mask keeping the ``target_support`` largest-|w| *active* cells.
+
+    Data-driven, monotone support shrink: only cells currently active in ``mask``
+    are candidates (pruned cells are never resurrected), and the smallest-|w|
+    active cells are zeroed — the optimizer chooses *which* cells die, not a
+    pre-imposed window. No-op when ``target_support`` ≥ current support.
+    """
+    active = np.flatnonzero(mask)
+    if target_support >= active.size:
+        return mask.copy()
+    keep = active[np.argsort(np.abs(w[active]))][-target_support:]
+    new_mask = np.zeros_like(mask, dtype=bool)
+    new_mask[keep] = True
+    return new_mask
+
+
+def surrogate_masked(
+    w: torch.Tensor, beta: float, *, mask: torch.Tensor, fft: bool = True
+) -> torch.Tensor:
+    """Differentiable surrogate of C(f) with f = mask · w (signed w).
+
+    Ratio-first LSE (the P2 record kernel's formulation): the pointwise ratio is
+    unit-scale ≈ 1.45, so the LSE gap ≈ log(N)/beta tracks the true max to
+    <1e-9 already at beta=1e10. Scale-invariant in w.
+    """
+    f = w * mask
+    n = f.shape[-1]
+    dx = 0.5 / n
+    conv = autoconv_fft(f) if fft else autoconv_direct(f)  # unscaled f★f
+    integral_sum = f.sum()
+    ratios = conv / (integral_sum * integral_sum * dx)
+    return smooth_max(ratios, beta)
+
+
+def lbfgs_masked(
+    w_init: np.ndarray,
+    betas: list[float],
+    *,
+    mask: np.ndarray,
+    max_iter: int = 2000,
+    lr: float = 1.0,
+    history_size: int = 200,
+) -> tuple[np.ndarray, float]:
+    """Run a masked signed smooth-max L-BFGS β-cascade; return ``(f, exact_C)``.
+
+    CPU float64 sequential L-BFGS (compute-router: GPU sits idle). ``mask``
+    keeps the support compact throughout; cells outside it are exactly zero.
+    Returns the best arena-exact score across the cascade with ∫f > 0
+    normalization (C is invariant under f → −f).
+    """
+    w = torch.tensor(w_init.copy(), dtype=torch.float64, requires_grad=True)
+    mask_t = torch.tensor(mask, dtype=torch.float64)
+    mask_np = mask.astype(np.float64)
+    best_c = float("inf")
+    best_f: np.ndarray | None = None
+
+    for beta in betas:
+        opt = torch.optim.LBFGS(
+            [w],
+            lr=lr,
+            max_iter=max_iter,
+            tolerance_grad=1e-15,
+            tolerance_change=1e-20,
+            history_size=history_size,
+            line_search_fn="strong_wolfe",
+        )
+
+        def closure():
+            opt.zero_grad()
+            loss = surrogate_masked(w, beta, mask=mask_t)
+            loss.backward()
+            return loss
+
+        opt.step(closure)
+        f_np = w.detach().cpu().numpy() * mask_np
+        if f_np.sum() < 0:
+            f_np = -f_np
+        c = float(verify_and_compute(f_np.tolist()))
+        if c < best_c:
+            best_c, best_f = c, f_np.copy()
+
+    assert best_f is not None
+    return best_f, best_c
+
+
+def self_pruning_search(
+    f_init: np.ndarray,
+    betas: list[float],
+    support_schedule: list[int],
+    *,
+    max_iter: int = 2000,
+    history_size: int = 200,
+    on_level=None,
+) -> tuple[np.ndarray, float, list[dict]]:
+    """Warm self-pruning support-shrinking schedule on the signed P4 objective.
+
+    Start from a near-converged *full-support* warm seed. At each target support
+    level: prune the smallest-|w| active cells (``prune_smallest``), re-optimize
+    the masked signed surrogate (``lbfgs_masked``) warm-started from the current
+    ``w``. Tracks the best arena-exact C across levels, plus the per-level
+    sign-fragmentation diagnostic (``neg_run_count``).
+    """
+    if not support_schedule:
+        raise ValueError("support_schedule must be non-empty")
+    w = np.asarray(f_init, dtype=np.float64).copy()
+    mask = w != 0.0
+    best_f: np.ndarray | None = None
+    best_c = float("inf")
+    trace: list[dict] = []
+
+    for target in support_schedule:
+        mask = prune_smallest(w, mask, target)
+        f_opt, c = lbfgs_masked(w, betas, mask=mask, max_iter=max_iter, history_size=history_size)
+        w = f_opt  # warm-start the next level from this level's optimum
+        row = {
+            "target": target,
+            "support": int(np.count_nonzero(f_opt)),
+            "score": c,
+            "neg_runs": neg_run_count(f_opt),
+        }
+        trace.append(row)
+        if on_level is not None:
+            on_level(row)
+        if c < best_c:
+            best_c, best_f = c, f_opt.copy()
+
+    return best_f, best_c, trace
+
+
+# --------------------------------------------------------------------------- #
 # Kolountzakis–Matolcsi LP fixed-point (Goal 5).
 #
 # The record-producing method in the signed-autoconvolution literature
