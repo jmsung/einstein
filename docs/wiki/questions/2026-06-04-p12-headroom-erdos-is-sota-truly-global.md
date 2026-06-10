@@ -14,3 +14,11 @@ Erdős's instinct: "three independent agents converged to the identical vector" 
 1. What is E[number of ±1 length-70 vectors with grid_max/√71 < 1.2809] under the uniform distribution on {±1}⁷⁰ — i.e. does a second-moment / threshold estimate of the L∞ flatness distribution predict any vectors below the current SOTA exist at all, or does it predict 1.2809 sits at the extreme tail where the expected count is ≪ 1 (ruling the search exhausted on evidence, not faith)?
 2. The three convergent searchers all use FFT-on-coefficients neighborhoods reachable by ≤4 flips from random starts; is there a *structurally inaccessible* region (e.g. vectors whose 4-flip-neighborhood graph component never contains a random-init basin) that an alteration-style construction (random + targeted Φ_d-peak repair) could seed but tabu/SA provably cannot enter?
 3. Is the +0.06 gap between rank-#2 (1.2809) and rank-#3 evidence of a genuine algebraic discontinuity, or an artifact of *who submitted* — and does the Lovász-local-lemma view (bad events = the ~70 cyclotomic peaks exceeding a target T, sparsely dependent across coprime moduli) give a constructive existence proof for some T < 1.2809·√71 that no one has searched for?
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"headroom Erdős lens is truly the") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

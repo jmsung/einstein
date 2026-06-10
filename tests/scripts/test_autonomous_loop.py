@@ -68,6 +68,19 @@ def _build_wiki_with_problems(tmp_path: Path, problems: list[dict]) -> Path:
     return pdir
 
 
+def _noop_submit(problem_id, payload, score, **kw):
+    """Sealed auto_submitter for tests that don't assert on submission.
+
+    NEVER pass auto_submitter=None in tests: None auto-imports the REAL
+    try_submit, which fetches the live leaderboard and appends to the real
+    mb/logs/auto-submit.md audit ledger (2026-06-10 pollution incident —
+    fake P14/P1/P2/P3 rows at 02:57Z came from exactly this).
+    """
+    from types import SimpleNamespace
+
+    return SimpleNamespace(submitted=False, rejected_at_gate="test-noop-stub")
+
+
 # ---------------- Problem dataclass + parsing ----------------
 
 
@@ -1006,7 +1019,31 @@ def test_run_one_visit_proceeds_when_precheck_returns_proceed(tmp_path: Path) ->
         llm_enabled=True,
     )
     runner_calls: list = []
-    with patch.object(al.inner_agent_gates, "precheck", return_value=fake_decision):
+    # Suppress the real LLM seams — without this, llm_enabled=True makes
+    # _try_llm_path auto-import the real claude_headless and spend real
+    # tokens (+ pollute the real mb telemetry/budget ledgers) on every
+    # test run. The unavailable runner forces the mechanical fallback.
+    real_inner = al.inner_attempt
+
+    def spy_inner(p, **kw):
+        kw["headless_runner"] = lambda *_a, **_kw: SimpleNamespace(
+            ok=False,
+            error_kind="unavailable",
+            error_message="test",
+            stdout="",
+            stderr="",
+            returncode=0,
+        )
+        kw["prompt_renderer"] = lambda **_kw: "prompt"
+        kw["response_parser"] = lambda _t: None
+        kw["budget_recorder"] = lambda *_a, **_kw: None
+        kw["telemetry_recorder"] = lambda *_a, **_kw: None
+        return real_inner(p, **kw)
+
+    with (
+        patch.object(al.inner_agent_gates, "precheck", return_value=fake_decision),
+        patch.object(al, "inner_attempt", side_effect=spy_inner),
+    ):
         results = al.run_one_visit(
             problem,
             cycle_log=log,
@@ -1666,6 +1703,7 @@ def test_run_one_visit_threads_llm_enabled_from_precheck(tmp_path: Path) -> None
         kw["prompt_renderer"] = lambda **_kw: "prompt"
         kw["response_parser"] = lambda _t: None
         kw["budget_recorder"] = lambda *_a, **_kw: None
+        kw["telemetry_recorder"] = lambda *_a, **_kw: None
         return real_inner(p, **kw)
 
     with (
@@ -2447,7 +2485,7 @@ def test_llm_path_passes_bandit_recommendation_when_enabled(tmp_path: Path, monk
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=fake_headless,
         prompt_renderer=fake_renderer,
         response_parser=fake_parse,
@@ -2495,7 +2533,7 @@ def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypat
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=fake_headless,
         prompt_renderer=fake_renderer,
         response_parser=fake_parse,
@@ -2534,7 +2572,7 @@ def test_llm_path_emits_telemetry_on_success(tmp_path: Path) -> None:
         problem=p14,
         attempt_index=2,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2578,7 +2616,7 @@ def test_llm_path_emits_fallback_telemetry_on_unavailable(tmp_path: Path) -> Non
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=unavailable_runner,
         prompt_renderer=lambda **kw: "PROMPT",
         response_parser=boom_parser,
@@ -2608,7 +2646,7 @@ def test_llm_path_emits_fallback_telemetry_on_parse_error(tmp_path: Path) -> Non
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=bad_parser,
@@ -2636,7 +2674,7 @@ def test_llm_path_telemetry_recorder_failure_never_breaks_cycle(tmp_path: Path) 
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2666,7 +2704,7 @@ def test_llm_path_pins_capture_gate_base_to_pre_cycle_head(tmp_path, monkeypatch
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2692,7 +2730,7 @@ def test_llm_path_omits_gate_base_when_head_unresolvable(tmp_path, monkeypatch) 
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2750,7 +2788,7 @@ def test_llm_path_uses_exact_tokens_and_cost_from_envelope(tmp_path, monkeypatch
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=_runner_with_usage(6300, 210, 0.0421),
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2783,7 +2821,7 @@ def test_llm_path_falls_back_to_estimate_without_usage_fields(tmp_path, monkeypa
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -3479,3 +3517,189 @@ def test_run_queue_problem_ids_empty_means_no_subset_no_filter(tmp_path: Path) -
         skip_gates=True,
     )
     assert len(results) == 1
+
+
+# ---------------- Phase 3 Goal 1 — --by-priority wiring ----------------
+
+
+def test_build_queue_by_priority_ranks_headroom_first(tmp_path: Path) -> None:
+    """Injected fetcher; P4 (real headroom) outranks P1 (tied) and P14 (we lead)."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(
+                problem_id=1, slug="erdos-overlap", tier="C", status="rank-2-frozen", score=0.38087
+            ),
+            dict(
+                problem_id=4,
+                slug="third-autocorrelation",
+                tier="S",
+                status="rank-2-displaced",
+                score=1.4525,
+            ),
+            dict(
+                problem_id=14, slug="circle-packing-square", tier="A", status="rank-1", score=2.64
+            ),
+        ],
+    )
+    arena1 = {1: 0.38087, 4: 1.4523, 14: 2.63}  # P1 tied, P4 behind, P14 ahead
+    queue = al.build_queue_by_priority(
+        al.load_problems(pdir),
+        skill_library=tmp_path / "no-skill-lib.md",
+        cycle_log=tmp_path / "no-cycle-log.md",
+        cache_path=tmp_path / "headroom-cache.json",
+        fetcher=lambda pid: (arena1[pid], None),
+    )
+    assert queue[0].problem_id == 4
+
+
+def test_build_queue_by_priority_offline_cold_cache_id_order(tmp_path: Path) -> None:
+    """Fetcher down + cold cache → headroom None everywhere → id-order fallback."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(problem_id=12, slug="c", tier="B", status="open", score=1.3),
+            dict(problem_id=2, slug="a", tier="S", status="open", score=1.5),
+        ],
+    )
+
+    def down(pid: int) -> tuple[float | None, float | None]:
+        raise OSError("offline")
+
+    queue = al.build_queue_by_priority(
+        al.load_problems(pdir),
+        skill_library=tmp_path / "no-skill-lib.md",
+        cycle_log=tmp_path / "no-cycle-log.md",
+        cache_path=tmp_path / "cold-cache.json",
+        fetcher=down,
+    )
+    assert [p.problem_id for p in queue] == [2, 12]
+
+
+def test_build_queue_by_priority_offline_warm_cache_still_ranks(tmp_path: Path) -> None:
+    """Fetcher down but cache warm → ranking still works (the cache ladder)."""
+    import problem_priority as pp
+
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(
+                problem_id=2, slug="first-autocorrelation", tier="S", status="open", score=1.5028611
+            ),
+            dict(problem_id=12, slug="flat-polynomials", tier="B", status="rank-8", score=1.3539),
+        ],
+    )
+    cache = tmp_path / "headroom-cache.json"
+    pp.save_cached_arena_best(cache, 2, 1.5028609, ts="t0")
+    pp.save_cached_arena_best(cache, 12, 1.2809, ts="t0")
+
+    def down(pid: int) -> tuple[float | None, float | None]:
+        raise OSError("offline")
+
+    queue = al.build_queue_by_priority(
+        al.load_problems(pdir),
+        skill_library=tmp_path / "no-skill-lib.md",
+        cycle_log=tmp_path / "no-cycle-log.md",
+        cache_path=cache,
+        fetcher=down,
+    )
+    # P12's relative headroom (~5.7e-2) dwarfs P2's (~1.3e-7).
+    assert [p.problem_id for p in queue] == [12, 2]
+
+
+def test_run_queue_by_priority_visits_top_priority_first(tmp_path: Path) -> None:
+    """End-to-end: run_queue(by_priority=True) visits the headroom problem, not id-first."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(
+                problem_id=1, slug="erdos-overlap", tier="C", status="rank-2-frozen", score=0.38087
+            ),
+            dict(problem_id=12, slug="flat-polynomials", tier="B", status="rank-8", score=1.3539),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    arena1 = {1: 0.38087, 12: 1.2809}
+
+    visited: list[int] = []
+    real_visit = al.run_one_visit
+
+    def spy_visit(problem, **kw):
+        visited.append(problem.problem_id)
+        return []
+
+    cache = tmp_path / "headroom-cache.json"
+    with (
+        patch.object(al, "run_one_visit", side_effect=spy_visit),
+        patch.object(al, "DEFAULT_HEADROOM_CACHE", cache),
+        patch.object(al, "_arena_scores_fetcher", lambda pid: (arena1[pid], None)),
+    ):
+        al.run_queue(
+            problems_dir=pdir,
+            cycle_log=log,
+            max_problems=1,
+            dry_run=True,
+            by_priority=True,
+        )
+    assert visited == [12]
+    assert real_visit is not None  # silence unused warning
+
+
+def test_run_queue_default_stays_id_order(tmp_path: Path) -> None:
+    """Back-compat: without by_priority the queue stays problem_id-ascending."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(
+                problem_id=1, slug="erdos-overlap", tier="C", status="rank-2-frozen", score=0.38087
+            ),
+            dict(problem_id=12, slug="flat-polynomials", tier="B", status="rank-8", score=1.3539),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+
+    visited: list[int] = []
+
+    def spy_visit(problem, **kw):
+        visited.append(problem.problem_id)
+        return []
+
+    with patch.object(al, "run_one_visit", side_effect=spy_visit):
+        al.run_queue(
+            problems_dir=pdir,
+            cycle_log=log,
+            max_problems=1,
+            dry_run=True,
+        )
+    assert visited == [1]
+
+
+def test_build_queue_by_priority_live_our_score_overrides_stale_frontmatter(
+    tmp_path: Path,
+) -> None:
+    """Goal-5 iterate fix: live JSAgent score from the leaderboard replaces a
+    stale frontmatter score_current (the P12 6-orders-inflated-headroom bug)."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            # Stale frontmatter claims 1.3539; live says our best == arena #1.
+            dict(problem_id=12, slug="flat-polynomials", tier="B", status="rank-8", score=1.3539),
+            dict(problem_id=4, slug="third-autocorrelation", tier="S", status="open", score=1.4525),
+        ],
+    )
+
+    def scores(pid: int) -> tuple[float | None, float | None]:
+        return {12: (1.2809, 1.2809), 4: (1.4523, None)}[pid]
+
+    queue = al.build_queue_by_priority(
+        al.load_problems(pdir),
+        skill_library=tmp_path / "no-lib.md",
+        cycle_log=tmp_path / "no-log.md",
+        cache_path=tmp_path / "cache.json",
+        fetcher=scores,
+    )
+    # P12's live ours == arena #1 → headroom 0 → sinks below P4 despite the
+    # stale frontmatter claiming a 5.7e-2 gap.
+    assert [p.problem_id for p in queue] == [4, 12]
