@@ -241,6 +241,35 @@ def build_queue(problems: list[Problem]) -> list[Problem]:
     )
 
 
+def surface_cross_pollination(cycle_log: Path, *, window: int = 50) -> int:
+    """Phase 3 Goal 3: count techniques spanning ≥2 problems in the trailing window.
+
+    Reuses the G5 A/B metric (`shadow_ab.count_cross_problem_rediscoveries`)
+    over the last `window` cycle-log rows. A single `--one-problem` run can't
+    span two problems, so the trailing window — not the run — is the metric's
+    scope; each scheduled run logs it so drift is visible run-over-run.
+    Returns 0 (never raises) on any failure — surfacing is not load-bearing.
+    """
+    try:
+        sys.path.insert(0, str(_REPO / "src"))
+        from einstein.bandit.shadow_ab import count_cross_problem_rediscoveries
+        from einstein.meta_loop.diagnose import parse_cycle_log
+    except ImportError as e:
+        log.warning("cross-pollination surfacing unavailable: %s", e)
+        return 0
+    try:
+        rows = parse_cycle_log(cycle_log)[-window:]
+    except OSError:
+        return 0
+    n = count_cross_problem_rediscoveries(rows)
+    log.info(
+        "cross-pollination: %d technique(s) span ≥2 problems in the last %d cycles",
+        n,
+        len(rows),
+    )
+    return n
+
+
 def _arena_best_fetcher(problem_id: int) -> float | None:
     """Live arena-#1 score via check_submission (same scripts/ dir).
 
@@ -1332,6 +1361,18 @@ def _try_llm_path(
                     problem.problem_id,
                 )
 
+    # Phase 3 Goal 3 (connect-the-dots): inject same-category sibling
+    # findings pre-strategy. Default-on; kill switch EINSTEIN_CONNECT_DOTS=0
+    # (mirrors the bandit pattern). Best-effort — never blocks the cycle.
+    dots_section = None
+    if os.environ.get("EINSTEIN_CONNECT_DOTS", "1") != "0":
+        try:
+            from inner_agent_prompt import sibling_findings
+
+            dots_section = sibling_findings(problem.problem_id)
+        except Exception as e:  # noqa: BLE001 — amplifier is not load-bearing
+            log.warning("connect-the-dots unavailable: %s (continuing without)", e)
+
     try:
         prompt = prompt_renderer(
             problem_id=problem.problem_id,
@@ -1346,6 +1387,7 @@ def _try_llm_path(
             attempt_index=attempt_index,
             pre_cycle_synthesis=pre_cycle_synthesis,
             bandit_recommendation=(bandit_pick.note() if bandit_pick is not None else None),
+            sibling_findings_section=dots_section,
         )
     except Exception as e:
         log.warning("render_prompt failed: %s — falling back", e)
@@ -2529,6 +2571,9 @@ def main(argv: list[str] | None = None) -> int:
             by_priority=args.by_priority,
         )
         log.info("completed %d cycles", len(results))
+        if not args.dry_run:
+            # Phase 3 Goal 3: per-run cross-pollination visibility.
+            surface_cross_pollination(args.cycle_log)
         if args.discipline_once and results and not args.dry_run:
             last = results[-1]
             log.info(

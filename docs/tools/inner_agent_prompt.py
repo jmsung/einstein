@@ -52,6 +52,11 @@ from inner_agent_output import OUTPUT_SCHEMA  # noqa: E402
 
 _FM_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 
+# Phase 3 Goal 3 (connect-the-dots): pid extraction from finding frontmatter.
+_ORIGIN_RE = re.compile(r"^question_origin:\s*problem-(\d+)", re.MULTILINE)
+_RELATED_RE = re.compile(r"^related_problems:\s*\[([^\]]*)\]", re.MULTILINE)
+_DRAFTED_RE = re.compile(r"^drafted:\s*(\S+)", re.MULTILINE)
+
 
 # ---------------- helpers ----------------
 
@@ -147,6 +152,81 @@ for human review. Whatever you Write, ALSO list in the JSON `wiki_writes`
 field so the cycle-log notes column reflects it."""
 
 
+# ---------------- connect-the-dots (Phase 3 Goal 3) ----------------
+
+
+def _finding_problem_ids(text: str) -> set[int]:
+    """Problem ids a finding's frontmatter references (origin + related)."""
+    pids: set[int] = set()
+    m = _ORIGIN_RE.search(text)
+    if m:
+        pids.add(int(m.group(1)))
+    m = _RELATED_RE.search(text)
+    if m:
+        for tok in m.group(1).split(","):
+            tok = tok.strip()
+            if tok.isdigit():
+                pids.add(int(tok))
+    return pids
+
+
+def sibling_findings(
+    problem_id: int,
+    *,
+    findings_dir: Path | None = None,
+    max_pages: int = 3,
+) -> str | None:
+    """Connect-the-dots section: recent findings from same-category siblings.
+
+    A finding qualifies when its frontmatter references at least one OTHER
+    problem in this problem's category (via `question_origin: problem-N` or
+    `related_problems: [..]`). Most-recent `drafted:` first, capped at
+    `max_pages`. None when the category is unknown or nothing qualifies —
+    the prompt simply omits the section.
+
+    Rationale: the P2 record came verbatim from a 4-day-old P2 dead-end's
+    "what might still work" — this section puts sibling problems' next-door
+    prescriptions in front of the agent BEFORE it picks a strategy.
+    """
+    try:
+        from strategy_picker import category_for
+    except ImportError:
+        return None
+    category = category_for(problem_id)
+    if not category or category == "?":
+        return None
+    if findings_dir is None:
+        findings_dir = _REPO / "docs" / "wiki" / "findings"
+
+    candidates: list[tuple[str, str]] = []  # (drafted, line)
+    try:
+        paths = sorted(findings_dir.glob("*.md"))
+    except OSError:
+        return None
+    for path in paths:
+        try:
+            text = path.read_text()
+        except OSError:
+            continue
+        sibling_pids = {
+            pid
+            for pid in _finding_problem_ids(text)
+            if pid != problem_id and category_for(pid) == category
+        }
+        if not sibling_pids:
+            continue
+        m = _DRAFTED_RE.search(text)
+        drafted = m.group(1) if m else "0000-00-00"
+        pid_str = ",".join(f"P{p}" for p in sorted(sibling_pids))
+        candidates.append(
+            (drafted, f"- docs/wiki/findings/{path.name} ({pid_str}, drafted {drafted})")
+        )
+    if not candidates:
+        return None
+    candidates.sort(key=lambda t: t[0], reverse=True)
+    return "\n".join(line for _, line in candidates[:max_pages])
+
+
 # ---------------- main render ----------------
 
 
@@ -173,6 +253,7 @@ def render_prompt(
     wall_clock_min: int = 30,
     pre_cycle_synthesis: str | None = None,
     bandit_recommendation: str | None = None,
+    sibling_findings_section: str | None = None,
 ) -> str:
     """Render the prompt body for one inner cycle.
 
@@ -281,11 +362,26 @@ def render_prompt(
     else:
         bandit_section = ""
 
+    # Phase 3 Goal 3: sibling-problem findings injected pre-strategy. The P2
+    # record came verbatim from a dead-end's "what might still work" — this
+    # section makes that transfer systematic instead of lucky.
+    if sibling_findings_section and sibling_findings_section.strip():
+        dots_section = (
+            "## Transferable findings from sibling problems (connect-the-dots)\n\n"
+            "Same-category findings from OTHER problems, most recent first. "
+            'Read each (especially any dead-end\'s "What might still work") '
+            "BEFORE the STRATEGY step — a sibling's next-door prescription "
+            "may be this problem's untried operator. Cite what you use.\n\n"
+            f"{sibling_findings_section.strip()}\n\n"
+        )
+    else:
+        dots_section = ""
+
     return f"""# Autonomous cycle — problem {problem_label}
 
 Attempt {attempt_index}/3 in this visit. cycle_id={cycle_id}. category={category}.
 
-{synthesis_section}{bandit_section}## Your task
+{synthesis_section}{bandit_section}{dots_section}## Your task
 
 Run the math-solving-protocol (`.claude/rules/math-solving-protocol.md`) and
 emit a single JSON object matching the schema at the end. Concretely:
