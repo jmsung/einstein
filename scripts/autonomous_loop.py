@@ -94,6 +94,13 @@ try:
     import inner_agent_gates  # type: ignore[import-not-found]
 except ImportError:
     inner_agent_gates = None  # type: ignore[assignment]
+try:
+    import problem_priority  # type: ignore[import-not-found]
+except ImportError:
+    problem_priority = None  # type: ignore[assignment]
+
+# Phase 3 Goal 1: arena-#1 cache for the priority picker's offline fallback.
+DEFAULT_HEADROOM_CACHE = DEFAULT_MB_DIR / "logs" / "headroom-cache.json"
 
 log = logging.getLogger("autonomous_loop")
 
@@ -232,6 +239,138 @@ def build_queue(problems: list[Problem]) -> list[Problem]:
         (p for p in problems if is_active(p)),
         key=lambda p: p.problem_id,
     )
+
+
+def surface_cross_pollination(cycle_log: Path, *, window: int = 50) -> int:
+    """Phase 3 Goal 3: count techniques spanning ≥2 problems in the trailing window.
+
+    Reuses the G5 A/B metric (`shadow_ab.count_cross_problem_rediscoveries`)
+    over the last `window` cycle-log rows. A single `--one-problem` run can't
+    span two problems, so the trailing window — not the run — is the metric's
+    scope; each scheduled run logs it so drift is visible run-over-run.
+    Returns 0 (never raises) on any failure — surfacing is not load-bearing.
+    """
+    try:
+        sys.path.insert(0, str(_REPO / "src"))
+        from einstein.bandit.shadow_ab import count_cross_problem_rediscoveries
+        from einstein.meta_loop.diagnose import parse_cycle_log
+    except ImportError as e:
+        log.warning("cross-pollination surfacing unavailable: %s", e)
+        return 0
+    try:
+        rows = parse_cycle_log(cycle_log)[-window:]
+        n = count_cross_problem_rediscoveries(rows)
+    except Exception as e:  # noqa: BLE001 — surfacing must never fail a run
+        log.warning("cross-pollination surfacing failed: %s", e)
+        return 0
+    log.info(
+        "cross-pollination: %d technique(s) span ≥2 problems in the last %d cycles",
+        n,
+        len(rows),
+    )
+    return n
+
+
+def _arena_scores_fetcher(
+    problem_id: int, agent_name: str = "JSAgent"
+) -> tuple[float | None, float | None]:
+    """One live leaderboard fetch → (arena #1 score, OUR best score or None).
+
+    Goal-5 rollout lesson: frontmatter `score_current` goes stale (P12 was 6
+    orders inflated; P2 said rank-3 the day after we retook #1) and stale
+    inputs make the picker grind dead targets. The leaderboard is the ground
+    truth for OUR standing too — one fetch serves both; frontmatter stays the
+    offline fallback. Raises on network/API failure — the caller catches and
+    falls back to the arena-#1 cache + frontmatter.
+    """
+    import check_submission  # noqa: PLC0415 — scripts/ sibling, lazy
+
+    lb = check_submission.check_leaderboard(problem_id, limit=20)
+    arena1 = float(lb[0]["score"]) if lb else None
+    ours = next(
+        (float(e["score"]) for e in lb if e.get("agentName") == agent_name),
+        None,
+    )
+    return arena1, ours
+
+
+def build_queue_by_priority(
+    problems: list[Problem],
+    *,
+    skill_library: Path = DEFAULT_SKILL_LIBRARY,
+    cycle_log: Path = DEFAULT_CYCLE_LOG,
+    cache_path: Path | None = None,
+    fetcher: Callable[[int], tuple[float | None, float | None]] | None = None,
+) -> list[Problem]:
+    """Phase 3 Goal 1: queue ranked by headroom × hit-rate × staleness.
+
+    Falls back to `build_queue` (problem_id order) when the priority module
+    is unavailable or no problem has headroom data (offline + cold cache).
+    Direction comes fail-closed from `einstein.auto_submit.PROBLEM_MINIMIZE`
+    (per dead-end-auto-submit-direction-sign); problems absent from that map
+    get headroom=None and rank after scored ones.
+    """
+    active = build_queue(problems)
+    if problem_priority is None:
+        log.warning("problem_priority unavailable — falling back to id order")
+        return active
+    try:
+        sys.path.insert(0, str(_REPO / "src"))
+        from einstein.auto_submit import PROBLEM_MINIMIZE
+    except ImportError:
+        log.warning("auto_submit.PROBLEM_MINIMIZE unavailable — id-order fallback")
+        return active
+
+    if cache_path is None:
+        # Resolved at call time so tests can patch DEFAULT_HEADROOM_CACHE
+        # (a def-time default would bind the real mb path immutably).
+        cache_path = DEFAULT_HEADROOM_CACHE
+    if fetcher is None:
+        fetcher = _arena_scores_fetcher
+    ts = dt.datetime.now(dt.timezone.utc).isoformat()
+    headrooms: dict[int, float | None] = {}
+    for p in active:
+        # One leaderboard fetch yields BOTH scores: arena #1 (cached for the
+        # offline ladder) and our live best (frontmatter is the fallback —
+        # it goes stale; see the Goal-5 verdict finding).
+        arena1: float | None = None
+        ours_live: float | None = None
+        try:
+            arena1, ours_live = fetcher(p.problem_id)
+        except Exception as e:  # noqa: BLE001 — offline → cache + frontmatter
+            log.warning("P%d leaderboard fetch failed (%s) — cache fallback", p.problem_id, e)
+        # Headroom = remaining GAIN POTENTIAL, so "our score" is the
+        # direction-best of live leaderboard standing and local frontmatter
+        # capability. Each covers the other's staleness mode: frontmatter
+        # lags retakes (P2 said rank-3 the day after our record); the
+        # leaderboard lags unsubmittable local capability (P12's rediscovered
+        # SOTA seed is minImprovement-blocked, so the board shows 1.3539
+        # while we verifiably hold 1.2809).
+        minimize = PROBLEM_MINIMIZE.get(p.problem_id)
+        candidates = [s for s in (ours_live, p.score_current) if s is not None]
+        if not candidates or minimize is None:
+            our_score = candidates[0] if candidates else None
+        else:
+            our_score = min(candidates) if minimize else max(candidates)
+        headrooms[p.problem_id] = problem_priority.headroom_for(
+            p.problem_id,
+            our_score=our_score,
+            minimize=minimize,
+            fetcher=(lambda _pid, _a=arena1: _a) if arena1 is not None else None,
+            cache_path=cache_path,
+            ts=ts,
+        )
+    queue = problem_priority.build_priority_queue(
+        active, headrooms, skill_library=skill_library, cycle_log=cycle_log
+    )
+    scored = sum(1 for h in headrooms.values() if h is not None)
+    log.info(
+        "priority queue: %d/%d problems with headroom data%s",
+        scored,
+        len(active),
+        "" if scored else " — id-order fallback",
+    )
+    return queue
 
 
 # ---------------- cycle-log row ----------------
@@ -1256,6 +1395,18 @@ def _try_llm_path(
                     problem.problem_id,
                 )
 
+    # Phase 3 Goal 3 (connect-the-dots): inject same-category sibling
+    # findings pre-strategy. Default-on; kill switch EINSTEIN_CONNECT_DOTS=0
+    # (mirrors the bandit pattern). Best-effort — never blocks the cycle.
+    dots_section = None
+    if os.environ.get("EINSTEIN_CONNECT_DOTS", "1") != "0":
+        try:
+            from inner_agent_prompt import sibling_findings
+
+            dots_section = sibling_findings(problem.problem_id)
+        except Exception as e:  # noqa: BLE001 — amplifier is not load-bearing
+            log.warning("connect-the-dots unavailable: %s (continuing without)", e)
+
     try:
         prompt = prompt_renderer(
             problem_id=problem.problem_id,
@@ -1270,6 +1421,7 @@ def _try_llm_path(
             attempt_index=attempt_index,
             pre_cycle_synthesis=pre_cycle_synthesis,
             bandit_recommendation=(bandit_pick.note() if bandit_pick is not None else None),
+            sibling_findings_section=dots_section,
         )
     except Exception as e:
         log.warning("render_prompt failed: %s — falling back", e)
@@ -2243,6 +2395,8 @@ def run_queue(
     skip_gates: bool = False,
     llm_enabled: bool | None = None,
     problem_ids: list[int] | None = None,
+    by_priority: bool = False,
+    headroom_fetcher: Callable[[int], tuple[float | None, float | None]] | None = None,
 ) -> list[CycleResult]:
     """Walk the queue: one visit (up to N cycles) per distinct problem.
 
@@ -2254,6 +2408,11 @@ def run_queue(
     queue to that subset, preserving tier+id order within the subset.
     None or empty list → no filter (backward-compatible default).
 
+    `by_priority` (Phase 3 Goal 1) ranks the queue by
+    headroom × hit-rate × staleness instead of problem_id order. Headroom
+    is fetched once per invocation (then served from the in-memory dict),
+    so multi-visit runs don't re-hit the leaderboard per visit.
+
     Tracks already-visited problem ids so each iteration picks the next
     un-visited problem.
 
@@ -2263,9 +2422,17 @@ def run_queue(
     results: list[CycleResult] = []
     done_ids: set[int] = set()
     id_subset: set[int] | None = set(problem_ids) if problem_ids else None
+    # One live fetch per run: after the first priority build, replay arena-#1
+    # scores from the cache so later visits re-rank without network calls.
+    priority_fetcher = headroom_fetcher
     for i in range(max_problems):
         problems = load_problems(problems_dir)
-        queue = [p for p in build_queue(problems) if p.problem_id not in done_ids]
+        if by_priority:
+            ranked = build_queue_by_priority(problems, fetcher=priority_fetcher)
+            priority_fetcher = lambda pid: (None, None)  # noqa: E731 — cache-only after 1st
+        else:
+            ranked = build_queue(problems)
+        queue = [p for p in ranked if p.problem_id not in done_ids]
         if id_subset is not None:
             queue = [p for p in queue if p.problem_id in id_subset]
         if not queue:
@@ -2330,6 +2497,14 @@ def main(argv: list[str] | None = None) -> int:
         "--queue-only", action="store_true", help="Print the current active queue and exit."
     )
     parser.add_argument(
+        "--by-priority",
+        action="store_true",
+        help="Rank the queue by headroom × hit-rate × staleness "
+        "(Phase 3 Goal 1) instead of problem_id order. Headroom "
+        "from the live leaderboard with a cache fallback "
+        "(mb/logs/headroom-cache.json); no data → id order.",
+    )
+    parser.add_argument(
         "--skip-if-recent",
         type=int,
         default=0,
@@ -2383,7 +2558,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.queue_only:
         problems = load_problems(args.problems_dir)
-        queue = build_queue(problems)
+        queue = build_queue_by_priority(problems) if args.by_priority else build_queue(problems)
         log.info("active queue (%d problems):", len(queue))
         for p in queue:
             score = f"{p.score_current:.6g}" if p.score_current is not None else "—"
@@ -2427,8 +2602,12 @@ def main(argv: list[str] | None = None) -> int:
             budget_path=args.budget_path,
             sentinel_path=args.sentinel_path,
             skip_gates=args.skip_gates,
+            by_priority=args.by_priority,
         )
         log.info("completed %d cycles", len(results))
+        if not args.dry_run:
+            # Phase 3 Goal 3: per-run cross-pollination visibility.
+            surface_cross_pollination(args.cycle_log)
         if args.discipline_once and results and not args.dry_run:
             last = results[-1]
             log.info(

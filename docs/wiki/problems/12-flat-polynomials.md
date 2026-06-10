@@ -6,7 +6,12 @@ problem_id: 12
 arena_url: https://einsteinarena.com/problems/flat-polynomials
 status: rank-8
 in_active_queue: true
-score_current: 1.3539
+# score_current = best locally-verified capability (the rediscovered SOTA seed;
+# verify_seed returns it every cycle), not the stale arena rank-8 score 1.3539.
+# The stale value inflated picker headroom 6 orders of magnitude → Goal-5
+# scheduler ground P12. Submitting the seed is minImprovement-blocked (beats
+# arena #1 by only 7.3e-10 < 1e-8).
+score_current: 1.2809320520721
 tier: B
 concepts_invoked: [discretization-as-structure.md, basin-rigidity.md, probabilistic-method.md]
 techniques_used: [memetic-tabu-search.md, basin-hopping-multistart.md, multistart-with-rotation-lottery.md]

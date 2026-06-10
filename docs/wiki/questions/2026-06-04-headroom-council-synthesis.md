@@ -105,3 +105,11 @@ says otherwise. Recommended execution order:
 The unifying thread: **three of five targets (P2, P3, P12) are gated by a
 score-comparability / resolution problem, not by search.** Build the
 cross-resolution / continuous-sup verification *before* chasing basins.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"Phase 7 headroom council — synthesis") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

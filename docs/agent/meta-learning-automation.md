@@ -98,11 +98,19 @@ Formalize a signal taxonomy in `record_cycle_row` (autonomous_loop.py) and auto-
 | Mechanism verified on ≥2 problems | append to `promotion-log` (human-gated → concept) |
 | Prior violated (e.g. a tie beaten) | finding + propose a rule edit |
 
-### Gap 4 — no scheduler (Phase 3, deferred)
-A **cron job** (`CronCreate` / `schedule` skill) runs `autonomous_loop.py --one-problem` on
-a cadence. Picks the next problem by priority = headroom × available-technique hit-rate ×
-staleness (candidate scaffolding: `docs/agent/82-problem-sweep-candidates.json`). Only
-schedule once Phase 2's inner agent is proven.
+### Gap 4 — no scheduler (Phase 3, BUILT 2026-06-09/10 — cron not yet armed)
+**Status: built + supervised-tested on `js/feat/meta-learning-scheduler`.** Goal 0 cleared
+Phase 2's entry conditions (R7 positive on write+cite branches, human R8 keep). Shipped:
+`problem_priority.py` (priority = log-compressed headroom × category hit-rate ×
+staleness, live-leaderboard our-score, empirical-Bayes prior, offline cache ladder),
+`scheduled_cycle.py` (runs/day cap, hard timeout, run ledger; cron spec in docstring),
+`scheduler_health.py` + `unattended-runbook.md`, connect-the-dots sibling-findings
+injection, per-run cross-pollination surfacing. 7-run supervised rollout: reliability
+green (15/17 LLM-path, ~$0.6/cycle, 0 spurious submits) but targeting initially ground
+P12 from stale frontmatter + raw-headroom spread — fixed and live-verified (queue
+P3→P10→P4). **Verdict: NOT yet unattended** — see
+`docs/wiki/findings/scheduler-supervised-rollout-verdict.md` for the precondition list
+(clean v2 attended window, weekly-audit habit, P7 onboarding).
 
 ## The non-negotiable: capture without pruning = spam (Phase 4, THIS branch)
 

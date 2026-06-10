@@ -242,10 +242,18 @@ def _check_converged(v: Any) -> bool:
 def _check_notes(v: Any) -> str:
     if not isinstance(v, str):
         raise InnerAgentOutputError(f"field 'notes': expected string, got {type(v).__name__}")
+    # Lenient on shape, strict on type — same policy as cited_sources
+    # (Phase 2: strict-parse on a cosmetic constraint caused a 40% fallback
+    # rate; Goal-5 runs 6-7 reproduced it via 283/294-char notes → mechanical
+    # fallback). Newlines flatten to "; ", overlength truncates with a marker.
+    # Failing the WHOLE response over a long note costs an LLM cycle for zero
+    # informational gain.
     if "\n" in v:
-        raise InnerAgentOutputError("field 'notes': must be single line (no newlines)")
+        log.warning("field 'notes': flattening %d newline(s)", v.count("\n"))
+        v = "; ".join(part.strip() for part in v.splitlines() if part.strip())
     if len(v) > MAX_NOTES_CHARS:
-        raise InnerAgentOutputError(f"field 'notes': {len(v)} chars > {MAX_NOTES_CHARS} max")
+        log.warning("field 'notes': %d chars > %d max — truncating", len(v), MAX_NOTES_CHARS)
+        v = v[: MAX_NOTES_CHARS - 1] + "…"
     return v
 
 

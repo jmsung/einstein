@@ -1,7 +1,7 @@
 ---
 type: question
 author: agent
-drafted: 2026-06-04
+drafted: 2026-06-09
 status: open
 asked_by: gap-detector
 related_pages: [concepts/circle-packing.md, problems/14-circle-packing-square.md]
