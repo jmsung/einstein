@@ -17,3 +17,11 @@ related_problems: [2]
 
 3. **Can a magic-function-style dual certificate be built whose Fourier-positivity structure predicts the optimal support, giving a constructive seed rather than an L-BFGS-discovered one?**
    Why it matters: the rank-#1 v² seed was found by a non-deterministic L-BFGS trajectory ("the exact score depends on L-BFGS trajectory") — this is exactly why reconstruction is fragile. A dual certificate that pins the active constraint set would make the seed reproducible by construction. A good answer either sketches the certificate's sign pattern on the 69-cluster support or rules out a clean dual for this asymmetric extremizer.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"headroom — Cohn what does the") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

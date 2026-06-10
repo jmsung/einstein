@@ -35,3 +35,11 @@ question about a *continuum limit*, which is my home ground.
    non-monotonicity is purely cross-basin and there is no "free" resolution headroom —
    killing the inflation hope analytically rather than empirically. A good answer separates
    the two confounds by resampling one f across n and reporting whether C2(n) is monotone.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"Riemann — headroom the continuum limit") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

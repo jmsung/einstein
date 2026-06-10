@@ -306,9 +306,18 @@ emit a single JSON object matching the schema at the end. Concretely:
    --problem-id {problem_id} --strategy <strategy>` if the problem has a
    manifest entry. If no entry, return `"score": null` and explain in `notes`.
 7. **LOG** — emit the JSON response. Stop calling tools after emitting it.
-   If the attempt failed (dead end), set `dead_end_finding` to the intended
-   path under `docs/wiki/findings/dead-end-*.md`; the orchestrator writes
-   the file in Goal 7.6.
+   A *declined or unactionable* attempt is a dead end too (per
+   `.claude/rules/failure-is-a-finding.md`): if you abandon the chosen
+   strategy for ANY reason (technique not wired in dispatch, known
+   obstruction, no actionable lever), first Grep `docs/wiki/findings/`
+   for an existing page covering that exact obstruction. If one exists,
+   cite it in `notes`. If none does, Write
+   `docs/wiki/findings/dead-end-<slug>.md` yourself (author: agent
+   frontmatter; sections "What we tried / Why it failed / What this
+   rules out / What might still work"), list it in `wiki_writes`, AND
+   set `dead_end_finding` to its path. Honest convergence with no new
+   obstruction (everything already covered by existing findings) is the
+   only case where writing nothing is correct.
 8. **CITED SOURCES** — populate `cited_sources` with every
    `docs/source/<file>.md` path that materially informed this attempt
    (read in step 1's wiki-first lookup, surfaced by gap_search, or

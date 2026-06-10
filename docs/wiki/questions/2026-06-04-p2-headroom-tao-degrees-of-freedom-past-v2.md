@@ -17,3 +17,11 @@ related_problems: [2]
 
 3. **Is there a multi-scale (dyadic) structure in the 69-cluster support whose finest scale is below the n=90000 grid spacing — i.e. is the optimum genuinely band-unlimited, so the right move is adaptive (non-uniform) grid refinement on the active clusters rather than uniform n?**
    Why it matters: B3 proved the optimum is high-frequency (18,193 non-trivial cells, low-freq regularizer strictly hurts). If the comb-spike clusters need sub-grid resolution that uniform 90k can't represent, an adaptive mesh concentrating points on the 69 clusters could expose DOF that uniform large-n wastes. A good answer measures the finest active cluster width in grid units and states whether it is grid-spacing-limited.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"headroom — Tao what degree of") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

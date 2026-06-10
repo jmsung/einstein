@@ -98,6 +98,55 @@ mostly paying for fallback), R7 < 100% (captures are skippable → the loop drif
 discretionary), or R8 below bar (the loop spams the wiki). A NO-GO does not kill Phase 2 —
 it routes back to a fix + re-pilot, and the failure modes get dead-end findings.
 
+## Phase 3 Goal 0 — entry-condition record (2026-06-09, branch `js/feat/meta-learning-scheduler`)
+
+Phase 2's CONDITIONAL GO required (a) a non-frozen cycle exercising the capture path
+positively and (b) a human R8 spot-check. Result: **R7 positively exercised after two
+pilot-surfaced fixes** — the pilot's first runs were honest-zero for a *fixable* reason,
+and fixing it was the point.
+
+**The runs (P12 flat-polynomials, rank-8, tier B — the only non-frozen tier-B in queue;
+`EINSTEIN_AUTO_SUBMIT=0` throughout):**
+
+1. **Misfire (mechanical)** — `--one-problem --skip-gates` runs the *mechanical* path:
+   the CLI has no explicit LLM flag, and with the precheck skipped `llm_enabled` defaults
+   to False (`autonomous_loop.py` main → `run_one_visit`). 2 cycles of `verify_seed`
+   only; rows discarded pre-commit (see cycle-log corrigendum at 284–286). Lesson for
+   Phase 3: the scheduler invocation must NOT use `--skip-gates`; the precheck IS the
+   LLM enabler.
+2. **LLM visit, pre-fix (cycles 284–286, reconstructed rows)** — 3/3 LLM-path, parse
+   3/3, 0 timeouts, $0.62–0.93/cycle exact. Zero findings: the agent *declined*
+   unactionable bandit picks (MTS already byte-identical to SOTA; bnb-exhaustive-w3 not
+   wired in the manifest) without filing the obstruction. Root cause: prompt step 7
+   classified only "failed" attempts as dead-ends — declines fell through
+   `failure-is-a-finding`.
+3. **Fixes:**
+   - `docs/tools/inner_agent_prompt.py` step 7 — declined/unactionable attempts are
+     dead ends too; grep findings/ first, cite if covered, else Write the dead-end page
+     (anti-spam guard built in).
+   - `tests/scripts/test_autonomous_loop.py` — `test_run_one_visit_proceeds_when_precheck_returns_proceed`
+     leaked 3 **real** `claude -p` calls (~$2) per suite run into the real telemetry +
+     budget ledgers (no headless_runner seam). Fixed with the spy-seam pattern; verified
+     $0 + no ledger writes. (Ledger pollution: P14 entries 2026-06-10T01:53–01:57Z are
+     test artifacts.)
+4. **LLM visit, post-fix (cycles 287–288)** — **R7 positive, both branches:**
+   - Cycle 287: agent Wrote
+     `docs/wiki/findings/dead-end-p12-stochastic-exhausted-no-algebraic-operator-wired.md`
+     (layered math+tooling obstruction, 4 concrete untried operators, skip-cite
+     instruction), `findings_added=1`, captured by the git-status delta. $1.01.
+   - Cycle 288: bandit re-picked the unwired technique → agent **cited the cycle-287
+     dead-end instead of duplicating** (the anti-spam branch). $0.60.
+
+| Criterion | Goal-0 status |
+|---|---|
+| R7 capture path positively exercised | ✅ cycle 287 (write branch) + 288 (cite branch) |
+| R8 human spot-check of captures | ✅ human verdict **keep** (2026-06-09) — `dead-end-p12-stochastic-exhausted-no-algebraic-operator-wired.md` judged keep-worthy (cites wiki pages + an open question; no `docs/source/` entry, accepted for an infra-flavored dead-end) |
+
+**GO for Phase 3 scheduler build** (2026-06-09): both Phase-2 entry conditions cleared —
+R7 positively exercised on write + cite branches, R8 spot-check passed. Conditions
+carried forward into the Phase-3 build: scheduler invocation must not use
+`--skip-gates`, and Goal 5's supervised rollout still gates promote-to-unattended.
+
 ## See also
 
 - `docs/agent/meta-learning-automation.md` — Gap 1 / Phase 2 in the full design.

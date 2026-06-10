@@ -1006,7 +1006,31 @@ def test_run_one_visit_proceeds_when_precheck_returns_proceed(tmp_path: Path) ->
         llm_enabled=True,
     )
     runner_calls: list = []
-    with patch.object(al.inner_agent_gates, "precheck", return_value=fake_decision):
+    # Suppress the real LLM seams — without this, llm_enabled=True makes
+    # _try_llm_path auto-import the real claude_headless and spend real
+    # tokens (+ pollute the real mb telemetry/budget ledgers) on every
+    # test run. The unavailable runner forces the mechanical fallback.
+    real_inner = al.inner_attempt
+
+    def spy_inner(p, **kw):
+        kw["headless_runner"] = lambda *_a, **_kw: SimpleNamespace(
+            ok=False,
+            error_kind="unavailable",
+            error_message="test",
+            stdout="",
+            stderr="",
+            returncode=0,
+        )
+        kw["prompt_renderer"] = lambda **_kw: "prompt"
+        kw["response_parser"] = lambda _t: None
+        kw["budget_recorder"] = lambda *_a, **_kw: None
+        kw["telemetry_recorder"] = lambda *_a, **_kw: None
+        return real_inner(p, **kw)
+
+    with (
+        patch.object(al.inner_agent_gates, "precheck", return_value=fake_decision),
+        patch.object(al, "inner_attempt", side_effect=spy_inner),
+    ):
         results = al.run_one_visit(
             problem,
             cycle_log=log,
@@ -1666,6 +1690,7 @@ def test_run_one_visit_threads_llm_enabled_from_precheck(tmp_path: Path) -> None
         kw["prompt_renderer"] = lambda **_kw: "prompt"
         kw["response_parser"] = lambda _t: None
         kw["budget_recorder"] = lambda *_a, **_kw: None
+        kw["telemetry_recorder"] = lambda *_a, **_kw: None
         return real_inner(p, **kw)
 
     with (
