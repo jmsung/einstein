@@ -3504,3 +3504,160 @@ def test_run_queue_problem_ids_empty_means_no_subset_no_filter(tmp_path: Path) -
         skip_gates=True,
     )
     assert len(results) == 1
+
+
+# ---------------- Phase 3 Goal 1 — --by-priority wiring ----------------
+
+
+def test_build_queue_by_priority_ranks_headroom_first(tmp_path: Path) -> None:
+    """Injected fetcher; P4 (real headroom) outranks P1 (tied) and P14 (we lead)."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(
+                problem_id=1, slug="erdos-overlap", tier="C", status="rank-2-frozen", score=0.38087
+            ),
+            dict(
+                problem_id=4,
+                slug="third-autocorrelation",
+                tier="S",
+                status="rank-2-displaced",
+                score=1.4525,
+            ),
+            dict(
+                problem_id=14, slug="circle-packing-square", tier="A", status="rank-1", score=2.64
+            ),
+        ],
+    )
+    arena1 = {1: 0.38087, 4: 1.4523, 14: 2.63}  # P1 tied, P4 behind, P14 ahead
+    queue = al.build_queue_by_priority(
+        al.load_problems(pdir),
+        skill_library=tmp_path / "no-skill-lib.md",
+        cycle_log=tmp_path / "no-cycle-log.md",
+        cache_path=tmp_path / "headroom-cache.json",
+        fetcher=lambda pid: arena1[pid],
+    )
+    assert queue[0].problem_id == 4
+
+
+def test_build_queue_by_priority_offline_cold_cache_id_order(tmp_path: Path) -> None:
+    """Fetcher down + cold cache → headroom None everywhere → id-order fallback."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(problem_id=12, slug="c", tier="B", status="open", score=1.3),
+            dict(problem_id=2, slug="a", tier="S", status="open", score=1.5),
+        ],
+    )
+
+    def down(pid: int) -> float:
+        raise OSError("offline")
+
+    queue = al.build_queue_by_priority(
+        al.load_problems(pdir),
+        skill_library=tmp_path / "no-skill-lib.md",
+        cycle_log=tmp_path / "no-cycle-log.md",
+        cache_path=tmp_path / "cold-cache.json",
+        fetcher=down,
+    )
+    assert [p.problem_id for p in queue] == [2, 12]
+
+
+def test_build_queue_by_priority_offline_warm_cache_still_ranks(tmp_path: Path) -> None:
+    """Fetcher down but cache warm → ranking still works (the cache ladder)."""
+    import problem_priority as pp
+
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(
+                problem_id=2, slug="first-autocorrelation", tier="S", status="open", score=1.5028611
+            ),
+            dict(problem_id=12, slug="flat-polynomials", tier="B", status="rank-8", score=1.3539),
+        ],
+    )
+    cache = tmp_path / "headroom-cache.json"
+    pp.save_cached_arena_best(cache, 2, 1.5028609, ts="t0")
+    pp.save_cached_arena_best(cache, 12, 1.2809, ts="t0")
+
+    def down(pid: int) -> float:
+        raise OSError("offline")
+
+    queue = al.build_queue_by_priority(
+        al.load_problems(pdir),
+        skill_library=tmp_path / "no-skill-lib.md",
+        cycle_log=tmp_path / "no-cycle-log.md",
+        cache_path=cache,
+        fetcher=down,
+    )
+    # P12's relative headroom (~5.7e-2) dwarfs P2's (~1.3e-7).
+    assert [p.problem_id for p in queue] == [12, 2]
+
+
+def test_run_queue_by_priority_visits_top_priority_first(tmp_path: Path) -> None:
+    """End-to-end: run_queue(by_priority=True) visits the headroom problem, not id-first."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(
+                problem_id=1, slug="erdos-overlap", tier="C", status="rank-2-frozen", score=0.38087
+            ),
+            dict(problem_id=12, slug="flat-polynomials", tier="B", status="rank-8", score=1.3539),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+    arena1 = {1: 0.38087, 12: 1.2809}
+
+    visited: list[int] = []
+    real_visit = al.run_one_visit
+
+    def spy_visit(problem, **kw):
+        visited.append(problem.problem_id)
+        return []
+
+    cache = tmp_path / "headroom-cache.json"
+    with (
+        patch.object(al, "run_one_visit", side_effect=spy_visit),
+        patch.object(al, "DEFAULT_HEADROOM_CACHE", cache),
+        patch.object(al, "_arena_best_fetcher", lambda pid: arena1[pid]),
+    ):
+        al.run_queue(
+            problems_dir=pdir,
+            cycle_log=log,
+            max_problems=1,
+            dry_run=True,
+            by_priority=True,
+        )
+    assert visited == [12]
+    assert real_visit is not None  # silence unused warning
+
+
+def test_run_queue_default_stays_id_order(tmp_path: Path) -> None:
+    """Back-compat: without by_priority the queue stays problem_id-ascending."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            dict(
+                problem_id=1, slug="erdos-overlap", tier="C", status="rank-2-frozen", score=0.38087
+            ),
+            dict(problem_id=12, slug="flat-polynomials", tier="B", status="rank-8", score=1.3539),
+        ],
+    )
+    log = tmp_path / "cycle-log.md"
+    log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
+
+    visited: list[int] = []
+
+    def spy_visit(problem, **kw):
+        visited.append(problem.problem_id)
+        return []
+
+    with patch.object(al, "run_one_visit", side_effect=spy_visit):
+        al.run_queue(
+            problems_dir=pdir,
+            cycle_log=log,
+            max_problems=1,
+            dry_run=True,
+        )
+    assert visited == [1]
