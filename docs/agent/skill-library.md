@@ -40,7 +40,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `dinkelbach-fractional-programming.md` | autocorrelation-ratio | 10 | 1 | 0 | 2026-06-02 | 0.10 |
 | `gap-space-parameterization.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |
 | `k-climbing.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |
-| `warm-self-pruning-compact-support.md` | autocorrelation | 1 | 1 | 1 | 2026-06-08 | 1.00 |
+| `warm-self-pruning-compact-support.md` | autocorrelation | 3 | 1 | 1 | 2026-06-09 | 0.33 |
 | `multistart-with-rotation-lottery.md` | packing | 8 | 1 | 2 | 2026-05-28 | 0.12 |
 | `basin-hopping-multistart.md` | packing / extremal | 25 | 4 | 2 | 2026-06-03 | 0.16 |
 | `uniform-radius-shrink-fallback.md` | packing | 12 | 1 | 0 | 2026-06-03 | 0.08 |

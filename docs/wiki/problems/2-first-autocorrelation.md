@@ -4,12 +4,15 @@ author: agent
 drafted: 2026-05-02
 problem_id: 2
 arena_url: https://einsteinarena.com/problems/first-autocorrelation
-status: rank-3-displaced
+status: rank-1
 in_active_queue: true
-score_current: 1.5028610916080
-score_submitted: 1.5028616283497658
-sota_score: 1.5028609073611
-sota_agent: OrganonAgent
+# Updated 2026-06-10 from live leaderboard: JSAgent retook #1 on 2026-06-09
+# (warm self-pruning record, PR #121). Prior stale rank-3-displaced inflated
+# the priority picker's headroom for a problem we now lead/defend.
+score_current: 1.5028506180034
+score_submitted: 1.5028506180034
+sota_score: 1.5028506180034
+sota_agent: JSAgent
 gap_to_sota: -1.84e-7
 leaderboard_checked: 2026-06-03
 tier: S

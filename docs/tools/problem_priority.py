@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import re
 import sys
 from pathlib import Path
@@ -49,6 +50,12 @@ if TYPE_CHECKING:  # Problem is autonomous_loop's dataclass; avoid runtime cycle
 HIT_RATE_FLOOR = 0.1
 STALENESS_FLOOR = 0.1
 NEUTRAL_HIT_RATE = 0.5
+# Headroom is log-compressed against the minImprovement scale before entering
+# the product. Raw relative headrooms span 6+ orders of magnitude across
+# problems (Goal-5 rollout: one stale 5.7e-2 entry out-ranked every 1e-4-class
+# problem 380:1 and ground the scheduler on it); compression makes the other
+# factors able to rotate the queue while preserving headroom ordering.
+HEADROOM_REF = 1e-7  # default arena minImprovement — "one submittable unit"
 
 _ROW_RE = re.compile(r"^\|\s*(\d+)\s*\|\s*(P\d+-[a-z0-9-]+)\s*\|", re.IGNORECASE)
 
@@ -144,6 +151,20 @@ def category_hit_rate(category: str, skill_library: Path) -> float | None:
     return top3 / tried
 
 
+def overall_hit_rate(skill_library: Path) -> float | None:
+    """Library-wide tried-weighted top3 rate — the empirical-Bayes prior for
+    categories with no rows. Goal-5 rollout: the fixed 0.5 neutral made
+    no-data categories outrank every measured category (real rates run
+    0.1–0.3), so the scheduler repeated P10 over P4."""
+    try:
+        rows = load_skill_library(skill_library)
+    except OSError:
+        return None
+    tried = sum(r.tried for r in rows)
+    top3 = sum(r.top3 for r in rows)
+    return (top3 / tried) if tried else None
+
+
 # ---------------- staleness ----------------
 
 
@@ -175,13 +196,16 @@ def staleness(problem_label: str, cycle_log: Path) -> float:
 
 
 def problem_priority(headroom: float, hit_rate: float | None, staleness: float) -> float:
-    """priority = headroom × max(hit_rate, floor) × max(staleness, floor).
+    """priority = log10(1 + headroom/REF) × max(hit_rate, floor) × max(staleness, floor).
 
-    headroom is the dominant, un-floored term: 0 headroom (tied/leading) → 0
-    priority regardless of the other factors.
+    headroom stays the dominant, un-floored term — 0 headroom (tied/leading)
+    → 0 priority regardless of the other factors — but is log-compressed so
+    cross-problem magnitude spreads (6+ orders) can't make one problem
+    permanently out-rank the rest of the queue.
     """
     hr = NEUTRAL_HIT_RATE if hit_rate is None else hit_rate
-    return headroom * max(hr, HIT_RATE_FLOOR) * max(staleness, STALENESS_FLOOR)
+    compressed = math.log10(1.0 + headroom / HEADROOM_REF)
+    return compressed * max(hr, HIT_RATE_FLOOR) * max(staleness, STALENESS_FLOOR)
 
 
 def build_priority_queue(
@@ -197,6 +221,11 @@ def build_priority_queue(
     except ImportError:
         category_for = lambda _pid: "?"  # noqa: E731 — degraded but functional
 
+    # Empirical-Bayes prior for categories with no library rows: the
+    # library-wide rate, NOT a fixed 0.5 (which out-ranked every measured
+    # category in the Goal-5 rollout).
+    library_prior = overall_hit_rate(skill_library)
+
     scored: list[tuple[float, int, "Problem"]] = []
     unscored: list["Problem"] = []
     for p in problems:
@@ -205,6 +234,8 @@ def build_priority_queue(
             unscored.append(p)
             continue
         hr = category_hit_rate(category_for(p.problem_id), skill_library)
+        if hr is None:
+            hr = library_prior  # may still be None → problem_priority neutral
         st = staleness(f"P{p.problem_id}-{p.slug}", cycle_log)
         scored.append((problem_priority(h, hr, st), p.problem_id, p))
 

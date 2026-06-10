@@ -270,16 +270,27 @@ def surface_cross_pollination(cycle_log: Path, *, window: int = 50) -> int:
     return n
 
 
-def _arena_best_fetcher(problem_id: int) -> float | None:
-    """Live arena-#1 score via check_submission (same scripts/ dir).
+def _arena_scores_fetcher(
+    problem_id: int, agent_name: str = "JSAgent"
+) -> tuple[float | None, float | None]:
+    """One live leaderboard fetch → (arena #1 score, OUR best score or None).
 
-    Raises on network/API failure — problem_priority.headroom_for catches
-    and falls back to the cache.
+    Goal-5 rollout lesson: frontmatter `score_current` goes stale (P12 was 6
+    orders inflated; P2 said rank-3 the day after we retook #1) and stale
+    inputs make the picker grind dead targets. The leaderboard is the ground
+    truth for OUR standing too — one fetch serves both; frontmatter stays the
+    offline fallback. Raises on network/API failure — the caller catches and
+    falls back to the arena-#1 cache + frontmatter.
     """
     import check_submission  # noqa: PLC0415 — scripts/ sibling, lazy
 
-    lb = check_submission.check_leaderboard(problem_id, limit=1)
-    return float(lb[0]["score"]) if lb else None
+    lb = check_submission.check_leaderboard(problem_id, limit=20)
+    arena1 = float(lb[0]["score"]) if lb else None
+    ours = next(
+        (float(e["score"]) for e in lb if e.get("agentName") == agent_name),
+        None,
+    )
+    return arena1, ours
 
 
 def build_queue_by_priority(
@@ -314,15 +325,37 @@ def build_queue_by_priority(
         # (a def-time default would bind the real mb path immutably).
         cache_path = DEFAULT_HEADROOM_CACHE
     if fetcher is None:
-        fetcher = _arena_best_fetcher
+        fetcher = _arena_scores_fetcher
     ts = dt.datetime.now(dt.timezone.utc).isoformat()
     headrooms: dict[int, float | None] = {}
     for p in active:
+        # One leaderboard fetch yields BOTH scores: arena #1 (cached for the
+        # offline ladder) and our live best (frontmatter is the fallback —
+        # it goes stale; see the Goal-5 verdict finding).
+        arena1: float | None = None
+        ours_live: float | None = None
+        try:
+            arena1, ours_live = fetcher(p.problem_id)
+        except Exception as e:  # noqa: BLE001 — offline → cache + frontmatter
+            log.warning("P%d leaderboard fetch failed (%s) — cache fallback", p.problem_id, e)
+        # Headroom = remaining GAIN POTENTIAL, so "our score" is the
+        # direction-best of live leaderboard standing and local frontmatter
+        # capability. Each covers the other's staleness mode: frontmatter
+        # lags retakes (P2 said rank-3 the day after our record); the
+        # leaderboard lags unsubmittable local capability (P12's rediscovered
+        # SOTA seed is minImprovement-blocked, so the board shows 1.3539
+        # while we verifiably hold 1.2809).
+        minimize = PROBLEM_MINIMIZE.get(p.problem_id)
+        candidates = [s for s in (ours_live, p.score_current) if s is not None]
+        if not candidates or minimize is None:
+            our_score = candidates[0] if candidates else None
+        else:
+            our_score = min(candidates) if minimize else max(candidates)
         headrooms[p.problem_id] = problem_priority.headroom_for(
             p.problem_id,
-            our_score=p.score_current,
-            minimize=PROBLEM_MINIMIZE.get(p.problem_id),
-            fetcher=fetcher,
+            our_score=our_score,
+            minimize=minimize,
+            fetcher=(lambda _pid, _a=arena1: _a) if arena1 is not None else None,
             cache_path=cache_path,
             ts=ts,
         )
@@ -2395,7 +2428,7 @@ def run_queue(
         problems = load_problems(problems_dir)
         if by_priority:
             ranked = build_queue_by_priority(problems, fetcher=priority_fetcher)
-            priority_fetcher = lambda pid: None  # noqa: E731 — cache-only after 1st
+            priority_fetcher = lambda pid: (None, None)  # noqa: E731 — cache-only after 1st
         else:
             ranked = build_queue(problems)
         queue = [p for p in ranked if p.problem_id not in done_ids]

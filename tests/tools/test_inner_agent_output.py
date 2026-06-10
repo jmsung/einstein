@@ -212,18 +212,22 @@ def test_converged_int_rejected():
         iao.parse_response(json.dumps(payload))
 
 
-def test_notes_too_long_rejected():
+def test_notes_too_long_truncated_not_rejected():
+    """Goal-5 runs 6-7: 283/294-char notes caused whole-response parse
+    failure -> mechanical fallback. Lenient policy (same as cited_sources):
+    truncate with a marker, never reject."""
     payload = dict(VALID_RESPONSE)
-    payload["notes"] = "x" * (iao.MAX_NOTES_CHARS + 1)
-    with pytest.raises(iao.InnerAgentOutputError, match="chars >"):
-        iao.parse_response(json.dumps(payload))
+    payload["notes"] = "x" * (iao.MAX_NOTES_CHARS + 100)
+    resp = iao.parse_response(json.dumps(payload))
+    assert len(resp.notes) <= iao.MAX_NOTES_CHARS
+    assert resp.notes.endswith("\u2026")
 
 
-def test_notes_newline_rejected():
+def test_notes_newlines_flattened_not_rejected():
     payload = dict(VALID_RESPONSE)
     payload["notes"] = "first line\nsecond line"
-    with pytest.raises(iao.InnerAgentOutputError, match="single line"):
-        iao.parse_response(json.dumps(payload))
+    resp = iao.parse_response(json.dumps(payload))
+    assert resp.notes == "first line; second line"
 
 
 def test_notes_wrong_type_rejected():

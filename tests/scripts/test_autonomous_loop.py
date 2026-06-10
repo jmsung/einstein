@@ -68,6 +68,19 @@ def _build_wiki_with_problems(tmp_path: Path, problems: list[dict]) -> Path:
     return pdir
 
 
+def _noop_submit(problem_id, payload, score, **kw):
+    """Sealed auto_submitter for tests that don't assert on submission.
+
+    NEVER pass auto_submitter=None in tests: None auto-imports the REAL
+    try_submit, which fetches the live leaderboard and appends to the real
+    mb/logs/auto-submit.md audit ledger (2026-06-10 pollution incident —
+    fake P14/P1/P2/P3 rows at 02:57Z came from exactly this).
+    """
+    from types import SimpleNamespace
+
+    return SimpleNamespace(submitted=False, rejected_at_gate="test-noop-stub")
+
+
 # ---------------- Problem dataclass + parsing ----------------
 
 
@@ -2472,7 +2485,7 @@ def test_llm_path_passes_bandit_recommendation_when_enabled(tmp_path: Path, monk
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=fake_headless,
         prompt_renderer=fake_renderer,
         response_parser=fake_parse,
@@ -2520,7 +2533,7 @@ def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypat
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=fake_headless,
         prompt_renderer=fake_renderer,
         response_parser=fake_parse,
@@ -2559,7 +2572,7 @@ def test_llm_path_emits_telemetry_on_success(tmp_path: Path) -> None:
         problem=p14,
         attempt_index=2,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2603,7 +2616,7 @@ def test_llm_path_emits_fallback_telemetry_on_unavailable(tmp_path: Path) -> Non
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=unavailable_runner,
         prompt_renderer=lambda **kw: "PROMPT",
         response_parser=boom_parser,
@@ -2633,7 +2646,7 @@ def test_llm_path_emits_fallback_telemetry_on_parse_error(tmp_path: Path) -> Non
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=bad_parser,
@@ -2661,7 +2674,7 @@ def test_llm_path_telemetry_recorder_failure_never_breaks_cycle(tmp_path: Path) 
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2691,7 +2704,7 @@ def test_llm_path_pins_capture_gate_base_to_pre_cycle_head(tmp_path, monkeypatch
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2717,7 +2730,7 @@ def test_llm_path_omits_gate_base_when_head_unresolvable(tmp_path, monkeypatch) 
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2775,7 +2788,7 @@ def test_llm_path_uses_exact_tokens_and_cost_from_envelope(tmp_path, monkeypatch
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=_runner_with_usage(6300, 210, 0.0421),
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -2808,7 +2821,7 @@ def test_llm_path_falls_back_to_estimate_without_usage_fields(tmp_path, monkeypa
         problem=p14,
         attempt_index=1,
         avoid_techniques=None,
-        auto_submitter=None,
+        auto_submitter=_noop_submit,
         headless_runner=seams["runner"],
         prompt_renderer=seams["renderer"],
         response_parser=seams["parser"],
@@ -3535,7 +3548,7 @@ def test_build_queue_by_priority_ranks_headroom_first(tmp_path: Path) -> None:
         skill_library=tmp_path / "no-skill-lib.md",
         cycle_log=tmp_path / "no-cycle-log.md",
         cache_path=tmp_path / "headroom-cache.json",
-        fetcher=lambda pid: arena1[pid],
+        fetcher=lambda pid: (arena1[pid], None),
     )
     assert queue[0].problem_id == 4
 
@@ -3550,7 +3563,7 @@ def test_build_queue_by_priority_offline_cold_cache_id_order(tmp_path: Path) -> 
         ],
     )
 
-    def down(pid: int) -> float:
+    def down(pid: int) -> tuple[float | None, float | None]:
         raise OSError("offline")
 
     queue = al.build_queue_by_priority(
@@ -3580,7 +3593,7 @@ def test_build_queue_by_priority_offline_warm_cache_still_ranks(tmp_path: Path) 
     pp.save_cached_arena_best(cache, 2, 1.5028609, ts="t0")
     pp.save_cached_arena_best(cache, 12, 1.2809, ts="t0")
 
-    def down(pid: int) -> float:
+    def down(pid: int) -> tuple[float | None, float | None]:
         raise OSError("offline")
 
     queue = al.build_queue_by_priority(
@@ -3620,7 +3633,7 @@ def test_run_queue_by_priority_visits_top_priority_first(tmp_path: Path) -> None
     with (
         patch.object(al, "run_one_visit", side_effect=spy_visit),
         patch.object(al, "DEFAULT_HEADROOM_CACHE", cache),
-        patch.object(al, "_arena_best_fetcher", lambda pid: arena1[pid]),
+        patch.object(al, "_arena_scores_fetcher", lambda pid: (arena1[pid], None)),
     ):
         al.run_queue(
             problems_dir=pdir,
@@ -3661,3 +3674,32 @@ def test_run_queue_default_stays_id_order(tmp_path: Path) -> None:
             dry_run=True,
         )
     assert visited == [1]
+
+
+def test_build_queue_by_priority_live_our_score_overrides_stale_frontmatter(
+    tmp_path: Path,
+) -> None:
+    """Goal-5 iterate fix: live JSAgent score from the leaderboard replaces a
+    stale frontmatter score_current (the P12 6-orders-inflated-headroom bug)."""
+    pdir = _build_wiki_with_problems(
+        tmp_path,
+        [
+            # Stale frontmatter claims 1.3539; live says our best == arena #1.
+            dict(problem_id=12, slug="flat-polynomials", tier="B", status="rank-8", score=1.3539),
+            dict(problem_id=4, slug="third-autocorrelation", tier="S", status="open", score=1.4525),
+        ],
+    )
+
+    def scores(pid: int) -> tuple[float | None, float | None]:
+        return {12: (1.2809, 1.2809), 4: (1.4523, None)}[pid]
+
+    queue = al.build_queue_by_priority(
+        al.load_problems(pdir),
+        skill_library=tmp_path / "no-lib.md",
+        cycle_log=tmp_path / "no-log.md",
+        cache_path=tmp_path / "cache.json",
+        fetcher=scores,
+    )
+    # P12's live ours == arena #1 → headroom 0 → sinks below P4 despite the
+    # stale frontmatter claiming a 5.7e-2 gap.
+    assert [p.problem_id for p in queue] == [4, 12]

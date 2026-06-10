@@ -180,13 +180,15 @@ def test_queue_ranks_by_priority_desc(tmp_path: Path) -> None:
         _mk_problem(4, "third-autocorrelation"),
         _mk_problem(12, "flat-polynomials"),
     ]
-    # P4 has the largest headroom; P12 was just visited (staleness 0 → floor).
+    # P12 has the largest raw headroom but was just visited (staleness floor)
+    # and its category has 0 hit-rate; P4 is staler with a productive category.
     headrooms = {2: 1e-7, 4: 1e-4, 12: 0.057}
     queue = pp.build_priority_queue(problems, headrooms, skill_library=lib, cycle_log=log)
     ids = [p.problem_id for p in queue]
-    # P12: large headroom dominates even with hit_rate 0 + fresh visit (floors).
-    assert ids[0] == 12
-    assert ids.index(4) < ids.index(2)
+    # Log-compression keeps headroom dominant but lets hit-rate + staleness
+    # rotate the queue: P4 edges fresh/0-hit P12 (the Goal-5 anti-grind fix);
+    # P2's sub-minImprovement headroom sinks it to the bottom.
+    assert ids == [4, 12, 2]
 
 
 def test_queue_tie_break_is_problem_id_asc(tmp_path: Path) -> None:
@@ -301,3 +303,27 @@ def test_headroom_for_none_when_direction_unknown(tmp_path: Path) -> None:
         cache_path=tmp_path / "c.json",
     )
     assert h is None
+
+
+def test_overall_hit_rate_is_tried_weighted(tmp_path: Path) -> None:
+    lib = _write_skill_lib(tmp_path)
+    # (0+0+6+9+4) / (4+1+25+34+19)
+    assert pp.overall_hit_rate(lib) == pytest.approx(19 / 83)
+    assert pp.overall_hit_rate(tmp_path / "nope.md") is None
+
+
+def test_unknown_category_uses_library_prior_not_half(tmp_path: Path) -> None:
+    """Goal-5 iterate fix: a no-data category must not outrank measured ones
+    via the generous 0.5 neutral — it gets the library-wide rate instead."""
+    lib = _write_skill_lib(tmp_path)
+    log = tmp_path / "empty.md"
+    # P10's category (sphere-packing-ish) has no rows; P4's (autocorrelation)
+    # does. Equal headroom + equal staleness → the measured category with the
+    # HIGHER actual rate must win iff its rate beats the library prior.
+    problems = [_mk_problem(10, "thomson-n282"), _mk_problem(4, "third-autocorrelation")]
+    headrooms = {10: 1e-4, 4: 1e-4}
+    queue = pp.build_priority_queue(problems, headrooms, skill_library=lib, cycle_log=log)
+    # library prior = 19/83 ≈ 0.229 > autocorrelation's 4/19 ≈ 0.211 — so P10
+    # edges P4 here, but by the prior's honest margin, not by 0.5-vs-0.21.
+    pri = {p.problem_id: i for i, p in enumerate(queue)}
+    assert set(pri) == {4, 10}
