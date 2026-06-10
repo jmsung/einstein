@@ -2505,6 +2505,309 @@ def test_llm_path_omits_recommendation_when_bandit_off(tmp_path: Path, monkeypat
 
 
 # ============================================================================
+# Phase 2 Goal 1 (js/feat/meta-learning-inner-agent) — per-cycle telemetry
+# ============================================================================
+
+
+def _telemetry_seam():
+    """Return (recorder, captured_list) — a fake telemetry recorder that
+    captures kwargs instead of writing to disk."""
+    captured: list[dict] = []
+
+    def recorder(path, **kw):
+        captured.append({"path": path, **kw})
+        return None
+
+    return recorder, captured
+
+
+def test_llm_path_emits_telemetry_on_success(tmp_path: Path) -> None:
+    """A clean LLM cycle emits one telemetry record path_taken=llm, parse_ok,
+    positive token estimates + a measured wall-clock; and the result dict's
+    `hours` is the measured wall-clock (no longer hard-coded 0.0)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="slsqp", score=2.6, converged=False)
+    recorder, captured = _telemetry_seam()
+    tele_path = tmp_path / "tele.jsonl"
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=2,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=seams["recorder"],
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=recorder,
+        telemetry_path=tele_path,
+    )
+    assert res is not None
+    assert len(captured) == 1
+    rec = captured[0]
+    assert rec["path"] == tele_path
+    assert rec["path_taken"] == "llm"
+    assert rec["llm_error_kind"] == ""
+    assert rec["parse_ok"] is True
+    assert rec["attempt_index"] == 2
+    assert rec["input_tokens"] > 0
+    assert rec["wall_clock_s"] >= 0.0
+    # hours column is now the measured wall-clock, not the old 0.0 sentinel.
+    assert res["hours"] == round(rec["wall_clock_s"] / 3600.0, 4)
+
+
+def test_llm_path_emits_fallback_telemetry_on_unavailable(tmp_path: Path) -> None:
+    """claude_headless ok=False(error_kind=unavailable) → telemetry records a
+    fallback with that exact error_kind, and parse is never attempted."""
+    from types import SimpleNamespace
+
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    recorder, captured = _telemetry_seam()
+
+    def unavailable_runner(prompt, **kw):
+        return SimpleNamespace(
+            ok=False, error_kind="unavailable", error_message="429", stdout="", stderr=""
+        )
+
+    def boom_parser(_t):
+        raise AssertionError("parser must not run when claude is unavailable")
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=unavailable_runner,
+        prompt_renderer=lambda **kw: "PROMPT",
+        response_parser=boom_parser,
+        budget_recorder=lambda *a, **k: None,
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=recorder,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is None  # fell back
+    assert len(captured) == 1
+    assert captured[0]["path_taken"] == "fallback"
+    assert captured[0]["llm_error_kind"] == "unavailable"
+    assert captured[0]["parse_ok"] is False
+
+
+def test_llm_path_emits_fallback_telemetry_on_parse_error(tmp_path: Path) -> None:
+    """A parse failure on otherwise-ok output records error_kind=parse-error."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams()
+    recorder, captured = _telemetry_seam()
+
+    def bad_parser(_t):
+        raise ValueError("not json")
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=bad_parser,
+        budget_recorder=lambda *a, **k: None,
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=recorder,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is None
+    assert len(captured) == 1
+    assert captured[0]["path_taken"] == "fallback"
+    assert captured[0]["llm_error_kind"] == "parse-error"
+
+
+def test_llm_path_telemetry_recorder_failure_never_breaks_cycle(tmp_path: Path) -> None:
+    """A raising telemetry recorder must not break the LLM result (best-effort)."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="nm", score=2.6)
+
+    def boom_recorder(path, **kw):
+        raise RuntimeError("disk full")
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=seams["recorder"],
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=boom_recorder,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is not None  # cycle still succeeds despite telemetry failure
+    assert res["compute"] == "local-cpu+llm"
+
+
+# ============================================================================
+# Phase 2 Goal 2 (js/feat/meta-learning-inner-agent) — per-cycle capture-gate base
+# ============================================================================
+
+
+def test_llm_path_pins_capture_gate_base_to_pre_cycle_head(tmp_path, monkeypatch) -> None:
+    """_try_llm_path passes env EINSTEIN_CAPTURE_GATE_BASE = current HEAD to the
+    headless runner so the inner session's capture-gate scopes to this cycle."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="slsqp", score=2.6)
+    monkeypatch.setattr(al, "_current_head", lambda *_a, **_k: "deadbeefcafe")
+
+    al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=seams["recorder"],
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=lambda *a, **k: None,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert len(seams["runner_calls"]) == 1
+    env = seams["runner_calls"][0]["env"]
+    assert env == {"EINSTEIN_CAPTURE_GATE_BASE": "deadbeefcafe"}
+
+
+def test_llm_path_omits_gate_base_when_head_unresolvable(tmp_path, monkeypatch) -> None:
+    """If HEAD can't be resolved (not a git repo), env is None — the gate falls
+    back to its `main` default rather than pinning a bogus base."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="nm", score=2.6)
+    monkeypatch.setattr(al, "_current_head", lambda *_a, **_k: None)
+
+    al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=seams["recorder"],
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=lambda *a, **k: None,
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert seams["runner_calls"][0]["env"] is None
+
+
+def test_current_head_returns_sha_in_real_repo() -> None:
+    """_current_head resolves a 40-char sha in this actual git repo."""
+    sha = al._current_head()
+    assert sha is not None
+    assert len(sha) == 40
+    assert all(c in "0123456789abcdef" for c in sha)
+
+
+# ============================================================================
+# Phase 2 Goal 3 (js/feat/meta-learning-inner-agent) — exact tokens + cost
+# ============================================================================
+
+
+def _runner_with_usage(input_tokens, output_tokens, cost_usd):
+    from types import SimpleNamespace
+
+    def runner(prompt, **kw):
+        return SimpleNamespace(
+            ok=True,
+            stdout='{"strategy":"slsqp"}',
+            stderr="",
+            returncode=0,
+            error_kind="",
+            error_message="",
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cost_usd=cost_usd,
+        )
+
+    return runner
+
+
+def test_llm_path_uses_exact_tokens_and_cost_from_envelope(tmp_path, monkeypatch) -> None:
+    """When the headless result carries usage fields (json mode), telemetry +
+    budget record the EXACT counts with token_source=exact and the cost."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="slsqp", score=2.6)
+    monkeypatch.setattr(al, "_current_head", lambda *_a, **_k: "abc")
+    tele_rec: list[dict] = []
+    budget_rec: list[dict] = []
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=_runner_with_usage(6300, 210, 0.0421),
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=lambda path, **kw: budget_rec.append(kw),
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=lambda path, **kw: tele_rec.append(kw),
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is not None
+    assert tele_rec[0]["token_source"] == "exact"
+    assert tele_rec[0]["input_tokens"] == 6300
+    assert tele_rec[0]["output_tokens"] == 210
+    assert tele_rec[0]["cost_usd"] == 0.0421
+    # budget ledger gets the exact counts, not the chars//4 estimate
+    assert budget_rec[0]["input_tokens"] == 6300
+    # notes carry the source + cost
+    assert "tokens=exact:in:6300/out:210" in res["notes"]
+    assert "cost=$0.0421" in res["notes"]
+
+
+def test_llm_path_falls_back_to_estimate_without_usage_fields(tmp_path, monkeypatch) -> None:
+    """A runner whose result lacks usage fields → token_source=estimate."""
+    p14, lib = _p14_with_packing_lib(tmp_path)
+    seams = _make_llm_seams(strategy="nm", score=2.6)  # fake_run_result has no usage
+    monkeypatch.setattr(al, "_current_head", lambda *_a, **_k: "abc")
+    tele_rec: list[dict] = []
+
+    res = al._try_llm_path(
+        problem=p14,
+        attempt_index=1,
+        avoid_techniques=None,
+        auto_submitter=None,
+        headless_runner=seams["runner"],
+        prompt_renderer=seams["renderer"],
+        response_parser=seams["parser"],
+        budget_recorder=lambda *a, **k: None,
+        skill_library=lib,
+        budget_path=tmp_path / "budget.md",
+        telemetry_recorder=lambda path, **kw: tele_rec.append(kw),
+        telemetry_path=tmp_path / "tele.jsonl",
+    )
+    assert res is not None
+    assert tele_rec[0]["token_source"] == "estimate"
+    assert tele_rec[0]["cost_usd"] == 0.0
+
+
+def test_max_cost_per_cycle_env_override(monkeypatch) -> None:
+    monkeypatch.delenv("EINSTEIN_MAX_COST_PER_CYCLE_USD", raising=False)
+    assert al._max_cost_per_cycle_usd() == al.DEFAULT_MAX_COST_PER_CYCLE_USD
+    monkeypatch.setenv("EINSTEIN_MAX_COST_PER_CYCLE_USD", "12.5")
+    assert al._max_cost_per_cycle_usd() == 12.5
+    monkeypatch.setenv("EINSTEIN_MAX_COST_PER_CYCLE_USD", "garbage")
+    assert al._max_cost_per_cycle_usd() == al.DEFAULT_MAX_COST_PER_CYCLE_USD
+
+
+# ============================================================================
 # Goal 2 (js/feat/parallel-attempts) — EINSTEIN_PARALLEL_K wiring
 # ============================================================================
 

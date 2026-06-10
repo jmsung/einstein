@@ -41,9 +41,12 @@ trailing comment.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import Any
+
+log = logging.getLogger("inner_agent_output")
 
 # ---------------- constants ----------------
 
@@ -198,6 +201,37 @@ def _check_path_list(v: Any, field_name: str, prefixes: tuple[str, ...]) -> list
     return out
 
 
+def _filter_path_list(v: Any, field_name: str, prefixes: tuple[str, ...]) -> list[str]:
+    """Lenient variant of `_check_path_list` for OPTIONAL informational fields.
+
+    A non-list is still a hard error (the field is structurally malformed),
+    but individual entries that aren't strings or don't match `prefixes` are
+    *dropped with a warning* rather than rejected. Used for `cited_sources`:
+    the agent frequently cites a findings/concepts page it actually read, but
+    that field feeds the docs/source/-only promotion detector, so the right
+    behavior is to keep the valid source/ paths and discard the rest — NOT to
+    fail the whole (otherwise valid) cycle and force a mechanical fallback.
+
+    Phase 2 Goal 1 reliability fix: pilot cycles fell back precisely because a
+    single `docs/wiki/findings/...` entry in `cited_sources` raised here. See
+    `docs/wiki/findings/inner-agent-cited-sources-parse-fallback.md`.
+    """
+    if not isinstance(v, list):
+        raise InnerAgentOutputError(f"field {field_name!r}: expected list, got {type(v).__name__}")
+    out: list[str] = []
+    for item in v:
+        if isinstance(item, str) and item.startswith(prefixes):
+            out.append(item)
+        else:
+            log.warning(
+                "field %r: dropping non-conforming entry %r (must start with %s)",
+                field_name,
+                item,
+                " | ".join(prefixes),
+            )
+    return out
+
+
 def _check_converged(v: Any) -> bool:
     # Strict bool — reject 0/1/etc to avoid silently treating int as truthy.
     if type(v) is not bool:
@@ -244,7 +278,9 @@ def validate(raw: dict) -> InnerAgentResponse:
             WIKI_OR_MB_PREFIXES,
         ),
         # Optional (default []) for backwards compat with pre-G4 agent replies.
-        cited_sources=_check_path_list(
+        # Lenient: non-docs/source/ entries are dropped, not rejected — a stray
+        # citation must never force a mechanical fallback (Phase 2 Goal 1).
+        cited_sources=_filter_path_list(
             raw.get("cited_sources", []),
             "cited_sources",
             (SOURCE_PREFIX,),

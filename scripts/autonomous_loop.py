@@ -52,6 +52,8 @@ DEFAULT_LOCKFILE = _REPO / ".autonomous-loop.lock"
 DEFAULT_MB_DIR = _REPO.parent / "mb"
 DEFAULT_BUDGET_PATH = DEFAULT_MB_DIR / "logs" / "inner-agent-budget.md"
 DEFAULT_SENTINEL_PATH = DEFAULT_MB_DIR / ".inner-agent-disabled"
+# Phase 2 Goal 1 of js/feat/meta-learning-inner-agent: per-LLM-cycle telemetry.
+DEFAULT_TELEMETRY_PATH = DEFAULT_MB_DIR / "logs" / "inner-agent-telemetry.jsonl"
 # Goal 4 of js/feat/research-synthesis: per-cycle citation sidecar.
 DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
 # Phase 1 of js/feat/meta-learning-automation: signal-taxonomy destinations.
@@ -322,6 +324,27 @@ def _bandit_enabled() -> bool:
     revert to the manifest `strategy_picker` path.
     """
     return os.environ.get("EINSTEIN_BANDIT", "").strip().lower() not in _BANDIT_FALSY
+
+
+DEFAULT_MAX_COST_PER_CYCLE_USD = 5.0
+
+
+def _max_cost_per_cycle_usd() -> float:
+    """Per-cycle cost ceiling for the runaway-cost guardrail (Phase 2 Goal 3).
+
+    A single inner cycle costing more than this is anomalous (the observed
+    pilot mean was ~$0.01-0.10); exceeding it logs a WARNING so a human
+    notices a runaway loop. The HARD daily ceiling stays the token-budget gate
+    (`inner_agent_gates`, 5M tokens/day). Override via env
+    `EINSTEIN_MAX_COST_PER_CYCLE_USD`; set 0 to disable the warning.
+    """
+    raw = os.environ.get("EINSTEIN_MAX_COST_PER_CYCLE_USD", "").strip()
+    if not raw:
+        return DEFAULT_MAX_COST_PER_CYCLE_USD
+    try:
+        return float(raw)
+    except ValueError:
+        return DEFAULT_MAX_COST_PER_CYCLE_USD
 
 
 def _bandit_seed(problem_id: int, attempt_index: int) -> int:
@@ -1066,6 +1089,32 @@ def _run_pre_cycle_synthesis(
         return None
 
 
+def _current_head(repo: Path = _REPO) -> str | None:
+    """Resolve the cb worktree's current HEAD sha, or None if unavailable.
+
+    Phase 2 Goal 2: used as the per-cycle capture-gate base. The inner
+    `claude -p` session inherits `EINSTEIN_CAPTURE_GATE_BASE=<this sha>` so its
+    Stop-hook capture-gate (`.claude/hooks/capture-gate.sh`) scopes to *this*
+    cycle's writes — diffs since pre-cycle HEAD — rather than the whole
+    branch-vs-main accumulation (which would pass trivially once the branch
+    already has one captured cycle). Best-effort: any git failure → None →
+    the gate falls back to its `main` default.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+        log.debug("capture-gate base resolve failed: %s", e)
+        return None
+    sha = out.stdout.strip()
+    return sha or None
+
+
 def _try_llm_path(
     *,
     problem: Problem,
@@ -1079,6 +1128,8 @@ def _try_llm_path(
     budget_path: Path = DEFAULT_BUDGET_PATH,
     skill_library: Path = DEFAULT_SKILL_LIBRARY,
     timeout_seconds: int = 1800,
+    telemetry_recorder: Callable[..., object] | None = None,
+    telemetry_path: Path = DEFAULT_TELEMETRY_PATH,
 ) -> dict | None:
     """Best-effort LLM cycle (Goal 7.7).
 
@@ -1092,7 +1143,54 @@ def _try_llm_path(
 
     Returns None on any failure — caller falls back to mechanical. Failure
     paths logged at WARNING; we never raise from this function.
+
+    Phase 2 Goal 1: every exit emits one `inner_agent_telemetry` record
+    (path taken, error kind, parse-ok, wall-clock, estimated tokens) so the
+    readiness criteria in `docs/agent/inner-agent-readiness.md` are
+    measurable. `telemetry_recorder` is a test seam; None → auto-import the
+    real `record_cycle` (mirrors `budget_recorder`).
     """
+    # Telemetry scaffolding — bound before the components import so even an
+    # import-error fallback is recorded. `_emit` is best-effort: telemetry
+    # must never break a cycle.
+    t_start = time.monotonic()
+    if telemetry_recorder is None:
+        try:
+            from inner_agent_telemetry import record_cycle as _real_tele
+
+            telemetry_recorder = _real_tele
+        except ImportError:
+            telemetry_recorder = None
+
+    def _emit(
+        path_taken: str,
+        *,
+        error_kind: str = "",
+        parse_ok: bool = False,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+        token_source: str = "estimate",
+        cost_usd: float = 0.0,
+    ) -> None:
+        if telemetry_recorder is None:
+            return
+        try:
+            telemetry_recorder(
+                telemetry_path,
+                problem_id=problem.problem_id,
+                attempt_index=attempt_index,
+                path_taken=path_taken,
+                llm_error_kind=error_kind,
+                parse_ok=parse_ok,
+                wall_clock_s=round(time.monotonic() - t_start, 3),
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                token_source=token_source,
+                cost_usd=cost_usd,
+            )
+        except Exception as e:  # noqa: BLE001 — telemetry is never load-bearing
+            log.warning("telemetry recorder failed: %s (continuing)", e)
+
     try:
         if prompt_renderer is None:
             from inner_agent_prompt import render_prompt as _real_render
@@ -1115,6 +1213,7 @@ def _try_llm_path(
                 budget_recorder = None
     except ImportError as e:
         log.warning("LLM path components unavailable (%s) — falling back", e)
+        _emit("fallback", error_kind="import-error")
         return None
 
     category = (
@@ -1174,6 +1273,7 @@ def _try_llm_path(
         )
     except Exception as e:
         log.warning("render_prompt failed: %s — falling back", e)
+        _emit("fallback", error_kind="render-error")
         return None
 
     # Tool allow-list reflects what the agent actually needs to run the
@@ -1194,46 +1294,95 @@ def _try_llm_path(
         "Task",
     ]
 
+    # Phase 2 Goal 2: scope the inner session's capture-gate to THIS cycle by
+    # pinning EINSTEIN_CAPTURE_GATE_BASE to the pre-cycle HEAD. Without this the
+    # gate diffs against `main` and passes trivially once the branch already
+    # has one captured cycle — every later cycle could skip its capture. Merged
+    # over os.environ by claude_headless, so the operator's EINSTEIN_CAPTURE_GATE
+    # mode (warn/block/off) is preserved.
+    run_env: dict[str, str] | None = None
+    gate_base = _current_head()
+    if gate_base:
+        run_env = {"EINSTEIN_CAPTURE_GATE_BASE": gate_base}
+
     try:
         run_result = headless_runner(
             prompt,
             allowed_tools=allowed_tools,
             timeout_seconds=timeout_seconds,
             add_dirs=[DEFAULT_MB_DIR],
+            env=run_env,
+            # Phase 2 Goal 3: json envelope carries exact usage + total_cost_usd.
+            output_format="json",
         )
     except Exception as e:
         log.warning("claude_headless raised unexpectedly: %s — falling back", e)
+        _emit("fallback", error_kind="headless-exception")
         return None
 
     if not getattr(run_result, "ok", False):
+        run_error_kind = getattr(run_result, "error_kind", "") or "non-zero"
         log.warning(
             "claude_headless not ok: kind=%s msg=%s — falling back",
-            getattr(run_result, "error_kind", "?"),
+            run_error_kind,
             getattr(run_result, "error_message", "?"),
         )
+        _emit("fallback", error_kind=run_error_kind)
         return None
 
     try:
         response = response_parser(run_result.stdout)
     except Exception as e:
         log.warning("inner_agent_output.parse_response failed: %s — falling back", e)
+        _emit("fallback", error_kind="parse-error")
         return None
 
-    # Estimate token usage from char counts (rough 4 chars / token). The
-    # exact count would require `claude -p --output-format json` and
-    # envelope parsing, which is a heavier path. Estimate is good enough
-    # for the daily-budget gate.
-    input_estimate = len(prompt) // 4
-    output_estimate = len(run_result.stdout) // 4
+    # Token + cost accounting. Phase 2 Goal 3: prefer the EXACT counts from the
+    # json envelope (claude_headless populates input_tokens/output_tokens/
+    # cost_usd in json mode); fall back to the rough chars//4 estimate when
+    # they're absent (text mode / test seams without usage fields).
+    exact_in = getattr(run_result, "input_tokens", None)
+    exact_out = getattr(run_result, "output_tokens", None)
+    cost_usd = getattr(run_result, "cost_usd", None) or 0.0
+    if exact_in is not None and exact_out is not None:
+        input_tokens, output_tokens = int(exact_in), int(exact_out)
+        token_source = "exact"
+    else:
+        input_tokens = len(prompt) // 4
+        output_tokens = len(run_result.stdout) // 4
+        token_source = "estimate"
+    # Runaway-cost guardrail: flag an anomalously expensive cycle for review.
+    ceiling = _max_cost_per_cycle_usd()
+    if ceiling > 0 and cost_usd > ceiling:
+        log.warning(
+            "inner cycle cost $%.4f exceeded per-cycle ceiling $%.2f (P%d) — "
+            "review for a runaway loop",
+            cost_usd,
+            ceiling,
+            problem.problem_id,
+        )
     if budget_recorder is not None:
         try:
             budget_recorder(
                 budget_path,
-                input_tokens=input_estimate,
-                output_tokens=output_estimate,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
             )
         except Exception as e:
             log.warning("budget recorder failed: %s (continuing)", e)
+
+    # Telemetry: the LLM path produced a parsed result. Emit before building
+    # the row so the wall-clock reflects the claude -p call, not the
+    # post-processing (auto_submit etc.).
+    elapsed_s = time.monotonic() - t_start
+    _emit(
+        "llm",
+        parse_ok=True,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        token_source=token_source,
+        cost_usd=cost_usd,
+    )
 
     # Build the cycle-log result dict
     notes_parts: list[str] = []
@@ -1245,7 +1394,9 @@ def _try_llm_path(
     if bandit_notes_parts:
         notes_parts.extend(bandit_notes_parts)
     notes_parts.append(f"llm-strategy={response.strategy}")
-    notes_parts.append(f"tokens=in:{input_estimate}/out:{output_estimate}")
+    notes_parts.append(f"tokens={token_source}:in:{input_tokens}/out:{output_tokens}")
+    if cost_usd:
+        notes_parts.append(f"cost=${cost_usd:.4f}")
 
     start_score = problem.score_current
     end_score: float | str = (
@@ -1288,10 +1439,9 @@ def _try_llm_path(
     return {
         "start_score": start_score if start_score is not None else "none",
         "end_score": end_score,
-        # claude_headless doesn't expose wall-clock directly; rough estimate
-        # via wall-clock measurement is a follow-up. 0.0 is honest about
-        # "unknown" until the headless wrapper surfaces timing.
-        "hours": 0.0,
+        # Phase 2 Goal 1: measured wall-clock for the LLM cycle (claude -p call
+        # plus this function's bookkeeping), in hours, for the cycle-log column.
+        "hours": round(elapsed_s / 3600.0, 4),
         "compute": "local-cpu+llm",
         "wiki_citations": 0,
         "findings_added": 1 if response.dead_end_finding else 0,
@@ -1319,6 +1469,8 @@ def inner_attempt(
     response_parser: Callable[[str], object] | None = None,
     budget_recorder: Callable[..., object] | None = None,
     budget_path: Path = DEFAULT_BUDGET_PATH,
+    telemetry_recorder: Callable[..., object] | None = None,
+    telemetry_path: Path = DEFAULT_TELEMETRY_PATH,
 ) -> dict:
     """Reflection chain for one cycle attempt.
 
@@ -1355,6 +1507,8 @@ def inner_attempt(
             budget_recorder=budget_recorder,
             budget_path=budget_path,
             skill_library=skill_library,
+            telemetry_recorder=telemetry_recorder,
+            telemetry_path=telemetry_path,
         )
         if llm_result is not None:
             return llm_result
