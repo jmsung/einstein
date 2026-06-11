@@ -2331,11 +2331,25 @@ class _LockHeld(RuntimeError):
     """Raised when the lockfile already exists (another loop is running)."""
 
 
-def _acquire_lock(lockfile: Path) -> int:
+def _pid_alive(pid: int) -> bool:
+    """True iff a process with `pid` currently exists."""
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True  # exists but owned by another user — still 'alive'
+    return True
+
+
+def _acquire_lock(lockfile: Path, *, _retry: bool = True) -> int:
     """Acquire an exclusive lock by creating `lockfile` with O_CREAT|O_EXCL.
 
     Returns the file descriptor (caller is responsible for releasing). On
-    contention, raises _LockHeld with the holding pid + age.
+    contention with a LIVE holder, raises _LockHeld. If the lockfile's holder
+    pid is dead (a crashed/killed run that leaked the lock), the stale lock is
+    cleared and acquisition retried once — otherwise one crash wedges the loop
+    forever (every scheduled run would exit 75 until manual `rm`).
     """
     try:
         fd = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
@@ -2344,6 +2358,11 @@ def _acquire_lock(lockfile: Path) -> int:
             stale = lockfile.read_text().strip()
         except OSError:
             stale = "(unknown)"
+        m = re.search(r"pid=(\d+)", stale)
+        if _retry and m and not _pid_alive(int(m.group(1))):
+            log.warning("clearing stale lockfile (holder pid=%s is dead): %s", m.group(1), stale)
+            lockfile.unlink(missing_ok=True)
+            return _acquire_lock(lockfile, _retry=False)
         try:
             age = time.time() - lockfile.stat().st_mtime
             age_str = f"{age:.0f}s old"

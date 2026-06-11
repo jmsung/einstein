@@ -421,6 +421,26 @@ def test_acquire_lock_raises_when_held(tmp_path: Path) -> None:
         al._release_lock(fd, lockfile)
 
 
+def test_acquire_lock_clears_stale_dead_pid(tmp_path: Path) -> None:
+    lockfile = tmp_path / "lock"
+    lockfile.write_text("pid=999999 started=2020-01-01T00:00:00\n")  # dead holder
+    fd = al._acquire_lock(lockfile)  # should auto-clear + acquire
+    try:
+        assert f"pid={al.os.getpid()}" in lockfile.read_text()  # now ours
+    finally:
+        al._release_lock(fd, lockfile)
+
+
+def test_acquire_lock_keeps_live_holder(tmp_path: Path) -> None:
+    lockfile = tmp_path / "lock"
+    fd = al._acquire_lock(lockfile)  # this process is the live holder
+    try:
+        with pytest.raises(al._LockHeld):
+            al._acquire_lock(lockfile)  # live pid → must NOT be cleared
+    finally:
+        al._release_lock(fd, lockfile)
+
+
 def test_has_recent_cycle_true_for_just_modified(tmp_path: Path) -> None:
     log = tmp_path / "cycle-log.md"
     log.write_text("# log")
