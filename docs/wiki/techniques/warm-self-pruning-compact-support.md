@@ -94,7 +94,14 @@ gaming); (4) no proven bound violated. See
 
 ## What this opens
 
-- **Direct transfer to P3 / P4** — same family, same compact-support leaders, mechanism
-  already verified on P3. Warm-self-prune from our full-support basins there.
+- **Direct transfer to P3** — same family, same nonnegativity, compact-support leaders,
+  mechanism already verified on P3 (dead-cell Hessian fingerprint at n=80). Warm-self-prune
+  from our full-support basin there, **with the P4 port notes**: strong cascade first
+  (max_iter 2000, β→1e13 — a weak cascade falsely shows monotone-up), fine steps
+  ~0.4%/level, and a regrow phase (refill + full-support re-opt) appended to each chain.
+- **P4 transfer result (2026-06-10)**: the signed variant (f = mask·w, regrow cycle)
+  works as a descent operator — first to cross P4's sign-topology classes, −1.40e-4 —
+  but converges to its own fixed point 7.7e-5 short of the leader; see
+  [dead-end-p4-shrink-regrow-fixed-point](../findings/dead-end-p4-shrink-regrow-fixed-point.md).
 - A general move for any compact-support extremal problem: don't *impose* the support
   geometry, *discover* it by data-driven pruning under a `φ''≠0` parameterization.
