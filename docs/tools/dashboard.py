@@ -167,12 +167,18 @@ def parse_arena_urls(problems_dir: Path = PROBLEMS_DIR) -> dict[int, str]:
     return urls
 
 
-def rank1_leaderboard(rank1_agents: dict[int, str]) -> list[tuple[str, int]]:
-    """Agents ranked by # of problems they hold arena #1 on (desc, then name)."""
-    counts: dict[str, int] = {}
-    for agent in rank1_agents.values():
-        counts[agent] = counts.get(agent, 0) + 1
-    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+def rank1_leaderboard(rank1_agents: dict[int, str]) -> list[tuple[str, int, list[int]]]:
+    """Agents ranked by # arena-#1 problems (desc, then name).
+
+    Returns (agent, count, sorted problem ids) so the dashboard can show *which*
+    problems each agent leads, not just the count.
+    """
+    by_agent: dict[str, list[int]] = {}
+    for pid, agent in rank1_agents.items():
+        by_agent.setdefault(agent, []).append(pid)
+    out = [(agent, len(pids), sorted(pids)) for agent, pids in by_agent.items()]
+    out.sort(key=lambda t: (-t[1], t[0]))
+    return out
 
 
 _STATUS_DIR = _LOGS / "status"
@@ -698,13 +704,14 @@ def render_html(
     lb = leaderboard or []
     rows_lb = "\n".join(
         f"<tr class='{'r1' if a == 'JSAgent' else ''}'>"
-        f"<td class='num'>{i}</td><td class='nm'>{a}</td><td class='num'>{c}</td></tr>"
-        for i, (a, c) in enumerate(lb, 1)
+        f"<td class='num'>{i}</td><td class='nm'>{a}</td><td class='num'>{c}</td>"
+        f"<td class='pl'>{', '.join('P' + str(p) for p in pids)}</td></tr>"
+        for i, (a, c, pids) in enumerate(lb, 1)
     )
     asof = f" · as of {rank1_asof}" if rank1_asof else ""
     leaderboard_block = (
         f"<h2>Overall leaderboard — # problems at arena #1{asof}</h2>"
-        f"<table class=sortable><tr><th>#</th><th>agent</th><th>#1 problems</th></tr>{rows_lb}</table>"
+        f"<table class=sortable><tr><th>#</th><th>agent</th><th>#1 problems</th><th>which</th></tr>{rows_lb}</table>"
         if lb
         else ""
     )
@@ -861,7 +868,7 @@ def render_html(
  th{{color:var(--mut);font-weight:400;font-size:10px;text-transform:uppercase}}
  td.num{{text-align:right;font-variant-numeric:tabular-nums}} td.nm{{color:#79c0ff}}
  td.st{{color:var(--mut);font-size:11px}} tr.r1 td.nm{{color:#7ee787}}
- td.ag{{color:#d2a8ff;font-size:11px}}
+ td.ag{{color:#d2a8ff;font-size:11px}} td.pl{{color:#8b949e;font-size:11px}}
  td.nm a{{color:inherit;text-decoration:none}} td.nm a:hover{{text-decoration:underline}}
  table.sortable th{{cursor:pointer;user-select:none}} table.sortable th:hover{{color:#c9d1d9}}
  h1 .ext{{font-size:12px;font-weight:400;color:#79c0ff;text-decoration:none}}
