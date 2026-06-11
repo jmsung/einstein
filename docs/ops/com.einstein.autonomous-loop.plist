@@ -15,14 +15,17 @@
   <array>
     <string>/bin/bash</string>
     <string>-lc</string>
-    <string>cd "__PROJECT_ROOT__" &amp;&amp; uv run python scripts/scheduled_cycle.py --skip-if-recent 30 --max-runs-per-day 40</string>
+    <string>cd "__PROJECT_ROOT__" &amp;&amp; uv run python scripts/scheduled_cycle.py --skip-if-recent 90 --max-runs-per-day 8</string>
   </array>
 
   <key>WorkingDirectory</key>
   <string>__PROJECT_ROOT__</string>
 
+  <!-- 2h cadence (was 30m). With an 8 runs/day cap + 90-min skip-if-recent this
+       keeps the loop well under a Pro/Max subscription usage window, leaving
+       headroom for interactive Claude use on the same account. -->
   <key>StartInterval</key>
-  <integer>1800</integer>
+  <integer>7200</integer>
 
   <key>RunAtLoad</key>
   <true/>
