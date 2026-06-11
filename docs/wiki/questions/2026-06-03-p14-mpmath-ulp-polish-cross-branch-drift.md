@@ -63,3 +63,11 @@ refactors, else the cycle log will be noisy.
 
 This is not a submission concern. P14 minImprovement = 1e-7 ≫ any drift here.
 The question is engineering hygiene, not arena progress.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"float64 ceiling" OR all:"basin rigidity" OR all:"`mpmath_ulp_polish` drift +4e-15 between branches on") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*

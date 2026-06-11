@@ -37,3 +37,11 @@ A working dispatch command that runs `mpmath_ulp_polish` against `p14_ae_tied.js
 ## Suggested next step
 
 Convert into a small `feat/manifest-seed-override` worktree once another problem in the float64-ceiling family acquires a second in-repo seed. Until then, stays open.
+
+## Suggested sources
+
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"float64 ceiling" OR all:"basin rigidity" OR all:"Should the manifest expose `--seed` as") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+
+Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
+
+*(no results; broaden the search terms or query the web)*
