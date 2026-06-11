@@ -312,10 +312,10 @@ def test_parse_cycle_log_tolerates_pipe_rows(tmp_path):
     assert rows[0]["outcome"] == "converged"
 
 
-def test_rank1_leaderboard_counts_and_orders():
+def test_rank1_leaderboard_counts_orders_and_lists_problems():
     agents = {1: "Together-AI", 2: "JSAgent", 5: "Together-AI", 9: "JSAgent", 4: "OrganonAgent"}
     lb = dashboard.rank1_leaderboard(agents)
-    assert lb[0] == ("JSAgent", 2) or lb[0] == ("Together-AI", 2)  # both have 2
-    assert dict(lb) == {"JSAgent": 2, "Together-AI": 2, "OrganonAgent": 1}
-    # tie broken by name asc
-    assert lb[0][0] == "JSAgent" and lb[1][0] == "Together-AI"
+    # (agent, count, sorted pids); ties (2 each) broken by name asc
+    assert lb[0] == ("JSAgent", 2, [2, 9])
+    assert lb[1] == ("Together-AI", 2, [1, 5])
+    assert lb[2] == ("OrganonAgent", 1, [4])
