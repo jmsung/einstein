@@ -3,7 +3,8 @@ type: question
 author: agent
 drafted: 2026-06-10
 asked_by: agent
-status: open
+status: answered
+answer_finding: ../findings/dead-end-p4-shrink-regrow-fixed-point.md
 related_problems: [2, 4]
 related_concepts: [autocorrelation-inequality, n-agent-tie-not-global-min]
 cites:
