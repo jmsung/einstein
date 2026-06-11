@@ -20,7 +20,10 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
+import signal
+import subprocess
 import sys
 from pathlib import Path
 
@@ -307,6 +310,133 @@ def current_problem(
     }
 
 
+# ----------------------------- control actions (--serve only) -----------------------------
+
+_SCHED_LOG = _LOGS / "scheduler.log"
+CONTROL_LOG = _LOGS / "dashboard-control.log"
+LAUNCHD_LABEL = "com.einstein.autonomous-loop"
+FINDINGS_DIR = _REPO / "docs" / "wiki" / "findings"
+
+# Allowlisted log files the viewer may render (name → path). No arbitrary reads.
+LOG_FILES = {
+    "cycle-log": CYCLE_LOG,
+    "scheduler": _SCHED_LOG,
+    "scheduler-err": _LOGS / "scheduler.err.log",
+    "auto-submit": AUTO_SUBMIT,
+    "budget": BUDGET,
+    "telemetry": TELEMETRY,
+    "control": CONTROL_LOG,
+}
+
+
+def _audit(action: str, result: str) -> None:
+    try:
+        CONTROL_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with CONTROL_LOG.open("a") as f:
+            f.write(f"{dt.datetime.now(dt.timezone.utc).isoformat()} {action} → {result}\n")
+    except OSError:
+        pass
+
+
+def action_start(pid: int) -> str:
+    """Spawn a detached one-problem loop run for problem `pid`."""
+    cmd = [
+        sys.executable,
+        str(_REPO / "scripts" / "autonomous_loop.py"),
+        "--one-problem",
+        "--by-priority",
+        "--problem-id",
+        str(pid),
+    ]
+    try:
+        out = _SCHED_LOG.open("a")
+        subprocess.Popen(  # noqa: S603 — fixed argv, local control plane
+            cmd, cwd=str(_REPO), stdout=out, stderr=subprocess.STDOUT, start_new_session=True
+        )
+        res = f"spawned loop for P{pid} (pid-detached)"
+    except OSError as e:
+        res = f"start failed: {e}"
+    _audit(f"start P{pid}", res)
+    return res
+
+
+def action_stop(lockfile: Path = LOCKFILE) -> str:
+    """SIGTERM the running loop via its lockfile pid (graceful)."""
+    try:
+        m = re.search(r"pid=(\d+)", lockfile.read_text())
+    except OSError:
+        m = None
+    if not m:
+        res = "no running loop (no lockfile)"
+    else:
+        pid = int(m.group(1))
+        try:
+            os.kill(pid, signal.SIGTERM)
+            res = f"SIGTERM → pid {pid}"
+        except ProcessLookupError:
+            res = f"pid {pid} already gone (stale lockfile)"
+        except OSError as e:
+            res = f"stop failed: {e}"
+    _audit("stop", res)
+    return res
+
+
+def action_auto(on: bool) -> str:
+    """Toggle the launchd schedule (real auto-mode on/off)."""
+    uid = os.getuid()
+    plist = Path.home() / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
+    if on:
+        cmd = ["launchctl", "bootstrap", f"gui/{uid}", str(plist)]
+    else:
+        cmd = ["launchctl", "bootout", f"gui/{uid}/{LAUNCHD_LABEL}"]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=15)  # noqa: S603
+        res = f"auto {'ON' if on else 'OFF'} (launchctl rc={r.returncode})"
+    except (OSError, subprocess.SubprocessError) as e:
+        res = f"auto toggle failed: {e}"
+    _audit(f"auto {'on' if on else 'off'}", res)
+    return res
+
+
+def action_kill(on: bool, sentinel: Path = SENTINEL) -> str:
+    """Toggle the kill-switch sentinel (pause/resume everything)."""
+    try:
+        if on:
+            sentinel.parent.mkdir(parents=True, exist_ok=True)
+            sentinel.write_text("disabled via dashboard\n")
+            res = "kill switch ON (loop paused)"
+        else:
+            sentinel.unlink(missing_ok=True)
+            res = "kill switch OFF (loop re-enabled)"
+    except OSError as e:
+        res = f"kill toggle failed: {e}"
+    _audit(f"kill {'on' if on else 'off'}", res)
+    return res
+
+
+def read_log(name: str, *, tail: int = 200) -> tuple[str, str]:
+    """Return (title, last-`tail`-lines) for an allowlisted log or a finding.
+
+    `name` is either a LOG_FILES key, or 'finding:<slug>' restricted to
+    docs/wiki/findings/ (path-traversal guarded). Returns an error string in
+    the body for unknown/unsafe names — never reads outside the allowlist.
+    """
+    if name.startswith("finding:"):
+        slug = name.split(":", 1)[1]
+        path = (FINDINGS_DIR / f"{slug}.md").resolve()
+        if FINDINGS_DIR.resolve() not in path.parents:
+            return (name, "refused: path escapes findings/")
+        title = f"finding · {slug}"
+    elif name in LOG_FILES:
+        path = LOG_FILES[name]
+        title = f"log · {name}"
+    else:
+        return (name, f"refused: '{name}' not in the allowlist")
+    lines = _read_text(path).splitlines()
+    body = "\n".join(lines[-tail:]) if lines else "(empty)"
+    return (title, body)
+
+
 # ----------------------------- render -----------------------------
 
 
@@ -337,6 +467,7 @@ def render_html(
     submits: list[str],
     health: str,
     generated: str,
+    controls: bool = False,
 ) -> str:
     rows_problems = "\n".join(
         f"<tr class='{'r1' if r['rank1'] else ''}'>"
@@ -348,7 +479,15 @@ def render_html(
         f"<td>{_hr_badge(r['headroom'])}</td>"
         f"<td class='num'>{_fmt(r.get('priority'), 3) if r.get('priority') is not None else '—'}</td>"
         f"<td>{'★' if r['rank1'] else ''}</td>"
-        f"<td class='num'>{r['cycles']}</td><td class='num'>#{r['last_cycle'] or '—'}</td></tr>"
+        f"<td class='num'>{r['cycles']}</td><td class='num'>#{r['last_cycle'] or '—'}</td>"
+        + (
+            f"<td><form method=post action=/start style=margin:0>"
+            f"<input type=hidden name=pid value={r['pid']}>"
+            f"<button class=run title='start one cycle on P{r['pid']}'>▶</button></form></td>"
+            if controls
+            else ""
+        )
+        + "</tr>"
         for i, r in enumerate(records, 1)
     )
     rows_cycles = "\n".join(
@@ -405,6 +544,25 @@ def render_html(
         if (current and attempts)
         else ""
     )
+    if controls:
+        killed = status["killed"]
+        control_bar = (
+            "<div class=ctl>"
+            "<form method=post action=/stop><button class=warn>⏹ Stop loop</button></form>"
+            "<form method=post action=/auto/on><button>▶ Auto on</button></form>"
+            "<form method=post action=/auto/off><button class=warn>⏸ Auto off</button></form>"
+            + (
+                "<form method=post action=/kill/off><button>✅ Resume (clear kill)</button></form>"
+                if killed
+                else "<form method=post action=/kill/on><button class=danger>🛑 Kill switch</button></form>"
+            )
+            + "</div>"
+        )
+        links = "".join(f"<a href='/log?name={n}'>{n}</a>" for n in LOG_FILES)
+        log_links = f"<h2>Logs</h2><div class=links>{links}</div>"
+        start_th = "<th>start</th>"
+    else:
+        control_bar = log_links = start_th = ""
     return f"""<!doctype html><html><head><meta charset=utf-8>
 <meta http-equiv=refresh content={REFRESH_S}>
 <title>einstein · autonomous loop</title>
@@ -436,9 +594,18 @@ def render_html(
  .hm{{color:var(--fg);font-size:12px}}
  .hs{{margin-top:8px;font-size:12px;color:var(--fg)}} .hs b{{color:#79c0ff;font-weight:600}}
  .mv{{color:#e3b341}}
+ .ctl{{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}}
+ .ctl form{{margin:0}}
+ button{{background:#21304a;color:#c9d1d9;border:1px solid #30557d;border-radius:6px;
+   padding:6px 12px;font:inherit;font-size:12px;cursor:pointer}}
+ button:hover{{background:#2b4a6e}}
+ button.warn{{background:#3a341b;border-color:#6e5b1f}} button.danger{{background:#3a1b1b;border-color:#7d3030}}
+ button.run{{padding:2px 8px;font-size:12px}}
+ .links a{{color:#79c0ff;margin-right:14px;font-size:12px}}
 </style></head><body><div class=wrap>
 <h1>einstein · autonomous loop</h1>
 <div class=sub>generated {generated} · auto-refresh {REFRESH_S}s · <span class=state>{run_state}</span></div>
+{control_bar}
 {hero}
 
 <div class=cards>
@@ -453,7 +620,7 @@ def render_html(
 {attempts_block}
 
 <h2>Per-problem records — ranked by picker priority (headroom × hit-rate × staleness)</h2>
-<table><tr><th>#</th><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>#1 agent</th><th>headroom</th><th>priority</th><th>we&nbsp;#1?</th><th>cycles</th><th>last</th></tr>
+<table><tr><th>#</th><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>#1 agent</th><th>headroom</th><th>priority</th><th>we&nbsp;#1?</th><th>cycles</th><th>last</th>{start_th}</tr>
 {rows_problems}
 </table>
 
@@ -464,13 +631,14 @@ def render_html(
 
 <h2>Auto-submit decisions (today)</h2>
 <ul>{rows_submit}</ul>
+{log_links}
 </div></body></html>"""
 
 
 # ----------------------------- assembly -----------------------------
 
 
-def build(*, today: str | None = None, generated: str | None = None) -> str:
+def build(*, today: str | None = None, generated: str | None = None, controls: bool = False) -> str:
     now = dt.datetime.now(dt.timezone.utc)
     today = today or now.strftime("%Y-%m-%d")
     generated = generated or now.strftime("%Y-%m-%d %H:%M:%SZ")
@@ -573,6 +741,20 @@ def build(*, today: str | None = None, generated: str | None = None) -> str:
         submits=submits,
         health=health,
         generated=generated,
+        controls=controls,
+    )
+
+
+def _log_page(name: str) -> str:
+    """A minimal HTML page rendering one allowlisted log/finding (--serve)."""
+    title, body = read_log(name)
+    esc = body.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return (
+        "<!doctype html><meta charset=utf-8>"
+        "<style>body{background:#0d1117;color:#c9d1d9;font:12px ui-monospace,Menlo,monospace;"
+        "margin:0;padding:20px}a{color:#79c0ff}pre{white-space:pre-wrap;word-break:break-word}"
+        "h1{font-size:15px}</style>"
+        f"<h1>{title}</h1><p><a href='/'>← back to dashboard</a></p><pre>{esc}</pre>"
     )
 
 
@@ -591,15 +773,51 @@ def main(argv: list[str] | None = None) -> int:
     if args.serve:
         import http.server
         import socketserver
+        from urllib.parse import parse_qs, urlparse
+
+        def _send(h, body: str, code: int = 200):
+            data = body.encode()
+            h.send_response(code)
+            h.send_header("Content-Type", "text/html; charset=utf-8")
+            h.send_header("Content-Length", str(len(data)))
+            h.end_headers()
+            h.wfile.write(data)
+
+        def _redirect(h):
+            h.send_response(303)
+            h.send_header("Location", "/")
+            h.end_headers()
 
         class H(http.server.BaseHTTPRequestHandler):
             def do_GET(self):  # noqa: N802
-                body = build().encode()
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+                u = urlparse(self.path)
+                if u.path == "/log":
+                    name = parse_qs(u.query).get("name", [""])[0]
+                    _send(self, _log_page(name))
+                elif u.path in ("/", "/index.html"):
+                    _send(self, build(controls=True))
+                else:
+                    _send(self, "not found", 404)
+
+            def do_POST(self):  # noqa: N802
+                u = urlparse(self.path)
+                length = int(self.headers.get("Content-Length", 0) or 0)
+                form = parse_qs(self.rfile.read(length).decode()) if length else {}
+                qs = parse_qs(u.query)
+                if u.path == "/start":
+                    pid = (form.get("pid") or qs.get("pid") or ["0"])[0]
+                    action_start(int(pid)) if pid.isdigit() else None
+                elif u.path == "/stop":
+                    action_stop()
+                elif u.path == "/auto/on":
+                    action_auto(True)
+                elif u.path == "/auto/off":
+                    action_auto(False)
+                elif u.path == "/kill/on":
+                    action_kill(True)
+                elif u.path == "/kill/off":
+                    action_kill(False)
+                _redirect(self)
 
             def log_message(self, *a):  # silence
                 pass

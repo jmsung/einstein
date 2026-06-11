@@ -177,6 +177,39 @@ def test_parse_rank1_agents_reads_latest_snapshot(tmp_path):
     assert asof == "2026-06-10"
 
 
+def test_action_kill_toggles_sentinel(tmp_path):
+    s = tmp_path / ".inner-agent-disabled"
+    dashboard.action_kill(True, sentinel=s)
+    assert s.exists()
+    dashboard.action_kill(False, sentinel=s)
+    assert not s.exists()
+
+
+def test_action_stop_parses_lockfile_pid(tmp_path, monkeypatch):
+    lock = tmp_path / "loop.lock"
+    lock.write_text("pid=999999 started=2026-06-11T00:00:00\n")
+    killed = {}
+    monkeypatch.setattr(dashboard.os, "kill", lambda pid, sig: killed.update(pid=pid, sig=sig))
+    res = dashboard.action_stop(lockfile=lock)
+    assert killed["pid"] == 999999 and "SIGTERM" in res
+
+
+def test_action_stop_no_lockfile(tmp_path):
+    assert "no running loop" in dashboard.action_stop(lockfile=tmp_path / "absent.lock")
+
+
+def test_read_log_allowlist_and_traversal(tmp_path, monkeypatch):
+    # unknown name refused
+    _, body = dashboard.read_log("../../etc/passwd")
+    assert "refused" in body
+    # path-traversal finding refused
+    _, body = dashboard.read_log("finding:../../../etc/passwd")
+    assert "refused" in body
+    # allowlisted log reads (cycle-log exists in repo)
+    title, _ = dashboard.read_log("cycle-log")
+    assert title == "log · cycle-log"
+
+
 def test_parse_cycle_log_tolerates_pipe_rows(tmp_path):
     log = tmp_path / "cycle-log.md"
     log.write_text(
