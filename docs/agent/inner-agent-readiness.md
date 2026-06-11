@@ -147,6 +147,46 @@ R7 positively exercised on write + cite branches, R8 spot-check passed. Conditio
 carried forward into the Phase-3 build: scheduler invocation must not use
 `--skip-gates`, and Goal 5's supervised rollout still gates promote-to-unattended.
 
+## Promote-to-unattended — operator decision (2026-06-11)
+
+**Status: LIVE.** The launchd agent `com.einstein.autonomous-loop` is installed and
+running 24/7 (every 30 min → `scheduled_cycle.py --skip-if-recent 30 --max-runs-per-day 40`,
+auto-submit armed). This is an **operator go-live decision, not a fully-clean R1–R9 pass** —
+recorded honestly per cycle-discipline (no rubber-stamp).
+
+**What the supervised burn-in proved** (`--max-problems 8 --by-priority`, cycles 306–308+,
+ledger `mb/logs/burnin-*.log` + `inner-agent-telemetry.jsonl`):
+
+| Gate | Result | Verdict |
+|---|---|---|
+| R1 unhandled exceptions | 0 | ✅ proven |
+| R2 fallback rate | 0% (LLM path every cycle) | ✅ proven |
+| R3 parse success | 100% | ✅ proven |
+| R4 timeout rate | 0% | ✅ proven |
+| R5 cost/cycle | max $0.65, mean $0.57 | ✅ proven |
+| R6 budget ledger accrues | row written, gate intact | ✅ proven |
+| **launchd auth** | `claude -p` runs under launchd with `HOME` set; no silent mechanical degrade | ✅ proven (the #1 deploy risk) |
+
+**What is NOT pre-certified — accepted as live-monitored, not crash risk:**
+
+- **R7 write-path** — the burn-in only hit P3 (proximity-frozen) and P4 (exhausted,
+  at-floor), both autocorrelation-family. Every cycle correctly *converged to honest-zero
+  and cited an existing dead-end* (the anti-spam branch) — so the *write-a-new-finding*
+  path was not exercised on a live problem. Zero new `findings/`/`concepts/` written, only
+  mechanical gap-questions. Correct behavior for dead problems; unproven on live ones.
+- **R8 capture quality** — no human spot-check of fresh captures yet (none were written).
+- **R9 armed-submit with a real candidate** — no record surfaced in the window, so the
+  gate chain only saw the "no candidate" path, never an actual armed submission decision.
+
+**Why go live anyway (operator rationale):** mechanical reliability is conclusively proven;
+the unproven gates are *quality/observation* gates, not stability gates. Blast radius is
+bounded by hard caps (40 runs/day, 5M tokens/day, 5 submits/day, 1h/problem throttle),
+triple-verify before every submit, and instant kill (`touch mb/.inner-agent-disabled` /
+`launchctl bootout`). The remaining risk — a bad submit or wiki drift — is reversible and
+caught by the **weekly audit** (`unattended-runbook.md`), which now *replaces* the
+supervised window as the R7/R8/R9 backstop. First audit must specifically check: did any
+live-headroom problem exercise the write-path, and were those captures keep-worthy.
+
 ## See also
 
 - `docs/agent/meta-learning-automation.md` — Gap 1 / Phase 2 in the full design.

@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- macOS launchd template. Replace __PROJECT_ROOT__ before installing. See docs/ops/README.md for the install walkthrough. -->
+<!-- macOS launchd template. Replace __PROJECT_ROOT__ (cb checkout) and __HOME__
+     (the user home holding ~/.claude auth) before installing. See docs/ops/README.md. -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>Label</key>
   <string>com.einstein.autonomous-loop</string>
 
+  <!-- Phase 3 entry point: scheduled_cycle.py wraps
+       `autonomous_loop.py --one-problem --by-priority` and adds the runs/day
+       cap + 7200s hard timeout + run ledger. Do NOT call autonomous_loop.py
+       directly here — the pre-Phase-3 command lacked --by-priority and ground P1. -->
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
     <string>-lc</string>
-    <string>cd "__PROJECT_ROOT__" &amp;&amp; uv run python scripts/autonomous_loop.py --max-problems 1 --skip-if-recent 60</string>
+    <string>cd "__PROJECT_ROOT__" &amp;&amp; uv run python scripts/scheduled_cycle.py --skip-if-recent 30 --max-runs-per-day 40</string>
   </array>
 
   <key>WorkingDirectory</key>
@@ -20,18 +25,23 @@
   <integer>1800</integer>
 
   <key>RunAtLoad</key>
-  <false/>
+  <true/>
 
   <key>StandardOutPath</key>
-  <string>__PROJECT_ROOT__/../mb/autonomous-loop.out.log</string>
+  <string>__PROJECT_ROOT__/../mb/logs/scheduler.log</string>
 
   <key>StandardErrorPath</key>
-  <string>__PROJECT_ROOT__/../mb/autonomous-loop.err.log</string>
+  <string>__PROJECT_ROOT__/../mb/logs/scheduler.err.log</string>
 
+  <!-- launchd starts with a bare environment. HOME is REQUIRED so the headless
+       `claude -p` inner agent finds its auth under ~/.claude; without it every
+       LLM cycle silently degrades to the mechanical path. -->
   <key>EnvironmentVariables</key>
   <dict>
+    <key>HOME</key>
+    <string>__HOME__</string>
     <key>PATH</key>
-    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
   </dict>
 
   <key>ThrottleInterval</key>
