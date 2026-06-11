@@ -45,6 +45,8 @@ LOCKFILE = _REPO / ".autonomous-loop.lock"
 
 DAILY_TOKEN_BUDGET = 5_000_000  # axioms.md / precheck hard ceiling
 REFRESH_S = 30
+ARENA_URL = "https://einsteinarena.com"
+PROBLEMS_DIR = _REPO / "docs" / "wiki" / "problems"
 
 
 # ----------------------------- parsing -----------------------------
@@ -138,6 +140,31 @@ def parse_rank1(path: Path = RANK1_JSON) -> set[int]:
         return set(json.loads(_read_text(path) or "[]"))
     except ValueError:
         return set()
+
+
+def parse_arena_urls(problems_dir: Path = PROBLEMS_DIR) -> dict[int, str]:
+    """{problem_id: arena_url} from each problem page's frontmatter.
+
+    Arena URL slugs differ from our internal slugs (P10 is /thomson, not
+    /thomson-n282), so read the declared arena_url rather than build one.
+    """
+    urls: dict[int, str] = {}
+    try:
+        files = list(problems_dir.glob("*.md"))
+    except OSError:
+        return urls
+    for p in files:
+        pid = url = None
+        for line in _read_text(p).splitlines()[:15]:  # frontmatter only
+            m = re.match(r"problem_id:\s*(\d+)", line)
+            if m:
+                pid = int(m.group(1))
+            m = re.match(r"arena_url:\s*(\S+)", line)
+            if m:
+                url = m.group(1)
+        if pid is not None and url:
+            urls[pid] = url
+    return urls
 
 
 _STATUS_DIR = _LOGS / "status"
@@ -242,6 +269,7 @@ def per_problem_records(
     minimize_map: dict[int, bool],
     priority_scorer=None,
     rank1_agents: dict[int, str] | None = None,
+    arena_urls: dict[int, str] | None = None,
 ) -> list[dict]:
     """One record per problem: our score, arena #1, headroom %, rank1, activity.
 
@@ -273,6 +301,7 @@ def per_problem_records(
                 "ours": p.score_current,
                 "arena1": arena1,
                 "arena1_agent": (rank1_agents or {}).get(pid, ""),
+                "arena_url": (arena_urls or {}).get(pid, ""),
                 "headroom": hr,
                 "rank1": pid in rank1,
                 "last_cycle": last_cycle.get(lbl, 0),
@@ -592,8 +621,13 @@ def render_html(
     rows_problems = "\n".join(
         f"<tr class='{'r1' if r['rank1'] else ''}'>"
         f"<td class='num'>{i}</td>"
-        f"<td>P{r['pid']}</td><td class='nm'>{r['name']}</td>"
-        f"<td>{r['tier']}</td><td class='st'>{r['status']}</td>"
+        f"<td>P{r['pid']}</td>"
+        + (
+            f"<td class='nm'><a href='{r['arena_url']}' target=_blank rel=noopener>{r['name']} ↗</a></td>"
+            if r.get("arena_url")
+            else f"<td class='nm'>{r['name']}</td>"
+        )
+        + f"<td>{r['tier']}</td><td class='st'>{r['status']}</td>"
         f"<td class='num'>{_fmt(r['ours'])}</td><td class='num'>{_fmt(r['arena1'])}</td>"
         f"<td class='ag'>{r.get('arena1_agent') or '—'}</td>"
         f"<td>{_hr_badge(r['headroom'])}</td>"
@@ -738,6 +772,9 @@ def render_html(
  td.num{{text-align:right;font-variant-numeric:tabular-nums}} td.nm{{color:#79c0ff}}
  td.st{{color:var(--mut);font-size:11px}} tr.r1 td.nm{{color:#7ee787}}
  td.ag{{color:#d2a8ff;font-size:11px}}
+ td.nm a{{color:inherit;text-decoration:none}} td.nm a:hover{{text-decoration:underline}}
+ h1 .ext{{font-size:12px;font-weight:400;color:#79c0ff;text-decoration:none}}
+ h1 .ext:hover{{text-decoration:underline}}
  .b{{padding:1px 6px;border-radius:10px;font-size:11px}}
  .green{{background:#1b3a26;color:#7ee787}} .amber{{background:#3a341b;color:#e3b341}} .gray{{background:#21262d;color:#8b949e}}
  code{{color:var(--mut);font-size:11px}} ul{{margin:6px 0;padding-left:18px}}
@@ -762,7 +799,7 @@ def render_html(
  .flash{{background:#16301f;border:1px solid #2d5a3a;color:#7ee787;border-radius:6px;
    padding:8px 12px;margin-bottom:10px;font-size:12px;width:100%}}
 </style></head><body><div class=wrap>
-<h1>einstein · autonomous loop</h1>
+<h1>einstein · autonomous loop · <a href="{ARENA_URL}" target=_blank rel=noopener class=ext>Einstein Arena ↗</a></h1>
 <div class=sub>generated {generated} · auto-refresh {REFRESH_S}s · <span class=state>{run_state}</span></div>
 {control_bar}
 {hero}
@@ -807,6 +844,7 @@ def build(*, today: str | None = None, generated: str | None = None, controls: b
     headroom = parse_headroom_cache()
     rank1 = parse_rank1()
     rank1_agents, rank1_asof = parse_rank1_agents()
+    arena_urls = parse_arena_urls()
     status = loop_status()
     today_s = today_summary(telemetry, today=today)
 
@@ -846,7 +884,7 @@ def build(*, today: str | None = None, generated: str | None = None, controls: b
         print(f"warn: problem loader unavailable ({e}); rendering ledger-only", file=sys.stderr)
 
     records = per_problem_records(
-        problems, headroom, rank1, cycle_rows, minimize_map, scorer, rank1_agents
+        problems, headroom, rank1, cycle_rows, minimize_map, scorer, rank1_agents, arena_urls
     )
 
     # cost per recent cycle: join telemetry cost onto the last cycle rows by order
