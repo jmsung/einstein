@@ -145,6 +145,37 @@ def test_current_problem_running_picks_latest_cycle():
     assert cur["attempt"] == 2 and cur["path"] == "llm"
 
 
+def test_current_problem_running_prefers_active_pid_over_cycle_log():
+    # cycle-log + telemetry both still say P4 (last completed), but the live
+    # process is on P5 (active_pid) → hero must show P5, not the stale P4.
+    records = [
+        {
+            "pid": 4,
+            "label": "P4-c",
+            "name": "c",
+            "tier": "S",
+            "status": "x",
+            "ours": 1.0,
+            "arena1": 1.0,
+            "headroom": 0.0,
+        },
+        {
+            "pid": 5,
+            "label": "P5-d",
+            "name": "d",
+            "tier": "B",
+            "status": "y",
+            "ours": 2.0,
+            "arena1": 1.0,
+            "headroom": 0.5,
+        },
+    ]
+    cycle_rows = [{"problem": "P4-c", "cycle_id": 308, "notes": ""}]
+    tele = [{"problem_id": 4, "attempt_index": 1, "path_taken": "llm", "ts": "t"}]
+    cur = dashboard.current_problem(cycle_rows, tele, records, running=True, active_pid=5)
+    assert cur["label"] == "P5-d"  # active process wins over stale cycle/telemetry
+
+
 def test_current_problem_idle_picks_highest_headroom():
     records = [
         {
