@@ -200,14 +200,32 @@ def test_action_stop_no_lockfile(tmp_path):
 
 def test_read_log_allowlist_and_traversal(tmp_path, monkeypatch):
     # unknown name refused
-    _, body = dashboard.read_log("../../etc/passwd")
+    _, body, _ = dashboard.read_log("../../etc/passwd")
     assert "refused" in body
     # path-traversal finding refused
-    _, body = dashboard.read_log("finding:../../../etc/passwd")
+    _, body, _ = dashboard.read_log("finding:../../../etc/passwd")
     assert "refused" in body
-    # allowlisted log reads (cycle-log exists in repo)
-    title, _ = dashboard.read_log("cycle-log")
-    assert title == "log · cycle-log"
+    # allowlisted log reads, newest-first, not markdown
+    title, _, is_md = dashboard.read_log("cycle-log")
+    assert title.startswith("log · cycle-log") and is_md is False
+
+
+def test_read_log_newest_first(tmp_path, monkeypatch):
+    log = tmp_path / "x.log"
+    log.write_text("first\nsecond\nthird\n")
+    monkeypatch.setitem(dashboard.LOG_FILES, "x", log)
+    _, body, _ = dashboard.read_log("x")
+    assert body.splitlines()[0] == "third"  # newest at top
+
+
+def test_render_markdown_basics():
+    md = "---\ntype: finding\n---\n# Title\n\nA **bold** and `code` and [[wl]].\n\n- one\n- two\n"
+    html = dashboard.render_markdown(md)
+    assert "<div class=fm>" in html  # frontmatter block
+    assert "<h2>Title</h2>" in html  # # → h2
+    assert "<b>bold</b>" in html and "<code>code</code>" in html
+    assert "<span class=wl>wl</span>" in html
+    assert html.count("<li>") == 2
 
 
 def test_parse_cycle_log_tolerates_pipe_rows(tmp_path):

@@ -414,27 +414,112 @@ def action_kill(on: bool, sentinel: Path = SENTINEL) -> str:
     return res
 
 
-def read_log(name: str, *, tail: int = 200) -> tuple[str, str]:
-    """Return (title, last-`tail`-lines) for an allowlisted log or a finding.
+def read_log(name: str, *, tail: int = 300) -> tuple[str, str, bool]:
+    """Return (title, body, is_markdown) for an allowlisted log or finding.
 
     `name` is either a LOG_FILES key, or 'finding:<slug>' restricted to
-    docs/wiki/findings/ (path-traversal guarded). Returns an error string in
-    the body for unknown/unsafe names — never reads outside the allowlist.
+    docs/wiki/findings/ (path-traversal guarded). Logs come back **newest-first**
+    (last `tail` lines, reversed) so the latest entry is at the top — no
+    scrolling. Findings come back as raw markdown (is_markdown=True) for the
+    caller to render. Unknown/unsafe names return a refusal — never reads
+    outside the allowlist.
     """
     if name.startswith("finding:"):
         slug = name.split(":", 1)[1]
         path = (FINDINGS_DIR / f"{slug}.md").resolve()
         if FINDINGS_DIR.resolve() not in path.parents:
-            return (name, "refused: path escapes findings/")
-        title = f"finding · {slug}"
-    elif name in LOG_FILES:
-        path = LOG_FILES[name]
-        title = f"log · {name}"
-    else:
-        return (name, f"refused: '{name}' not in the allowlist")
-    lines = _read_text(path).splitlines()
-    body = "\n".join(lines[-tail:]) if lines else "(empty)"
-    return (title, body)
+            return (name, "refused: path escapes findings/", False)
+        return (f"finding · {slug}", _read_text(path) or "(empty)", True)
+    if name in LOG_FILES:
+        lines = _read_text(LOG_FILES[name]).splitlines()
+        body = "\n".join(reversed(lines[-tail:])) if lines else "(empty)"  # newest-first
+        return (f"log · {name}  (newest first)", body, False)
+    return (name, f"refused: '{name}' not in the allowlist", False)
+
+
+def render_markdown(md: str) -> str:
+    """Minimal, dependency-free markdown → HTML for finding pages.
+
+    Covers what findings use: YAML frontmatter, #/##/### headings, **bold**,
+    *italic*, `code`, ``` fences, -/* and numbered lists, > quotes, [links](),
+    [[wikilinks]], --- rules. Not CommonMark-complete — just readable.
+    """
+    import html as _html
+
+    lines = md.splitlines()
+    meta = ""
+    if lines and lines[0].strip() == "---":
+        end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
+        if end:
+            fm = "<br>".join(_html.escape(line) for line in lines[1:end])
+            meta = f"<div class=fm>{fm}</div>"
+            lines = lines[end + 1 :]
+
+    def inline(s: str) -> str:
+        s = _html.escape(s)
+        s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+        s = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
+        s = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"<i>\1</i>", s)
+        s = re.sub(r"\[\[([^\]]+)\]\]", r"<span class=wl>\1</span>", s)
+        s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
+        return s
+
+    out: list[str] = []
+    in_code = in_ul = in_ol = False
+
+    def close_lists() -> None:
+        nonlocal in_ul, in_ol
+        if in_ul:
+            out.append("</ul>")
+            in_ul = False
+        if in_ol:
+            out.append("</ol>")
+            in_ol = False
+
+    for ln in lines:
+        if ln.strip().startswith("```"):
+            if in_code:
+                out.append("</pre>")
+            else:
+                close_lists()
+                out.append("<pre class=code>")
+            in_code = not in_code
+            continue
+        if in_code:
+            out.append(_html.escape(ln))
+            continue
+        st = ln.strip()
+        if not st:
+            close_lists()
+        elif st.startswith("#"):
+            close_lists()
+            lvl = min(len(st) - len(st.lstrip("#")), 4) + 1
+            out.append(f"<h{lvl}>{inline(st.lstrip('#').strip())}</h{lvl}>")
+        elif st in ("---", "***", "___"):
+            close_lists()
+            out.append("<hr>")
+        elif re.match(r"^[-*]\s+", st):
+            if not in_ul:
+                close_lists()
+                out.append("<ul>")
+                in_ul = True
+            out.append(f"<li>{inline(re.sub(r'^[-*]\\s+', '', st))}</li>")
+        elif re.match(r"^\d+\.\s+", st):
+            if not in_ol:
+                close_lists()
+                out.append("<ol>")
+                in_ol = True
+            out.append(f"<li>{inline(re.sub(r'^\\d+\\.\\s+', '', st))}</li>")
+        elif st.startswith(">"):
+            close_lists()
+            out.append(f"<blockquote>{inline(st.lstrip('>').strip())}</blockquote>")
+        else:
+            close_lists()
+            out.append(f"<p>{inline(st)}</p>")
+    if in_code:
+        out.append("</pre>")
+    close_lists()
+    return meta + "\n".join(out)
 
 
 # ----------------------------- render -----------------------------
@@ -563,7 +648,17 @@ def render_html(
             + "</div>"
         )
         links = "".join(f"<a href='/log?name={n}'>{n}</a>" for n in LOG_FILES)
-        log_links = f"<h2>Logs</h2><div class=links>{links}</div>"
+        try:
+            recent_f = sorted(
+                FINDINGS_DIR.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True
+            )[:10]
+        except OSError:
+            recent_f = []
+        flinks = "".join(f"<a href='/log?name=finding:{p.stem}'>{p.stem}</a>" for p in recent_f)
+        log_links = (
+            f"<h2>Logs</h2><div class=links>{links}</div>"
+            f"<h2>Recent findings</h2><div class=links>{flinks or '—'}</div>"
+        )
         start_th = "<th>start</th>"
     else:
         control_bar = log_links = start_th = ""
@@ -752,15 +847,32 @@ def build(*, today: str | None = None, generated: str | None = None, controls: b
 
 
 def _log_page(name: str) -> str:
-    """A minimal HTML page rendering one allowlisted log/finding (--serve)."""
-    title, body = read_log(name)
-    esc = body.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    """A styled HTML page for one allowlisted log (newest-first) or finding (rendered md)."""
+    title, body, is_md = read_log(name)
+    if is_md:
+        content = f"<div class=doc>{render_markdown(body)}</div>"
+    else:
+        esc = body.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        content = f"<pre>{esc}</pre>"
     return (
         "<!doctype html><meta charset=utf-8>"
-        "<style>body{background:#0d1117;color:#c9d1d9;font:12px ui-monospace,Menlo,monospace;"
-        "margin:0;padding:20px}a{color:#79c0ff}pre{white-space:pre-wrap;word-break:break-word}"
-        "h1{font-size:15px}</style>"
-        f"<h1>{title}</h1><p><a href='/'>← back to dashboard</a></p><pre>{esc}</pre>"
+        "<style>"
+        "body{background:#0d1117;color:#c9d1d9;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;"
+        "margin:0;padding:24px;max-width:900px}"
+        "a{color:#79c0ff}pre{white-space:pre-wrap;word-break:break-word;font-size:12px}"
+        "h1.t{font-size:14px;color:#8b949e}"
+        ".doc{font-family:-apple-system,system-ui,sans-serif;line-height:1.65}"
+        ".doc h2{font-size:20px;border-bottom:1px solid #30363d;padding-bottom:6px;margin-top:28px}"
+        ".doc h3{font-size:16px;color:#d2a8ff}.doc h4{font-size:14px;color:#8b949e}"
+        ".doc code{background:#161b22;padding:1px 5px;border-radius:4px;font-size:12px;color:#79c0ff}"
+        ".doc pre.code{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px;"
+        "white-space:pre-wrap;font-size:12px}"
+        ".doc blockquote{border-left:3px solid #30557d;margin:8px 0;padding:2px 12px;color:#8b949e}"
+        ".doc .wl{color:#7ee787}.doc hr{border:0;border-top:1px solid #30363d;margin:20px 0}"
+        ".fm{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:10px 12px;"
+        "font:11px ui-monospace,Menlo,monospace;color:#8b949e;margin-bottom:20px}"
+        "</style>"
+        f"<h1 class=t>{title}</h1><p><a href='/'>← back to dashboard</a></p>{content}"
     )
 
 
