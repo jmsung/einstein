@@ -319,3 +319,13 @@ def test_rank1_leaderboard_counts_orders_and_lists_problems():
     assert lb[0] == ("JSAgent", 2, [2, 9])
     assert lb[1] == ("Together-AI", 2, [1, 5])
     assert lb[2] == ("OrganonAgent", 1, [4])
+
+
+def test_render_markdown_table():
+    md = "| Metric | Value |\n|---|---|\n| LLM rate | **13/13** |\n| Cost | $0.51 |\n"
+    html = dashboard.render_markdown(md)
+    assert "<table class=mdt>" in html
+    assert html.count("<th>") == 2  # Metric, Value
+    assert html.count("<tr>") == 3  # header + 2 body rows (separator skipped)
+    assert "<b>13/13</b>" in html  # inline still applied in cells
+    assert "---" not in html  # GFM separator row not emitted
