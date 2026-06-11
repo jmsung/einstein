@@ -633,6 +633,34 @@ def render_markdown(md: str) -> str:
 
 # ----------------------------- render -----------------------------
 
+# Client-side column sort for any <table class=sortable>. Kept as a plain string
+# (not in the render f-string) so its braces need no escaping. Numeric-aware
+# (strips %,$,#,★,commas; handles 'n/a'/'—' as -inf); click toggles asc/desc.
+_SORT_JS = """<script>
+document.querySelectorAll('table.sortable').forEach(tbl=>{
+  const ths=[...tbl.rows[0].cells];
+  ths.forEach((th,idx)=>{
+    th.style.cursor='pointer'; th.title='click to sort';
+    th.onclick=()=>{
+      const dir = th.dataset.dir==='asc' ? 'desc' : 'asc';
+      ths.forEach(h=>{h.dataset.dir='';h.textContent=h.textContent.replace(/[ ▲▼]+$/,'');});
+      th.dataset.dir=dir; th.textContent=th.textContent.replace(/[ ▲▼]+$/,'')+(dir==='asc'?' ▲':' ▼');
+      const num=s=>{ s=String(s).replace(/[,$%#★]/g,'').trim();
+        if(s===''||s==='—'||s==='n/a') return -Infinity;
+        const m=s.match(/-?\\d+\\.?\\d*(e-?\\d+)?/i); return m?parseFloat(m[0]):NaN; };
+      const rows=[...tbl.rows].slice(1);
+      rows.sort((a,b)=>{
+        const x=(a.cells[idx]?.innerText||'').trim(), y=(b.cells[idx]?.innerText||'').trim();
+        const nx=num(x), ny=num(y); let c;
+        c = (!isNaN(nx)&&!isNaN(ny)) ? nx-ny : x.localeCompare(y);
+        return dir==='asc'?c:-c;
+      });
+      rows.forEach(r=>tbl.appendChild(r));
+    };
+  });
+});
+</script>"""
+
 
 def _fmt(x, nd=6):
     if x is None:
@@ -666,6 +694,7 @@ def render_html(
     controls: bool = False,
 ) -> str:
     running = status["running"]
+    sort_js = _SORT_JS
     lb = leaderboard or []
     rows_lb = "\n".join(
         f"<tr class='{'r1' if a == 'JSAgent' else ''}'>"
@@ -675,7 +704,7 @@ def render_html(
     asof = f" · as of {rank1_asof}" if rank1_asof else ""
     leaderboard_block = (
         f"<h2>Overall leaderboard — # problems at arena #1{asof}</h2>"
-        f"<table><tr><th>#</th><th>agent</th><th>#1 problems</th></tr>{rows_lb}</table>"
+        f"<table class=sortable><tr><th>#</th><th>agent</th><th>#1 problems</th></tr>{rows_lb}</table>"
         if lb
         else ""
     )
@@ -834,6 +863,7 @@ def render_html(
  td.st{{color:var(--mut);font-size:11px}} tr.r1 td.nm{{color:#7ee787}}
  td.ag{{color:#d2a8ff;font-size:11px}}
  td.nm a{{color:inherit;text-decoration:none}} td.nm a:hover{{text-decoration:underline}}
+ table.sortable th{{cursor:pointer;user-select:none}} table.sortable th:hover{{color:#c9d1d9}}
  h1 .ext{{font-size:12px;font-weight:400;color:#79c0ff;text-decoration:none}}
  h1 .ext:hover{{text-decoration:underline}}
  .b{{padding:1px 6px;border-radius:10px;font-size:11px}}
@@ -876,12 +906,12 @@ def render_html(
 
 {attempts_block}
 
-{leaderboard_block}
-
-<h2>Per-problem records — ranked by picker priority (headroom × hit-rate × staleness)</h2>
-<table><tr><th>#</th><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>#1 agent</th><th>headroom</th><th>priority</th><th>we&nbsp;#1?</th><th>cycles</th><th>last</th>{start_th}</tr>
+<h2>Per-problem records — ranked by picker priority (headroom × hit-rate × staleness) · click a header to re-sort</h2>
+<table class=sortable><tr><th>#</th><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>#1 agent</th><th>headroom</th><th>priority</th><th>we&nbsp;#1?</th><th>cycles</th><th>last</th>{start_th}</tr>
 {rows_problems}
 </table>
+
+{leaderboard_block}
 
 <h2>Recent cycles</h2>
 <table><tr><th>cycle</th><th>problem</th><th>score</th><th>outcome</th><th>cost</th></tr>
@@ -891,7 +921,7 @@ def render_html(
 <h2>Auto-submit decisions (today)</h2>
 <ul>{rows_submit}</ul>
 {log_links}
-</div></body></html>"""
+</div>{sort_js}</body></html>"""
 
 
 # ----------------------------- assembly -----------------------------
