@@ -7,20 +7,24 @@ away — closes the user-facing "leave it running, come back later" promise
 ## What lives here
 
 - **`com.einstein.autonomous-loop.plist`** — macOS `launchd` template.
-  Fires `scripts/autonomous_loop.py --max-problems 1 --skip-if-recent 60`
-  every 30 minutes. Replace `__PROJECT_ROOT__` with your local checkout's
-  absolute path before installing.
+  Fires `scripts/scheduled_cycle.py --skip-if-recent 30 --max-runs-per-day 40`
+  every 30 minutes (the Phase-3 cron entry: it wraps
+  `autonomous_loop.py --one-problem --by-priority` with a runs/day cap + 7200s
+  timeout + run ledger). Replace `__PROJECT_ROOT__` (cb checkout) and `__HOME__`
+  (user home holding `~/.claude` auth) before installing.
 
 ## Install (macOS)
 
 ```bash
-# From the repo root:
+# From the repo root (cb checkout):
 PROJECT_ROOT="$(pwd)"
 PLIST_LOCAL="docs/ops/com.einstein.autonomous-loop.plist"
 PLIST_INSTALLED="$HOME/Library/LaunchAgents/com.einstein.autonomous-loop.plist"
 
-# 1. Substitute the placeholder
-sed "s|__PROJECT_ROOT__|$PROJECT_ROOT|g" "$PLIST_LOCAL" > "$PLIST_INSTALLED"
+# 1. Substitute placeholders — HOME is REQUIRED so headless `claude -p` finds
+#    its auth under ~/.claude; launchd starts with a bare environment.
+sed -e "s|__PROJECT_ROOT__|$PROJECT_ROOT|g" -e "s|__HOME__|$HOME|g" \
+  "$PLIST_LOCAL" > "$PLIST_INSTALLED"
 
 # 2. Bootstrap + enable for the GUI session
 launchctl bootstrap "gui/$UID" "$PLIST_INSTALLED"
