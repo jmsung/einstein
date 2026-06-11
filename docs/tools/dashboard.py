@@ -191,6 +191,25 @@ def today_summary(telemetry: list[dict], *, today: str) -> dict:
     }
 
 
+def _pid_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def loop_running(lockfile: Path = LOCKFILE) -> bool:
+    """True iff a loop holds the lock AND its pid is alive (stale lock → False)."""
+    try:
+        m = re.search(r"pid=(\d+)", lockfile.read_text())
+    except OSError:
+        return False
+    return bool(m) and _pid_alive(int(m.group(1)))
+
+
 def loop_status(
     *, lockfile: Path = LOCKFILE, sentinel: Path = SENTINEL, ledger: Path = RUN_LEDGER
 ) -> dict:
@@ -200,7 +219,7 @@ def loop_status(
     if led:
         last_run = led[-1]
     return {
-        "running": lockfile.exists(),
+        "running": loop_running(lockfile),
         "killed": sentinel.exists(),
         "last_run": last_run,
     }
@@ -339,7 +358,14 @@ def _audit(action: str, result: str) -> None:
 
 
 def action_start(pid: int) -> str:
-    """Spawn a detached one-problem loop run for problem `pid`."""
+    """Spawn a detached one-problem loop run for problem `pid`.
+
+    Refuses if a run is already active — the state machine requires Stop first.
+    """
+    if loop_running():
+        res = f"refused start P{pid}: a run is active — Stop it first"
+        _audit(f"start P{pid}", res)
+        return res
     cmd = [
         sys.executable,
         str(_REPO / "scripts" / "autonomous_loop.py"),
@@ -382,7 +408,15 @@ def action_stop(lockfile: Path = LOCKFILE) -> str:
 
 
 def action_auto(on: bool) -> str:
-    """Toggle the launchd schedule (real auto-mode on/off)."""
+    """Toggle the launchd schedule (real auto-mode on/off).
+
+    Turning auto ON is refused while a run is active (Stop first); turning it
+    OFF is always allowed.
+    """
+    if on and loop_running():
+        res = "refused auto on: a run is active — Stop it first"
+        _audit("auto on", res)
+        return res
     uid = os.getuid()
     plist = Path.home() / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
     if on:
@@ -554,6 +588,7 @@ def render_html(
     generated: str,
     controls: bool = False,
 ) -> str:
+    running = status["running"]
     rows_problems = "\n".join(
         f"<tr class='{'r1' if r['rank1'] else ''}'>"
         f"<td class='num'>{i}</td>"
@@ -566,9 +601,13 @@ def render_html(
         f"<td>{'★' if r['rank1'] else ''}</td>"
         f"<td class='num'>{r['cycles']}</td><td class='num'>#{r['last_cycle'] or '—'}</td>"
         + (
-            f"<td><form method=post action=/start style=margin:0>"
-            f"<input type=hidden name=pid value={r['pid']}>"
-            f"<button class=run title='start one cycle on P{r['pid']}'>▶</button></form></td>"
+            (
+                f"<td><form method=post action=/start style=margin:0>"
+                f"<input type=hidden name=pid value={r['pid']}>"
+                f"<button class=run title='start one cycle on P{r['pid']}'>▶</button></form></td>"
+                if not running
+                else "<td><button class=run disabled title='stop the active run first'>▶</button></td>"
+            )
             if controls
             else ""
         )
@@ -635,17 +674,34 @@ def render_html(
         clog = _read_text(CONTROL_LOG).splitlines()
         if clog:
             last = f"<div class=flash>last action · {clog[-1]}</div>"
+        state_hint = (
+            "<span class=hint>a run is active — Stop before starting another</span>"
+            if running
+            else "<span class=hint>idle — pick a problem ▶ below, or turn Auto on</span>"
+        )
+        # State machine: Stop only when running; Start/Auto-on only when idle.
+        stop_btn = (
+            "<form method=post action=/stop><button class=warn>⏹ Stop loop</button></form>"
+            if running
+            else "<button class=warn disabled title='nothing running'>⏹ Stop loop</button>"
+        )
+        auto_on_btn = (
+            "<button disabled title='stop the active run first'>▶ Auto on</button>"
+            if running
+            else "<form method=post action=/auto/on><button>▶ Auto on</button></form>"
+        )
         control_bar = last + (
             "<div class=ctl>"
-            "<form method=post action=/stop><button class=warn>⏹ Stop loop</button></form>"
-            "<form method=post action=/auto/on><button>▶ Auto on</button></form>"
-            "<form method=post action=/auto/off><button class=warn>⏸ Auto off</button></form>"
+            + stop_btn
+            + auto_on_btn
+            + "<form method=post action=/auto/off><button class=warn>⏸ Auto off</button></form>"
             + (
                 "<form method=post action=/kill/off><button>✅ Resume (clear kill)</button></form>"
                 if killed
                 else "<form method=post action=/kill/on><button class=danger>🛑 Kill switch</button></form>"
             )
             + "</div>"
+            + state_hint
         )
         links = "".join(f"<a href='/log?name={n}'>{n}</a>" for n in LOG_FILES)
         try:
@@ -700,6 +756,8 @@ def render_html(
  button:hover{{background:#2b4a6e}}
  button.warn{{background:#3a341b;border-color:#6e5b1f}} button.danger{{background:#3a1b1b;border-color:#7d3030}}
  button.run{{padding:2px 8px;font-size:12px}}
+ button:disabled{{opacity:.35;cursor:not-allowed}}
+ .hint{{color:#8b949e;font-size:11px;display:block;margin:-6px 0 14px}}
  .links a{{color:#79c0ff;margin-right:14px;font-size:12px}}
  .flash{{background:#16301f;border:1px solid #2d5a3a;color:#7ee787;border-radius:6px;
    padding:8px 12px;margin-bottom:10px;font-size:12px;width:100%}}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 from pathlib import Path
 
@@ -175,6 +176,30 @@ def test_parse_rank1_agents_reads_latest_snapshot(tmp_path):
     agents, asof = dashboard.parse_rank1_agents(tmp_path)
     assert agents == {2: "JSAgent", 4: "OrganonAgent"}  # latest file wins (2026-06-10)
     assert asof == "2026-06-10"
+
+
+def test_loop_running_true_for_live_pid(tmp_path):
+    lf = tmp_path / "l.lock"
+    lf.write_text(f"pid={os.getpid()} started=now\n")  # this process is alive
+    assert dashboard.loop_running(lf) is True
+
+
+def test_loop_running_false_for_dead_pid_and_missing(tmp_path):
+    lf = tmp_path / "l.lock"
+    lf.write_text("pid=999999 started=2020-01-01\n")  # dead
+    assert dashboard.loop_running(lf) is False
+    assert dashboard.loop_running(tmp_path / "absent.lock") is False
+
+
+def test_action_start_refused_while_running(monkeypatch):
+    monkeypatch.setattr(dashboard, "loop_running", lambda *a, **k: True)
+    res = dashboard.action_start(11)
+    assert "refused" in res and "Stop it first" in res
+
+
+def test_action_auto_on_refused_while_running(monkeypatch):
+    monkeypatch.setattr(dashboard, "loop_running", lambda *a, **k: True)
+    assert "refused" in dashboard.action_auto(True)
 
 
 def test_action_kill_toggles_sentinel(tmp_path):
