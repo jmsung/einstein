@@ -237,6 +237,29 @@ def loop_running(lockfile: Path = LOCKFILE) -> bool:
     return bool(m) and _pid_alive(int(m.group(1)))
 
 
+def running_problem_id(lockfile: Path = LOCKFILE) -> int | None:
+    """The problem id the live loop process is on, from its argv `--problem-id N`.
+
+    Authoritative for the 'working on' panel — the cycle-log only updates when a
+    cycle COMPLETES, so a freshly-started run shows the previous problem there.
+    Returns None for auto/by-priority runs (no explicit id) or when not running.
+    """
+    try:
+        pid = int(re.search(r"pid=(\d+)", lockfile.read_text()).group(1))
+    except (OSError, AttributeError):
+        return None
+    if not _pid_alive(pid):
+        return None
+    try:
+        out = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "command="], capture_output=True, text=True, timeout=5
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    m = re.search(r"--problem-id\s+(\d+)", out)
+    return int(m.group(1)) if m else None
+
+
 def loop_status(
     *, lockfile: Path = LOCKFILE, sentinel: Path = SENTINEL, ledger: Path = RUN_LEDGER
 ) -> dict:
@@ -316,18 +339,30 @@ def per_problem_records(
 
 
 def current_problem(
-    cycle_rows: list[dict], telemetry: list[dict], records: list[dict], *, running: bool
+    cycle_rows: list[dict],
+    telemetry: list[dict],
+    records: list[dict],
+    *,
+    running: bool,
+    active_pid: int | None = None,
 ) -> dict | None:
     """The problem the loop is on right now (running) or up next (idle).
 
-    Running → the latest cycle-log row's problem. Idle → the highest-headroom
-    record (what --by-priority would pick next). Enriches with the latest
-    telemetry attempt (path/cost/ts) and the matched per-problem record.
+    Running → the ACTIVE process's problem: `active_pid` (from its --problem-id
+    argv) wins; else the latest telemetry row's problem (last completed attempt);
+    else the latest cycle-log row. This avoids showing the previous problem while
+    a freshly-started run hasn't logged a cycle yet. Idle → highest-headroom record.
     """
     by_label = {r["label"]: r for r in records}
+    by_pid = {r.get("pid"): r for r in records}
     latest_row = max(cycle_rows, key=lambda r: r["cycle_id"]) if cycle_rows else {}
-    if running and latest_row:
-        rec = by_label.get(latest_row["problem"])
+    if running:
+        rpid = active_pid
+        if rpid is None and telemetry:
+            rpid = telemetry[-1].get("problem_id")
+        rec = by_pid.get(rpid) if rpid is not None else None
+        if rec is None and latest_row:
+            rec = by_label.get(latest_row["problem"])
         mode = "running"
     elif records:
         rec = records[0]
@@ -337,7 +372,10 @@ def current_problem(
     if rec is None:
         return None
     last = telemetry[-1] if telemetry else {}
-    strat = parse_strategy(latest_row.get("notes", "")) if mode == "running" else {}
+    # strategy from the most recent cycle row FOR THIS problem (may be absent if
+    # the run hasn't completed a cycle yet → blank, i.e. 'starting').
+    mine = [r for r in cycle_rows if r["problem"] == rec["label"]]
+    strat = parse_strategy(mine[-1].get("notes", "")) if (mode == "running" and mine) else {}
     return {
         "mode": mode,
         "label": rec["label"],
@@ -925,7 +963,13 @@ def build(*, today: str | None = None, generated: str | None = None, controls: b
     except Exception as e:  # noqa: BLE001 — health card degrades, page still renders
         health = f"HEALTHY (health-check unavailable: {e})"
 
-    current = current_problem(cycle_rows, telemetry, records, running=status["running"])
+    current = current_problem(
+        cycle_rows,
+        telemetry,
+        records,
+        running=status["running"],
+        active_pid=running_problem_id() if status["running"] else None,
+    )
     attempts = recent_attempts(cycle_rows, current["label"]) if current else []
 
     return render_html(
