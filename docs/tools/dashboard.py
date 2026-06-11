@@ -195,6 +195,43 @@ def per_problem_records(
     return recs
 
 
+def current_problem(
+    cycle_rows: list[dict], telemetry: list[dict], records: list[dict], *, running: bool
+) -> dict | None:
+    """The problem the loop is on right now (running) or up next (idle).
+
+    Running → the latest cycle-log row's problem. Idle → the highest-headroom
+    record (what --by-priority would pick next). Enriches with the latest
+    telemetry attempt (path/cost/ts) and the matched per-problem record.
+    """
+    by_label = {r["label"]: r for r in records}
+    if running and cycle_rows:
+        rec = by_label.get(max(cycle_rows, key=lambda r: r["cycle_id"])["problem"])
+        mode = "running"
+    elif records:
+        rec = records[0]
+        mode = "next"
+    else:
+        return None
+    if rec is None:
+        return None
+    last = telemetry[-1] if telemetry else {}
+    return {
+        "mode": mode,
+        "label": rec["label"],
+        "name": rec["name"],
+        "tier": rec["tier"],
+        "status": rec["status"],
+        "ours": rec["ours"],
+        "arena1": rec["arena1"],
+        "headroom": rec["headroom"],
+        "attempt": last.get("attempt_index"),
+        "path": last.get("path_taken"),
+        "cost": last.get("cost_usd"),
+        "ts": last.get("ts", ""),
+    }
+
+
 # ----------------------------- render -----------------------------
 
 
@@ -218,6 +255,7 @@ def render_html(
     *,
     status: dict,
     today: dict,
+    current: dict | None,
     records: list[dict],
     recent_cycles: list[dict],
     submits: list[str],
@@ -250,6 +288,21 @@ def render_html(
     )
     health_cls = "green" if health.startswith("HEALTHY") else "amber"
     budget_cls = "amber" if today["budget_pct"] > 80 else "green"
+    if current is None:
+        hero = ""
+    else:
+        verb = "🟢 working on" if current["mode"] == "running" else "⏭ up next (highest headroom)"
+        att = (
+            f" · attempt {current['attempt']} · {current['path']} · ${current['cost']:.2f}"
+            if current.get("attempt") is not None and current["mode"] == "running"
+            else ""
+        )
+        hero = f"""<div class=hero>
+ <div class=k>{verb}</div>
+ <div class=hp>{current['label']} <span class=ht>{current['name']}</span></div>
+ <div class=hm>tier {current['tier']} · {current['status']} · ours {_fmt(current['ours'])} ·
+   arena #1 {_fmt(current['arena1'])} · headroom {_hr_badge(current['headroom'])}{att}</div>
+</div>"""
     return f"""<!doctype html><html><head><meta charset=utf-8>
 <meta http-equiv=refresh content={REFRESH_S}>
 <title>einstein · autonomous loop</title>
@@ -273,9 +326,15 @@ def render_html(
  .green{{background:#1b3a26;color:#7ee787}} .amber{{background:#3a341b;color:#e3b341}} .gray{{background:#21262d;color:#8b949e}}
  code{{color:var(--mut);font-size:11px}} ul{{margin:6px 0;padding-left:18px}}
  .state{{font-size:15px}}
+ .hero{{background:linear-gradient(135deg,#161b22,#1b2530);border:1px solid #2d4a3a;
+   border-radius:10px;padding:16px 18px;margin-bottom:18px}}
+ .hero .k{{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em}}
+ .hp{{font-size:24px;color:#7ee787;margin:4px 0}} .hp .ht{{color:var(--mut);font-size:14px}}
+ .hm{{color:var(--fg);font-size:12px}}
 </style></head><body><div class=wrap>
 <h1>einstein · autonomous loop</h1>
 <div class=sub>generated {generated} · auto-refresh {REFRESH_S}s · <span class=state>{run_state}</span></div>
+{hero}
 
 <div class=cards>
  <div class=card><div class=k>health</div><div class="v {health_cls}">{health.split(' ')[0]}</div><div class=sub>{health}</div></div>
@@ -370,9 +429,12 @@ def build(*, today: str | None = None, generated: str | None = None) -> str:
     except Exception as e:  # noqa: BLE001 — health card degrades, page still renders
         health = f"HEALTHY (health-check unavailable: {e})"
 
+    current = current_problem(cycle_rows, telemetry, records, running=status["running"])
+
     return render_html(
         status=status,
         today=today_s,
+        current=current,
         records=records,
         recent_cycles=recent,
         submits=submits,

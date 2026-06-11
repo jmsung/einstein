@@ -78,6 +78,56 @@ def test_per_problem_records_sorts_by_headroom_then_unknowns_last():
     assert p2["rank1"] is True and p2["last_cycle"] == 7 and p2["cycles"] == 1
 
 
+def test_current_problem_running_picks_latest_cycle():
+    records = [
+        {
+            "label": "P4-c",
+            "name": "c",
+            "tier": "S",
+            "status": "x",
+            "ours": 1.0,
+            "arena1": 1.0,
+            "headroom": 0.0,
+        },
+        {
+            "label": "P10-t",
+            "name": "t",
+            "tier": "B",
+            "status": "y",
+            "ours": 2.0,
+            "arena1": 1.0,
+            "headroom": 0.5,
+        },
+    ]
+    cycle_rows = [{"problem": "P4-c", "cycle_id": 308}, {"problem": "P10-t", "cycle_id": 312}]
+    tele = [
+        {"problem_id": 10, "attempt_index": 2, "path_taken": "llm", "cost_usd": 0.38, "ts": "t"}
+    ]
+    cur = dashboard.current_problem(cycle_rows, tele, records, running=True)
+    assert (
+        cur["mode"] == "running" and cur["label"] == "P10-t"
+    )  # latest cycle, not highest headroom
+    assert cur["attempt"] == 2 and cur["path"] == "llm"
+
+
+def test_current_problem_idle_picks_highest_headroom():
+    records = [
+        {
+            "label": "P4-c",
+            "name": "c",
+            "tier": "S",
+            "status": "x",
+            "ours": 1.0,
+            "arena1": 1.0,
+            "headroom": 0.5,
+        }
+    ]
+    cur = dashboard.current_problem(
+        [{"problem": "P9-z", "cycle_id": 9}], [], records, running=False
+    )
+    assert cur["mode"] == "next" and cur["label"] == "P4-c"  # records[0], ignores cycle history
+
+
 def test_parse_cycle_log_tolerates_pipe_rows(tmp_path):
     log = tmp_path / "cycle-log.md"
     log.write_text(
