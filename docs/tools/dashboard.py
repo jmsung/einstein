@@ -546,7 +546,11 @@ def render_html(
     )
     if controls:
         killed = status["killed"]
-        control_bar = (
+        last = ""
+        clog = _read_text(CONTROL_LOG).splitlines()
+        if clog:
+            last = f"<div class=flash>last action · {clog[-1]}</div>"
+        control_bar = last + (
             "<div class=ctl>"
             "<form method=post action=/stop><button class=warn>⏹ Stop loop</button></form>"
             "<form method=post action=/auto/on><button>▶ Auto on</button></form>"
@@ -602,6 +606,8 @@ def render_html(
  button.warn{{background:#3a341b;border-color:#6e5b1f}} button.danger{{background:#3a1b1b;border-color:#7d3030}}
  button.run{{padding:2px 8px;font-size:12px}}
  .links a{{color:#79c0ff;margin-right:14px;font-size:12px}}
+ .flash{{background:#16301f;border:1px solid #2d5a3a;color:#7ee787;border-radius:6px;
+   padding:8px 12px;margin-bottom:10px;font-size:12px;width:100%}}
 </style></head><body><div class=wrap>
 <h1>einstein · autonomous loop</h1>
 <div class=sub>generated {generated} · auto-refresh {REFRESH_S}s · <span class=state>{run_state}</span></div>
