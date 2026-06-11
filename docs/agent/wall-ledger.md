@@ -78,6 +78,12 @@ leader's. (Full-res n=100k LP is infeasible ~ but the reduced-basis LP is a vali
 local-optimality certificate.) ~17 method families now exhausted incl. every
 council move; the record requires a seed of its distinct topology.
 
+### 2026-06-10 — P4 shrink–regrow decay wall (js/feat/p4-warm-pruning-transfer)
+
+| date | problem | obstruction | failed attempts | wisdom consulted | resolving move | outcome | finding |
+|---|---|---|---|---|---|---|---|
+| 2026-06-10 | P4 third-autocorrelation | Shrink–regrow cycling (the first operator that crosses P4 sign classes by descent — partially overturns the 06-06 "descent can't" row) decays geometrically to its own fixed point ≈1.452381, 7.7e-5 above the leader: new fragmentation must CO-EVOLVE with magnitudes through descent; injection rate is the bottleneck, not prune selection | 6 plain cycles (gains −1.9e-5→−2.6e-6), regrow noise A/B (<5e-7), Hilbert energy-norm prune (on-envelope −2.3e-6), Tao run-splitting prune (forced runs 2696→3642 but C +2.4e-4 = damage), Hadamard leader-sign transplant (1.4539 — sign topology alone does NOT fix the basin) | this ledger (06-06 rows), qmd (sign-topology + fragmentation findings), council re-dispatch Tao/Hilbert/Cohn/Hadamard | none left in the prune-rule class (Cohn LP-guided prune not run — same class falsified twice independently); operator banked at its fixed point with our-best improved 1.4525212→1.4523809 (−1.40e-4, triple-verified) | **honest-zero for the record** — but the operator transfers (P3 next per branch note); the JOINT (sign, magnitude) co-adaptation extends the incompressibility verdict | `findings/dead-end-p4-shrink-regrow-fixed-point.md` (Goal 3) |
+
 ## Lesson distilled (meta)
 The dominant time-sink is **brute-forcing past a wall instead of escalating to wisdom
 at the 2nd failure.** The council diagnoses obstructions and rules out whole families

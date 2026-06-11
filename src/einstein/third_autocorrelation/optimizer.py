@@ -207,6 +207,280 @@ def signed_descent(init_v, betas, iters, lr, neg_target, neg_base):
 
 
 # --------------------------------------------------------------------------- #
+# Warm self-pruning support-shrinking search (js/feat/p4-warm-pruning-transfer).
+#
+# P2's record operator (findings/p2-warm-self-pruning-beats-record) ported to
+# the signed P4 objective. Two load-bearing differences from the P2 kernel:
+#   1. f = mask * w with w UNCONSTRAINED-SIGN (not mask * v**2) — the masked
+#      re-opt may re-fragment signs inside the surviving support, which is the
+#      move-class argument against the discrete-sign-topology obstruction
+#      (findings/p4-basin-is-discrete-sign-topology).
+#   2. No leader support target — the P4 leader is full-support, so the
+#      schedule floor is a free hyperparameter.
+# --------------------------------------------------------------------------- #
+
+
+def neg_run_count(f: np.ndarray) -> int:
+    """Number of contiguous runs of f < 0 — the sign-fragmentation diagnostic.
+
+    The leader's edge over our basin is fragmentation (4705 runs vs our 823) on
+    a shared envelope (findings/p4-fragmentation-not-fraction-shared-envelope).
+    """
+    neg = np.asarray(f) < 0.0
+    if not neg.any():
+        return 0
+    return int(neg[0]) + int(np.count_nonzero(~neg[:-1] & neg[1:]))
+
+
+def prune_smallest(w: np.ndarray, mask: np.ndarray, target_support: int) -> np.ndarray:
+    """Return a new 0/1 mask keeping the ``target_support`` largest-|w| *active* cells.
+
+    Data-driven, monotone support shrink: only cells currently active in ``mask``
+    are candidates (pruned cells are never resurrected), and the smallest-|w|
+    active cells are zeroed — the optimizer chooses *which* cells die, not a
+    pre-imposed window. No-op when ``target_support`` ≥ current support.
+    """
+    active = np.flatnonzero(mask)
+    if target_support >= active.size:
+        return mask.copy()
+    keep = active[np.argsort(np.abs(w[active]))][-target_support:]
+    new_mask = np.zeros_like(mask, dtype=bool)
+    new_mask[keep] = True
+    return new_mask
+
+
+def softmax_cell_weights(f: np.ndarray, beta_sel: float = 1e7) -> np.ndarray:
+    """Per-cell active-set weights p_{2i} from the smooth-max softmax.
+
+    The LSE multiplier measure p_t = softmax(β·ratios) over conv positions is
+    the curvature coupling of the equioscillation (∂²(f★f)(t)/∂w_i² = 2 at
+    t = 2i). Cell i's weight is p at its self-convolution position 2i.
+    Moderate β_sel spreads p over the near-active set (graded energy); the
+    optimization β (1e13) would collapse it to a few spikes.
+    """
+    n = len(f)
+    dx = 0.5 / n
+    m = 2 * n - 1
+    m_pad = 1 << (m - 1).bit_length()
+    F = np.fft.rfft(f, n=m_pad)
+    conv = np.fft.irfft(F * F, n=m_pad)[:m]
+    ratios = conv / (f.sum() * f.sum() * dx)
+    z = beta_sel * (ratios - ratios.max())
+    p = np.exp(z)
+    p /= p.sum()
+    return p[2 * np.arange(n)]
+
+
+def prune_energy(
+    w: np.ndarray,
+    mask: np.ndarray,
+    target_support: int,
+    *,
+    beta_sel: float = 1e7,
+    eps: float = 1e-12,
+) -> np.ndarray:
+    """Energy-norm prune (Hilbert, council 2026-06-10): smallest e_i = w_i²·p_{2i}.
+
+    Smallest-|w| pruning measures cells in the Euclidean norm, but the basin
+    geometry is governed by the Lagrangian curvature: killing a small-|w| cell
+    under an active peak (large p_{2i}) pins the equioscillation and U-turns,
+    while a moderate-|w| cell with negligible coupling (p_{2i}≈0) is free mass
+    whose death re-fragments the sign field. ``eps·w²`` tiebreaks the p≈0 sea.
+    """
+    active = np.flatnonzero(mask)
+    if target_support >= active.size:
+        return mask.copy()
+    p_cell = softmax_cell_weights(w * mask, beta_sel)
+    e = w[active] ** 2 * (p_cell[active] + eps)
+    keep = active[np.argsort(e)][-target_support:]
+    new_mask = np.zeros_like(mask, dtype=bool)
+    new_mask[keep] = True
+    return new_mask
+
+
+def _run_segments(sign: np.ndarray) -> list[tuple[int, int]]:
+    """Contiguous same-sign segments of a sign array as (start, end) half-open."""
+    edges = np.flatnonzero(sign[:-1] != sign[1:]) + 1
+    bounds = np.concatenate(([0], edges, [len(sign)]))
+    return [(int(bounds[i]), int(bounds[i + 1])) for i in range(len(bounds) - 1)]
+
+
+def prune_split(
+    w: np.ndarray,
+    mask: np.ndarray,
+    target_support: int,
+    *,
+    beta_sel: float = 1e7,
+    lo_frac: float = 0.2,
+    hi_frac: float = 0.7,
+    margin: int = 5,
+) -> np.ndarray:
+    """Run-splitting prune (Tao + Hilbert, council 2026-06-10).
+
+    Candidates = interior cells (≥``margin`` from run boundaries) of same-sign
+    runs longer than the median run length, inside the mid-domain
+    [lo_frac·n, hi_frac·n) where the leader's extra negative runs sit. Among
+    candidates, prune the smallest energy e_i = w_i²·(p_{2i}+eps) — splitting
+    long runs instead of re-carving existing boundaries. Falls back to global
+    energy pruning when the candidate pool is too small.
+    """
+    active = np.flatnonzero(mask)
+    if target_support >= active.size:
+        return mask.copy()
+    k = active.size - target_support
+
+    n = len(w)
+    f = w * mask
+    sign = np.sign(f)
+    segs = _run_segments(sign)
+    lengths = np.array([b - a for a, b in segs])
+    med = np.median(lengths)
+    lo, hi = int(lo_frac * n), int(hi_frac * n)
+
+    cand = np.zeros(n, dtype=bool)
+    for a, b in segs:
+        if b - a > med and a + margin < b - margin:
+            cand[a + margin : b - margin] = True
+    cand[:lo] = False
+    cand[hi:] = False
+    cand &= mask
+
+    pool = np.flatnonzero(cand)
+    if pool.size < k:
+        return prune_energy(w, mask, target_support, beta_sel=beta_sel)
+
+    p_cell = softmax_cell_weights(f, beta_sel)
+    e = w[pool] ** 2 * (p_cell[pool] + 1e-12)
+    die = pool[np.argsort(e)][:k]
+    new_mask = mask.copy()
+    new_mask[die] = False
+    return new_mask
+
+
+PRUNE_RULES = {
+    "abs": lambda w, mask, t: prune_smallest(w, mask, t),
+    "energy": lambda w, mask, t: prune_energy(w, mask, t),
+    "split": lambda w, mask, t: prune_split(w, mask, t),
+}
+
+
+def surrogate_masked(
+    w: torch.Tensor, beta: float, *, mask: torch.Tensor, fft: bool = True
+) -> torch.Tensor:
+    """Differentiable surrogate of C(f) with f = mask · w (signed w).
+
+    Ratio-first LSE (the P2 record kernel's formulation): the pointwise ratio is
+    unit-scale ≈ 1.45, so the LSE gap ≈ log(N)/beta tracks the true max to
+    <1e-9 already at beta=1e10. Scale-invariant in w.
+    """
+    f = w * mask
+    n = f.shape[-1]
+    dx = 0.5 / n
+    conv = autoconv_fft(f) if fft else autoconv_direct(f)  # unscaled f★f
+    integral_sum = f.sum()
+    ratios = conv / (integral_sum * integral_sum * dx)
+    return smooth_max(ratios, beta)
+
+
+def lbfgs_masked(
+    w_init: np.ndarray,
+    betas: list[float],
+    *,
+    mask: np.ndarray,
+    max_iter: int = 2000,
+    lr: float = 1.0,
+    history_size: int = 200,
+) -> tuple[np.ndarray, float]:
+    """Run a masked signed smooth-max L-BFGS β-cascade; return ``(f, exact_C)``.
+
+    CPU float64 sequential L-BFGS (compute-router: GPU sits idle). ``mask``
+    keeps the support compact throughout; cells outside it are exactly zero.
+    Returns the best arena-exact score across the cascade with ∫f > 0
+    normalization (C is invariant under f → −f).
+    """
+    w = torch.tensor(w_init.copy(), dtype=torch.float64, requires_grad=True)
+    mask_t = torch.tensor(mask, dtype=torch.float64)
+    mask_np = mask.astype(np.float64)
+    best_c = float("inf")
+    best_f: np.ndarray | None = None
+
+    for beta in betas:
+        opt = torch.optim.LBFGS(
+            [w],
+            lr=lr,
+            max_iter=max_iter,
+            tolerance_grad=1e-15,
+            tolerance_change=1e-20,
+            history_size=history_size,
+            line_search_fn="strong_wolfe",
+        )
+
+        def closure():
+            opt.zero_grad()
+            loss = surrogate_masked(w, beta, mask=mask_t)
+            loss.backward()
+            return loss
+
+        opt.step(closure)
+        f_np = w.detach().cpu().numpy() * mask_np
+        if f_np.sum() < 0:
+            f_np = -f_np
+        c = float(verify_and_compute(f_np.tolist()))
+        if c < best_c:
+            best_c, best_f = c, f_np.copy()
+
+    assert best_f is not None
+    return best_f, best_c
+
+
+def self_pruning_search(
+    f_init: np.ndarray,
+    betas: list[float],
+    support_schedule: list[int],
+    *,
+    max_iter: int = 2000,
+    history_size: int = 200,
+    on_level=None,
+    prune_rule: str = "abs",
+) -> tuple[np.ndarray, float, list[dict]]:
+    """Warm self-pruning support-shrinking schedule on the signed P4 objective.
+
+    Start from a near-converged *full-support* warm seed. At each target support
+    level: prune active cells per ``prune_rule`` (see ``PRUNE_RULES`` — "abs" =
+    smallest-|w|; "energy"/"split" = council 2026-06-10 active-set-aware rules),
+    re-optimize the masked signed surrogate (``lbfgs_masked``) warm-started from
+    the current ``w``. Tracks the best arena-exact C across levels, plus the
+    per-level sign-fragmentation diagnostic (``neg_run_count``).
+    """
+    if not support_schedule:
+        raise ValueError("support_schedule must be non-empty")
+    prune = PRUNE_RULES[prune_rule]
+    w = np.asarray(f_init, dtype=np.float64).copy()
+    mask = w != 0.0
+    best_f: np.ndarray | None = None
+    best_c = float("inf")
+    trace: list[dict] = []
+
+    for target in support_schedule:
+        mask = prune(w, mask, target)
+        f_opt, c = lbfgs_masked(w, betas, mask=mask, max_iter=max_iter, history_size=history_size)
+        w = f_opt  # warm-start the next level from this level's optimum
+        row = {
+            "target": target,
+            "support": int(np.count_nonzero(f_opt)),
+            "score": c,
+            "neg_runs": neg_run_count(f_opt),
+        }
+        trace.append(row)
+        if on_level is not None:
+            on_level(row)
+        if c < best_c:
+            best_c, best_f = c, f_opt.copy()
+
+    return best_f, best_c, trace
+
+
+# --------------------------------------------------------------------------- #
 # Kolountzakis–Matolcsi LP fixed-point (Goal 5).
 #
 # The record-producing method in the signed-autoconvolution literature
