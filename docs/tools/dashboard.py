@@ -989,7 +989,7 @@ def build(*, today: str | None = None, generated: str | None = None, controls: b
 
     # cost per recent cycle: join telemetry cost onto the last cycle rows by order
     cost_by_idx = {i: r.get("cost_usd") for i, r in enumerate(telemetry)}
-    recent = cycle_rows[-20:][::-1]
+    recent = cycle_rows[-10:][::-1]
     # attach today's costs to recent cycles where the problem matches the latest telemetry
     tele_cost = {r.get("problem_id"): r.get("cost_usd") for r in telemetry[-20:]}
     for c in recent:
