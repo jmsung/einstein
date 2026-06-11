@@ -581,6 +581,7 @@ def render_markdown(md: str) -> str:
 
     out: list[str] = []
     in_code = in_ul = in_ol = False
+    tbl: list[str] = []
 
     def close_lists() -> None:
         nonlocal in_ul, in_ol
@@ -591,8 +592,29 @@ def render_markdown(md: str) -> str:
             out.append("</ol>")
             in_ol = False
 
+    def flush_tbl() -> None:
+        nonlocal tbl
+        if not tbl:
+            return
+        rows, tbl = tbl, []
+
+        def cells(r):
+            return [c.strip() for c in r.strip().strip("|").split("|")]
+
+        header = cells(rows[0])
+        start = 1
+        if len(rows) > 1 and all(re.fullmatch(r":?-{1,}:?", c) for c in cells(rows[1]) if c):
+            start = 2  # GFM separator row → skip
+        head = "".join(f"<th>{inline(c)}</th>" for c in header)
+        body = "".join(
+            "<tr>" + "".join(f"<td>{inline(c)}</td>" for c in cells(r)) + "</tr>"
+            for r in rows[start:]
+        )
+        out.append(f"<table class=mdt><tr>{head}</tr>{body}</table>")
+
     for ln in lines:
         if ln.strip().startswith("```"):
+            flush_tbl()
             if in_code:
                 out.append("</pre>")
             else:
@@ -604,6 +626,11 @@ def render_markdown(md: str) -> str:
             out.append(_html.escape(ln))
             continue
         st = ln.strip()
+        if len(st) >= 2 and st.startswith("|") and st.endswith("|"):
+            close_lists()
+            tbl.append(st)
+            continue
+        flush_tbl()
         if not st:
             close_lists()
         elif st.startswith("#"):
@@ -633,6 +660,7 @@ def render_markdown(md: str) -> str:
             out.append(f"<p>{inline(st)}</p>")
     if in_code:
         out.append("</pre>")
+    flush_tbl()
     close_lists()
     return meta + "\n".join(out)
 
@@ -1071,6 +1099,9 @@ def _log_page(name: str) -> str:
         ".doc code{background:#161b22;padding:1px 5px;border-radius:4px;font-size:12px;color:#79c0ff}"
         ".doc pre.code{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px;"
         "white-space:pre-wrap;font-size:12px}"
+        ".doc table.mdt{border-collapse:collapse;margin:12px 0;font-size:13px}"
+        ".doc table.mdt th,.doc table.mdt td{border:1px solid #30363d;padding:5px 12px;text-align:left}"
+        ".doc table.mdt th{color:#8b949e;background:#161b22}"
         ".doc blockquote{border-left:3px solid #30557d;margin:8px 0;padding:2px 12px;color:#8b949e}"
         ".doc .wl{color:#7ee787}.doc hr{border:0;border-top:1px solid #30363d;margin:20px 0}"
         ".fm{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:10px 12px;"
