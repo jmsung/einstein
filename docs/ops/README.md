@@ -7,8 +7,8 @@ away — closes the user-facing "leave it running, come back later" promise
 ## What lives here
 
 - **`com.einstein.autonomous-loop.plist`** — macOS `launchd` template.
-  Fires `scripts/scheduled_cycle.py --skip-if-recent 90 --max-runs-per-day 8`
-  every 2 hours (the Phase-3 cron entry: it wraps
+  Fires `scripts/scheduled_cycle.py --skip-if-recent 20 --max-runs-per-day 48`
+  every 30 minutes — push-hard mode (the Phase-3 cron entry: it wraps
   `autonomous_loop.py --one-problem --by-priority` with a runs/day cap + 7200s
   timeout + run ledger). Replace `__PROJECT_ROOT__` (cb checkout) and `__HOME__`
   (user home holding `~/.claude` auth) before installing.

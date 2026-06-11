@@ -15,17 +15,19 @@
   <array>
     <string>/bin/bash</string>
     <string>-lc</string>
-    <string>cd "__PROJECT_ROOT__" &amp;&amp; uv run python scripts/scheduled_cycle.py --skip-if-recent 90 --max-runs-per-day 8</string>
+    <string>cd "__PROJECT_ROOT__" &amp;&amp; uv run python scripts/scheduled_cycle.py --skip-if-recent 20 --max-runs-per-day 48</string>
   </array>
 
   <key>WorkingDirectory</key>
   <string>__PROJECT_ROOT__</string>
 
-  <!-- 2h cadence (was 30m). With an 8 runs/day cap + 90-min skip-if-recent this
-       keeps the loop well under a Pro/Max subscription usage window, leaving
-       headroom for interactive Claude use on the same account. -->
+  <!-- 30-min cadence, push-hard mode: each cycle is ~15 min (housekeeping-bound),
+       so 30m + the lockfile = effectively continuous with no overlap. 48/day cap
+       is a backstop; the real ceiling is the 5M-token/day budget + the Pro/Max
+       subscription usage window (shared with interactive use — expect to hit the
+       rolling limit, at which point claude -p falls back to mechanical until it resets). -->
   <key>StartInterval</key>
-  <integer>7200</integer>
+  <integer>1800</integer>
 
   <key>RunAtLoad</key>
   <true/>
