@@ -8,8 +8,12 @@ autonomous_loop's precheck. No live cron until Goal 5's verdict.
 
 from __future__ import annotations
 
+import datetime as dt
+import json
 import sys
 from pathlib import Path
+
+import pytest
 
 _REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO / "scripts"))
@@ -17,6 +21,18 @@ sys.path.insert(0, str(_REPO / "scripts"))
 import scheduled_cycle as sc  # noqa: E402
 
 TODAY = "2026-06-09"
+
+
+@pytest.fixture(autouse=True)
+def _isolate_real_paths(tmp_path, monkeypatch):
+    """Keep every main() test off the real cooldown/telemetry files.
+
+    main()'s post-run cooldown logic reads --telemetry and writes/clears
+    --cooldown-file, both defaulting to real mb/logs/ paths. Redirect the
+    module defaults to tmp so the suite never deletes a live cooldown.
+    """
+    monkeypatch.setattr(sc, "DEFAULT_COOLDOWN_FILE", tmp_path / "cooldown.txt")
+    monkeypatch.setattr(sc, "DEFAULT_TELEMETRY", tmp_path / "telemetry.jsonl")
 
 
 # ---------------- build_command ----------------
@@ -175,3 +191,114 @@ def test_main_timeout_passed_to_runner(tmp_path: Path) -> None:
         now_iso=f"{TODAY}T06:00:00Z",
     )
     assert seen == [1234]
+
+
+# ---------------- rate-limit cooldown gate ----------------
+
+
+def _telemetry_writer(path: Path, *, error_kind: str, n: int):
+    """A fake runner that appends n far-future telemetry rows, then succeeds."""
+
+    def run(cmd: list[str], timeout: int) -> int:
+        with path.open("a") as f:
+            for i in range(n):
+                f.write(
+                    json.dumps(
+                        {
+                            "ts": "2099-01-01T00:00:00+00:00",  # ≥ run start always
+                            "problem_id": 3,
+                            "attempt_index": i + 1,
+                            "path_taken": "fallback" if error_kind else "llm",
+                            "llm_error_kind": error_kind,
+                        }
+                    )
+                    + "\n"
+                )
+        return 0
+
+    return run
+
+
+def test_count_unavailable_since_filters_kind_and_time(tmp_path):
+    tel = tmp_path / "t.jsonl"
+    tel.write_text(
+        json.dumps({"ts": "2026-06-11T05:00:00+00:00", "llm_error_kind": "unavailable"})
+        + "\n"
+        + json.dumps({"ts": "2026-06-11T07:00:00+00:00", "llm_error_kind": "unavailable"})
+        + "\n"
+        + json.dumps({"ts": "2026-06-11T07:30:00+00:00", "llm_error_kind": "parse-error"})
+        + "\n"
+    )
+    since = dt.datetime(2026, 6, 11, 6, tzinfo=dt.timezone.utc)
+    assert sc.count_unavailable_since(tel, since) == 1  # only the 07:00 unavailable row
+
+
+def test_in_cooldown_expired_returns_none(tmp_path):
+    cd = tmp_path / "cd.txt"
+    cd.write_text("2020-01-01T00:00:00+00:00\n")
+    now = dt.datetime(2026, 6, 11, tzinfo=dt.timezone.utc)
+    assert sc.in_cooldown(cd, now=now) is None
+
+
+def test_main_skips_when_in_cooldown(tmp_path):
+    led = _ledger(tmp_path, [])
+    cd = tmp_path / "cd.txt"
+    cd.write_text("2099-01-01T00:00:00+00:00\n")  # far-future deadline
+    calls: list[list[str]] = []
+    rc = sc.main(
+        ["--ledger", str(led), "--cooldown-file", str(cd)],
+        runner=lambda cmd, timeout: calls.append(cmd) or 0,
+        today=TODAY,
+        now_iso=f"{TODAY}T06:00:00Z",
+    )
+    assert rc == 0 and calls == []  # skipped cleanly, loop never invoked
+    assert led.read_text() == ""  # not counted as a run
+
+
+def test_main_trips_cooldown_on_unavailable_run(tmp_path):
+    led = _ledger(tmp_path, [])
+    cd = tmp_path / "cd.txt"
+    tel = tmp_path / "t.jsonl"
+    rc = sc.main(
+        [
+            "--ledger",
+            str(led),
+            "--cooldown-file",
+            str(cd),
+            "--telemetry",
+            str(tel),
+            "--cooldown-after",
+            "2",
+            "--cooldown-hours",
+            "5",
+        ],
+        runner=_telemetry_writer(tel, error_kind="unavailable", n=2),
+        today=TODAY,
+        now_iso=f"{TODAY}T06:00:00Z",
+    )
+    assert rc == 0
+    assert cd.exists()  # cooldown tripped
+    assert sc.read_cooldown_until(cd) > dt.datetime.now(dt.timezone.utc)  # future deadline
+
+
+def test_main_clears_cooldown_on_clean_run(tmp_path):
+    led = _ledger(tmp_path, [])
+    cd = tmp_path / "cd.txt"
+    cd.write_text("2020-01-01T00:00:00+00:00\n")  # stale/expired → not skipped
+    tel = tmp_path / "t.jsonl"
+    sc.main(
+        [
+            "--ledger",
+            str(led),
+            "--cooldown-file",
+            str(cd),
+            "--telemetry",
+            str(tel),
+            "--cooldown-after",
+            "2",
+        ],
+        runner=_telemetry_writer(tel, error_kind="", n=1),  # clean llm cycle
+        today=TODAY,
+        now_iso=f"{TODAY}T06:00:00Z",
+    )
+    assert not cd.exists()  # clean run clears the stale cooldown
