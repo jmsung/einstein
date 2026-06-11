@@ -178,6 +178,20 @@ def test_parse_rank1_agents_reads_latest_snapshot(tmp_path):
     assert asof == "2026-06-10"
 
 
+def test_parse_arena_urls_reads_frontmatter(tmp_path):
+    (tmp_path / "4-third.md").write_text(
+        "---\nproblem_id: 4\narena_url: https://einsteinarena.com/problems/third-autocorrelation\n---\n# x\n"
+    )
+    (tmp_path / "10-thom.md").write_text(
+        "---\nproblem_id: 10\narena_url: https://einsteinarena.com/problems/thomson\n---\n"
+    )
+    (tmp_path / "nourl.md").write_text("---\nproblem_id: 99\n---\n")  # no arena_url → skipped
+    urls = dashboard.parse_arena_urls(tmp_path)
+    assert urls[4].endswith("/third-autocorrelation")
+    assert urls[10].endswith("/thomson")  # arena slug ≠ our slug
+    assert 99 not in urls
+
+
 def test_loop_running_true_for_live_pid(tmp_path):
     lf = tmp_path / "l.lock"
     lf.write_text(f"pid={os.getpid()} started=now\n")  # this process is alive
