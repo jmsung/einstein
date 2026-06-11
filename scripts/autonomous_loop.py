@@ -2478,6 +2478,13 @@ def main(argv: list[str] | None = None) -> int:
         "--max-attempts-per-visit cycles.",
     )
     parser.add_argument(
+        "--problem-id",
+        type=int,
+        default=None,
+        help="Restrict the run to this one problem id (dashboard 'start "
+        "problem N'). Passed through to run_queue's problem_ids filter.",
+    )
+    parser.add_argument(
         "--max-attempts-per-visit",
         type=int,
         default=DEFAULT_MAX_ATTEMPTS_PER_VISIT,
@@ -2603,6 +2610,7 @@ def main(argv: list[str] | None = None) -> int:
             sentinel_path=args.sentinel_path,
             skip_gates=args.skip_gates,
             by_priority=args.by_priority,
+            problem_ids=[args.problem_id] if args.problem_id else None,
         )
         log.info("completed %d cycles", len(results))
         if not args.dry_run:
