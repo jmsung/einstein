@@ -79,6 +79,7 @@ def run_one(args: dict) -> dict:
         max_iter=args["max_iter"],
         history_size=args["history_size"],
         on_level=on_level,
+        prune_rule=args.get("prune_rule", "abs"),
     )
     return {
         "tag": tag,
@@ -142,6 +143,12 @@ def main() -> None:
     ap.add_argument("--history-size", type=int, default=200)
     ap.add_argument("--time-budget", type=float, default=36000.0, help="seconds")
     ap.add_argument("--betas", type=float, nargs="*", default=DEFAULT_BETAS)
+    ap.add_argument(
+        "--prune-rule",
+        choices=["abs", "energy", "split"],
+        default="abs",
+        help="cell-selection rule: abs=smallest-|w|; energy/split=council active-set-aware rules",
+    )
     args = ap.parse_args()
 
     n = args.n
@@ -158,12 +165,13 @@ def main() -> None:
             ap.error(f"--floor {floor} yields empty support schedule at n={n}")
         tasks.append(
             {
-                "tag": f"floor{floor:.2f}",
+                "tag": f"{args.prune_rule}{floor:.2f}",
                 "f_init": f,
                 "schedule": schedule,
                 "betas": list(args.betas),
                 "max_iter": args.max_iter,
                 "history_size": args.history_size,
+                "prune_rule": args.prune_rule,
             }
         )
 
