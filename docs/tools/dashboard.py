@@ -95,6 +95,33 @@ def parse_cycle_log(path: Path = CYCLE_LOG) -> list[dict]:
     return rows
 
 
+def parse_strategy(notes: str) -> dict:
+    """Pull strategy/technique/llm-move/category out of a cycle-log notes cell.
+
+    Notes are semicolon-ish key=value soup, e.g.
+    `... strategy=thompson-bandit; ... technique=warm-self-pruning-compact-support.md
+     prior=Beta(3,3) sampled_θ=0.58; llm-strategy=skip-execution-converged-... ;`
+    """
+
+    def grab(pat, default=""):
+        m = re.search(pat, notes)
+        return m.group(1).strip() if m else default
+
+    return {
+        "strategy": grab(r"strategy=([^;]+)"),
+        "technique": grab(r"technique=(\S+?\.md)").removesuffix(".md"),
+        "llm_move": grab(r"llm-strategy=([^;]+)"),
+        "category": grab(r"category=([^;]+)"),
+        "theta": grab(r"sampled_θ=([\d.]+)"),
+    }
+
+
+def recent_attempts(cycle_rows: list[dict], label: str, n: int = 6) -> list[dict]:
+    """Last n cycles for one problem, newest first, with strategy parsed."""
+    mine = [r for r in cycle_rows if r["problem"] == label][-n:][::-1]
+    return [{**r, **parse_strategy(r.get("notes", ""))} for r in mine]
+
+
 def parse_headroom_cache(path: Path = HEADROOM_CACHE) -> dict[int, float]:
     try:
         data = json.loads(_read_text(path) or "{}")
@@ -108,6 +135,38 @@ def parse_rank1(path: Path = RANK1_JSON) -> set[int]:
         return set(json.loads(_read_text(path) or "[]"))
     except ValueError:
         return set()
+
+
+_STATUS_DIR = _LOGS / "status"
+
+
+def parse_rank1_agents(status_dir: Path = _STATUS_DIR) -> tuple[dict[int, str], str]:
+    """{problem_id: arena-#1 agent name} from the latest status_*.md snapshot.
+
+    Source: `scripts/update_status.py` writes blocks like
+        ## Problem 4: Third Autocorrelation ...
+        - **#1**: OrganonAgent (1.4523...)
+    Returns ({}, "") if no snapshot exists. Also returns the snapshot date.
+    """
+    try:
+        latest = max(status_dir.glob("status_*.md"), key=lambda p: p.name, default=None)
+    except OSError:
+        latest = None
+    if latest is None:
+        return {}, ""
+    text = _read_text(latest)
+    agents: dict[int, str] = {}
+    cur: int | None = None
+    for line in text.splitlines():
+        m = re.match(r"##\s*Problem\s+(\d+)\s*:", line)
+        if m:
+            cur = int(m.group(1))
+            continue
+        m = re.match(r"-\s*\*\*#1\*\*:\s*([^(]+?)\s*\(", line)
+        if m and cur is not None:
+            agents[cur] = m.group(1).strip()
+            cur = None
+    return agents, latest.stem.replace("status_", "")
 
 
 # ----------------------------- summaries -----------------------------
@@ -159,8 +218,15 @@ def per_problem_records(
     rank1: set[int],
     cycle_rows: list[dict],
     minimize_map: dict[int, bool],
+    priority_scorer=None,
+    rank1_agents: dict[int, str] | None = None,
 ) -> list[dict]:
-    """One record per problem: our score, arena #1, headroom %, rank1, activity."""
+    """One record per problem: our score, arena #1, headroom %, rank1, activity.
+
+    `priority_scorer(rec) -> float | None` ranks the queue exactly as the loop's
+    picker does (headroom × hit-rate × staleness). When None, falls back to raw
+    headroom so the function stays usable standalone.
+    """
     # cycle activity by problem label
     last_cycle: dict[str, int] = {}
     count: dict[str, int] = {}
@@ -184,14 +250,17 @@ def per_problem_records(
                 "status": p.status,
                 "ours": p.score_current,
                 "arena1": arena1,
+                "arena1_agent": (rank1_agents or {}).get(pid, ""),
                 "headroom": hr,
                 "rank1": pid in rank1,
                 "last_cycle": last_cycle.get(lbl, 0),
                 "cycles": count.get(lbl, 0),
             }
         )
-    # highest headroom first; unknowns (None) last; ties by id
-    recs.sort(key=lambda r: (r["headroom"] is None, -(r["headroom"] or 0), r["pid"]))
+    for r in recs:
+        r["priority"] = priority_scorer(r) if priority_scorer else r["headroom"]
+    # highest priority first; unknowns (None) last; ties by id
+    recs.sort(key=lambda r: (r["priority"] is None, -(r["priority"] or 0), r["pid"]))
     return recs
 
 
@@ -205,8 +274,9 @@ def current_problem(
     telemetry attempt (path/cost/ts) and the matched per-problem record.
     """
     by_label = {r["label"]: r for r in records}
-    if running and cycle_rows:
-        rec = by_label.get(max(cycle_rows, key=lambda r: r["cycle_id"])["problem"])
+    latest_row = max(cycle_rows, key=lambda r: r["cycle_id"]) if cycle_rows else {}
+    if running and latest_row:
+        rec = by_label.get(latest_row["problem"])
         mode = "running"
     elif records:
         rec = records[0]
@@ -216,6 +286,7 @@ def current_problem(
     if rec is None:
         return None
     last = telemetry[-1] if telemetry else {}
+    strat = parse_strategy(latest_row.get("notes", "")) if mode == "running" else {}
     return {
         "mode": mode,
         "label": rec["label"],
@@ -229,6 +300,10 @@ def current_problem(
         "path": last.get("path_taken"),
         "cost": last.get("cost_usd"),
         "ts": last.get("ts", ""),
+        "strategy": strat.get("strategy", ""),
+        "technique": strat.get("technique", ""),
+        "llm_move": strat.get("llm_move", ""),
+        "theta": strat.get("theta", ""),
     }
 
 
@@ -256,6 +331,7 @@ def render_html(
     status: dict,
     today: dict,
     current: dict | None,
+    attempts: list[dict],
     records: list[dict],
     recent_cycles: list[dict],
     submits: list[str],
@@ -264,13 +340,16 @@ def render_html(
 ) -> str:
     rows_problems = "\n".join(
         f"<tr class='{'r1' if r['rank1'] else ''}'>"
+        f"<td class='num'>{i}</td>"
         f"<td>P{r['pid']}</td><td class='nm'>{r['name']}</td>"
         f"<td>{r['tier']}</td><td class='st'>{r['status']}</td>"
         f"<td class='num'>{_fmt(r['ours'])}</td><td class='num'>{_fmt(r['arena1'])}</td>"
+        f"<td class='ag'>{r.get('arena1_agent') or '—'}</td>"
         f"<td>{_hr_badge(r['headroom'])}</td>"
+        f"<td class='num'>{_fmt(r.get('priority'), 3) if r.get('priority') is not None else '—'}</td>"
         f"<td>{'★' if r['rank1'] else ''}</td>"
         f"<td class='num'>{r['cycles']}</td><td class='num'>#{r['last_cycle'] or '—'}</td></tr>"
-        for r in records
+        for i, r in enumerate(records, 1)
     )
     rows_cycles = "\n".join(
         f"<tr><td class='num'>#{c['cycle_id']}</td><td class='nm'>{c['problem']}</td>"
@@ -297,12 +376,35 @@ def render_html(
             if current.get("attempt") is not None and current["mode"] == "running"
             else ""
         )
+        strat_line = ""
+        if current["mode"] == "running" and current.get("technique"):
+            th = f" · θ={current['theta']}" if current.get("theta") else ""
+            mv = (
+                f" → <span class=mv>{current['llm_move']}</span>" if current.get("llm_move") else ""
+            )
+            strat_line = (
+                f"<div class=hs>strategy <b>{current['strategy'] or '—'}</b>{th} · "
+                f"technique <b>{current['technique']}</b>{mv}</div>"
+            )
         hero = f"""<div class=hero>
  <div class=k>{verb}</div>
  <div class=hp>{current['label']} <span class=ht>{current['name']}</span></div>
  <div class=hm>tier {current['tier']} · {current['status']} · ours {_fmt(current['ours'])} ·
    arena #1 {_fmt(current['arena1'])} · headroom {_hr_badge(current['headroom'])}{att}</div>
+ {strat_line}
 </div>"""
+    rows_attempts = "\n".join(
+        f"<tr><td class='num'>#{a['cycle_id']}</td><td class='nm'>{a.get('technique') or '—'}</td>"
+        f"<td>{a.get('llm_move') or a['outcome']}</td><td class='num'>{a['score']}</td>"
+        f"<td>{a['outcome']}</td></tr>"
+        for a in attempts
+    )
+    attempts_block = (
+        f"<h2>Recent attempts on {current['label']} — what was tried</h2>"
+        f"<table><tr><th>cycle</th><th>technique</th><th>move</th><th>score</th><th>outcome</th></tr>{rows_attempts}</table>"
+        if (current and attempts)
+        else ""
+    )
     return f"""<!doctype html><html><head><meta charset=utf-8>
 <meta http-equiv=refresh content={REFRESH_S}>
 <title>einstein · autonomous loop</title>
@@ -322,6 +424,7 @@ def render_html(
  th{{color:var(--mut);font-weight:400;font-size:10px;text-transform:uppercase}}
  td.num{{text-align:right;font-variant-numeric:tabular-nums}} td.nm{{color:#79c0ff}}
  td.st{{color:var(--mut);font-size:11px}} tr.r1 td.nm{{color:#7ee787}}
+ td.ag{{color:#d2a8ff;font-size:11px}}
  .b{{padding:1px 6px;border-radius:10px;font-size:11px}}
  .green{{background:#1b3a26;color:#7ee787}} .amber{{background:#3a341b;color:#e3b341}} .gray{{background:#21262d;color:#8b949e}}
  code{{color:var(--mut);font-size:11px}} ul{{margin:6px 0;padding-left:18px}}
@@ -331,6 +434,8 @@ def render_html(
  .hero .k{{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em}}
  .hp{{font-size:24px;color:#7ee787;margin:4px 0}} .hp .ht{{color:var(--mut);font-size:14px}}
  .hm{{color:var(--fg);font-size:12px}}
+ .hs{{margin-top:8px;font-size:12px;color:var(--fg)}} .hs b{{color:#79c0ff;font-weight:600}}
+ .mv{{color:#e3b341}}
 </style></head><body><div class=wrap>
 <h1>einstein · autonomous loop</h1>
 <div class=sub>generated {generated} · auto-refresh {REFRESH_S}s · <span class=state>{run_state}</span></div>
@@ -345,8 +450,10 @@ def render_html(
  <div class=card><div class=k>last run</div><div class=sub style=margin-top:6px>{status['last_run'] or '—'}</div></div>
 </div>
 
-<h2>Per-problem records (our score vs arena #1)</h2>
-<table><tr><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>headroom</th><th>#1?</th><th>cycles</th><th>last</th></tr>
+{attempts_block}
+
+<h2>Per-problem records — ranked by picker priority (headroom × hit-rate × staleness)</h2>
+<table><tr><th>#</th><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>#1 agent</th><th>headroom</th><th>priority</th><th>we&nbsp;#1?</th><th>cycles</th><th>last</th></tr>
 {rows_problems}
 </table>
 
@@ -372,24 +479,48 @@ def build(*, today: str | None = None, generated: str | None = None) -> str:
     cycle_rows = parse_cycle_log()
     headroom = parse_headroom_cache()
     rank1 = parse_rank1()
+    rank1_agents, rank1_asof = parse_rank1_agents()
     status = loop_status()
     today_s = today_summary(telemetry, today=today)
 
     # problems + direction map via the loop's own loaders (single source of truth)
-    problems, minimize_map = [], {}
+    problems, minimize_map, scorer = [], {}, None
     try:
         sys.path.insert(0, str(_REPO / "scripts"))
         sys.path.insert(0, str(_REPO / "src"))
-        from autonomous_loop import DEFAULT_PROBLEMS_DIR, load_problems
+        sys.path.insert(0, str(_TOOLS))
+        from autonomous_loop import (
+            DEFAULT_CYCLE_LOG,
+            DEFAULT_PROBLEMS_DIR,
+            DEFAULT_SKILL_LIBRARY,
+            load_problems,
+        )
 
         from einstein.auto_submit import PROBLEM_MINIMIZE
 
         problems = load_problems(DEFAULT_PROBLEMS_DIR)
         minimize_map = dict(PROBLEM_MINIMIZE)
+
+        # Rank exactly as the picker does: headroom × hit-rate × staleness.
+        import problem_priority as pp
+        import strategy_picker as sp
+
+        def scorer(rec):  # noqa: E306 — closure over the loaded modules
+            hr = rec["headroom"]
+            if hr is None:
+                return None
+            cat = sp.category_for(rec["pid"])
+            hit = pp.category_hit_rate(cat, DEFAULT_SKILL_LIBRARY)
+            if hit is None:
+                hit = pp.overall_hit_rate(DEFAULT_SKILL_LIBRARY)
+            stale = pp.staleness(rec["label"], DEFAULT_CYCLE_LOG)
+            return pp.problem_priority(hr, hit, stale)
     except Exception as e:  # noqa: BLE001 — dashboard degrades to ledger-only view
         print(f"warn: problem loader unavailable ({e}); rendering ledger-only", file=sys.stderr)
 
-    records = per_problem_records(problems, headroom, rank1, cycle_rows, minimize_map)
+    records = per_problem_records(
+        problems, headroom, rank1, cycle_rows, minimize_map, scorer, rank1_agents
+    )
 
     # cost per recent cycle: join telemetry cost onto the last cycle rows by order
     cost_by_idx = {i: r.get("cost_usd") for i, r in enumerate(telemetry)}
@@ -430,11 +561,13 @@ def build(*, today: str | None = None, generated: str | None = None) -> str:
         health = f"HEALTHY (health-check unavailable: {e})"
 
     current = current_problem(cycle_rows, telemetry, records, running=status["running"])
+    attempts = recent_attempts(cycle_rows, current["label"]) if current else []
 
     return render_html(
         status=status,
         today=today_s,
         current=current,
+        attempts=attempts,
         records=records,
         recent_cycles=recent,
         submits=submits,

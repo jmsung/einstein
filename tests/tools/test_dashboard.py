@@ -78,6 +78,40 @@ def test_per_problem_records_sorts_by_headroom_then_unknowns_last():
     assert p2["rank1"] is True and p2["last_cycle"] == 7 and p2["cycles"] == 1
 
 
+def test_per_problem_records_priority_scorer_reorders():
+    class P:
+        def __init__(self, pid, slug, score):
+            self.problem_id, self.slug, self.name = pid, slug, slug
+            self.tier, self.status, self.score_current = "A", "active", score
+
+    problems = [P(1, "a", 2.0), P(2, "b", 1.5)]  # P1 has bigger raw headroom
+    headroom = {1: 1.0, 2: 1.0}
+    # scorer inverts: reward P2 over P1 (e.g. hit-rate/staleness favours P2)
+    recs = dashboard.per_problem_records(
+        problems,
+        headroom,
+        rank1=set(),
+        cycle_rows=[],
+        minimize_map={1: True, 2: True},
+        priority_scorer=lambda r: {1: 0.1, 2: 0.9}[r["pid"]],
+    )
+    assert [r["pid"] for r in recs] == [2, 1]  # picker priority wins, not raw headroom
+    assert recs[0]["priority"] == 0.9
+
+
+def test_parse_strategy_extracts_technique_and_move():
+    notes = (
+        "autonomous_loop LLM cycle — category=autocorrelation; strategy=thompson-bandit; "
+        "technique=warm-self-pruning-compact-support.md prior=Beta(3,3) sampled_θ=0.58; "
+        "llm-strategy=skip-execution-converged-honest-zero; tokens=..."
+    )
+    s = dashboard.parse_strategy(notes)
+    assert s["strategy"] == "thompson-bandit"
+    assert s["technique"] == "warm-self-pruning-compact-support"  # .md stripped
+    assert s["llm_move"] == "skip-execution-converged-honest-zero"
+    assert s["theta"] == "0.58"
+
+
 def test_current_problem_running_picks_latest_cycle():
     records = [
         {
@@ -126,6 +160,21 @@ def test_current_problem_idle_picks_highest_headroom():
         [{"problem": "P9-z", "cycle_id": 9}], [], records, running=False
     )
     assert cur["mode"] == "next" and cur["label"] == "P4-c"  # records[0], ignores cycle history
+
+
+def test_parse_rank1_agents_reads_latest_snapshot(tmp_path):
+    (tmp_path / "status_2026-06-09.md").write_text("## Problem 4:\n- **#1**: OldAgent (1.0)\n")
+    (tmp_path / "status_2026-06-10.md").write_text(
+        "# Arena Status\n"
+        "## Problem 2: First Autocorrelation\n"
+        "- **#1**: JSAgent (1.5028506180033636)\n"
+        "- **Top 3**: #1 JSAgent, #2 OrganonAgent\n"
+        "## Problem 4: Third Autocorrelation\n"
+        "- **#1**: OrganonAgent (1.4523043331831582)\n"
+    )
+    agents, asof = dashboard.parse_rank1_agents(tmp_path)
+    assert agents == {2: "JSAgent", 4: "OrganonAgent"}  # latest file wins (2026-06-10)
+    assert asof == "2026-06-10"
 
 
 def test_parse_cycle_log_tolerates_pipe_rows(tmp_path):
