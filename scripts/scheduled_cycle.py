@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import logging
 import subprocess
 import sys
@@ -46,13 +47,78 @@ from typing import Callable
 _REPO = Path(__file__).resolve().parents[1]
 DEFAULT_MB_DIR = _REPO.parent / "mb"
 DEFAULT_LEDGER = DEFAULT_MB_DIR / "logs" / "scheduler-runs.log"
+DEFAULT_TELEMETRY = DEFAULT_MB_DIR / "logs" / "inner-agent-telemetry.jsonl"
+DEFAULT_COOLDOWN_FILE = DEFAULT_MB_DIR / "logs" / "scheduler-cooldown.txt"
 DEFAULT_MAX_RUNS_PER_DAY = 8
 DEFAULT_TIMEOUT_S = 7200
 DEFAULT_SKIP_IF_RECENT_MIN = 45
+# Rate-limit backoff: `claude_headless` tags auth/quota/429/overload as
+# `error_kind="unavailable"`. When a run logs ≥ this many such cycles we've hit
+# the Pro/Max rolling window — cool down rather than spin mechanical cycles. The
+# window is ~5h; on expiry the next scheduled run auto-resumes (in_cooldown → None).
+DEFAULT_COOLDOWN_AFTER = 2
+DEFAULT_COOLDOWN_HOURS = 5.0
 
 log = logging.getLogger("scheduled_cycle")
 
 Runner = Callable[[list[str], int], int]
+
+
+def _parse_iso(ts: str) -> dt.datetime | None:
+    try:
+        return dt.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        return None
+
+
+def count_unavailable_since(telemetry: Path, since: dt.datetime) -> int:
+    """Count telemetry rows with error_kind='unavailable' stamped at/after `since`.
+
+    The rate-limit signal for the current run: callers pass the run's start time.
+    """
+    try:
+        lines = telemetry.read_text().splitlines()
+    except OSError:
+        return 0
+    n = 0
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        ts = _parse_iso(str(r.get("ts", "")))
+        if ts is not None and ts >= since and r.get("llm_error_kind") == "unavailable":
+            n += 1
+    return n
+
+
+def read_cooldown_until(cooldown_file: Path) -> dt.datetime | None:
+    """The active cooldown deadline, or None if absent/unparseable."""
+    try:
+        return _parse_iso(cooldown_file.read_text().strip())
+    except OSError:
+        return None
+
+
+def in_cooldown(cooldown_file: Path, *, now: dt.datetime) -> dt.datetime | None:
+    """Return the deadline if we're still cooling down, else None (expired/absent)."""
+    until = read_cooldown_until(cooldown_file)
+    return until if (until is not None and now < until) else None
+
+
+def set_cooldown(cooldown_file: Path, *, until: dt.datetime) -> None:
+    try:
+        cooldown_file.parent.mkdir(parents=True, exist_ok=True)
+        cooldown_file.write_text(until.isoformat() + "\n")
+    except OSError as e:
+        log.warning("cooldown write failed: %s", e)
+
+
+def clear_cooldown(cooldown_file: Path) -> None:
+    cooldown_file.unlink(missing_ok=True)
 
 
 def build_command(*, skip_if_recent_min: int, dry_run: bool = False) -> list[str]:
@@ -109,6 +175,15 @@ def main(
     parser.add_argument("--max-runs-per-day", type=int, default=DEFAULT_MAX_RUNS_PER_DAY)
     parser.add_argument("--timeout-s", type=int, default=DEFAULT_TIMEOUT_S)
     parser.add_argument("--skip-if-recent", type=int, default=DEFAULT_SKIP_IF_RECENT_MIN)
+    parser.add_argument("--telemetry", type=Path, default=DEFAULT_TELEMETRY)
+    parser.add_argument("--cooldown-file", type=Path, default=DEFAULT_COOLDOWN_FILE)
+    parser.add_argument("--cooldown-hours", type=float, default=DEFAULT_COOLDOWN_HOURS)
+    parser.add_argument(
+        "--cooldown-after",
+        type=int,
+        default=DEFAULT_COOLDOWN_AFTER,
+        help="≥ this many 'unavailable' cycles in a run → cool down (0 disables).",
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -123,6 +198,19 @@ def main(
         today = now.strftime("%Y-%m-%d")
     if now_iso is None:
         now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Rate-limit cooldown: if a prior run hit the subscription window, skip until
+    # it resets (clean exit; not counted as a run). Auto-resumes on expiry.
+    if not args.dry_run:
+        until = in_cooldown(args.cooldown_file, now=now)
+        if until is not None:
+            mins = (until - now).total_seconds() / 60.0
+            log.info(
+                "rate-limit cooldown active until %s (~%.0f min) — skipping (clean exit)",
+                until.isoformat(),
+                mins,
+            )
+            return 0
 
     if not args.dry_run and not should_run(
         args.ledger, max_runs_per_day=args.max_runs_per_day, today=today
@@ -146,6 +234,23 @@ def main(
 
     if not args.dry_run:
         record_run(args.ledger, exit_code=rc, duration_s=duration, ts=now_iso)
+        # Rate-limit detection: count this run's 'unavailable' cycles. Trip the
+        # cooldown if we saturated the window; clear it on a clean run so the next
+        # saturation re-trips fresh.
+        if args.cooldown_after > 0:
+            unavail = count_unavailable_since(args.telemetry, start)
+            if unavail >= args.cooldown_after:
+                until = now + dt.timedelta(hours=args.cooldown_hours)
+                set_cooldown(args.cooldown_file, until=until)
+                log.warning(
+                    "%d 'unavailable' cycles this run (≥ %d) — subscription window hit; "
+                    "cooling down until %s",
+                    unavail,
+                    args.cooldown_after,
+                    until.isoformat(),
+                )
+            else:
+                clear_cooldown(args.cooldown_file)
     return rc if isinstance(rc, int) else 124  # 124 = conventional timeout code
 
 
