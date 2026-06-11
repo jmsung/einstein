@@ -12,6 +12,7 @@
 #                                   + anti-bloat surface (near-dup/stale-uncited)
 #   5. compounding_metrics.py     — refresh the auto metrics block in metrics.md
 #   6. promotion-log check        — surface findings cited 3+ times for human review
+#   7. dashboard.py               — regenerate mb/logs/dashboard.html status page
 #
 # Step ordering matters: refresh_qmd must run BEFORE wiki_graph (otherwise the
 # new sources from this cycle are invisible to the gap detector); gap_search
@@ -45,7 +46,7 @@ echo "==> cycle $CYCLE_ID — $PROBLEM_SLUG — post-cycle discipline"
 echo
 
 # 1. refresh qmd index (so next cycle sees this cycle's new findings/sources)
-echo "[1/6] refresh qmd index"
+echo "[1/7] refresh qmd index"
 if [[ -x docs/tools/refresh_qmd.sh ]]; then
   if ! bash docs/tools/refresh_qmd.sh; then
     echo "  warning: refresh_qmd.sh exited non-zero (qmd may be offline; continuing)"
@@ -56,7 +57,7 @@ fi
 echo
 
 # 2. wiki_graph gap detection — file top-3 missing-connection questions
-echo "[2/6] wiki_graph — gap detection + auto-file"
+echo "[2/7] wiki_graph — gap detection + auto-file"
 if [[ -f docs/tools/wiki_graph.py ]]; then
   if ! uv run python docs/tools/wiki_graph.py --file-questions; then
     echo "  warning: wiki_graph.py exited non-zero (continuing)"
@@ -67,7 +68,7 @@ fi
 echo
 
 # 3. gap_search — enrich any newly-filed open questions with arxiv candidates
-echo "[3/6] gap_search — enrich open questions"
+echo "[3/7] gap_search — enrich open questions"
 if [[ -f docs/tools/gap_search.py ]]; then
   if ! uv run python docs/tools/gap_search.py; then
     echo "  warning: gap_search.py exited non-zero (continuing)"
@@ -80,7 +81,7 @@ echo
 # 4. wiki_lint — structural health check (orphans / broken cites / body link gaps)
 #    Hard failure (non-zero exit) → drop the regression-detect sentinel
 #    (Goal 7.8b). Future cycles skip until a human inspects + `rm`s it.
-echo "[4/6] wiki_lint — structural wiki health"
+echo "[4/7] wiki_lint — structural wiki health"
 if [[ -f docs/tools/wiki_lint.py ]]; then
   if ! uv run python docs/tools/wiki_lint.py; then
     HARD_FAIL_REASONS="${HARD_FAIL_REASONS}wiki_lint exit non-zero;"
@@ -94,7 +95,7 @@ echo
 # 5. compounding metrics — refresh the auto block in metrics.md (Phase 4 of
 #    meta-learning-automation). Cheap, best-effort, never hard-fails: it only
 #    reads append-only logs and splices a marker-delimited block.
-echo "[5/6] compounding metrics — refresh metrics.md"
+echo "[5/7] compounding metrics — refresh metrics.md"
 if [[ -f docs/tools/compounding_metrics.py ]]; then
   if ! uv run python docs/tools/compounding_metrics.py --write; then
     echo "  warning: compounding_metrics.py exited non-zero (continuing)"
@@ -105,13 +106,25 @@ fi
 echo
 
 # 6. promotion-log check — surface findings cited 3+ times for human review
-echo "[6/6] promotion-log check"
+echo "[6/7] promotion-log check"
 PROMOTION_LOG="docs/agent/promotion-log.md"
 if [[ -f "$PROMOTION_LOG" ]]; then
   echo "  promotion-log exists at $PROMOTION_LOG"
   echo "  (human-gated: review for findings → concept proposals)"
 else
   echo "  no promotion-log; nothing to surface this cycle"
+fi
+echo
+
+# 7. dashboard — regenerate the local status page (best-effort; never hard-fails).
+#    Read-only over the ledgers; a render failure must not block a cycle.
+echo "[7/7] dashboard — regenerate status page"
+if [[ -f docs/tools/dashboard.py ]]; then
+  if ! uv run python docs/tools/dashboard.py >/dev/null; then
+    echo "  warning: dashboard.py exited non-zero (continuing)"
+  fi
+else
+  echo "  skip: docs/tools/dashboard.py not present"
 fi
 echo
 
