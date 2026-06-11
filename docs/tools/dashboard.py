@@ -828,6 +828,7 @@ def main(argv: list[str] | None = None) -> int:
             def log_message(self, *a):  # silence
                 pass
 
+        socketserver.TCPServer.allow_reuse_address = True  # clean restarts (no TIME_WAIT bind fail)
         with socketserver.TCPServer(("127.0.0.1", args.serve), H) as srv:
             print(f"dashboard → http://localhost:{args.serve}  (Ctrl-C to stop)")
             srv.serve_forever()
