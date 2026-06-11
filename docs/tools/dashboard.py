@@ -167,6 +167,14 @@ def parse_arena_urls(problems_dir: Path = PROBLEMS_DIR) -> dict[int, str]:
     return urls
 
 
+def rank1_leaderboard(rank1_agents: dict[int, str]) -> list[tuple[str, int]]:
+    """Agents ranked by # of problems they hold arena #1 on (desc, then name)."""
+    counts: dict[str, int] = {}
+    for agent in rank1_agents.values():
+        counts[agent] = counts.get(agent, 0) + 1
+    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+
 _STATUS_DIR = _LOGS / "status"
 
 
@@ -653,9 +661,24 @@ def render_html(
     submits: list[str],
     health: str,
     generated: str,
+    leaderboard: list[tuple[str, int]] | None = None,
+    rank1_asof: str = "",
     controls: bool = False,
 ) -> str:
     running = status["running"]
+    lb = leaderboard or []
+    rows_lb = "\n".join(
+        f"<tr class='{'r1' if a == 'JSAgent' else ''}'>"
+        f"<td class='num'>{i}</td><td class='nm'>{a}</td><td class='num'>{c}</td></tr>"
+        for i, (a, c) in enumerate(lb, 1)
+    )
+    asof = f" · as of {rank1_asof}" if rank1_asof else ""
+    leaderboard_block = (
+        f"<h2>Overall leaderboard — # problems at arena #1{asof}</h2>"
+        f"<table><tr><th>#</th><th>agent</th><th>#1 problems</th></tr>{rows_lb}</table>"
+        if lb
+        else ""
+    )
     rows_problems = "\n".join(
         f"<tr class='{'r1' if r['rank1'] else ''}'>"
         f"<td class='num'>{i}</td>"
@@ -853,6 +876,8 @@ def render_html(
 
 {attempts_block}
 
+{leaderboard_block}
+
 <h2>Per-problem records — ranked by picker priority (headroom × hit-rate × staleness)</h2>
 <table><tr><th>#</th><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>#1 agent</th><th>headroom</th><th>priority</th><th>we&nbsp;#1?</th><th>cycles</th><th>last</th>{start_th}</tr>
 {rows_problems}
@@ -982,6 +1007,8 @@ def build(*, today: str | None = None, generated: str | None = None, controls: b
         submits=submits,
         health=health,
         generated=generated,
+        leaderboard=rank1_leaderboard(rank1_agents),
+        rank1_asof=rank1_asof,
         controls=controls,
     )
 
