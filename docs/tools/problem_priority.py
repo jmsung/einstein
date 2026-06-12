@@ -99,6 +99,21 @@ def consecutive_noprogress(problem_label: str, cycle_log: Path) -> int:
     return streak
 
 
+def exhausted_ids(problems: Sequence["Problem"], cycle_log: Path) -> set[int]:
+    """Problem ids whose consecutive no-progress streak ≥ EXHAUSTION_THRESHOLD.
+
+    Used by the loop's skip-when-all-exhausted gate. Empty when demotion is
+    disabled (threshold ≤ 0).
+    """
+    if EXHAUSTION_THRESHOLD <= 0:
+        return set()
+    return {
+        p.problem_id
+        for p in problems
+        if consecutive_noprogress(f"P{p.problem_id}-{p.slug}", cycle_log) >= EXHAUSTION_THRESHOLD
+    }
+
+
 # ---------------- headroom ----------------
 
 

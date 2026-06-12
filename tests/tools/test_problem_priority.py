@@ -366,3 +366,60 @@ def test_queue_demotes_exhausted_problem(tmp_path: Path) -> None:
     headrooms = {4: 0.1, 12: 1e-4}
     queue = pp.build_priority_queue(problems, headrooms, skill_library=lib, cycle_log=log)
     assert [p.problem_id for p in queue] == [12, 4]  # exhausted P4 demoted below P12
+
+
+def test_exhausted_ids_set(tmp_path: Path) -> None:
+    log = _log_with_streak(tmp_path, "P3-autocorrelation", 9)
+    assert pp.exhausted_ids([_mk_problem(3, "autocorrelation")], log) == {3}
+    # below threshold → not exhausted
+    log2 = _log_with_streak(tmp_path, "P3-autocorrelation", 3)
+    assert pp.exhausted_ids([_mk_problem(3, "autocorrelation")], log2) == set()
+
+
+def test_build_queue_by_priority_skips_when_all_exhausted(tmp_path: Path) -> None:
+    # both problems have 8 straight no-progress cycles → all exhausted → skip ([])
+    rows = ["# log", ""]
+    for i in range(8):
+        for lbl in ("P3-autocorrelation", "P4-third-autocorrelation"):
+            rows.append(
+                f"| {300 + i*2} | {lbl} | 1.0 (no Δ) | 1 | local-cpu | 0 | 0 | 0 | a:1 | converged | x | 0 |"
+            )
+    log = tmp_path / "cl.md"
+    log.write_text("\n".join(rows) + "\n")
+    cache = tmp_path / "hc.json"
+    problems = [
+        _mk_problem(3, "autocorrelation", 0.9),
+        _mk_problem(4, "third-autocorrelation", 1.4),
+    ]
+    # fetcher gives arena #1 so headroom is computable (problems are 'behind')
+    q = al.build_queue_by_priority(
+        problems,
+        cycle_log=log,
+        skill_library=tmp_path / "none.md",
+        cache_path=cache,
+        fetcher=lambda pid: (10.0, None),
+    )
+    assert q == []  # all exhausted → cheap skip
+
+
+def test_build_queue_by_priority_runs_when_one_live(tmp_path: Path) -> None:
+    rows = ["# log", ""]
+    for i in range(8):  # only P3 exhausted; P4 has no rows → live
+        rows.append(
+            f"| {300 + i} | P3-autocorrelation | 1.0 (no Δ) | 1 | local-cpu | 0 | 0 | 0 | a:1 | converged | x | 0 |"
+        )
+    log = tmp_path / "cl.md"
+    log.write_text("\n".join(rows) + "\n")
+    problems = [
+        _mk_problem(3, "autocorrelation", 0.9),
+        _mk_problem(4, "third-autocorrelation", 1.4),
+    ]
+    q = al.build_queue_by_priority(
+        problems,
+        cycle_log=log,
+        skill_library=tmp_path / "none.md",
+        cache_path=tmp_path / "hc.json",
+        fetcher=lambda pid: (10.0, None),
+    )
+    ids = [p.problem_id for p in q]
+    assert 4 in ids and ids[0] == 4  # live P4 first; P3 demoted but queue not skipped
