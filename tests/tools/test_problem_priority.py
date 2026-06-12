@@ -327,3 +327,42 @@ def test_unknown_category_uses_library_prior_not_half(tmp_path: Path) -> None:
     # edges P4 here, but by the prior's honest margin, not by 0.5-vs-0.21.
     pri = {p.problem_id: i for i, p in enumerate(queue)}
     assert set(pri) == {4, 10}
+
+
+# ---------------- exhaustion demotion ----------------
+
+
+def _log_with_streak(tmp_path: Path, label: str, n: int, *, last_finding: bool = False) -> Path:
+    """A cycle-log where `label` has n trailing converged no-progress rows."""
+    rows = ["# Cycle log", ""]
+    for i in range(n):
+        f = 1 if (last_finding and i == n - 1) else 0  # a finding in the NEWEST row resets
+        rows.append(
+            f"| {300 + i} | {label} | 1.0 (no Δ) | 1 | local-cpu | 0 | {f} | 0 | a:1/h:0/hyb:0 | converged | x | 0 |"
+        )
+    p = tmp_path / "cycle-log.md"
+    p.write_text("\n".join(rows) + "\n")
+    return p
+
+
+def test_consecutive_noprogress_counts_and_resets(tmp_path: Path) -> None:
+    assert (
+        pp.consecutive_noprogress(
+            "P3-autocorrelation", _log_with_streak(tmp_path, "P3-autocorrelation", 10)
+        )
+        == 10
+    )
+    # a finding in the newest row → streak 0 (it learned something)
+    log = _log_with_streak(tmp_path, "P3-autocorrelation", 10, last_finding=True)
+    assert pp.consecutive_noprogress("P3-autocorrelation", log) == 0
+
+
+def test_queue_demotes_exhausted_problem(tmp_path: Path) -> None:
+    lib = _write_skill_lib(tmp_path)
+    # P4 has 8 straight no-progress cycles (exhausted); P12 has none.
+    log = _log_with_streak(tmp_path, "P4-third-autocorrelation", 8)
+    problems = [_mk_problem(4, "third-autocorrelation"), _mk_problem(12, "flat-polynomials")]
+    # P4 has the BIGGER headroom — without demotion it would rank first.
+    headrooms = {4: 0.1, 12: 1e-4}
+    queue = pp.build_priority_queue(problems, headrooms, skill_library=lib, cycle_log=log)
+    assert [p.problem_id for p in queue] == [12, 4]  # exhausted P4 demoted below P12
