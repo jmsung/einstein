@@ -30,7 +30,7 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `slsqp-active-pair-polish.md` | packing / kissing | 25 | 6 | 1 | 2026-06-03 | 0.24 |
 | `arena-tolerance-slsqp.md` | packing | 34 | 9 | 1 | 2026-06-03 | 0.26 |
 | `larger-n-cascade.md` | autocorrelation | 19 | 4 | 3 | 2026-06-06 | 0.21 |
-| `cross-resolution-basin-transfer.md` | autocorrelation | 9 | 1 | 1 | 2026-06-02 | 0.11 |
+| `cross-resolution-basin-transfer.md` | autocorrelation | 10 | 1 | 1 | 2026-06-11 | 0.10 |
 | `bounded-lbfgs-per-region-sigmoid.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `boundary-snap-for-kinks.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `first-order-link-tangent-test.md` | kissing-tight | 2 | 1 | 1 | 2026-04-25 | 0.50 |
