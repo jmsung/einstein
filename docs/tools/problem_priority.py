@@ -30,6 +30,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import os
 import re
 import sys
 from pathlib import Path
@@ -57,7 +58,45 @@ NEUTRAL_HIT_RATE = 0.5
 # factors able to rotate the queue while preserving headroom ordering.
 HEADROOM_REF = 1e-7  # default arena minImprovement — "one submittable unit"
 
+# Exhaustion demotion: a problem with ≥ this many consecutive no-progress cycles
+# (converged/no-change AND no finding/concept written) is pushed to the bottom of
+# the queue so the loop stops re-grinding a known wall (e.g. P3's unsubmittable
+# ceiling, hit 22× in a row). 0 disables. Resets when a cycle improves the score
+# or writes a finding. Env-tunable.
+EXHAUSTION_THRESHOLD = int(os.environ.get("EINSTEIN_EXHAUSTION_THRESHOLD", "8") or "8")
+_NOPROGRESS_OUTCOMES = {"converged", "no-change", "llm-no-execution", "gate-skipped"}
+
 _ROW_RE = re.compile(r"^\|\s*(\d+)\s*\|\s*(P\d+-[a-z0-9-]+)\s*\|", re.IGNORECASE)
+
+
+def consecutive_noprogress(problem_label: str, cycle_log: Path) -> int:
+    """Count this problem's most-recent consecutive no-progress cycles.
+
+    No-progress = outcome in {converged, no-change, llm-no-execution, gate-skipped}
+    AND the cycle wrote no finding/concept. A cycle that improves the score or
+    files a finding breaks the streak (the problem learned something / moved).
+    """
+    try:
+        lines = cycle_log.read_text().splitlines()
+    except OSError:
+        return 0
+    mine: list[list[str]] = []
+    for line in lines:
+        s = line.strip()
+        if not _ROW_RE.match(s):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) < 11 or cells[1].lower() != problem_label.lower():
+            continue
+        mine.append(cells)
+    streak = 0
+    for cells in reversed(mine):
+        wrote = any(c.isdigit() and int(c) > 0 for c in (cells[6], cells[7]))  # findings/concepts
+        if cells[9].lower() in _NOPROGRESS_OUTCOMES and not wrote:
+            streak += 1
+        else:
+            break
+    return streak
 
 
 # ---------------- headroom ----------------
@@ -244,4 +283,29 @@ def build_priority_queue(
 
     scored.sort(key=lambda t: (-t[0], t[1]))
     unscored.sort(key=lambda p: p.problem_id)
+
+    # Exhaustion demotion: split off problems stuck at a known wall so the loop
+    # stops fixating on them (the ranking otherwise keeps re-picking a problem
+    # whose headroom looks big but is unactionable — e.g. P3's unsubmittable
+    # ceiling). Demoted problems go to the bottom, least-exhausted first, so they
+    # still get an occasional re-check but never crowd out actionable work.
+    if EXHAUSTION_THRESHOLD > 0:
+        live: list["Problem"] = []
+        exhausted: list[tuple[int, int, "Problem"]] = []
+        for _prio, pid, p in scored:
+            streak = consecutive_noprogress(f"P{p.problem_id}-{p.slug}", cycle_log)
+            if streak >= EXHAUSTION_THRESHOLD:
+                exhausted.append((streak, pid, p))
+            else:
+                live.append(p)
+        if exhausted:
+            log.info(
+                "exhaustion-demoted %d problem(s) (≥%d no-progress cycles): %s",
+                len(exhausted),
+                EXHAUSTION_THRESHOLD,
+                ", ".join(f"P{p.problem_id}(streak {s})" for s, _, p in exhausted),
+            )
+            exhausted.sort(key=lambda t: (t[0], t[1]))  # least-exhausted first
+            return live + unscored + [p for _, _, p in exhausted]
+
     return [p for _, _, p in scored] + unscored
