@@ -467,6 +467,25 @@ def action_start(pid: int) -> str:
     return res
 
 
+def action_start_loop() -> str:
+    """Spawn a detached id-order infinite loop (autonomous_loop --loop-forever)."""
+    if loop_running():
+        res = "refused loop: a run is active — Stop it first"
+        _audit("start-loop", res)
+        return res
+    cmd = [sys.executable, str(_REPO / "scripts" / "autonomous_loop.py"), "--loop-forever"]
+    try:
+        out = _SCHED_LOG.open("a")
+        subprocess.Popen(  # noqa: S603 — fixed argv, local control plane
+            cmd, cwd=str(_REPO), stdout=out, stderr=subprocess.STDOUT, start_new_session=True
+        )
+        res = "spawned id-order loop (1→N, forever)"
+    except OSError as e:
+        res = f"loop start failed: {e}"
+    _audit("start-loop", res)
+    return res
+
+
 def action_stop(lockfile: Path = LOCKFILE) -> str:
     """SIGTERM the running loop via its lockfile pid (graceful)."""
     try:
@@ -849,10 +868,17 @@ def render_html(
             if running
             else "<form method=post action=/auto/on><button>▶ Auto on</button></form>"
         )
+        loop_btn = (
+            "<button disabled title='stop the active run first'>🔁 Loop all 1→N</button>"
+            if running
+            else "<form method=post action=/start-loop>"
+            "<button title='run every problem in id order, forever'>🔁 Loop all 1→N</button></form>"
+        )
         control_bar = last + (
             "<div class=ctl>"
             + stop_btn
             + auto_on_btn
+            + loop_btn
             + "<form method=post action=/auto/off><button class=warn>⏸ Auto off</button></form>"
             + (
                 "<form method=post action=/kill/off><button>✅ Resume (clear kill)</button></form>"
@@ -1160,6 +1186,8 @@ def main(argv: list[str] | None = None) -> int:
                 if u.path == "/start":
                     pid = (form.get("pid") or qs.get("pid") or ["0"])[0]
                     action_start(int(pid)) if pid.isdigit() else None
+                elif u.path == "/start-loop":
+                    action_start_loop()
                 elif u.path == "/stop":
                     action_stop()
                 elif u.path == "/auto/on":
