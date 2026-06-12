@@ -370,6 +370,20 @@ def build_queue_by_priority(
         len(active),
         "" if scored else " — id-order fallback",
     )
+    # Skip-when-all-exhausted gate: if EVERY active problem is at a known wall
+    # (exhaustion-demoted), return an empty queue so the loop no-ops cheaply (no
+    # claude -p call) instead of re-confirming walls for ~$0.6/cycle. The cron
+    # still fires and re-checks for free; a problem re-enters when a cycle
+    # improves its score or files a finding (streak reset), or on manual re-arm.
+    if queue:
+        ex = problem_priority.exhausted_ids(active, cycle_log)
+        if ex and all(p.problem_id in ex for p in queue):
+            log.info(
+                "all %d active problems exhausted (≥ no-progress threshold) — "
+                "skipping cycle (no LLM spend); cron will re-check",
+                len(queue),
+            )
+            return []
     return queue
 
 
