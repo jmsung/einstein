@@ -2489,6 +2489,55 @@ def run_queue(
     return results
 
 
+def run_sequential_forever(
+    *,
+    problems_dir: Path = DEFAULT_PROBLEMS_DIR,
+    cycle_log: Path = DEFAULT_CYCLE_LOG,
+    max_attempts_per_visit: int = DEFAULT_MAX_ATTEMPTS_PER_VISIT,
+    budget_path: Path = DEFAULT_BUDGET_PATH,
+    sentinel_path: Path = DEFAULT_SENTINEL_PATH,
+    skip_gates: bool = False,
+    sleep_s: float = 10.0,
+    max_passes: int | None = None,
+    pass_runner: Callable[[], list[CycleResult]] | None = None,
+    sleeper: Callable[[float], None] | None = None,
+) -> int:
+    """Run every active problem in problem-id order, then repeat — forever.
+
+    Id-order round-robin that ignores priority AND the exhaustion skip ("just
+    run everything 1→N, over and over"). Each pass is one `run_queue` sweep with
+    `by_priority=False` (= `build_queue`, id-ascending, no exhaustion gate).
+    Stops when the kill-switch sentinel appears or the process is signalled; a
+    short sleep between passes keeps an all-no-op pass from hot-spinning.
+    Returns the number of completed passes (`max_passes` bounds it for tests).
+    """
+    runner = pass_runner or (
+        lambda: run_queue(
+            problems_dir=problems_dir,
+            cycle_log=cycle_log,
+            max_problems=10_000,  # one full sweep over all active problems
+            max_attempts_per_visit=max_attempts_per_visit,
+            budget_path=budget_path,
+            sentinel_path=sentinel_path,
+            skip_gates=skip_gates,
+            by_priority=False,
+        )
+    )
+    nap = sleeper or time.sleep
+    passes = 0
+    while max_passes is None or passes < max_passes:
+        if sentinel_path.exists():
+            log.info("sequential-loop: sentinel present — stopping after %d pass(es)", passes)
+            break
+        log.info("sequential-loop: pass %d — all active problems in id order", passes + 1)
+        runner()
+        passes += 1
+        if sentinel_path.exists():
+            break
+        nap(sleep_s)
+    return passes
+
+
 # ---------------- CLI ----------------
 
 
@@ -2516,6 +2565,13 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Restrict the run to this one problem id (dashboard 'start "
         "problem N'). Passed through to run_queue's problem_ids filter.",
+    )
+    parser.add_argument(
+        "--loop-forever",
+        action="store_true",
+        help="Run every active problem in id order (1→N), then repeat forever "
+        "(dashboard 'Loop all'). Ignores --by-priority and the exhaustion skip; "
+        "stops on the kill-switch sentinel or SIGTERM.",
     )
     parser.add_argument(
         "--max-attempts-per-visit",
@@ -2625,6 +2681,18 @@ def main(argv: list[str] | None = None) -> int:
             return 75  # EX_TEMPFAIL — cron will retry next interval
 
     try:
+        if args.loop_forever:
+            passes = run_sequential_forever(
+                problems_dir=args.problems_dir,
+                cycle_log=args.cycle_log,
+                max_attempts_per_visit=args.max_attempts_per_visit,
+                budget_path=args.budget_path,
+                sentinel_path=args.sentinel_path,
+                skip_gates=args.skip_gates,
+            )
+            log.info("sequential-loop ended after %d pass(es)", passes)
+            return 0
+
         max_problems = 1 if args.one_problem else args.max_problems
         inner_runner: CycleRunner | None = None
         if args.discipline_once and max_problems > 1:

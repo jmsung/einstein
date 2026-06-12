@@ -3723,3 +3723,35 @@ def test_build_queue_by_priority_live_our_score_overrides_stale_frontmatter(
     # P12's live ours == arena #1 → headroom 0 → sinks below P4 despite the
     # stale frontmatter claiming a 5.7e-2 gap.
     assert [p.problem_id for p in queue] == [4, 12]
+
+
+def test_run_sequential_forever_runs_passes_then_stops(tmp_path: Path) -> None:
+    sentinel = tmp_path / ".disabled"
+    calls = {"n": 0}
+
+    def fake_pass():
+        calls["n"] += 1
+        return []
+
+    n = al.run_sequential_forever(
+        sentinel_path=sentinel,
+        sleep_s=0,
+        max_passes=3,
+        pass_runner=fake_pass,
+        sleeper=lambda s: None,
+    )
+    assert n == 3 and calls["n"] == 3  # bounded by max_passes
+
+
+def test_run_sequential_forever_stops_on_sentinel(tmp_path: Path) -> None:
+    sentinel = tmp_path / ".disabled"
+    sentinel.write_text("kill")  # present from the start
+    calls = {"n": 0}
+    n = al.run_sequential_forever(
+        sentinel_path=sentinel,
+        sleep_s=0,
+        max_passes=10,
+        pass_runner=lambda: calls.__setitem__("n", calls["n"] + 1) or [],
+        sleeper=lambda s: None,
+    )
+    assert n == 0 and calls["n"] == 0  # sentinel → never runs a pass
