@@ -37,7 +37,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 
 ## Approach
 
-Three ideas, in the order they fire on a new problem.
+Three ideas fire on a new problem, in order; a fourth measures whether the loop as a whole is improving.
 
 **1. A council of mathematician personas writes the right questions.** Before any optimizer runs, JSAgent dispatches a parallel research panel — Gauss, Riemann, Tao, Conway, Euler, Poincaré, Erdős, Noether, Cohn, Razborov (always) plus a specialist bench triggered by problem domain (Viazovska, Szemerédi, Turán, Ramanujan, Archimedes, Hilbert). Each persona's job is to write 2–3 *questions* a stuck mathematician would ask, not produce a solution. Questions become the seed for the next step.
 
