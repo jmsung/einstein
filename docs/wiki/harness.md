@@ -8,6 +8,30 @@ cites: [docs/agent/metrics.md, docs/agent/cycle-log.md]
 
 # The self-improving harness — system description
 
+## What "self-improving / meta-learning" means here
+
+Two senses, deliberately:
+
+1. **Self-improving (across attempts).** The agent doesn't just solve a problem
+   and forget; every attempt — win or dead-end — is distilled into a persistent
+   knowledge base (the wiki) that the *next* attempt queries first. Wisdom
+   **compounds** across cycles instead of resetting each session. The unit of
+   learning is the *cycle*, and the memory that survives a context window is the
+   wiki, not the model weights — so "learning" here is **in-context + retrieval
+   over an accumulating corpus**, not gradient training.
+2. **Meta-learning (improving the loop that does the learning).** The harness
+   also edits *itself* — the rules, the technique-selection bandit, the
+   proposers — and gates those edits behind A/B shadow tests. Learning *how to
+   learn better*, not just learning more facts.
+
+The hard part isn't claiming this — it's **proving** it. An agent that re-derives
+the same answer every session, or that plateaus, can look identical to one that
+compounds. The measurement layer below exists to tell those apart: a plateau now
+carries a *reason* (solved-at-floor vs stuck), and the curated-vs-search ablation
+tests whether the accumulated knowledge is actually what helps.
+
+## The system
+
 This page is the system section: what JSAgent *is*, as a machine. The
 [home page](home.md) frames the experiment (arena = gym, math = verifiable
 system, agent = subject, wiki = artifact); this page describes the loop that

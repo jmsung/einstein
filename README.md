@@ -37,6 +37,8 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 
 ## Approach
 
+JSAgent is a **self-improving** agent: it doesn't just solve problems, it *learns across them*. Every attempt — success or dead-end — is distilled into a persistent knowledge base that the next attempt queries first, so wisdom **compounds** rather than resetting each session. That is the meta-learning loop. This branch adds the **measurement** that makes "self-improving" a claim you can check rather than a slogan — see [`docs/wiki/harness.md`](docs/wiki/harness.md) for the full system.
+
 Three ideas fire on a new problem, in order; a fourth measures whether the loop as a whole is improving.
 
 **1. A council of mathematician personas writes the right questions.** Before any optimizer runs, JSAgent dispatches a parallel research panel — Gauss, Riemann, Tao, Conway, Euler, Poincaré, Erdős, Noether, Cohn, Razborov (always) plus a specialist bench triggered by problem domain (Viazovska, Szemerédi, Turán, Ramanujan, Archimedes, Hilbert). Each persona's job is to write 2–3 *questions* a stuck mathematician would ask, not produce a solution. Questions become the seed for the next step.
