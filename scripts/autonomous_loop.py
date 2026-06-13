@@ -60,6 +60,9 @@ DEFAULT_CITED_SOURCES_LOG = DEFAULT_MB_DIR / "logs" / "cited-sources.jsonl"
 DEFAULT_CAPTURE_QUEUE = DEFAULT_MB_DIR / "logs" / "capture-queue.jsonl"
 DEFAULT_PROMOTION_LOG = _REPO / "docs" / "agent" / "promotion-log.md"
 DEFAULT_PROPOSALS_ROOT = DEFAULT_MB_DIR / "proposals"
+# Goal 3 of js/feat/evolve-and-measure: one JSON artifact per cycle (the actual
+# solution/params produced), linked from the dashboard log viewer.
+DEFAULT_ARTIFACTS_DIR = DEFAULT_MB_DIR / "logs" / "cycle-artifacts"
 
 # Goal 8 of js/feat/research-synthesis: the rule_edit marker that toggles
 # the pre-cycle synthesis step. When this exact heading is present in
@@ -921,6 +924,9 @@ def _inner_attempt_fanout(
         "outcome": outcome,
         "notes": notes,
         "chosen_techniques": chosen_techniques,
+        # Goal 3 of js/feat/evolve-and-measure: the winner's solution params,
+        # persisted as the per-cycle artifact (None when no attempt completed).
+        "payload": (payloads_by_index.get(winner.index) if winner is not None else None),
         # Goal 3 of js/feat/parallel-attempts: per-pull reward signal so
         # `_bandit_skill_update` can bump top3 only on the winner's arm.
         # Index-aligned with `chosen_techniques`.
@@ -1616,6 +1622,8 @@ def _try_llm_path(
         "outcome": outcome,
         "notes": notes,
         "chosen_techniques": [response.strategy] if response.strategy else [],
+        # Goal 3 of js/feat/evolve-and-measure: the LLM cycle's solution params.
+        "payload": response.payload,
         # Goal 4: thread cited_sources for the cycle-log column + sidecar JSONL
         "cited_sources": list(getattr(response, "cited_sources", []) or []),
     }
@@ -1754,6 +1762,7 @@ def inner_attempt(
     outcome = "scaffold-no-attempt"
     runtime_hours = 0.0
     compute_tag = "none-strategy-only"
+    dispatch_payload = None  # Goal 3: solution params for the per-cycle artifact
 
     if dispatcher is None:
         # Lazy import — dispatch lives in src/einstein, not docs/tools
@@ -1783,6 +1792,7 @@ def inner_attempt(
             end_score = result.score
             runtime_hours = result.runtime_seconds / 3600.0
             compute_tag = "local-cpu"  # TODO: thread compute_router decision through
+            dispatch_payload = getattr(result, "payload", None)
             if start_score is not None and result.score is not None and result.score < start_score:  # type: ignore[operator]
                 outcome = "improved-local"
             else:
@@ -1829,6 +1839,8 @@ def inner_attempt(
         # Extra field — NOT part of the cycle-log schema. Consumed by
         # run_one_visit to build the avoid set for the next attempt.
         "chosen_techniques": chosen_techniques,
+        # Goal 3 of js/feat/evolve-and-measure: the dispatch solution params.
+        "payload": dispatch_payload,
     }
 
 
@@ -2103,6 +2115,22 @@ def _run_one_cycle(
             outcome=result["outcome"],
             notes=result["notes"],
         )
+
+    # Goal 3: persist this cycle's solution artifact (score/technique/payload)
+    # so the plateau is inspectable — linked from the dashboard. Best-effort:
+    # never let artifact I/O break the cycle.
+    try:
+        from einstein.meta_loop.solution_artifact import persist_cycle
+
+        persist_cycle(
+            DEFAULT_ARTIFACTS_DIR,
+            cycle_id=cycle_id,
+            problem=problem.display,
+            result=result,
+            ts=dt.datetime.now(dt.timezone.utc).isoformat(),
+        )
+    except Exception as e:  # noqa: BLE001 — artifact persistence is never load-bearing
+        log.warning("solution-artifact persist failed: %s (continuing)", e)
 
     row = format_cycle_log_row(
         cycle_id=cycle_id,

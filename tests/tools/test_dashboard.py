@@ -329,3 +329,84 @@ def test_render_markdown_table():
     assert html.count("<tr>") == 3  # header + 2 body rows (separator skipped)
     assert "<b>13/13</b>" in html  # inline still applied in cells
     assert "---" not in html  # GFM separator row not emitted
+
+
+# ---------------- Goal 2: trajectory + classifier signal column ----------------
+
+
+class _PWithCert:
+    def __init__(self, pid, slug, score, certificate=None):
+        self.problem_id, self.slug, self.name = pid, slug, slug
+        self.tier, self.status, self.score_current = "A", "active", score
+        self.extra = {"certificate": certificate} if certificate else {}
+
+
+def test_per_problem_records_attaches_classification_and_trajectory():
+    # P2 minimize: 1.6 → 1.5 over two cycles = improving (open headroom).
+    # P19 carries a certificate = solved-at-floor regardless of curve.
+    problems = [
+        _PWithCert(2, "auto", 1.5),
+        _PWithCert(19, "diff", 2.639, certificate="bnb-negative-lemma"),
+    ]
+    cycle_rows = [
+        {"problem": "P2-auto", "cycle_id": 1, "score": "1.6 → 1.55", "outcome": "improved"},
+        {"problem": "P2-auto", "cycle_id": 2, "score": "1.55 → 1.50", "outcome": "improved"},
+        {"problem": "P19-diff", "cycle_id": 3, "score": "2.639 → 2.639", "outcome": "no-change"},
+    ]
+    recs = dashboard.per_problem_records(
+        problems,
+        headroom={2: 1.4, 19: 2.6},  # arena1 scores → both have headroom
+        rank1=set(),
+        cycle_rows=cycle_rows,
+        minimize_map={2: True, 19: True},
+    )
+    by_pid = {r["pid"]: r for r in recs}
+    assert by_pid[2]["classification"] == "improving"
+    assert by_pid[2]["trajectory"] == [1.55, 1.50]
+    assert by_pid[19]["classification"] == "solved-at-floor"
+    assert by_pid[19]["certificate"] == "bnb-negative-lemma"
+
+
+def test_class_badge_maps_each_state():
+    assert "📈 improving" in dashboard._class_badge("improving")
+    assert "✅ solved" in dashboard._class_badge("solved-at-floor")
+    assert "🧱 stuck" in dashboard._class_badge("stuck")
+    assert "b blue" in dashboard._class_badge("solved-at-floor")
+    assert dashboard._class_badge(None) == '<span class="b gray">—</span>'
+
+
+def test_sparkline_too_short_is_dash():
+    assert dashboard._sparkline([]) == '<span class="spk-na">—</span>'
+    assert dashboard._sparkline([1.0]) == '<span class="spk-na">—</span>'
+
+
+def test_sparkline_renders_polyline_and_color_by_direction():
+    # minimize: last < first → improvement → green stroke
+    svg = dashboard._sparkline([1.6, 1.55, 1.5], minimize=True)
+    assert "<polyline" in svg and "#7ee787" in svg
+    # flat → grey
+    assert "#8b949e" in dashboard._sparkline([1.5, 1.5], minimize=True)
+
+
+# ---------------- Goal 3: per-cycle artifact viewer ----------------
+
+
+def test_read_log_artifact_reads_and_guards(tmp_path, monkeypatch):
+    monkeypatch.setattr(dashboard, "ARTIFACTS_DIR", tmp_path)
+    (tmp_path / "cycle-312.json").write_text('{"cycle_id": 312, "outcome": "improved"}')
+    title, body, is_md = dashboard.read_log("artifact:312")
+    assert title == "cycle artifact · #312" and is_md is False
+    assert '"outcome": "improved"' in body
+    # non-integer id refused
+    _, body, _ = dashboard.read_log("artifact:../../etc/passwd")
+    assert "refused" in body
+    # missing artifact → friendly message, not crash
+    _, body, _ = dashboard.read_log("artifact:999")
+    assert "no artifact" in body
+
+
+def test_parse_artifact_ids(tmp_path):
+    (tmp_path / "cycle-3.json").write_text("{}")
+    (tmp_path / "cycle-10.json").write_text("{}")
+    (tmp_path / "junk.json").write_text("{}")
+    assert dashboard.parse_artifact_ids(tmp_path) == {3, 10}
