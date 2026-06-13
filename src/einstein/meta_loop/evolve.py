@@ -230,8 +230,9 @@ def triple_verify_score_fn(problem_id: int) -> VerifyFn:
     """
     from einstein.triple_verify.core import get_verifier, verify
 
+    verifier = get_verifier(problem_id)  # resolve once, not per candidate
+
     def _score(payload: Payload) -> float | None:
-        verifier = get_verifier(problem_id)
         if verifier is None:
             return None
         result = verify(payload, verifier)

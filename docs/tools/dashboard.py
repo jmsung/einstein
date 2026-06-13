@@ -144,16 +144,17 @@ def parse_rank1(path: Path = RANK1_JSON) -> set[int]:
 
 
 def parse_artifact_ids(artifacts_dir: Path = ARTIFACTS_DIR) -> set[int]:
-    """Cycle ids with a persisted solution artifact (for the recent-cycles links)."""
-    ids: set[int] = set()
+    """Cycle ids with a persisted solution artifact (for the recent-cycles links).
+
+    Delegates to the single source of truth (`solution_artifact.list_artifact_ids`)
+    so the `cycle-<id>.json` convention can't drift between writer and viewer;
+    degrades to an empty set if einstein isn't importable."""
     try:
-        for p in artifacts_dir.glob("cycle-*.json"):
-            stem = p.stem[len("cycle-") :]
-            if stem.isdigit():
-                ids.add(int(stem))
-    except OSError:
-        pass
-    return ids
+        from einstein.meta_loop.solution_artifact import list_artifact_ids
+
+        return list_artifact_ids(artifacts_dir)
+    except Exception:  # noqa: BLE001 — artifact links are optional
+        return set()
 
 
 def parse_arena_urls(problems_dir: Path = PROBLEMS_DIR) -> dict[int, str]:

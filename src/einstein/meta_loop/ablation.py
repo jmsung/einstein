@@ -116,7 +116,13 @@ def is_firewalled(target: str) -> bool:
         return True
     if any(marker in low for marker in FIREWALL_DENY_PATH_MARKERS):
         return True
-    host = urlparse(target).netloc
+    # Normalize schemeless host strings ("einsteinarena.com/problems/x") so
+    # urlparse populates netloc — otherwise the whole string lands in `path`,
+    # `netloc` is empty, and a bare-host arena reference bypasses _host_blocked.
+    to_parse = target
+    if "://" not in target and not target.startswith("/"):
+        to_parse = "//" + target
+    host = urlparse(to_parse).netloc
     if host and _host_blocked(host):
         return True
     return False
@@ -142,6 +148,9 @@ ANSWER_KEY_PROBES = (
     "https://raw.githubusercontent.com/jmsung/einstein/main/README.md",
     "/Users/x/projects/einstein/mb/problems/19-difference-bases/solutions/solution-best.json",
     "docs/wiki/problems/2-first-autocorrelation.md",
+    # schemeless host forms — a web-search snippet may produce a bare host
+    "einsteinarena.com/problems/difference-bases",
+    "www.einsteinarena.com/leaderboard",
 )
 
 
