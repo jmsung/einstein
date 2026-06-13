@@ -41,3 +41,4 @@ docs/raw/
 .obsidian/
 
 .claude/scheduled_tasks.lock
+.autonomous-loop.lock
