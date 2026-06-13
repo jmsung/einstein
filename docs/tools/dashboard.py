@@ -39,6 +39,7 @@ RUN_LEDGER = _LOGS / "scheduler-runs.log"
 BUDGET = _LOGS / "inner-agent-budget.md"
 AUTO_SUBMIT = _LOGS / "auto-submit.md"
 HEADROOM_CACHE = _LOGS / "headroom-cache.json"
+ARTIFACTS_DIR = _LOGS / "cycle-artifacts"  # Goal 3: per-cycle solution artifacts
 RANK1_JSON = _LOGS / "status" / "our_rank1_problems.json"
 SENTINEL = _MB / ".inner-agent-disabled"
 LOCKFILE = _REPO / ".autonomous-loop.lock"
@@ -140,6 +141,19 @@ def parse_rank1(path: Path = RANK1_JSON) -> set[int]:
         return set(json.loads(_read_text(path) or "[]"))
     except ValueError:
         return set()
+
+
+def parse_artifact_ids(artifacts_dir: Path = ARTIFACTS_DIR) -> set[int]:
+    """Cycle ids with a persisted solution artifact (for the recent-cycles links)."""
+    ids: set[int] = set()
+    try:
+        for p in artifacts_dir.glob("cycle-*.json"):
+            stem = p.stem[len("cycle-") :]
+            if stem.isdigit():
+                ids.add(int(stem))
+    except OSError:
+        pass
+    return ids
 
 
 def parse_arena_urls(problems_dir: Path = PROBLEMS_DIR) -> dict[int, str]:
@@ -629,6 +643,18 @@ def read_log(name: str, *, tail: int = 300) -> tuple[str, str, bool]:
         if FINDINGS_DIR.resolve() not in path.parents:
             return (name, "refused: path escapes findings/", False)
         return (f"finding · {slug}", _read_text(path) or "(empty)", True)
+    if name.startswith("artifact:"):
+        cid = name.split(":", 1)[1]
+        if not cid.isdigit():
+            return (name, "refused: artifact id must be an integer", False)
+        path = (ARTIFACTS_DIR / f"cycle-{cid}.json").resolve()
+        if ARTIFACTS_DIR.resolve() not in path.parents:
+            return (name, "refused: path escapes cycle-artifacts/", False)
+        return (
+            f"cycle artifact · #{cid}",
+            _read_text(path) or "(no artifact persisted for this cycle)",
+            False,
+        )
     if name in LOG_FILES:
         lines = _read_text(LOG_FILES[name]).splitlines()
         body = "\n".join(reversed(lines[-tail:])) if lines else "(empty)"  # newest-first
@@ -852,6 +878,7 @@ def render_html(
     leaderboard: list[tuple[str, int]] | None = None,
     rank1_asof: str = "",
     controls: bool = False,
+    artifact_ids: set[int] | None = None,
 ) -> str:
     running = status["running"]
     sort_js = _SORT_JS
@@ -902,10 +929,17 @@ def render_html(
         + "</tr>"
         for i, r in enumerate(records, 1)
     )
+    aids = artifact_ids or set()
     rows_cycles = "\n".join(
         f"<tr><td class='num'>#{c['cycle_id']}</td><td class='nm'>{c['problem']}</td>"
         f"<td class='num'>{c['score']}</td><td>{c['outcome']}</td>"
-        f"<td class='num'>{c.get('cost', '')}</td></tr>"
+        f"<td class='num'>{c.get('cost', '')}</td>"
+        + (
+            f"<td><a href='/log?name=artifact:{c['cycle_id']}' title='inspect solution/params'>📄</a></td>"
+            if c["cycle_id"] in aids
+            else "<td class='st'>—</td>"
+        )
+        + "</tr>"
         for c in recent_cycles
     )
     rows_submit = "\n".join(f"<li><code>{s}</code></li>" for s in submits) or "<li>none today</li>"
@@ -1088,7 +1122,7 @@ def render_html(
 {leaderboard_block}
 
 <h2>Recent cycles</h2>
-<table><tr><th>cycle</th><th>problem</th><th>score</th><th>outcome</th><th>cost</th></tr>
+<table><tr><th>cycle</th><th>problem</th><th>score</th><th>outcome</th><th>cost</th><th>artifact</th></tr>
 {rows_cycles}
 </table>
 
@@ -1214,6 +1248,7 @@ def build(*, today: str | None = None, generated: str | None = None, controls: b
         leaderboard=rank1_leaderboard(rank1_agents),
         rank1_asof=rank1_asof,
         controls=controls,
+        artifact_ids=parse_artifact_ids(),
     )
 
 

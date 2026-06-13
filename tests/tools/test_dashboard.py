@@ -386,3 +386,27 @@ def test_sparkline_renders_polyline_and_color_by_direction():
     assert "<polyline" in svg and "#7ee787" in svg
     # flat → grey
     assert "#8b949e" in dashboard._sparkline([1.5, 1.5], minimize=True)
+
+
+# ---------------- Goal 3: per-cycle artifact viewer ----------------
+
+
+def test_read_log_artifact_reads_and_guards(tmp_path, monkeypatch):
+    monkeypatch.setattr(dashboard, "ARTIFACTS_DIR", tmp_path)
+    (tmp_path / "cycle-312.json").write_text('{"cycle_id": 312, "outcome": "improved"}')
+    title, body, is_md = dashboard.read_log("artifact:312")
+    assert title == "cycle artifact · #312" and is_md is False
+    assert '"outcome": "improved"' in body
+    # non-integer id refused
+    _, body, _ = dashboard.read_log("artifact:../../etc/passwd")
+    assert "refused" in body
+    # missing artifact → friendly message, not crash
+    _, body, _ = dashboard.read_log("artifact:999")
+    assert "no artifact" in body
+
+
+def test_parse_artifact_ids(tmp_path):
+    (tmp_path / "cycle-3.json").write_text("{}")
+    (tmp_path / "cycle-10.json").write_text("{}")
+    (tmp_path / "junk.json").write_text("{}")
+    assert dashboard.parse_artifact_ids(tmp_path) == {3, 10}
