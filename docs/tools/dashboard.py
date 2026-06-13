@@ -39,6 +39,7 @@ RUN_LEDGER = _LOGS / "scheduler-runs.log"
 BUDGET = _LOGS / "inner-agent-budget.md"
 AUTO_SUBMIT = _LOGS / "auto-submit.md"
 HEADROOM_CACHE = _LOGS / "headroom-cache.json"
+ARTIFACTS_DIR = _LOGS / "cycle-artifacts"  # Goal 3: per-cycle solution artifacts
 RANK1_JSON = _LOGS / "status" / "our_rank1_problems.json"
 SENTINEL = _MB / ".inner-agent-disabled"
 LOCKFILE = _REPO / ".autonomous-loop.lock"
@@ -139,6 +140,20 @@ def parse_rank1(path: Path = RANK1_JSON) -> set[int]:
     try:
         return set(json.loads(_read_text(path) or "[]"))
     except ValueError:
+        return set()
+
+
+def parse_artifact_ids(artifacts_dir: Path = ARTIFACTS_DIR) -> set[int]:
+    """Cycle ids with a persisted solution artifact (for the recent-cycles links).
+
+    Delegates to the single source of truth (`solution_artifact.list_artifact_ids`)
+    so the `cycle-<id>.json` convention can't drift between writer and viewer;
+    degrades to an empty set if einstein isn't importable."""
+    try:
+        from einstein.meta_loop.solution_artifact import list_artifact_ids
+
+        return list_artifact_ids(artifacts_dir)
+    except Exception:  # noqa: BLE001 — artifact links are optional
         return set()
 
 
@@ -298,6 +313,70 @@ def relative_headroom(
     return max(gap, 0.0) / max(abs(arena1), 1e-12)
 
 
+def _trajectory_module():
+    """Lazy import of the Goal-1 trajectory module + CycleRow.
+
+    Returns ``(tj, CycleRow)`` or ``(None, None)`` if ``einstein`` isn't on the
+    path (the dashboard degrades to a no-signal view rather than crashing).
+    """
+    try:
+        from einstein.meta_loop import trajectory as tj
+        from einstein.meta_loop.diagnose import CycleRow
+
+        return tj, CycleRow
+    except Exception:  # noqa: BLE001 — signal column is optional
+        return None, None
+
+
+def _attach_signals(recs: list[dict], problems, cycle_rows: list[dict], minimize_map) -> None:
+    """Attach the per-problem trajectory + improving/solved/stuck classification.
+
+    Mutates ``recs`` in place, adding ``trajectory`` (running-best score list),
+    ``classification`` (Classification.value or None), and ``certificate``.
+    Reuses the tested Goal-1 primitives; the dashboard cycle dicts are adapted
+    into ``CycleRow`` once. The classifier is fed the same headroom the table
+    already shows + the problem's `certificate:` frontmatter field.
+    """
+    tj, CycleRow = _trajectory_module()
+    if tj is None:
+        for r in recs:
+            r.setdefault("trajectory", [])
+            r.setdefault("classification", None)
+            r.setdefault("certificate", None)
+        return
+    crows = [
+        CycleRow(
+            cycle_id=c["cycle_id"],
+            problem=c.get("problem", ""),
+            score_field=c.get("score", ""),
+            hours="",
+            compute="",
+            wiki_citations="",
+            findings_added="",
+            concepts_added="",
+            author_mix="",
+            outcome=c.get("outcome", ""),
+            notes="",
+        )
+        for c in cycle_rows
+        if isinstance(c.get("cycle_id"), int)
+    ]
+    cert_by_pid = {p.problem_id: tj.certificate_of(getattr(p, "extra", {}) or {}) for p in problems}
+    for r in recs:
+        pid = r["pid"]
+        cert = cert_by_pid.get(pid)
+        r["certificate"] = cert
+        minz = minimize_map.get(pid)
+        r["minimize"] = bool(minz)
+        if minz is None:
+            r["trajectory"], r["classification"] = [], None
+            continue
+        pts = tj.problem_trajectory(crows, problem_id=pid, minimize=minz)
+        cls = tj.classify(pts, headroom=r["headroom"], certificate=cert, minimize=minz)
+        r["trajectory"] = [p.best_score for p in pts]
+        r["classification"] = cls.value
+
+
 def per_problem_records(
     problems,
     headroom: dict[int, float],
@@ -349,6 +428,7 @@ def per_problem_records(
         r["priority"] = priority_scorer(r) if priority_scorer else r["headroom"]
     # highest priority first; unknowns (None) last; ties by id
     recs.sort(key=lambda r: (r["priority"] is None, -(r["priority"] or 0), r["pid"]))
+    _attach_signals(recs, problems, cycle_rows, minimize_map)
     return recs
 
 
@@ -564,6 +644,18 @@ def read_log(name: str, *, tail: int = 300) -> tuple[str, str, bool]:
         if FINDINGS_DIR.resolve() not in path.parents:
             return (name, "refused: path escapes findings/", False)
         return (f"finding · {slug}", _read_text(path) or "(empty)", True)
+    if name.startswith("artifact:"):
+        cid = name.split(":", 1)[1]
+        if not cid.isdigit():
+            return (name, "refused: artifact id must be an integer", False)
+        path = (ARTIFACTS_DIR / f"cycle-{cid}.json").resolve()
+        if ARTIFACTS_DIR.resolve() not in path.parents:
+            return (name, "refused: path escapes cycle-artifacts/", False)
+        return (
+            f"cycle artifact · #{cid}",
+            _read_text(path) or "(no artifact persisted for this cycle)",
+            False,
+        )
     if name in LOG_FILES:
         lines = _read_text(LOG_FILES[name]).splitlines()
         body = "\n".join(reversed(lines[-tail:])) if lines else "(empty)"  # newest-first
@@ -728,7 +820,49 @@ def _hr_badge(hr):
         return '<span class="b gray">n/a</span>'
     if hr <= 0:
         return '<span class="b green">SOTA</span>'
-    return f'<span class="b amber">{hr*100:.3g}%</span>'
+    return f'<span class="b amber">{hr * 100:.3g}%</span>'
+
+
+# classification → (css class, label). Mirrors trajectory.Classification.
+_CLASS_BADGE = {
+    "improving": ("green", "📈 improving"),
+    "solved-at-floor": ("blue", "✅ solved"),
+    "stuck": ("red", "🧱 stuck"),
+    "unknown": ("gray", "❔ unknown"),
+}
+
+
+def _class_badge(cls):
+    if not cls:
+        return '<span class="b gray">—</span>'
+    css, label = _CLASS_BADGE.get(cls, ("gray", cls))
+    return f'<span class="b {css}">{label}</span>'
+
+
+def _sparkline(values, *, minimize=True, w=78, h=18):
+    """Inline SVG of the running-best trajectory; '—' if too short to plot.
+
+    'Better' is drawn upward (down-is-better problems are flipped), so a rising
+    line always means improvement. Stroke is green when the net direction is an
+    improvement, grey when flat/worse."""
+    vals = [v for v in (values or []) if isinstance(v, (int, float))]
+    if len(vals) < 2:
+        return '<span class="spk-na">—</span>'
+    lo, hi = min(vals), max(vals)
+    span = (hi - lo) or 1.0
+    n = len(vals)
+    pts = []
+    for i, v in enumerate(vals):
+        x = (i / (n - 1)) * (w - 2) + 1
+        good = ((hi - v) / span) if minimize else ((v - lo) / span)  # 1 = best
+        y = (1 - good) * (h - 2) + 1
+        pts.append(f"{x:.1f},{y:.1f}")
+    improved = (vals[-1] < vals[0]) if minimize else (vals[-1] > vals[0])
+    stroke = "#7ee787" if improved else "#8b949e"
+    return (
+        f"<svg class=spk width={w} height={h} viewBox='0 0 {w} {h}' preserveAspectRatio=none>"
+        f"<polyline fill=none stroke='{stroke}' stroke-width=1.3 points='{' '.join(pts)}'/></svg>"
+    )
 
 
 def render_html(
@@ -745,6 +879,7 @@ def render_html(
     leaderboard: list[tuple[str, int]] | None = None,
     rank1_asof: str = "",
     controls: bool = False,
+    artifact_ids: set[int] | None = None,
 ) -> str:
     running = status["running"]
     sort_js = _SORT_JS
@@ -775,6 +910,9 @@ def render_html(
         f"<td class='num'>{_fmt(r['ours'])}</td><td class='num'>{_fmt(r['arena1'])}</td>"
         f"<td class='ag'>{r.get('arena1_agent') or '—'}</td>"
         f"<td>{_hr_badge(r['headroom'])}</td>"
+        f"<td class='sig' title='{(r.get('certificate') or '')}'>"
+        f"{_class_badge(r.get('classification'))} "
+        f"{_sparkline(r.get('trajectory'), minimize=r.get('minimize', True))}</td>"
         f"<td class='num'>{_fmt(r.get('priority'), 3) if r.get('priority') is not None else '—'}</td>"
         f"<td>{'★' if r['rank1'] else ''}</td>"
         f"<td class='num'>{r['cycles']}</td><td class='num'>#{r['last_cycle'] or '—'}</td>"
@@ -792,10 +930,17 @@ def render_html(
         + "</tr>"
         for i, r in enumerate(records, 1)
     )
+    aids = artifact_ids or set()
     rows_cycles = "\n".join(
         f"<tr><td class='num'>#{c['cycle_id']}</td><td class='nm'>{c['problem']}</td>"
         f"<td class='num'>{c['score']}</td><td>{c['outcome']}</td>"
-        f"<td class='num'>{c.get('cost','')}</td></tr>"
+        f"<td class='num'>{c.get('cost', '')}</td>"
+        + (
+            f"<td><a href='/log?name=artifact:{c['cycle_id']}' title='inspect solution/params'>📄</a></td>"
+            if c["cycle_id"] in aids
+            else "<td class='st'>—</td>"
+        )
+        + "</tr>"
         for c in recent_cycles
     )
     rows_submit = "\n".join(f"<li><code>{s}</code></li>" for s in submits) or "<li>none today</li>"
@@ -829,9 +974,9 @@ def render_html(
             )
         hero = f"""<div class=hero>
  <div class=k>{verb}</div>
- <div class=hp>{current['label']} <span class=ht>{current['name']}</span></div>
- <div class=hm>tier {current['tier']} · {current['status']} · ours {_fmt(current['ours'])} ·
-   arena #1 {_fmt(current['arena1'])} · headroom {_hr_badge(current['headroom'])}{att}</div>
+ <div class=hp>{current["label"]} <span class=ht>{current["name"]}</span></div>
+ <div class=hm>tier {current["tier"]} · {current["status"]} · ours {_fmt(current["ours"])} ·
+   arena #1 {_fmt(current["arena1"])} · headroom {_hr_badge(current["headroom"])}{att}</div>
  {strat_line}
 </div>"""
     rows_attempts = "\n".join(
@@ -929,6 +1074,9 @@ def render_html(
  h1 .ext:hover{{text-decoration:underline}}
  .b{{padding:1px 6px;border-radius:10px;font-size:11px}}
  .green{{background:#1b3a26;color:#7ee787}} .amber{{background:#3a341b;color:#e3b341}} .gray{{background:#21262d;color:#8b949e}}
+ .blue{{background:#16263a;color:#79c0ff}} .red{{background:#3a1b1b;color:#f78a8a}}
+ td.sig{{white-space:nowrap}} td.sig .spk{{vertical-align:middle;margin-left:4px}}
+ td.sig .spk-na{{color:var(--mut);margin-left:4px}}
  code{{color:var(--mut);font-size:11px}} ul{{margin:6px 0;padding-left:18px}}
  .state{{font-size:15px}}
  .hero{{background:linear-gradient(135deg,#161b22,#1b2530);border:1px solid #2d4a3a;
@@ -957,25 +1105,25 @@ def render_html(
 {hero}
 
 <div class=cards>
- <div class=card><div class=k>health</div><div class="v {health_cls}">{health.split(' ')[0]}</div><div class=sub>{health}</div></div>
- <div class=card><div class=k>cycles today</div><div class=v>{today['cycles']}</div></div>
- <div class=card><div class=k>spend today</div><div class=v>${today['cost']:.2f}</div></div>
- <div class=card><div class=k>tokens today</div><div class="v {budget_cls}">{today['tokens']:,}</div><div class=sub>{today['budget_pct']:.1f}% of 5M</div></div>
- <div class=card><div class=k>fallbacks today</div><div class=v>{today['fallback']}</div></div>
- <div class=card><div class=k>last run</div><div class=sub style=margin-top:6px>{status['last_run'] or '—'}</div></div>
+ <div class=card><div class=k>health</div><div class="v {health_cls}">{health.split(" ")[0]}</div><div class=sub>{health}</div></div>
+ <div class=card><div class=k>cycles today</div><div class=v>{today["cycles"]}</div></div>
+ <div class=card><div class=k>spend today</div><div class=v>${today["cost"]:.2f}</div></div>
+ <div class=card><div class=k>tokens today</div><div class="v {budget_cls}">{today["tokens"]:,}</div><div class=sub>{today["budget_pct"]:.1f}% of 5M</div></div>
+ <div class=card><div class=k>fallbacks today</div><div class=v>{today["fallback"]}</div></div>
+ <div class=card><div class=k>last run</div><div class=sub style=margin-top:6px>{status["last_run"] or "—"}</div></div>
 </div>
 
 {attempts_block}
 
 <h2>Per-problem records — ranked by picker priority (headroom × hit-rate × staleness) · click a header to re-sort</h2>
-<table class=sortable><tr><th>#</th><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>#1 agent</th><th>headroom</th><th>priority</th><th>we&nbsp;#1?</th><th>cycles</th><th>last</th>{start_th}</tr>
+<table class=sortable><tr><th>#</th><th>id</th><th>problem</th><th>tier</th><th>status</th><th>ours</th><th>arena #1</th><th>#1 agent</th><th>headroom</th><th>signal</th><th>priority</th><th>we&nbsp;#1?</th><th>cycles</th><th>last</th>{start_th}</tr>
 {rows_problems}
 </table>
 
 {leaderboard_block}
 
 <h2>Recent cycles</h2>
-<table><tr><th>cycle</th><th>problem</th><th>score</th><th>outcome</th><th>cost</th></tr>
+<table><tr><th>cycle</th><th>problem</th><th>score</th><th>outcome</th><th>cost</th><th>artifact</th></tr>
 {rows_cycles}
 </table>
 
@@ -1101,6 +1249,7 @@ def build(*, today: str | None = None, generated: str | None = None, controls: b
         leaderboard=rank1_leaderboard(rank1_agents),
         rank1_asof=rank1_asof,
         controls=controls,
+        artifact_ids=parse_artifact_ids(),
     )
 
 
