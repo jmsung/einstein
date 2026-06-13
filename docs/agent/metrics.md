@@ -44,8 +44,8 @@ _Computed by `docs/tools/compounding_metrics.py`. The signal of a loop that comp
 |---|---|---|
 | Records achieved | 0 | problems that reached a record |
 | Median time-to-record | n/a cycles | ↓ over time = compounding |
-| Technique hit-rate (top3/tried) | 27% | ↑ = picks getting better |
-| Cite-reuse rate | 84% (49/58) | ↑ = cycles standing on prior cites |
+| Technique hit-rate (top3/tried) | 26% | ↑ = picks getting better |
+| Cite-reuse rate | 84% (51/61) | ↑ = cycles standing on prior cites |
 | % cycles recall-preceded-win | n/a (needs instrumentation) | honest gap — not faked |
 
 <!-- compounding:end -->

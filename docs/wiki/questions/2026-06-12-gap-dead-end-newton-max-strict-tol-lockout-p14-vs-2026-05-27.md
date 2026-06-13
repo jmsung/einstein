@@ -1,19 +1,19 @@
 ---
 type: question
 author: agent
-drafted: 2026-06-11
+drafted: 2026-06-12
 status: open
 asked_by: gap-detector
-related_pages: [findings/dead-end-p19-4mark-sidon-rulers.md, findings/dead-end-p19-different-k-local-search.md]
+related_pages: [findings/dead-end-newton-max-strict-tol-lockout-p14.md, questions/2026-05-27-p14-newton-max-manifest-wiring.md]
 gap_type: type-2-missing-connection
-similarity: 0.62
+similarity: 0.65
 ---
 
-# Connection gap: `findings/dead-end-p19-4mark-sidon-rulers.md` ↔ `findings/dead-end-p19-different-k-local-search.md`
+# Connection gap: `findings/dead-end-newton-max-strict-tol-lockout-p14.md` ↔ `questions/2026-05-27-p14-newton-max-manifest-wiring.md`
 
 ## Question
 
-qmd reports semantic similarity 0.62 between these two pages, but there is no explicit citation in either direction. What is the missing connection?
+qmd reports semantic similarity 0.65 between these two pages, but there is no explicit citation in either direction. What is the missing connection?
 
 ## Why it matters
 
@@ -28,7 +28,7 @@ Read both pages. If a structural connection exists, file as `docs/wiki/findings/
 
 ## Suggested sources
 
-*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"Connection gap `findings dead-end-p19-4mark-sidon-rulers.md` ↔ `findings") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
+*Auto-suggested by `docs/tools/gap_search.py` — arxiv query: `(all:"Connection gap `findings dead-end-newton-max-strict-tol-lockout-p14.md` ↔ `questions") AND (cat:math.NT OR cat:math.CO OR cat:math.OC OR cat:math.MG OR cat:math.PR OR cat:math.CA OR cat:math.NA)`*
 
 Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close the question with `status: superseded` and a one-line explanation.
 

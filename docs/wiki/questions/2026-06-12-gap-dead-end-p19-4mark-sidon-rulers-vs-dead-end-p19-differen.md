@@ -1,7 +1,7 @@
 ---
 type: question
 author: agent
-drafted: 2026-06-11
+drafted: 2026-06-12
 status: open
 asked_by: gap-detector
 related_pages: [findings/dead-end-p19-4mark-sidon-rulers.md, findings/dead-end-p19-different-k-local-search.md]

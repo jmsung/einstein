@@ -27,9 +27,9 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 |---|---|---|---|---|---|---|
 | `parallel-tempering-sa.md` | kissing / Coulomb | 5 | 3 | 2 | 2026-04-25 | 0.60 |
 | `mpmath-ulp-polish.md` | float64-ceiling family | 10 | 6 | 5 | 2026-06-01 | 0.60 |
-| `slsqp-active-pair-polish.md` | packing / kissing | 25 | 6 | 1 | 2026-06-03 | 0.24 |
-| `arena-tolerance-slsqp.md` | packing | 34 | 9 | 1 | 2026-06-03 | 0.26 |
-| `larger-n-cascade.md` | autocorrelation | 19 | 4 | 3 | 2026-06-06 | 0.21 |
+| `slsqp-active-pair-polish.md` | packing / kissing | 29 | 6 | 1 | 2026-06-12 | 0.21 |
+| `arena-tolerance-slsqp.md` | packing | 35 | 9 | 1 | 2026-06-12 | 0.26 |
+| `larger-n-cascade.md` | autocorrelation | 20 | 4 | 3 | 2026-06-12 | 0.20 |
 | `cross-resolution-basin-transfer.md` | autocorrelation | 10 | 1 | 1 | 2026-06-11 | 0.10 |
 | `bounded-lbfgs-per-region-sigmoid.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `boundary-snap-for-kinks.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
@@ -40,9 +40,9 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `dinkelbach-fractional-programming.md` | autocorrelation-ratio | 10 | 1 | 0 | 2026-06-02 | 0.10 |
 | `gap-space-parameterization.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |
 | `k-climbing.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |
-| `warm-self-pruning-compact-support.md` | autocorrelation | 9 | 2 | 2 | 2026-06-11 | 0.22 |
+| `warm-self-pruning-compact-support.md` | autocorrelation | 10 | 2 | 2 | 2026-06-12 | 0.20 |
 | `multistart-with-rotation-lottery.md` | packing | 8 | 1 | 2 | 2026-05-28 | 0.12 |
-| `basin-hopping-multistart.md` | packing / extremal | 25 | 4 | 2 | 2026-06-03 | 0.16 |
+| `basin-hopping-multistart.md` | packing / extremal | 27 | 4 | 2 | 2026-06-12 | 0.15 |
 | `uniform-radius-shrink-fallback.md` | packing | 12 | 1 | 0 | 2026-06-03 | 0.08 |
 | `micro-perturbation-multiscale.md` | kissing | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `cma-es-with-warmstart.md` | exploration | 3 | 1 | 1 | 2026-04-19 | 0.33 |
