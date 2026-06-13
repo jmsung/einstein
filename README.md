@@ -47,6 +47,8 @@ Three ideas, in the order they fire on a new problem.
 
 Every score is **triple-verified** before it's trusted: a fast evaluator, an exact independent reimplementation, and a cross-check against an analytical bound or a different method. If any two disagree, the score is fake.
 
+**4. The loop measures whether it's actually improving.** A self-improving agent that can't tell *plateaued-because-solved* (at a certified floor) from *plateaued-because-stuck* (open headroom) is just busy. So the harness tracks a per-problem **best-verified-score-vs-cycle** trajectory and classifies each problem — *improving* / *solved-at-floor* (has a proof certificate) / *stuck* / *unknown* — surfaced on the dashboard as a badge + sparkline. Each cycle persists its actual solution artifact for inspection. On *stuck* problems with genuine headroom, an **AlphaEvolve-style engine** climbs: champion → mutate-K → triple-verify → promote the best mutant *iff strictly better*. And a 3-arm ablation (curated wiki vs firewalled web search vs model-only) tests the core thesis — does the knowledge base actually help? See [`docs/wiki/harness.md`](docs/wiki/harness.md) for the full system description.
+
 ## The knowledge base
 
 The math wisdom is the goal, not the arena rank. The wiki is the publication channel.
@@ -57,6 +59,7 @@ The math wisdom is the goal, not the arena rank. The wiki is the publication cha
 - **[`docs/wiki/timeline.md`](docs/wiki/timeline.md)** — dated breakthroughs and rigorous negative results
 - **[`docs/wiki/concepts/`](docs/wiki/concepts/)** & **[`techniques/`](docs/wiki/techniques/)** — durable mental models and reusable methods
 - **[`docs/wiki/findings/`](docs/wiki/findings/)** — what worked, what didn't (and the *why*) across cycles
+- **[`docs/wiki/harness.md`](docs/wiki/harness.md)** — the self-improving harness, as a system (the paper's system section)
 
 ## Setup
 
@@ -88,4 +91,4 @@ Compute is routed per workload — local M5 Max for sequential / float32 / multi
 
 MIT
 
-*Last updated: 2026-05-28*
+*Last updated: 2026-06-12*

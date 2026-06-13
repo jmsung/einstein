@@ -49,3 +49,27 @@ _Computed by `docs/tools/compounding_metrics.py`. The signal of a loop that comp
 | % cycles recall-preceded-win | n/a (needs instrumentation) | honest gap — not faked |
 
 <!-- compounding:end -->
+
+## Objective trajectory & classifier (js/feat/evolve-and-measure, Goal 1)
+
+The metric that says *direction*, not just *ran*. Computed by
+`einstein.meta_loop.trajectory` from the cycle-log; surfaced in the dashboard's
+per-problem "signal" column (badge + running-best sparkline).
+
+Per problem, a **best-verified-score-vs-cycle** curve plus a classification:
+
+| Class | Meaning | What it implies |
+|---|---|---|
+| **improving** | running-best moved the right way within the recent window | the loop is climbing here — leave it |
+| **solved-at-floor** | a `certificate:` (dual bound / BnB negative lemma / PD-Hessian) proves the floor | flat is *solved*, not stuck — don't spend |
+| **stuck** | open headroom vs arena #1, no certificate, no recent gain | the only class the evolve engine runs on |
+| **unknown** | no headroom data + no certificate + flat | honest gap — not labeled either way |
+
+Branch aggregates (from `trajectory.aggregate`): **#rank-1**,
+**records/100-cycles**, **headroom-closed rate** = solved-at-floor / (solved +
+stuck) — of the problems where the floor question is *decided*, the fraction
+closed.
+
+Why a `certificate:` frontmatter field and not the `status:` string: this
+branch exists to stop conflating *frozen-by-policy* with *proven-at-floor*. A
+problem is `solved-at-floor` only when a real proof is named.
