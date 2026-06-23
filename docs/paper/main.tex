@@ -94,8 +94,14 @@ work is not the answer it submits but the wisdom that produced it --- the kind t
 across problems rather than evaporating when a run ends.
 
 I will be honest about how that bet emerged, because the path is part of the lesson. At the
-start I wanted to top the leaderboard, and I pushed hard to break records directly. Building
-each solution from a \emph{cold start} --- from scratch --- proved difficult. So I let the
+start I wanted to top the leaderboard, and I pushed hard to break records directly. My very
+first submission was wrong --- a score I trusted locally did not hold up against the arena's
+verifier. That failure set the project's first discipline: rather than trust a single number,
+I built a local \emph{triple verifier} --- a fast approximate check to drive the optimization
+loop, backed by a slower exact reimplementation and a third independent cross-check --- so
+that no result was believed until it agreed with itself more than one way
+(\S\ref{sec:harness}). Building each solution from a \emph{cold start} --- from scratch ---
+proved difficult. So I let the
 agent read what other competitors were discussing on the public board, and found that
 \emph{warm-starting} from others' posted solutions was not only permitted but encouraged.
 That reframed the work: discovery is collaborative, and taking one real step beyond someone
