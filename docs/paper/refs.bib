@@ -1,13 +1,8 @@
 % References for the JSAgent methodology paper.
-%
-% VERIFIED entries carry confirmed arXiv ids / authors (traced to docs/source/).
-% TODO entries are related-work stubs: real works, but their arXiv id / authors are
-% NOT yet verified against a primary source. DO NOT cite a fabricated id — every
-% `% TODO: verify` must be resolved against the actual paper in Goal 7 before build.
+% All entries below trace to ingested sources in docs/source/ (verified metadata:
+% title, year, source_url). No fabricated ids.
 
-% ---------------------------------------------------------------------------
-% VERIFIED
-% ---------------------------------------------------------------------------
+% ---------- The platform (EinsteinArena) ----------
 
 @article{bianchi2026einstein,
   title   = {Harnessing the Collective Intelligence of AI Agents in the Wild for New Discoveries},
@@ -16,56 +11,78 @@
   year    = {2026},
   url     = {https://arxiv.org/abs/2606.10402},
   note    = {The EinsteinArena platform paper. JSAgent is reference [23] and is credited
-             by name in both flagship case studies.}
+             by name in both flagship case studies.
+             src: docs/source/2026-bianchi-einstein-arena-collective-intelligence.md}
 }
 
-% The arena-problems / AlphaEvolve-constructions reference cited by the arena operator
-% and across the wiki (e.g. findings/verification-patterns, p4-web-research-frontier).
-% arXiv id verified (appears in multiple source pages); author list is TODO.
-@article{arena2025problems,
-  title   = {EinsteinArena reference problems and constructions},
-  author  = {{Tao et al.}},
+@misc{togetherai2026arena,
+  title  = {Einstein Arena},
+  author = {{Together AI}},
+  year   = {2026},
+  howpublished = {\url{https://einsteinarena.com/}},
+  note   = {Platform blog / site. src: docs/source/2026-togetherai-einstein-arena.md}
+}
+
+% ---------- Single-run / agentic-discovery related work (§7) ----------
+
+@article{novikov2025alphaevolve,
+  title   = {AlphaEvolve: A Coding Agent for Scientific and Algorithmic Discovery},
+  author  = {Novikov, Alexander and others},
+  journal = {arXiv preprint arXiv:2506.13131},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2506.13131},
+  note    = {src: docs/source/2025-novikov-alphaevolve.md}
+}
+
+@misc{yuksekgonul2025tttdiscover,
+  title  = {Learning to Discover at Test Time (TTT-Discover)},
+  author = {Yuksekgonul, Mert and others},
+  year   = {2025},
+  howpublished = {\url{https://test-time-training.github.io/discover/}},
+  note   = {src: docs/source/2025-yuksekgonul-ttt-discover.md}
+}
+
+@article{swanson2025virtuallab,
+  title   = {The Virtual Lab: AI Agents Design New SARS-CoV-2 Nanobodies},
+  author  = {Swanson, Kyle and others},
+  journal = {Nature},
+  year    = {2025},
+  url     = {https://www.nature.com/articles/s41586-025-09442-9},
+  note    = {src: docs/source/2025-swanson-virtual-lab.md}
+}
+
+@article{qu2026coral,
+  title   = {CORAL: Towards Autonomous Multi-Agent Evolution for Open-Ended Discovery},
+  author  = {Qu, and others},
+  journal = {arXiv preprint arXiv:2604.01658},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2604.01658},
+  note    = {src: docs/source/2026-qu-coral-towards-autonomous-multi-agent.md}
+}
+
+@article{lin2026ahe,
+  title   = {Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses},
+  author  = {Lin, and others},
+  journal = {arXiv preprint arXiv:2604.25850},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2604.25850},
+  note    = {Directly relevant to the harness-as-artifact thesis (§4).
+             src: docs/source/2026-lin-agentic-harness-engineering-ahe.md}
+}
+
+% ---------- Math: arena problem frontier ----------
+
+@article{georgiev2025exploration,
+  title   = {Mathematical Exploration and Discovery at Scale},
+  author  = {Georgiev, Bogdan and G{\'o}mez-Serrano, Javier and Tao, Terence and Wagner, Adam Zsolt},
   journal = {arXiv preprint arXiv:2511.02864},
   year    = {2025},
   url     = {https://arxiv.org/abs/2511.02864},
-  note    = {TODO: verify exact title + author list against the primary source.}
+  note    = {The arena operator's reference paper; AlphaEvolve constructions + proven
+             bounds cited across the wiki. src: docs/source/2025-georgiev-math-exploration.md}
 }
 
-% ---------------------------------------------------------------------------
-% TODO: verify (related work, §7) — real works; ids/authors unconfirmed.
-% ---------------------------------------------------------------------------
-
-@misc{alphaevolve2025,
-  title  = {AlphaEvolve},
-  author = {{Google DeepMind}},
-  year   = {2025},
-  note   = {TODO: verify arXiv id / report citation + author list.}
-}
-
-@misc{tttdiscover2026,
-  title  = {TTT-Discover},
-  author = {{TODO}},
-  year   = {2026},
-  note   = {TODO: verify arXiv id + author list.}
-}
-
-@misc{virtuallab2024,
-  title  = {The Virtual Lab},
-  author = {{TODO}},
-  year   = {2024},
-  note   = {TODO: verify venue / arXiv id + author list.}
-}
-
-@misc{coral2025,
-  title  = {CORAL},
-  author = {{TODO}},
-  year   = {2025},
-  note   = {TODO: verify arXiv id + author list.}
-}
-
-@misc{agentrxiv2025,
-  title  = {AgentRxiv},
-  author = {{TODO}},
-  year   = {2025},
-  note   = {TODO: verify arXiv id + author list.}
-}
+% NOTE (Goal 5/6): per-problem math citations (kissing, autocorrelation, packing, etc.)
+% are available in the 1258-entry docs/source/ corpus — wire the specific ones into
+% §3 / §5 as those sections are drafted. Author lists with "and others" need the full
+% list filled from each source PDF before final build (Goal 7).
