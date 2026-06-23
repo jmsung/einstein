@@ -3,8 +3,8 @@
 % Self-contained: compiles with a stock TeX Live (no external .sty files required).
 %
 % STRUCTURE: objective contribution leads (§1–§9); the first-person origin story lives in
-% Appendix A ("A Personal Account"). Numbers re-verified against the live sweep
-% (scripts/leaderboard_standings.py) 2026-06-22 22:00 PT.
+% Appendix A ("A Personal Account"). Standings are dated historical snapshots (06-22 and
+% 06-23 2026) via scripts/leaderboard_standings.py — NOT kept in sync with the live board.
 %
 % \src{...} = internal provenance (which wiki/source page backs a claim). Rendered INVISIBLE;
 % kept in source for traceability. Term convention: "knowledge base" = the artifact.
@@ -216,7 +216,8 @@ were diagnosed and recorded: \emph{peak-locking} under the $\exp(v)$ parameteriz
 iterate freezes $\sim 5\mathrm{e}{-}8$ from SOTA across all $n$ and all optimizers), escaped by
 switching to $f=v^2$; and the \emph{compact-support} structure of the true optimum, reached by
 warm data-driven self-pruning (\S\ref{sec:techniques}). The latter broke a two-agent tie and
-set a verified arena record ($1.5028609\to 1.5028506$) on 2026-06-08 --- rank \#1 at the time.
+set a verified arena record ($1.5028609\to 1.5028506$) on 2026-06-08 --- rank \#1 at the time
+(Figure~\ref{fig:p2}).
 That record was itself an intermediate link: on 2026-06-23 a strong newcomer (\texttt{Hyra})
 narrowly surpassed it, moving JSAgent to rank \#2 --- the same collective-progress pattern as
 P3 below, and exactly what the thesis predicts. What does \emph{not} decay is the verified
@@ -282,9 +283,9 @@ triple-verify the spine of the method --- and an honest illustration of why a le
 position is weaker evidence than a locally re-verified construction.
 \src{problems/9-uncertainty-principle.md, findings/verification-patterns.md, findings/p9-uncertainty-push-trajectory.md}
 
-\paragraph{P3, second autocorrelation inequality (rank \#3, on the documented frontier).}
-JSAgent achieved the strongest $10^5$-interval solution, $C=0.962214$, via cross-resolution
-basin transfer and Dinkelbach refinement --- the result the platform
+\paragraph{P3, second autocorrelation inequality (frontier value at posting).}
+JSAgent achieved the strongest $10^5$-interval solution at the time, $C=0.962214$, via
+cross-resolution basin transfer and Dinkelbach refinement --- the result the platform
 paper~\cite{bianchi2026einstein} attributes to JSAgent by name (its Fig.~6) and depicts within
 a basin-transfer lineage alongside another agent's parallel work (Fig.~3b). The final record
 ($0.962643$, at $4\times 10^5$ resolution) went to a different agent; JSAgent's contribution
@@ -347,9 +348,10 @@ and a human-auditable account of how it reasons. Every campaign
 begins with planning rather than code --- a written plan stating what to do and why before
 any optimizer runs. Unlike a frozen orchestration pipeline, the harness and the knowledge
 base co-evolve: a failure produces a finding, a recurring finding is promoted to a rule, and
-the next run inherits both. \src{.claude/rules/, docs/agent/}
+the next run inherits both (the recurring terms are defined in Table~\ref{tab:defs}).
+\src{.claude/rules/, docs/agent/}
 
-The loop a single problem-cycle runs is:
+The loop a single problem-cycle runs is shown in Figure~\ref{fig:loop}:
 
 \begin{figure}[h]
 \centering
@@ -491,10 +493,10 @@ Trace & Prior KB item retrieved & Later action and effect & Supports \\
 \midrule
 P2 & a dead-end finding's ``what might still work'' note, written 4 days earlier &
   its prescription (warm self-pruning) was executed verbatim, setting a verified record
-  ($1.5028609\to 1.5028506$) & persistence $>$ in-context reasoning \\
+  ($1.5028609\to 1.5028506$; since surpassed) & persistence $>$ in-context reasoning \\
 P3 & cross-resolution basin transfer, distilled from earlier autocorrelation work &
-  retrieved and reapplied; temporarily took rank \#1 at posting ($0.96199\to 0.96221$;
-  now \#3) & cross-problem method transfer \\
+  retrieved and reapplied; frontier value at posting ($0.96199\to 0.96221$; rank since
+  moved) & cross-problem method transfer \\
 P1 & --- (a fresh SDP-relaxation attempt) &
   it failed; the recorded \emph{why} (rank-1 primal optimum destroyed by lifting) ruled out
   a family of approaches on later problems & failure becomes reusable knowledge \\
@@ -603,8 +605,9 @@ kissing record past JSAgent's contribution.
 \section{Evaluation and Reproducibility}
 \label{sec:eval}
 
-To keep the contribution auditable rather than asserted, we state the evaluation protocol,
-the claims and their evidence, the compute used, and how to reproduce the standings.
+To keep the contribution auditable rather than asserted, we state the evaluation protocol
+(Table~\ref{tab:protocol}), the claims and their evidence (Table~\ref{tab:claims}), the compute
+used, and how to reproduce the standings.
 
 \paragraph{Protocol.}
 \begin{table}[htbp]
@@ -949,7 +952,8 @@ later --- unless fast surrogate verifiers become available there.
 \section{Limitations and Threats to Validity}
 \label{sec:limits}
 
-The honest framing distributed through the paper is collected here as a single account.
+The honest framing distributed through the paper is collected here as a single account
+(Table~\ref{tab:threats}).
 
 \begin{table}[h]
 \centering
@@ -1081,7 +1085,7 @@ submissions for the problem were eventually closed; JSAgent did not hold the fin
 (\texttt{KawaiiCorgi} did, on a configuration later extended to $604$ vectors). The dust
 settled and the result was not mine, but the competition was genuinely thrilling --- and it is
 the clearest thing I have seen to a field of agents pushing one another past a wall that had
-stood, in the published literature, for forty years.
+stood, in the published literature, for over four decades.
 
 \paragraph{Problems are related --- so build a memory.}
 As I let the agent work more problems, a pattern surfaced: many were related. The first,
@@ -1133,7 +1137,7 @@ the breakthrough, the verified result --- is given below, each traceable to the 
 pages. Ranks are as of the 2026-06-22 sweep (Table~\ref{tab:standings}); where the documented
 progression predates that snapshot, both are stated.
 
-\paragraph{P2 --- first autocorrelation inequality (now rank \#1).}
+\paragraph{P2 --- first autocorrelation inequality (verified record, since surpassed).}
 \emph{Initial:} minimize $C=\max(f\!\star\!f)/(\int f)^2$; the larger-$n$ cascade that had
 worked on P4 was applied under the standard $\exp(v)$ parameterization. \emph{Wall:} the
 iterate peak-locked at $\delta\approx 5\mathrm{e}{-}8$ for every $n$ --- under $\exp(v)$ both
@@ -1144,9 +1148,10 @@ a finite boundary-KKT signal), then \emph{warm data-driven self-pruning} --- see
 converged full-support basin and let the optimizer drive the smallest-magnitude cells to exact
 zero on a support-shrinking schedule. \emph{Result:} a verified arena record
 $C=1.5028506$ (2026-06-08), beating the prior \#1 by $\sim\!1\mathrm{e}{-}5$; the arena server
-reproduced it to $10^{-16}$. \src{problems/2-first-autocorrelation.md, findings/p2-peak-locking-hessian-mechanism.md, findings/p2-warm-self-pruning-beats-record.md}
+reproduced it to $10^{-16}$. It was rank \#1 until 2026-06-23, when a newcomer (\texttt{Hyra})
+narrowly surpassed it --- an intermediate link, as the thesis predicts. \src{problems/2-first-autocorrelation.md, findings/p2-peak-locking-hessian-mechanism.md, findings/p2-warm-self-pruning-beats-record.md}
 
-\paragraph{P3 --- second autocorrelation inequality (rank \#3, on the frontier).}
+\paragraph{P3 --- second autocorrelation inequality (frontier value at posting; rank since moved).}
 \emph{Initial:} maximize the ratio $C=\|f\!\star\!f\|_2^2/(\|f\!\star\!f\|_1\,\|f\!\star\!f\|_\infty)$
 from-scratch (Adam $+$ upsampling cascade) at $n=10^5$. \emph{Wall:} from-scratch search tops
 out near $0.91$ --- its basin is \emph{disjoint} from the SOTA basin, and upsampling preserves
@@ -1155,7 +1160,8 @@ basin identity, so more resolution adds almost nothing. \emph{Breakthrough:}
 to $10^5$ (landing in a structurally distinct basin) and refine with Dinkelbach $+$ a
 $\beta$-cascade. \emph{Result:} $C=0.962214$, the frontier value at that resolution ---
 credited to JSAgent in the platform paper (Fig.~6), though other agents reached a matching
-value in a close cluster; it now stands at \#3 behind the lineage it helped seed. \src{problems/3-autocorrelation.md, techniques/cross-resolution-basin-transfer.md, findings/dead-end-p3-jaech-cascade-extended.md}
+value in a close cluster; it has since been surpassed (rank \#3 at the 06-22 snapshot, \#4 by
+06-23) as the lineage it helped seed advanced. \src{problems/3-autocorrelation.md, techniques/cross-resolution-basin-transfer.md, findings/dead-end-p3-jaech-cascade-extended.md}
 
 \paragraph{P18 --- circles in a rectangle (rank \#1, clean).}
 \emph{Initial:} pack 21 circles in a rectangle of perimeter $\le 4$, maximizing $\sum r$;
