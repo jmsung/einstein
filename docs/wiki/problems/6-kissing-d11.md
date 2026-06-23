@@ -18,6 +18,11 @@ private_tracking: ../../mb/problems/6-kissing-number/
 
 # Problem 6 — Kissing Number in Dimension 11 (n=594)
 
+> ⚠️ **Possibly stale (2026-06-22).** The platform paper (Bianchi et al., arXiv 2606.10402) reports the
+> arena kissing-d11 record as **604** under `scoring: max`, not a fixed-594 feasibility target. This page
+> may be frozen at the 594 sub-goal. Resolve before treating as closed → see
+> [question 2026-06-22-p6-kissing-d11-594-vs-604-reformulation](../questions/2026-06-22-p6-kissing-d11-594-vs-604-reformulation.md).
+
 ## Statement
 Place 594 unit vectors in R^11 so that every pair separates by at least 1 (i.e., 594 unit spheres each tangent to a central unit sphere with no pairwise overlap). Score = total hinge overlap; score 0 proves the kissing number kappa(11) >= 594.
 

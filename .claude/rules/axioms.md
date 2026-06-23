@@ -26,6 +26,8 @@ The repo + wiki *is* the publication channel — auditable, version-controlled, 
 
 **Why L0:** the wiki is the artifact; external posts dilute it. Also: the wiki is built for *math wisdom*, not promotion.
 
+**Carve-out (2026-06-22, human-approved):** A2 is **waived for a single authored methodology paper** (`js/docs/methodology-paper`) — a deliberate write-up of JSAgent's approach for arXiv, distilled *from* the wiki, not a substitute for it. This does **not** re-open agent autonomous posting: the agent still may not post to arena threads, blogs, or social. The carve-out is a one-time human decision for one auditable artifact; the wiki remains the canonical record and the paper cites it.
+
 ## A3 — Solution backup
 
 Solutions are the most important artifact. Never lose a solution.
