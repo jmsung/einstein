@@ -103,16 +103,101 @@ scientific contributions today.
 \section{Agentic Harness Contribution}
 \label{sec:harness}
 % The structurally novel core. Each item is a .claude/rules/ rule with a *why*. See outline.md §4.
-\stub{self-improvement loop: gap $\to$ question $\to$ research $\to$ distill $\to$ finding $\to$ promote.}
-\stub{council dispatch --- personas write \emph{questions}, not solutions.}
-\stub{wiki-first lookup + cycle discipline --- every cycle logged, no cherry-picking.}
-\stub{triple-verify --- the credibility spine; evaluator-drift incidents (P9/P14/P17).}
-\stub{wall-hit escalation --- consult failure ledger + re-dispatch council before brute force.}
-\stub{failure-is-a-finding --- dead-ends with the \emph{why}; the P2 record came verbatim from
-  a 4-day-old dead-end's ``what might still work'' section.}
-\stub{compute router --- route workload to M5 Max CPU/MPS before launching.}
-\stub{evidence the loop works: cycle-log authorship mix, records-per-100-cycles, trajectory
-  classifier. \src{docs/agent/cycle-log.md, docs/agent/metrics.md}}
+% DRAFT (Goal 3): prose grounded directly in .claude/rules/*. Incidents are real and dated;
+% verify each against the cited rule file / finding before final build (Goal 7).
+
+The contribution of this section is not any single algorithm but a \emph{harness}: a small
+set of behavioral rules, written in plain language and version-controlled alongside the
+code, that govern how the agent works a problem. Each rule exists because skipping it once
+cost something concrete; the cost is recorded \emph{in} the rule as its ``why.'' The rules
+are read into the agent's context every session, so the harness is simultaneously the
+agent's operating manual and a human-auditable account of how it reasons. Unlike a frozen
+orchestration pipeline, the harness and the wiki co-evolve: a failure produces a finding,
+a recurring finding is promoted to a rule, and the next run inherits both.
+\src{.claude/rules/, docs/agent/}
+
+\paragraph{The self-improvement loop.}
+Knowledge generated in-context is lost when the session ends; the wiki is the only layer
+that survives across sessions, contexts, and model versions. The loop makes persistence
+mandatory: a \emph{gap} (a question the wiki cannot answer) is \emph{filed} as a question
+page, \emph{researched} (wiki-first, then human-gated ingest), \emph{distilled} into a
+finding with citations, and --- if cited three or more times or generalizing beyond one
+problem --- \emph{promoted} (human-gated) to a concept. The most-skipped step is the
+cheapest: filing the question. An unfiled gap is wisdom permanently lost.
+\src{.claude/rules/self-improvement-loop.md}
+
+\paragraph{Council dispatch --- personas that write questions, not answers.}
+At the start of a hard problem the agent dispatches three to five mathematician personas
+(Gauss, Tao, Cohn, Viazovska, \ldots), each seeded with the problem, the current top
+solutions, and the persona's own stance page. Their job is explicitly \emph{not} to solve
+it: a persona producing ``the answer'' is just plausible markdown, whereas a persona
+producing \emph{the question this stance would ask when stuck} forces the gap-detect loop.
+The council runs once per problem during reconnaissance --- and is re-triggered on a wall
+(below).
+\src{.claude/rules/council-dispatch.md}
+
+\paragraph{Wiki-first lookup and cycle discipline.}
+Before answering any in-scope question the agent must query the wiki first and cite what it
+finds; the first tool call of every problem cycle is a wiki query, treated as a
+\emph{correctness check on memory} rather than a search-because-stuck. Every cycle ---
+success or failure --- produces exactly one row in a cycle log. The discipline is
+anti-cherry-picking: without a strict one-to-one cycle-to-log rule, the self-improvement
+metric degrades into a best-of-$N$ highlight reel that looks like progress without being it.
+\src{.claude/rules/wiki-first-lookup.md, .claude/rules/cycle-discipline.md}
+
+\paragraph{Triple-verify --- the credibility spine.}
+Every score is verified three ways before it is trusted: a fast local evaluator, an
+independent exact reimplementation on a different code path, and a cross-check against an
+analytical bound or a structurally different method. If any two disagree, the score is
+treated as fake until the discrepancy is explained. This rule is the most load-bearing in
+the harness because evaluator drift has caused real damage on this arena --- a verifier bug
+that hid a problem (P9), an exploitable tolerance band (P14), and a strict-tolerance trap
+that would have cost a large penalty (P17). Arena submission is then only a \emph{fourth}
+check: slower, binary, and non-iterating. The local triple-verify is the closed loop.
+\src{.claude/rules/triple-verify.md, .claude/rules/axioms.md (A1)}
+
+\paragraph{Wall-hit escalation --- consult failure before brute force.}
+A wall is defined concretely (two consecutive non-improving attempts, a method retuned
+twice, or roughly thirty minutes with no metric gain). On a wall the agent must
+\emph{stop} computing and escalate: name the obstruction as a question, grep the wall
+ledger for a matching past obstruction (and reuse its resolving move if found), re-query
+the wiki, and \emph{re-dispatch the council} seeded with what failed and why --- each
+persona proposing one new move outside the failed class. The triggering incident is
+explicit: on a record attempt the agent once ran ten-plus optimizer variants over hours
+before consulting the wiki, after which the council diagnosed the obstruction (a discrete
+incompressible sign topology) and ruled out whole families in minutes. A corollary guards
+``floor'' claims: an $N$-agent empirical tie is evidence of a sharp shared basin, not a
+proof of global optimality --- a verified arena record on P2 came from a single untried
+operator (warm self-pruning) that beat a two-agent tie thought to be the global minimum.
+\src{.claude/rules/wall-hit-escalation.md, concepts/n-agent-tie-not-global-min}
+
+\paragraph{Failure is a finding.}
+Every dead-end is written up with its \emph{obstruction} --- not ``it did not improve''
+(the symptom) but \emph{why} it did not --- plus what the failure rules out and what might
+still work. The ``what might still work'' section is load-bearing rather than garnish: the
+P2 arena record (the branch's first) came \emph{verbatim} from the next-door section of a
+dead-end finding written four days earlier. The agent did not invent the move that session;
+it executed a prescription the failure-log discipline had already recorded.
+\src{.claude/rules/failure-is-a-finding.md}
+
+\paragraph{Compute router.}
+Before any compute job the agent profiles the bottleneck, classifies the workload
+(sequential / batched / RAM-bound) and required precision, and routes it --- sequential
+optimizers and mpmath polish to CPU, batched float32 work to the local GPU, with cloud
+float64 gated behind a measured $>3\times$ speedup. Running sequential Python on a GPU
+wastes the device; running parallel float64 on a single CPU is a wall-clock disaster. The
+router catches both before launch.
+\src{.claude/rules/compute-router.md, .claude/rules/axioms.md (A4)}
+
+\paragraph{Evidence the loop works.}
+Because every cycle is logged with author attribution, the harness can be measured on its
+own terms: the agent-vs-human authorship mix of wiki pages (a healthy mix is the
+self-improvement signal --- all-human means the agent did not learn, all-agent-unreviewed
+means the human is asleep at the wheel), records produced per unit of cycle effort, and a
+trajectory classifier over the cycle log.
+\src{docs/agent/cycle-log.md, docs/agent/metrics.md}
+% TODO (Goal 7): pull the actual authorship-mix + records-per-100-cycles numbers from
+% docs/agent/metrics.md and state them here with the date.
 
 % ======================================================================
 \section{Techniques Produced}
