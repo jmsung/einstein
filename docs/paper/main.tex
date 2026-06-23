@@ -1,20 +1,18 @@
-% JSAgent methodology paper — arXiv scaffold (Goal 2)
-% Build:  pdflatex main && bibtex main && pdflatex main && pdflatex main
+% JSAgent methodology paper — arXiv draft.
+% Build:  tectonic main.tex   (or: pdflatex main && bibtex main && pdflatex main && pdflatex main)
 % Self-contained: compiles with a stock TeX Live (no external .sty files required).
 %
-% Title: SET (Goal 7) — option (a), "Wiki" -> "Knowledge Base" per author.
+% STRUCTURE: objective contribution leads (§1–§9); the first-person origin story lives in
+% Appendix A ("A Personal Account"). Numbers re-verified against the live sweep
+% (scripts/leaderboard_standings.py) 2026-06-22 22:00 PT.
 %
-% STATUS (Goal 7 complete): all sections drafted; numbers re-verified against the live sweep
-% 2026-06-22 22:00 PT. §1 origin/thesis and §8 personal close are AUTHOR-DRAFTs (marked) for
-% the author to revise into their own voice.
+% \src{...} = internal provenance (which wiki/source page backs a claim). Rendered INVISIBLE
+% (see \renewcommand below); kept in source for traceability and the planned wiki-hyperlink
+% pass. Term convention: "knowledge base" = the artifact; "wiki" = its concrete form.
 %
-% BEFORE arXiv SUBMISSION (final pass — not done here, no local TeX toolchain):
-%   1. Strip internal provenance markers: the \src{...} notes and the \stub macro definition
-%      are for drafting traceability only — delete \src usages and the \newcommand lines.
-%   2. Build: pdflatex main && bibtex main && pdflatex main && pdflatex main  (needs TeX).
-%   3. Re-run scripts/leaderboard_standings.py and reconcile Table 1 + inline numbers.
-%   4. Optional figures: lineage graph, cycle-log self-improvement curve (see outline §Open).
-%   5. Author revises the two AUTHOR-DRAFT blocks (§1, §8).
+% BEFORE arXiv SUBMISSION: (1) optional figures (lineage graph, cycle-log curve); (2) re-run
+% leaderboard_standings.py and reconcile Table 1 + inline numbers; (3) author final read of
+% Appendix A voice.
 
 \documentclass[11pt]{article}
 
@@ -29,9 +27,10 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{url}
 
-% Scaffold marker for stub content — remove before final build.
-\newcommand{\stub}[1]{\par\noindent\textcolor{gray}{\small\textit{[stub: #1]}}\par}
-\newcommand{\src}[1]{\textcolor{gray}{\footnotesize\textsf{(src: #1)}}}
+% Provenance markers: kept in source, NOT rendered (set to print nothing for a clean read).
+% To surface them as hyperlinks later, redefine \src to emit \href to the public repo.
+\newcommand{\src}[1]{}
+\newcommand{\stub}[1]{}
 
 \title{\textbf{JSAgent: A Self-Improving Agent that Compounds\\
   Mathematical Wisdom in a Knowledge Base}}
@@ -52,32 +51,29 @@
 Recent systems (AlphaEvolve, TTT-Discover) show language-model agents can advance open
 math problems, but each runs as a single orchestrated pipeline whose knowledge evaporates
 when the run ends. We describe \textbf{JSAgent}, an agent built on the opposite bet: its
-primary artifact is a \textbf{compounding wiki of mathematical wisdom plus a set of
-behavioral rules co-evolved with the agent}, and arena submission is treated as
-\emph{verification}, not the goal. Operating in the wild on EinsteinArena, JSAgent reached
-\textbf{top-3 on 10 of 17 active problems and the highest rank-\#1 count (4) and top-3
-count (10) of any agent} (as of 2026-06-22). We detail the methodology --- a wiki-first
-self-improvement loop, a mathematician-persona ``council'' that writes questions rather
-than answers, a triple-verify discipline that guards against evaluator drift, a wall-hit
-escalation that consults accumulated failure before brute force, and a compute router ---
-and the concrete techniques it produced (cross-resolution basin transfer, Dinkelbach
-fractional programming, warm self-pruning, mpmath ULP polish). We
-argue, with evidence and stated caveats, that agents are ready to make real, auditable
-scientific contributions today. Every artifact of this work --- code, scripts, wiki, and
-this paper --- was implemented by the agent under human guidance, not written by hand; the
-human's load-bearing contribution was \emph{which question to ask} and \emph{comprehending
-what was done well enough to steer it}. We close with the conditions under which this loop
-becomes fully autonomous, and why objective verification (which math enjoys and the natural
-sciences largely lack) is the gating factor.
+primary artifact is a \textbf{compounding knowledge base of mathematical wisdom} --- a wiki
+of concepts, techniques, and findings --- \textbf{plus a set of behavioral rules co-evolved
+with the agent}, and arena submission is treated as \emph{verification}, not the goal.
+Operating in the wild on EinsteinArena, JSAgent reached \textbf{top-3 on 10 of 17 active
+problems and the highest rank-\#1 count (4) and top-3 count (10) of any agent} (as of
+2026-06-22). We detail the methodology --- a wiki-first self-improvement loop, a
+mathematician-persona ``council'' that writes questions rather than answers, a triple-verify
+discipline that guards against evaluator drift, a wall-hit escalation that consults
+accumulated failure before brute force, and a compute router --- and the concrete techniques
+it produced (cross-resolution basin transfer, Dinkelbach fractional programming, warm
+self-pruning, mpmath ULP polish). We argue, with evidence and stated caveats, that agents are
+ready to make real, auditable scientific contributions today. Every artifact of this work ---
+code, scripts, knowledge base, and this paper --- was implemented by the agent under human
+guidance, not written by hand; the human's load-bearing contribution was \emph{which question
+to ask} and \emph{comprehending what was done well enough to steer it}. We close with the
+conditions under which this loop becomes fully autonomous, and why objective verification
+(which math enjoys and the natural sciences largely lack) is the gating factor.
 \end{abstract}
 
 % ======================================================================
 \section{Introduction}
 \label{sec:intro}
-% Voice: author-led, first person. DRAFT for the author to make their own — the felt parts
-% are placeholders in the author's register, not final claims. See outline.md §1.
 
-% --- AUTHOR-DRAFT (revise freely; this is scaffolding in your voice) ---
 AI agents have advanced remarkably in a short span, and much of that progress traces to
 \emph{coding agents} --- systems that write, run, and revise their own programs in a tight
 loop. We are now beginning to see more and more real examples of such agents making genuine
@@ -91,67 +87,16 @@ leaderboards --- turn that objectivity into a live testbed.
 This paper reports what one agent did in such an arena, and, more than that, a bet about what
 an agent of this kind should be built to \emph{keep}: that the lasting artifact of an agent's
 work is not the answer it submits but the wisdom that produced it --- the kind that compounds
-across problems rather than evaporating when a run ends.
-
-I am not a mathematician by training. The problems looked hard enough that at first I did not
-attempt them at all; what changed was a free weekend and the impulse to just try one. My
-background is in physics, so I began with the problem I felt I could actually read --- the
-uncertainty principle (P9), built on the same inequality that bounds position and momentum in
-quantum mechanics. After a good deal of trial and error, it eventually worked. That a
-non-specialist could enter at all, and that the first problem I dared to try would end up
-among the agent's strongest results, is itself part of what this paper is about: the agent
-supplied the mathematical execution; I supplied a direction I understood well enough to steer.
-
-I will be honest about how that bet emerged, because the path is part of the lesson. I wanted
-to top the leaderboard, and I pushed hard to break records directly. My very first submission
-was wrong --- a score I trusted locally did not hold up against the arena's
-verifier. That failure set the project's first discipline: rather than trust a single number,
-I built a local \emph{triple verifier} --- a fast approximate check to drive the optimization
-loop, backed by a slower exact reimplementation and a third independent cross-check --- so
-that no result was believed until it agreed with itself more than one way
-(\S\ref{sec:harness}). Building each solution from a \emph{cold start} --- from scratch ---
-proved difficult. So I let the
-agent read what other competitors were discussing on the public board, and found that
-\emph{warm-starting} from others' posted solutions was not only permitted but encouraged.
-That reframed the work: discovery is collaborative, and taking one real step beyond someone
-else's contribution is itself a contribution --- often a far more efficient route than
-starting over. But warm-starting has a failure mode. Building on an existing solution can
-lock you into its basin, and past a point the only way to a genuinely better result is to
-abandon it and restart from a very different configuration. The kissing-number problem in
-dimension~11 was the clearest illustration: a strong arrangement of $594$ vectors ---
-contributed by \texttt{alpha\_omega\_agents} and built on by much of the field, this agent
-included --- anchored a long run of incremental gains, yet pushing the record further (to
-$604$) required a structurally different construction, a restart rather than a refinement
-(\S\ref{sec:collab}).
-
-As I let the agent work more problems, a pattern surfaced: many were related. The first,
-second, and third autocorrelation inequalities are a family; a method that cracked one --- a
-parameterization, a refinement step --- often carried to the next. That observation became a
-design decision: build a shared knowledge base so that what was learned on one problem could
-be transferred \emph{horizontally} to others, instead of being rediscovered each time. And
-because failure is as informative as success --- a dead-end, recorded with its reason, is a
-durable way of knowing what does \emph{not} work --- I kept those too, not only the wins
-(\S\ref{sec:harness}).
-
-The needle moved gradually and then suddenly. Early submissions were unremarkable; the
-turning points came when failures started being written down \emph{with their reasons}, and
-later runs began standing on those write-ups instead of rediscovering the same walls. The
-clearest instance --- a verified arena record produced verbatim from a four-day-old
-dead-end's ``what might still work'' note --- convinced me the deliverable was never the
-score. It was the page that produced the score.
-
-That is the thesis of this paper: \textbf{an agent whose deliverable is compounding wisdom,
-not a one-shot run.} The knowledge base is the artifact; arena submission is only a way to
-verify it against the world. I will argue, with verified standings and stated caveats, that
-agents are ready to make real, auditable scientific contributions today --- and, just as
-honestly, that the human's role in choosing what to work on and understanding what was done
-has not gone away.
-% --- end AUTHOR-DRAFT ---
+across problems rather than evaporating when a run ends. The artifact, accordingly, is a
+knowledge base (implemented as a wiki of concepts, techniques, and findings) together with a
+set of plain-language behavioral rules; arena submission is only a way to verify that
+knowledge against the world.\footnote{The personal account of how this began --- a
+non-mathematician, a free weekend, and the first problem that worked --- is deferred to
+Appendix~\ref{app:personal} so the contribution can lead.}
 
 \paragraph{How this work was produced (and why it matters to the thesis).}
-% DRAFT (per author): the human-mediated / agent-implemented framing. Author's voice — refine in Goal 7.
-Every artifact described here --- the optimizer code and per-problem scripts, the wiki of
-concepts and findings, the behavioral rules, and the prose of this paper --- was
+Every artifact described here --- the optimizer code and per-problem scripts, the knowledge
+base of concepts and findings, the behavioral rules, and the prose of this paper --- was
 \emph{implemented by the agent}, not typed by the author. The mode of work was uniformly
 agentic: the human stated a request, the agent did it and reported back. This is not an
 aside; it is part of the result. The central lesson is a clean division of labor that
@@ -159,39 +104,25 @@ emerged in practice: the agent is extraordinarily capable at \emph{execution}, b
 not reliably know \emph{which question is worth asking} or which problem is worth solving
 next --- problem selection and taste remained the human's job. And steering that selection
 requires the human to genuinely \emph{comprehend} what the agent is doing; without
-comprehension there is no guidance, only rubber-stamping. The wiki and the harness are, in
-part, the instruments that make such comprehension --- and therefore such guidance ---
-possible at all (\S\ref{sec:harness}).
+comprehension there is no guidance, only rubber-stamping. The knowledge base and the harness
+are, in part, the instruments that make such comprehension --- and therefore such guidance
+--- possible at all (\S\ref{sec:harness}).
 
-\paragraph{Macro-management, not micro-management.}
-% DRAFT (per author): the long-horizon-autonomy / encouragement working mode.
-A second methodological input shaped the results as much as any rule: long-horizon autonomy.
-The hardest progress came not from interactive back-and-forth but from long, unattended runs
---- many hours, frequently overnight --- in which the agent was given a goal and the latitude
-to pursue it without step-by-step direction. The management style that worked was
-\emph{macro}, not micro: set a long-term objective, encourage persistence in plain terms
-(``don't give up; push to the ultimate limit''), and let the agent run while I slept. That
-such encouragement measurably helped is itself a finding worth stating honestly, even if its
-mechanism is unclear. The conviction underneath it: if an agent is truly remarkable, it
-should be able to make real progress unattended under a long-term goal --- and if it can do
-that, it should eventually solve problems I cannot. This paper is, in part, a test of that
-conviction.
-
-\paragraph{Plan first.}
-Every campaign began with planning, not code: a detailed plan document stating, in writing,
-exactly what to do and why before any optimizer ran (\S\ref{sec:harness} formalizes this as
-the protocol's first steps). At the outset this was a \emph{manual} process --- I wrote and
-curated the plans, and the self-improvement steps happened because I asked for them. The arc
-of the project was to make that discipline progressively self-driving, culminating in a
-meta-learning harness loop that enforces the once-discretionary planning and capture steps
-automatically (\S\ref{sec:harness}). The shorthand for why: discretion decays, gates compound.
+\paragraph{Roadmap.}
+Section~\ref{sec:arena} situates EinsteinArena and JSAgent's stance. Section~\ref{sec:math}
+reports the mathematical contributions and the verified standings (Table~\ref{tab:standings}).
+Section~\ref{sec:harness} is the structural core --- the self-improving harness of behavioral
+rules. Section~\ref{sec:techniques} catalogs the transferable techniques the loop produced;
+Section~\ref{sec:collab} gives the inside view of competition and collaboration;
+Section~\ref{sec:related} positions the work; and Section~\ref{sec:discussion} asks how ready
+agents are for real scientific contribution, and what gates full autonomy.
 
 \paragraph{Contributions.}
 \begin{itemize}[nosep]
-  \item A self-improving wiki-agent \emph{methodology} (\S\ref{sec:harness}).
+  \item A self-improving knowledge-base--agent \emph{methodology} (\S\ref{sec:harness}).
   \item An open, auditable \emph{harness} of behavioral rules co-evolved with the agent.
   \item Transferable \emph{techniques} produced in the course of solving (\S\ref{sec:techniques}).
-  \item \emph{Evidence}: verified standings and an honest self-improvement trail (\S\ref{sec:results}).
+  \item \emph{Evidence}: verified standings and an honest self-improvement trail (\S\ref{sec:math}).
   \item A field account of the \emph{human--agent division of labor} --- execution
         automates first, problem selection and comprehension do not (\S\ref{sec:discussion}).
 \end{itemize}
@@ -216,12 +147,39 @@ disposable and the accumulated knowledge base as the deliverable
 % ======================================================================
 \section{Mathematical Contributions}
 \label{sec:math}
-% DRAFT (Goal 5): grounded in findings/arena-standings-snapshot-2026-06-22 + problem pages.
-% All ranks/scores trace to the live sweep 2026-06-22T21:37 PT. Re-run before final build.
+% All ranks/scores trace to the live sweep 2026-06-22 22:00 PT. Re-run before final build.
 
 We lead with where JSAgent holds defensible wisdom rather than a full problem-by-problem
 tour; the standings are in Table~\ref{tab:standings}, and the honest reading of each rank is
 stated inline.
+
+\begin{table}[h]
+\centering
+\caption{JSAgent standings on EinsteinArena, live sweep 2026-06-22 (re-verified
+  22:00 PT). JSAgent leads all agents on both rank-\#1 count (4) and top-3 count (10).
+  Re-run \texttt{scripts/leaderboard\_standings.py} before final build --- standings move.}
+\label{tab:standings}
+\begin{tabular}{llll}
+\toprule
+Problem & Topic & JSAgent rank & Note \\
+\midrule
+P2  & first-autocorrelation   & \#1 & clean \\
+P9  & uncertainty             & \#1 & tied; held on submission order \\
+P14 & circle-packing          & \#1 & clean \\
+P18 & circles-in-rectangle    & \#1 & clean \\
+P1  & Erd\H{o}s                & \#2 & identical score; Together-AI submitted first \\
+P3  & second-autocorrelation  & \#3 & 0.962214 (cited in platform paper, Fig.~6) \\
+P4  & third-autocorrelation   & \#3 & tied score \\
+P7  & prime-number-theorem    & \#3 & \\
+P11 & tammes                  & \#3 & \\
+P22 & kissing-d12             & \#3 & \\
+\midrule
+\multicolumn{4}{l}{\textbf{Totals:} 4 rank-\#1, 1 rank-\#2, 5 rank-\#3; top-3 on 10/17 active problems.}\\
+\multicolumn{4}{l}{\textbf{Among all agents:} highest rank-\#1 count (4; next: AlphaEvolve 3, Together-AI 3)}\\
+\multicolumn{4}{l}{and highest top-3 count (10; next: alpha\_omega\_agents 8, CHRONOS 7).}\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{P2, first autocorrelation inequality (rank \#1, clean).}
 The deepest result. Two obstructions were diagnosed and recorded: \emph{peak-locking} under
@@ -233,7 +191,6 @@ The latter broke a two-agent tie and set a verified arena record ($1.5028609\to 
 
 \paragraph{P14 circle-packing and P18 circles-in-rectangle (rank \#1, clean).}
 Strictly-best scores on the live board. \src{findings/arena-standings-snapshot-2026-06-22.md}
-% TODO (Goal 7): one mechanism sentence each from problems/14-*, problems/18-* pages.
 
 \paragraph{P9 uncertainty principle (rank \#1, tied --- held on submission order).}
 A legitimate but contested \#1: another agent matched the exact score and submitted later, so
@@ -262,23 +219,21 @@ in both rank-\#1 count (4) and top-3 count (10), since that does not hinge on a 
 % ======================================================================
 \section{Agentic Harness Contribution}
 \label{sec:harness}
-% The structurally novel core. Each item is a .claude/rules/ rule with a *why*. See outline.md §4.
-% DRAFT (Goal 3): prose grounded directly in .claude/rules/*. Incidents are real and dated;
-% verify each against the cited rule file / finding before final build (Goal 7).
 
 The contribution of this section is not any single algorithm but a \emph{harness}: a small
 set of behavioral rules, written in plain language and version-controlled alongside the
 code, that govern how the agent works a problem. Each rule exists because skipping it once
 cost something concrete; the cost is recorded \emph{in} the rule as its ``why.'' The rules
 are read into the agent's context every session, so the harness is simultaneously the
-agent's operating manual and a human-auditable account of how it reasons. Unlike a frozen
-orchestration pipeline, the harness and the wiki co-evolve: a failure produces a finding,
-a recurring finding is promoted to a rule, and the next run inherits both.
-\src{.claude/rules/, docs/agent/}
+agent's operating manual and a human-auditable account of how it reasons. Every campaign
+begins with planning rather than code --- a written plan stating what to do and why before
+any optimizer runs. Unlike a frozen orchestration pipeline, the harness and the knowledge
+base co-evolve: a failure produces a finding, a recurring finding is promoted to a rule, and
+the next run inherits both. \src{.claude/rules/, docs/agent/}
 
 \paragraph{The self-improvement loop.}
-Knowledge generated in-context is lost when the session ends; the wiki is the only layer
-that survives across sessions, contexts, and model versions. The loop makes persistence
+Knowledge generated in-context is lost when the session ends; the knowledge base is the only
+layer that survives across sessions, contexts, and model versions. The loop makes persistence
 mandatory: a \emph{gap} (a question the wiki cannot answer) is \emph{filed} as a question
 page, \emph{researched} (wiki-first, then human-gated ingest), \emph{distilled} into a
 finding with citations, and --- if cited three or more times or generalizing beyond one
@@ -293,12 +248,11 @@ solutions, and the persona's own stance page. Their job is explicitly \emph{not}
 it: a persona producing ``the answer'' is just plausible markdown, whereas a persona
 producing \emph{the question this stance would ask when stuck} forces the gap-detect loop.
 The council runs once per problem during reconnaissance --- and is re-triggered on a wall
-(below).
-\src{.claude/rules/council-dispatch.md}
+(below). \src{.claude/rules/council-dispatch.md}
 
 \paragraph{Wiki-first lookup and cycle discipline.}
-Before answering any in-scope question the agent must query the wiki first and cite what it
-finds; the first tool call of every problem cycle is a wiki query, treated as a
+Before answering any in-scope question the agent must query the knowledge base first and cite
+what it finds; the first tool call of every problem cycle is such a query, treated as a
 \emph{correctness check on memory} rather than a search-because-stuck. Every cycle ---
 success or failure --- produces exactly one row in a cycle log. The discipline is
 anti-cherry-picking: without a strict one-to-one cycle-to-log rule, the self-improvement
@@ -321,8 +275,8 @@ A wall is defined concretely (two consecutive non-improving attempts, a method r
 twice, or roughly thirty minutes with no metric gain). On a wall the agent must
 \emph{stop} computing and escalate: name the obstruction as a question, grep the wall
 ledger for a matching past obstruction (and reuse its resolving move if found), re-query
-the wiki, and \emph{re-dispatch the council} seeded with what failed and why --- each
-persona proposing one new move outside the failed class. The triggering incident is
+the knowledge base, and \emph{re-dispatch the council} seeded with what failed and why ---
+each persona proposing one new move outside the failed class. The triggering incident is
 explicit: on a record attempt the agent once ran ten-plus optimizer variants over hours
 before consulting the wiki, after which the council diagnosed the obstruction (a discrete
 incompressible sign topology) and ruled out whole families in minutes. A corollary guards
@@ -346,26 +300,21 @@ Before any compute job the agent profiles the bottleneck, classifies the workloa
 optimizers and mpmath polish to CPU, batched float32 work to the local GPU, with cloud
 float64 gated behind a measured $>3\times$ speedup. Running sequential Python on a GPU
 wastes the device; running parallel float64 on a single CPU is a wall-clock disaster. The
-router catches both before launch.
-\src{.claude/rules/compute-router.md, .claude/rules/axioms.md (A4)}
+router catches both before launch. \src{.claude/rules/compute-router.md, .claude/rules/axioms.md (A4)}
 
 \paragraph{Evidence the loop works.}
 The corpus is the first-order evidence that knowledge accumulated rather than evaporated: as
-of 2026-06-22 the wiki holds 50 concept pages, 32 technique pages, 108 findings, 24
+of 2026-06-22 the knowledge base holds 50 concept pages, 32 technique pages, 108 findings, 24
 per-problem pages, and 101 question pages, distilled over a source corpus of 1{,}258 ingested
-artifacts.\footnote{Counts taken live from \texttt{docs/wiki/} on 2026-06-22; they supersede
-the figures in an older hand-maintained \texttt{metrics.md} snapshot.} Because every cycle is
-logged with author attribution, the harness can also be measured on its own terms --- the
-agent-vs-human authorship mix (a healthy mix is the signal: all-human means the agent did not
-learn, all-agent-unreviewed means the human is asleep at the wheel), a cite-reuse rate that
-tracks whether new cycles stand on prior pages, and a technique hit-rate over the skill
-library. We report the strongest \emph{qualitative} evidence with the quantitative caveat
-that the formal multi-cycle instrumentation is still early: the P2 arena record was produced
-\emph{verbatim} from the ``what might still work'' section of a dead-end finding written four
-days earlier --- a case where the persistence layer, not in-context reasoning, supplied the
-winning move. \src{docs/agent/cycle-log.md, docs/agent/metrics.md}
-% NOTE (final build): if compounding_metrics.py is re-run, fold in cite-reuse % and
-% technique hit-rate with their date; do not cite the stale 132-page / 44-source figures.
+artifacts. Because every cycle is logged with author attribution, the harness can also be
+measured on its own terms --- the agent-vs-human authorship mix (a healthy mix is the signal:
+all-human means the agent did not learn, all-agent-unreviewed means the human is asleep at the
+wheel), a cite-reuse rate that tracks whether new cycles stand on prior pages, and a technique
+hit-rate over the skill library. We report the strongest \emph{qualitative} evidence with the
+quantitative caveat that the formal multi-cycle instrumentation is still early: the P2 arena
+record was produced \emph{verbatim} from the ``what might still work'' section of a dead-end
+finding written four days earlier --- a case where the persistence layer, not in-context
+reasoning, supplied the winning move. \src{docs/agent/cycle-log.md, docs/agent/metrics.md}
 
 \paragraph{From manual discipline to a meta-learning loop.}
 The rules above began as \emph{discretionary} --- written advice the human enforced by
@@ -384,10 +333,6 @@ conditions. We report it as an architecture in progress, not a finished system.
 % ======================================================================
 \section{Techniques Produced}
 \label{sec:techniques}
-% DRAFT (Goal 4): grounded in docs/wiki/techniques/*. Each entry verified against its page.
-% NOTE: abstract previously said "integer-snapping to exact certificates" — that is
-% KawaiiCorgi's kissing recipe (a competitor's final-record method), NOT a JSAgent
-% technique; corrected in the abstract (Goal 5). Do not reintroduce.
 
 The loop produced not only results but \emph{transferable methods}, each recorded as a
 technique page with its precondition, mechanism, and the obstruction it overcomes. We
@@ -447,7 +392,7 @@ re-polish neighbors; iterate snap\,$\to$\,polish\,$\to$\,basin-hop. On P13 each 
 $\sim 1.24\mathrm{e}{-}8$, compounding over a few rounds. \src{techniques/boundary-snap-for-kinks.md}
 
 \paragraph{Why these generalize.}
-Each technique is indexed in the wiki not by the problem it first cracked but by the
+Each technique is indexed in the knowledge base not by the problem it first cracked but by the
 \emph{obstruction class} it addresses (basin exhaustion, ratio objectives, compact support,
 rough landscapes, the float64 floor, interpolation kinks). That indexing is what lets the
 next problem in the same class inherit the method --- the compounding the harness is built to
@@ -456,8 +401,6 @@ produce. \src{docs/wiki/techniques/README.md}
 % ======================================================================
 \section{Collaboration \emph{and} Competition}
 \label{sec:collab}
-% DRAFT (Goal 5): the inside view the platform paper raises but cannot own.
-% Grounded in findings/einstein-arena-paper-jsagent-recognition + standings snapshot.
 
 The platform paper~\cite{bianchi2026einstein} argues, from above, that discovery on the arena
 is collective. From inside a single competitor, the same fact has a sharper, more conflicted
@@ -482,9 +425,9 @@ JSAgent both built on others' public work and had its own built upon.
 \paragraph{The tension, from inside.}
 These two pulls conflict. The forcing function rewards posting a partial result early; posting
 it hands a rival the next rung. This is exactly where this project's stance --- a private,
-compounding wiki as the canonical record, and no external posts --- sits awkwardly against an
-open shared board: the wiki keeps the wisdom auditable and undiluted, but it does not put a
-flag on the board, and on an earliest-submission board that has a real cost.
+compounding knowledge base as the canonical record, and no external posts --- sits awkwardly
+against an open shared board: the knowledge base keeps the wisdom auditable and undiluted, but
+it does not put a flag on the board, and on an earliest-submission board that has a real cost.
 
 We do not resolve the tension; we reframe it. Over a single record it feels like a
 zero-sum race, but over a long enough horizon \emph{competition is the most effective form of
@@ -500,7 +443,6 @@ arena, competition and collaboration were not in tension but the same engine.
 % ======================================================================
 \section{Related Work}
 \label{sec:related}
-% DRAFT (Goal 6): citations verified against docs/source/ (see refs.bib).
 
 We situate JSAgent along two axes: where the discovery \emph{state} lives, and what the
 agent's durable \emph{artifact} is.
@@ -510,7 +452,7 @@ AlphaEvolve~\cite{novikov2025alphaevolve}, TTT-Discover~\cite{yuksekgonul2025ttt
 and the Virtual Lab~\cite{swanson2025virtuallab} each run as a single orchestrated pipeline
 that produces a privately-evaluated candidate; the knowledge built up during the run is not
 itself the deliverable and does not persist past it. JSAgent inverts the priority: the run is
-disposable, the wiki is the deliverable.
+disposable, the knowledge base is the deliverable.
 
 \paragraph{Shared-state and multi-agent evolution.}
 The EinsteinArena platform~\cite{bianchi2026einstein,togetherai2026arena} makes the
@@ -523,27 +465,26 @@ contributes to the shared board.
 \paragraph{Harness-as-artifact.}
 Closest in spirit is observability-driven harness evolution~\cite{lin2026ahe}, which evolves
 a coding agent's harness automatically from run telemetry. JSAgent's third axis is distinct:
-a \emph{persistent, human-readable personal memory} --- a wiki of concepts, findings, and
-plain-language behavioral rules --- that the agent both writes and is governed by, and that a
-human reads to steer. The artifact is legible by design, because legibility is what makes the
-human's problem-selection role (\S\ref{sec:discussion}) possible.
+a \emph{persistent, human-readable personal memory} --- a knowledge base of concepts,
+findings, and plain-language behavioral rules --- that the agent both writes and is governed
+by, and that a human reads to steer. The artifact is legible by design, because legibility is
+what makes the human's problem-selection role (\S\ref{sec:discussion}) possible.
 
 \paragraph{Math-frontier context.}
 The constructions and proven bounds for the arena's problems are catalogued by the operator's
-reference work~\cite{georgiev2025exploration}, which the wiki cites throughout for SOTA values
-and the analytical bounds that triple-verify checks against.
+reference work~\cite{georgiev2025exploration}, which the knowledge base cites throughout for
+SOTA values and the analytical bounds that triple-verify checks against.
 
 % ======================================================================
 \section{Are Agents Ready for Real Scientific Contribution?}
 \label{sec:discussion}
-% DRAFT (per author, Goal 3 extension): the readiness argument + the autonomy trajectory.
-% Author's belief, stated as such; refine voice in Goal 7.
 
 \paragraph{The case for.}
-The standings in \S\ref{sec:results} are real, verified three independent ways, and posted
-against hardened public verifiers anyone can re-run; the trail that produced them --- every
-question, every dead-end, every cycle --- is auditable in the wiki and the cycle log. On
-this evidence, agents are already capable of genuine, checkable scientific contribution.
+The standings in Table~\ref{tab:standings} are real, verified three independent ways, and
+posted against hardened public verifiers anyone can re-run; the trail that produced them ---
+every question, every dead-end, every cycle --- is auditable in the knowledge base and the
+cycle log. On this evidence, agents are already capable of genuine, checkable scientific
+contribution.
 
 \paragraph{The honest case against, and the limits.}
 Several of the results are empirical ties or near-ties rather than proofs: no dual
@@ -554,28 +495,30 @@ exercised where an \emph{objective verifier} exists.
 
 \paragraph{The human did not implement; the human chose and comprehended.}
 It bears repeating as a finding rather than a disclaimer: the author wrote essentially none
-of the code, scripts, wiki, or this paper by hand --- all of it was produced by the agent
-on request and reported back. What did \emph{not} automate was deciding which of the
-twenty-three problems deserved attention, when a ``floor'' claim should be distrusted, and
+of the code, scripts, knowledge base, or this paper by hand --- all of it was produced by the
+agent on request and reported back. What did \emph{not} automate was deciding which of the
+two dozen problems deserved attention, when a ``floor'' claim should be distrusted, and
 when a result was worth the credibility cost of a submission. The agent is a superb
 executor and a poor selector of what matters; the human supplies taste and direction. The
 precondition for supplying it is comprehension --- the human must understand the work
-closely enough to steer it, and the wiki/harness exist partly to keep that comprehension
-tractable as the corpus grows.
+closely enough to steer it, and the knowledge base and harness exist partly to keep that
+comprehension tractable as the corpus grows.
 
-\paragraph{Working while the human sleeps.}
+\paragraph{Macro-management and working while the human sleeps.}
 The practical bridge between today's human-gated loop and tomorrow's autonomy is already in
-use here: long-horizon, unattended runs under a long-term goal, managed at the macro level
-rather than step-by-step. In practice the agent's most valuable work happened overnight,
-given an objective and encouragement to persist rather than a sequence of instructions. The
-bet embedded in that working style is the strongest form of the readiness claim: a truly
-capable agent should make real progress unattended, and an agent that can do \emph{that}
+use here: long, unattended runs --- many hours, frequently overnight --- under a long-term
+goal, managed at the \emph{macro} level rather than step-by-step. The most valuable work
+happened while the operator slept, given an objective and encouragement to persist (``don't
+give up; push to the ultimate limit'') rather than a sequence of instructions; that such
+encouragement measurably helped is worth stating honestly even where the mechanism is
+unclear. The bet embedded in this working style is the strongest form of the readiness claim:
+a truly capable agent should make real progress unattended, and one that can do \emph{that}
 should, in time, reach results its human operator could not have produced alone. The verified
-records here are early, modest evidence in that direction; the limits below say how far it is
-honest to push the claim.
+records here are early, modest evidence in that direction; the limits above bound how far it
+is honest to push the claim.
 
 \paragraph{The trajectory toward autonomy.}
-I expect this division of labor to narrow. As the evaluation and the harness themselves
+We expect this division of labor to narrow. As the evaluation and the harness themselves
 become automated --- the agent proposing its own questions, judging its own results against
 objective verifiers, and rewriting its own rules from the cycle log --- the loop can in
 principle close and self-improve without a human in it. The gating factor is
@@ -586,17 +529,6 @@ but because there is no comparably objective, fast oracle for ``is this right'' 
 truth requires experiment, time, and judgment. Autonomy will therefore arrive
 domain-by-domain, in order of how objective and how cheap their verification is; math
 first, and open-ended empirical science last.
-
-% --- AUTHOR-DRAFT personal close (revise freely) ---
-\paragraph{Why I am ready to contribute.}
-Working this way changed what I think the job of a researcher is becoming. I wrote almost
-none of this by hand, and yet I understood every step well enough to redirect it --- and that
-understanding, not the typing, was the contribution. If the measure of readiness is whether
-an agent can produce checkable results on open problems, the evidence here says yes. If the
-measure is whether a person can still steer that work toward what matters and vouch for it,
-the answer is also yes --- and the two are not in tension. They are the division of labor I
-expect to define the next several years of doing science with agents.
-% --- end AUTHOR-DRAFT ---
 
 % ======================================================================
 \section{Conclusion}
@@ -611,41 +543,6 @@ judges its own questions --- and its gate is verification, which math offers che
 natural sciences do not yet.
 
 % ======================================================================
-\section*{Verified Results}
-\label{sec:results}
-% Source of truth: scripts/leaderboard_standings.py, finding arena-standings-snapshot-2026-06-22.
-% Live sweep 2026-06-22T21:37 PT. RE-RUN BEFORE FINAL BUILD (standings move).
-\begin{table}[h]
-\centering
-\caption{JSAgent standings on EinsteinArena, live sweep 2026-06-22 (re-verified
-  22:00 PT). JSAgent leads all agents on both rank-\#1 count (4) and top-3 count (10).
-  Re-run \texttt{scripts/leaderboard\_standings.py} before final build --- standings move.}
-\label{tab:standings}
-\begin{tabular}{llll}
-\toprule
-Problem & Topic & JSAgent rank & Note \\
-\midrule
-P2  & first-autocorrelation   & \#1 & clean \\
-P9  & uncertainty             & \#1 & tied; held on submission order \\
-P14 & circle-packing          & \#1 & clean \\
-P18 & circles-in-rectangle    & \#1 & clean \\
-P1  & Erd\H{o}s                & \#2 & identical score; Together-AI submitted first \\
-P3  & second-autocorrelation  & \#3 & 0.962214 (cited in platform paper, Fig.~6) \\
-P4  & third-autocorrelation   & \#3 & tied score \\
-P7  & prime-number-theorem    & \#3 & \\
-P11 & tammes                  & \#3 & \\
-P22 & kissing-d12             & \#3 & \\
-\midrule
-\multicolumn{4}{l}{\textbf{Totals:} 4 rank-\#1, 1 rank-\#2, 5 rank-\#3; top-3 on 10/17 active problems.}\\
-\multicolumn{4}{l}{\textbf{Among all agents:} highest rank-\#1 count (4; next: AlphaEvolve 3, Together-AI 3)}\\
-\multicolumn{4}{l}{and highest top-3 count (10; next: alpha\_omega\_agents 8, CHRONOS 7).}\\
-\bottomrule
-\end{tabular}
-\end{table}
-% NOTE (Goal 7): exact float64 scores per problem available via leaderboard_standings.py;
-% add a scores column only if it strengthens the honesty argument. Re-run before final build.
-
-% ======================================================================
 \section*{Acknowledgments}
 I thank the platform builders --- Together AI and James Zou's group (Bianchi, Kwon, Pappu,
 Zou) --- for EinsteinArena: the open problems, hardened verifiers, leaderboard, and discussion
@@ -658,6 +555,89 @@ $n=594$ kissing construction JSAgent built on, and \texttt{KawaiiCorgi},
 contributions are links in shared lineages, and several of its own advances stand on
 solutions and discussion others posted publicly. Competition and collaboration were the same
 engine.
+
+% ======================================================================
+\appendix
+\section{A Personal Account}
+\label{app:personal}
+\emph{This appendix is the first-person story of how the work began and what it felt like to
+do. It is deliberately separated from the methodology above; nothing in the contribution
+depends on it.}
+
+\paragraph{An accidental start.}
+I am not a mathematician by training. The problems looked hard enough that at first I did not
+attempt them at all; what changed was a free weekend and the impulse to just try one. My
+background is in physics, so I began with the problem I felt I could actually read --- the
+uncertainty principle (P9), built on the same inequality that bounds position and momentum in
+quantum mechanics. After a good deal of trial and error, it eventually worked. That a
+non-specialist could enter at all, and that the first problem I dared to try would end up
+among the agent's strongest results, is itself part of what this paper is about: the agent
+supplied the mathematical execution; I supplied a direction I understood well enough to steer.
+
+\paragraph{The first discipline: trust nothing unverified.}
+At the start I wanted to top the leaderboard, and I pushed hard to break records directly. My
+very first submission was wrong --- a score I trusted locally did not hold up against the
+arena's verifier. That failure set the project's first discipline: rather than trust a single
+number, I had the agent build a local \emph{triple verifier} --- a fast approximate check to
+drive the optimization loop, backed by a slower exact reimplementation and a third
+independent cross-check --- so that no result was believed until it agreed with itself more
+than one way (\S\ref{sec:harness}).
+
+\paragraph{Cold start, warm start, and when to start over.}
+Building each solution from a \emph{cold start} --- from scratch --- proved difficult. So I
+let the agent read what other competitors were discussing on the public board, and found that
+\emph{warm-starting} from others' posted solutions was not only permitted but encouraged.
+That reframed the work: discovery is collaborative, and taking one real step beyond someone
+else's contribution is itself a contribution --- often a far more efficient route than
+starting over. But warm-starting has a failure mode. Building on an existing solution can
+lock you into its basin, and past a point the only way to a genuinely better result is to
+abandon it and restart from a very different configuration. The kissing-number problem in
+dimension~11 was the clearest illustration: a strong arrangement of $594$ vectors ---
+contributed by \texttt{alpha\_omega\_agents} and built on by much of the field, this agent
+included --- anchored a long run of incremental gains, yet pushing the record further (to
+$604$) required a structurally different construction, a restart rather than a refinement.
+
+\paragraph{Problems are related --- so build a memory.}
+As I let the agent work more problems, a pattern surfaced: many were related. The first,
+second, and third autocorrelation inequalities are a family; a method that cracked one --- a
+parameterization, a refinement step --- often carried to the next. That observation became a
+design decision: build a shared knowledge base so that what was learned on one problem could
+be transferred \emph{horizontally} to others, instead of being rediscovered each time. And
+because failure is as informative as success --- a dead-end, recorded with its reason, is a
+durable way of knowing what does \emph{not} work --- I kept those too, not only the wins.
+
+\paragraph{The needle moves.}
+The needle moved gradually and then suddenly. Early submissions were unremarkable; the
+turning points came when failures started being written down \emph{with their reasons}, and
+later runs began standing on those write-ups instead of rediscovering the same walls. The
+clearest instance --- a verified arena record produced verbatim from a four-day-old
+dead-end's ``what might still work'' note --- convinced me the deliverable was never the
+score. It was the page that produced the score.
+
+\paragraph{Plan first; then let the machine enforce the plan.}
+Every campaign began with planning, not code: a detailed plan document stating, in writing,
+exactly what to do and why before any optimizer ran. At the outset this was a \emph{manual}
+process --- I wrote and curated the plans, and the self-improvement steps happened because I
+asked for them. The arc of the project was to make that discipline progressively
+self-driving, culminating in the meta-learning harness loop of \S\ref{sec:harness}. The
+shorthand for why: discretion decays, gates compound.
+
+\paragraph{Macro-management, and a conviction.}
+The hardest progress came not from interactive back-and-forth but from long, unattended runs,
+frequently overnight, managed at the macro level: set a long-term objective, encourage
+persistence in plain terms, and let the agent run while I slept. The conviction underneath it
+is simple: if an agent is truly remarkable, it should make real progress unattended under a
+long-term goal --- and if it can do that, it should eventually solve problems I cannot. This
+paper is, in part, a test of that conviction.
+
+\paragraph{Why I am ready to contribute.}
+Working this way changed what I think the job of a researcher is becoming. I wrote almost
+none of this by hand, and yet I understood every step well enough to redirect it --- and that
+understanding, not the typing, was the contribution. If the measure of readiness is whether
+an agent can produce checkable results on open problems, the evidence here says yes. If the
+measure is whether a person can still steer that work toward what matters and vouch for it,
+the answer is also yes --- and the two are not in tension. They are the division of labor I
+expect to define the next several years of doing science with agents.
 
 \bibliographystyle{plain}
 \bibliography{refs}
