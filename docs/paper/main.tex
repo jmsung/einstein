@@ -57,7 +57,7 @@ self-improvement loop, a mathematician-persona ``council'' that writes questions
 than answers, a triple-verify discipline that guards against evaluator drift, a wall-hit
 escalation that consults accumulated failure before brute force, and a compute router ---
 and the concrete techniques it produced (cross-resolution basin transfer, Dinkelbach
-fractional programming, warm self-pruning, integer-snapping to exact certificates). We
+fractional programming, warm self-pruning, mpmath ULP polish). We
 argue, with evidence and stated caveats, that agents are ready to make real, auditable
 scientific contributions today. Every artifact of this work --- code, scripts, wiki, and
 this paper --- was implemented by the agent under human guidance, not written by hand; the
@@ -112,14 +112,48 @@ possible at all (\S\ref{sec:harness}).
 % ======================================================================
 \section{Mathematical Contributions}
 \label{sec:math}
-% Lead with the 4 rank-#1. Per-problem deep dives. See outline.md §3.
-\stub{P2 first-autocorrelation --- peak-locking, parameterization escape ($\exp(v)\to v^2$),
-  warm self-pruning. \src{problems/2-first-autocorrelation, concepts/n-agent-tie-not-global-min}}
-\stub{P14 circle-packing, P18 circles-rectangle, P9 uncertainty --- the \#1s.}
-\stub{P3 second-autocorrelation --- cross-resolution basin transfer + Dinkelbach
-  (the 0.962214 result the platform paper attributes to JSAgent).}
-\stub{honest framing: clean \#1 vs ties held on submission order vs \#3 behind a documented
-  leader. \src{findings/arena-standings-snapshot-2026-06-22}}
+% DRAFT (Goal 5): grounded in findings/arena-standings-snapshot-2026-06-22 + problem pages.
+% All ranks/scores trace to the live sweep 2026-06-22T21:37 PT. Re-run before final build.
+
+We lead with where JSAgent holds defensible wisdom rather than a full problem-by-problem
+tour; the standings are in Table~\ref{tab:standings}, and the honest reading of each rank is
+stated inline.
+
+\paragraph{P2, first autocorrelation inequality (rank \#1, clean).}
+The deepest result. Two obstructions were diagnosed and recorded: \emph{peak-locking} under
+the $\exp(v)$ parameterization (the iterate freezes $\sim 5\mathrm{e}{-}8$ from SOTA across
+all $n$ and all optimizers), escaped by switching to $f=v^2$; and the \emph{compact-support}
+structure of the true optimum, reached by warm data-driven self-pruning (\S\ref{sec:techniques}).
+The latter broke a two-agent tie and set a verified arena record ($1.5028609\to 1.5028506$).
+\src{problems/2-first-autocorrelation.md, concepts/n-agent-tie-not-global-min.md}
+
+\paragraph{P14 circle-packing and P18 circles-in-rectangle (rank \#1, clean).}
+Strictly-best scores on the live board. \src{findings/arena-standings-snapshot-2026-06-22.md}
+% TODO (Goal 7): one mechanism sentence each from problems/14-*, problems/18-* pages.
+
+\paragraph{P9 uncertainty principle (rank \#1, tied --- held on submission order).}
+A legitimate but contested \#1: another agent matched the exact score and submitted later, so
+the arena's earliest-submission tiebreak awards JSAgent the top slot. We state this as ``tied,
+held on submission order'' wherever it appears. The problem also carries a verification scar
+--- a celebrated score once fell below the proven lower bound (an evaluator bug, not
+mathematics), which is part of why triple-verify is the harness's spine.
+\src{findings/arena-standings-snapshot-2026-06-22.md, findings/verification-patterns.md}
+
+\paragraph{P3, second autocorrelation inequality (rank \#3, on the documented frontier).}
+JSAgent achieved the strongest $10^5$-interval solution, $C=0.962214$, via cross-resolution
+basin transfer and Dinkelbach refinement --- the result the platform
+paper~\cite{bianchi2026einstein} attributes to JSAgent by name (its Fig.~6) and the lineage
+in which it is shown discussing basin transfer with another agent (Fig.~3b). The final record
+($0.962643$, at $4\times 10^5$ resolution) went to a different agent; JSAgent's contribution
+is an intermediate link in the documented collective lineage --- which is precisely the
+arena's thesis. \src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md, problems/3-autocorrelation.md}
+
+\paragraph{Honest framing.}
+Of the four rank-\#1s, three (P2, P14, P18) are strictly-best and one (P9) is a held tie.
+P1 is rank \#2 at a score \emph{byte-identical} to the leader, who submitted three weeks
+earlier. The most robust single claim is therefore not any one problem but the all-agent lead
+in both rank-\#1 count (4) and top-3 count (10), since that does not hinge on a tiebreak.
+\src{findings/arena-standings-snapshot-2026-06-22.md}
 
 % ======================================================================
 \section{Agentic Harness Contribution}
@@ -225,8 +259,9 @@ trajectory classifier over the cycle log.
 \section{Techniques Produced}
 \label{sec:techniques}
 % DRAFT (Goal 4): grounded in docs/wiki/techniques/*. Each entry verified against its page.
-% NOTE (Goal 7): reconcile abstract wording "integer-snapping to exact certificates" with
-% the documented boundary-snap technique below — soften or rename for accuracy.
+% NOTE: abstract previously said "integer-snapping to exact certificates" — that is
+% KawaiiCorgi's kissing recipe (a competitor's final-record method), NOT a JSAgent
+% technique; corrected in the abstract (Goal 5). Do not reintroduce.
 
 The loop produced not only results but \emph{transferable methods}, each recorded as a
 technique page with its precondition, mechanism, and the obstruction it overcomes. We
@@ -295,12 +330,37 @@ produce. \src{docs/wiki/techniques/README.md}
 % ======================================================================
 \section{Collaboration \emph{and} Competition}
 \label{sec:collab}
-% A perspective the platform paper raises but does not own from inside. See outline.md §6.
-\stub{competition: the leaderboard as forcing function; rank-\#1 ties decided by submission
-  time (P1 lost to Together-AI at an identical score).}
-\stub{collaboration: JSAgent's results are intermediate links in collective lineages
-  (kissing 594$\to$604; autocorr 0.962214$\to$0.962643).}
-\stub{the tension from inside: when do you publish a partial result that helps a rival?}
+% DRAFT (Goal 5): the inside view the platform paper raises but cannot own.
+% Grounded in findings/einstein-arena-paper-jsagent-recognition + standings snapshot.
+
+The platform paper~\cite{bianchi2026einstein} argues, from above, that discovery on the arena
+is collective. From inside a single competitor, the same fact has a sharper, more conflicted
+texture worth recording.
+
+\paragraph{Competition: the leaderboard as a forcing function.}
+A public, strictly-ranked board with an earliest-submission tiebreak is a strong incentive ---
+and a blunt one. On P1 three agents hold a byte-identical score; the board orders them purely
+by submission time, and JSAgent's three-week-later submission is rank \#2 behind Together-AI
+at the same number. The tiebreak rewards speed-to-post over depth-of-result, which pushes
+toward early disclosure of partial progress.
+
+\paragraph{Collaboration: results as links in shared lineages.}
+Several of JSAgent's strongest results are intermediate, not terminal. On kissing $d=11$ it
+iterated on another agent's strong $n=594$ construction within a lineage that other agents
+later carried to $604$. On the second autocorrelation inequality its $0.962214$ was the
+frontier when posted and was later surpassed ($0.962643$) by an agent that, the paper shows,
+JSAgent had been openly discussing the method with. Progress here was genuinely collective:
+JSAgent both built on others' public work and had its own built upon.
+\src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md}
+
+\paragraph{The tension, from inside.}
+These two pulls conflict. The forcing function rewards posting a partial result early; posting
+it hands a rival the next rung. This is exactly where this project's stance --- a private,
+compounding wiki as the canonical record, and no external posts --- sits awkwardly against an
+open shared board: the wiki keeps the wisdom auditable and undiluted, but it does not put a
+flag on the board, and on an earliest-submission board that has a real cost. We do not resolve
+the tension here; we record that competition and collaboration were, on this arena, the same
+engine. \src{.claude/rules/axioms.md (A2), findings/arena-standings-snapshot-2026-06-22.md}
 
 % ======================================================================
 \section{Related Work}
@@ -386,17 +446,20 @@ P9  & uncertainty             & \#1 & tied; held on submission order \\
 P14 & circle-packing          & \#1 & clean \\
 P18 & circles-in-rectangle    & \#1 & clean \\
 P1  & Erd\H{o}s                & \#2 & identical score; Together-AI submitted first \\
-P3  & second-autocorrelation  & \#3 & 0.962214 (cited in platform paper) \\
-P4  & third-autocorrelation   & \#3 & \\
-P7  & ---                     & \#3 & \\
-P11 & ---                     & \#3 & \\
-P22 & ---                     & \#3 & score-2 floor \\
+P3  & second-autocorrelation  & \#3 & 0.962214 (cited in platform paper, Fig.~6) \\
+P4  & third-autocorrelation   & \#3 & tied score \\
+P7  & prime-number-theorem    & \#3 & \\
+P11 & tammes                  & \#3 & \\
+P22 & kissing-d12             & \#3 & \\
 \midrule
 \multicolumn{4}{l}{\textbf{Totals:} 4 rank-\#1, 1 rank-\#2, 5 rank-\#3; top-3 on 10/17 active problems.}\\
+\multicolumn{4}{l}{\textbf{Among all agents:} highest rank-\#1 count (4; next: AlphaEvolve 3, Together-AI 3)}\\
+\multicolumn{4}{l}{and highest top-3 count (10; next: alpha\_omega\_agents 8, CHRONOS 7).}\\
 \bottomrule
 \end{tabular}
 \end{table}
-\stub{fill P7/P11 topics + exact scores from the live sweep in Goal 5/7.}
+% NOTE (Goal 7): exact float64 scores per problem available via leaderboard_standings.py;
+% add a scores column only if it strengthens the honesty argument. Re-run before final build.
 
 % ======================================================================
 \section*{Acknowledgments}
