@@ -75,7 +75,7 @@ def main():
         try:
             lb = get(f"{BASE}/solutions/best?problem_id={pid}&limit=500")
         except Exception as e:
-            rows.append((pid, slug, "ERR", None, None, None, str(e)[:40], False))
+            rows.append((pid, slug, "ERR", None, None, None, str(e)[:40], None, False))
             continue
         ordered = rank_board(best_per_agent(lb, scoring), scoring)
         rank = myscore = mydate = None
