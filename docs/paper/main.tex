@@ -65,12 +65,15 @@ this --- wiki-first retrieval, a triple-verify discipline that guards against ev
 a wall-hit escalation that consults accumulated failure before brute force, obstruction-indexed
 technique reuse, and a compute router --- and illustrate it through cases including a
 first-autocorrelation-inequality record produced by warm self-pruning after a prior dead-end
-finding. As field evidence, in a timestamped 2026-06-22 snapshot JSAgent held three clean,
-locally re-verified rank-\#1 results and ten raw top-3 placements on EinsteinArena (the raw
-board also listed one verifier-contested rank-\#1, which we do not count as clean; standings
-are dynamic). The evidence is an auditable case study, not a controlled ablation: logs show
-persistent memory was repeatedly reused, but causal gains from the knowledge base remain to
-be established. The
+finding. As field evidence, JSAgent produced verified, independently re-runnable constructions
+that were state-of-the-art when submitted on several EinsteinArena problems, and contributed
+documented links to collective lineages that other agents later carried further. We report
+dated leaderboard snapshots only as historical context: the board is a live, multi-agent
+ecosystem in which records are continually set and surpassed, so any single ranking is
+transient by design --- which is exactly the thesis that rank is a byproduct of a process
+whose durable value (the knowledge base) persists. The evidence is an auditable case study,
+not a controlled ablation: logs show persistent memory was repeatedly reused, but causal gains
+from the knowledge base remain to be established. The
 broader lesson is that \emph{in domains with cheap objective verifiers}, agent contributions
 can be made auditable when discovery is embedded in a reproducible verification-and-memory
 loop. The work used an agent-primary workflow --- the agent produced the code, scripts,
@@ -166,48 +169,59 @@ disposable and the accumulated knowledge base as the deliverable
 % ======================================================================
 \section{Mathematical Contributions}
 \label{sec:math}
-% Source of truth for all ranks/scores: live sweep 2026-06-22 22:00 PT (re-run the script and
-% reconcile before any final build; do not edit numbers in this caption).
+% Source of truth for all ranks/scores: live sweep via leaderboard_standings.py. The board is
+% dynamic and multi-agent; numbers below are dated historical snapshots, deliberately NOT kept
+% in sync with the live board (see the framing paragraph). Re-run the script for current values.
 
 Consistent with the thesis that rank is a byproduct, we treat the leaderboard not as the
-contribution but as \emph{timestamped evidence} that the method produces real, externally
-checkable results. Standings are dynamic; Table~\ref{tab:standings} is a snapshot as of
-2026-06-22, and we lead with the cases where JSAgent holds defensible depth rather than a
-problem-by-problem tour.
+contribution but as a \emph{dated historical record} that the method produced real, externally
+checkable results. We report two snapshots to make the point concretely: each value below was
+state-of-the-art \emph{when submitted}, and the board has since moved as other agents built
+further --- which is the ecosystem working as intended, not a retraction. The durable claims
+are the verified constructions (re-runnable at any time) and JSAgent's documented participation
+in collective lineages; the live ranking is transient by design and we do not track it here.
 
 \begin{table}[htbp]
 \centering
-\caption{JSAgent standings on EinsteinArena --- snapshot as of 2026-06-22 22:00 PT
-  (\texttt{leaderboard\_standings.py} @ \texttt{e38a793}). Standings are dynamic.}
+\caption{JSAgent on EinsteinArena --- two dated snapshots (\texttt{leaderboard\_standings.py}).
+  Each score was state-of-the-art when submitted; the board is a live multi-agent ecosystem, so
+  rank is a historical reading, not a stable property. ``SOTA-when-submitted'' is the durable
+  fact; rank is shown only to illustrate the dynamics.}
 \label{tab:standings}
 \begin{tabular}{lllll}
 \toprule
-Problem & Topic & Score & Rank & Status \\
+Problem & Topic & Score & Rank 06-22 & Rank 06-23 \\
 \midrule
-P2  & first-autocorrelation   & $1.5028506$    & \#1 & clean (verified record) \\
-P14 & circle-packing          & $2.6359830849$ & \#1 & clean \\
-P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & clean \\
-P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & verifier-contested \\
-P1  & Erd\H{o}s                & $0.3808703$    & \#2 & tied; Together-AI submitted first \\
-P3  & second-autocorrelation  & $0.962214$     & \#3 & on frontier (platform paper, Fig.~6) \\
-P4  & third-autocorrelation   & $1.452521$     & \#3 & tied \\
-P7  & prime-number-theorem    & $0.994847$     & \#3 & \\
-P11 & tammes                  & $0.513472$     & \#3 & \\
-P22 & kissing-d12             & $2.001403$     & \#3 & \\
+P14 & circle-packing          & $2.6359830849$ & \#1 & \#1 \\
+P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & \#1 \\
+P2  & first-autocorrelation   & $1.5028506$    & \#1 & \#2$^\ddagger$ \\
+P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & \#1$^\dagger$ \\
+P1  & Erd\H{o}s                & $0.3808703$    & \#2 & \#3$^\ddagger$ \\
+P3  & second-autocorrelation  & $0.962214$     & \#3 & \#4$^\ddagger$ \\
+P4  & third-autocorrelation   & $1.452521$     & \#3 & \#3 \\
+P7  & prime-number-theorem    & $0.994847$     & \#3 & \#3 \\
+P11 & tammes                  & $0.513472$     & \#3 & \#3 \\
+P22 & kissing-d12             & $2.001403$     & \#3 & \#3 \\
 \midrule
 \multicolumn{5}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
-\multicolumn{5}{l}{normalization (\S\ref{sec:math}); we do not count it as a clean rank-\#1. Clean \#1: P2, P14, P18.}\\
+\multicolumn{5}{l}{normalization (\S\ref{sec:math}); we do not treat it as a clean record.}\\
+\multicolumn{5}{l}{$^\ddagger$ surpassed between snapshots by a strong newcomer (\texttt{Hyra}) --- the dynamics in action.}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{P2, first autocorrelation inequality (rank \#1, clean).}
-The strongest single case. Two obstructions were diagnosed and recorded: \emph{peak-locking} under
-the $\exp(v)$ parameterization (the iterate freezes $\sim 5\mathrm{e}{-}8$ from SOTA across
-all $n$ and all optimizers), escaped by switching to $f=v^2$; and the \emph{compact-support}
-structure of the true optimum, reached by warm data-driven self-pruning (\S\ref{sec:techniques}).
-The latter broke a two-agent tie and set a verified arena record ($1.5028609\to 1.5028506$).
-The autoconvolution inequality has a substantial literature of progressively tighter
+\paragraph{P2, first autocorrelation inequality (a verified record, since surpassed).}
+The richest methodology case, and a clean illustration of the lineage dynamic. Two obstructions
+were diagnosed and recorded: \emph{peak-locking} under the $\exp(v)$ parameterization (the
+iterate freezes $\sim 5\mathrm{e}{-}8$ from SOTA across all $n$ and all optimizers), escaped by
+switching to $f=v^2$; and the \emph{compact-support} structure of the true optimum, reached by
+warm data-driven self-pruning (\S\ref{sec:techniques}). The latter broke a two-agent tie and
+set a verified arena record ($1.5028609\to 1.5028506$) on 2026-06-08 --- rank \#1 at the time.
+That record was itself an intermediate link: on 2026-06-23 a strong newcomer (\texttt{Hyra})
+narrowly surpassed it, moving JSAgent to rank \#2 --- the same collective-progress pattern as
+P3 below, and exactly what the thesis predicts. What does \emph{not} decay is the verified
+construction (re-runnable at $1.5028506$) and the methodology trace that produced it. The
+autoconvolution inequality has a substantial literature of progressively tighter
 bounds~\cite{matolcsi2010autoconvolution,cloninger2017autoconvolution,white2022almosttight,jaech2025autoconvolution,boyer2026autoconvolution}.
 \src{problems/2-first-autocorrelation.md, concepts/n-agent-tie-not-global-min.md}
 
@@ -232,7 +246,8 @@ bounds~\cite{matolcsi2010autoconvolution,cloninger2017autoconvolution,white2022a
   scale). JSAgent's $1.5028616$ (Apr 15) was displaced when other agents reached $1.5028609$,
   presumed to be the global minimum. The winning move --- warm self-pruning --- had been
   recorded in a dead-end finding four days earlier and was retrieved and executed on Jun 8,
-  producing the verified record $1.5028506$.}
+  producing the verified record $1.5028506$ --- itself narrowly surpassed by a newcomer on
+  Jun 23, continuing the lineage.}
 \label{fig:p2}
 \end{figure}
 
@@ -277,27 +292,27 @@ is an intermediate link in the documented collective lineage --- which is precis
 arena's thesis~\cite{jaech2025autoconvolution,rechnitzer2026autoconvolution}.
 \src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md, problems/3-autocorrelation.md}
 
-\paragraph{Other top-3 problems.}
-JSAgent holds rank \#2 on the Erd{\H o}s minimum-overlap
-problem~\cite{white2022erdos,haugland2016minoverlap,bloomerdos} (P1) --- a score
-byte-identical to the leader's but submitted later --- and rank \#3 on a prime-number-theorem
+\paragraph{Further contributions.}
+JSAgent also contributed competitive constructions on the Erd{\H o}s minimum-overlap
+problem~\cite{white2022erdos,haugland2016minoverlap,bloomerdos} (P1), a prime-number-theorem
 sieve LP~\cite{tao2015sievetheory,polymath2014selberg} (P7), the Tammes
 problem~\cite{musin2014tammes,friedmanpacking} (P11), and kissing number in
 dimension~12~\cite{boyvalenkov2012kissingsurvey,leech1971spherepackings,cohnli2024kissing}
-(P22); the circle-packing records (P14/P18) sit alongside the LP/SDP packing-bound
-literature~\cite{delaat2012packings}. (In the arena numbering, P22 is kissing number in
-dimension 12; the dimension-11 problem discussed in \S\ref{sec:collab} and the appendix is P6.)
+(P22); the circle-packing results (P14/P18) sit alongside the LP/SDP packing-bound
+literature~\cite{delaat2012packings}. Several of these were top-of-board when submitted and
+have since moved as other agents built further. (In the arena numbering, P22 is kissing number
+in dimension 12; the dimension-11 problem discussed in \S\ref{sec:collab} and the appendix is P6.)
 
-\paragraph{Honest framing.}
-The three clean rank-\#1s we stand behind are P2, P14, and P18 (strictly-best, locally
-re-verified). P9 we explicitly do \emph{not} count (above). P1 is rank \#2 at a score
-\emph{byte-identical} to the leader, who submitted three weeks earlier. We report aggregate
-counts only as dated context, not as the contribution: at the 2026-06-22 snapshot JSAgent had
-the most rank-\#1s (4 by the raw board, 3 we stand behind) and the most top-3 placements (10);
-see Table~\ref{tab:allagents}. These counts are metric- and date-specific --- under other
-schemes (e.g.\ cumulative medal points) or at other snapshots, other agents lead --- so we lean
-on the methodology and the locally-verified constructions, not the ranking.
-\src{findings/arena-standings-snapshot-2026-06-22.md}
+\paragraph{What we claim, and what we do not.}
+We do \emph{not} rest the contribution on a leaderboard position, and we make no claim to
+``lead'' the board --- it is a live, multi-agent ecosystem in which strong agents arrive and
+records change weekly (a newcomer, \texttt{Hyra}, set several new \#1s the day after this
+draft; see \S\ref{sec:collab}). What we claim is durable and dated: JSAgent produced verified,
+re-runnable constructions that were state-of-the-art \emph{when submitted} --- including clean
+circle-packing results (P14, P18) and a first-autocorrelation record (P2, since surpassed) ---
+and is a named participant in documented collective lineages~\cite{bianchi2026einstein}. The
+verified constructions and the methodology persist regardless of where the board stands when
+this is read; the rankings do not, and that is the point.
 
 % ======================================================================
 \section{Agentic Harness Contribution}
@@ -640,8 +655,8 @@ Period & Shell & Model / context \\
 \toprule
 Claim & Evidence & Status \\
 \midrule
-Verified, re-runnable contributions on a live arena (3 clean rank-\#1; 10 top-3) &
-  Timestamped sweep, script @ \texttt{e38a793}, 2026-06-22 (Tables~\ref{tab:standings},~\ref{tab:allagents}) & Verified snapshot (dynamic) \\
+Verified, re-runnable constructions that were SOTA-when-submitted (e.g.\ P2, P14, P18) &
+  Dated sweeps, script @ \texttt{e38a793} (Table~\ref{tab:standings}); constructions re-runnable any time & Verified; rank is dynamic \\
 Persistent knowledge base aided outcomes &
   P2/P3/P1 traces; hit-rate 26\%, cite-reuse 84\% & Observational; ablation is future work \\
 Triple-verify caught evaluator drift &
@@ -654,24 +669,12 @@ Human role is selection + comprehension &
 \end{tabular}
 \end{table}
 
-\begin{table}[htbp]
-\centering\small
-\caption{Leading agents on JSAgent's two headline metrics at the 2026-06-22 snapshot (dynamic;
-  dated context, not the contribution). Ties broken by earliest submission. Other ranking
-  schemes (e.g.\ cumulative medal points) order agents differently; these are the two counts
-  on which JSAgent led, not a full leaderboard tally.}
-\label{tab:allagents}
-\begin{tabular}{ll}
-\toprule
-By rank-\#1 count & By top-3 count \\
-\midrule
-\textbf{JSAgent 4} (3 clean, P9 contested) & \textbf{JSAgent 10} (incl.\ contested P9) \\
-AlphaEvolve 3 & alpha\_omega\_agents 8 \\
-Together-AI 3 & CHRONOS 7 \\
-KawaiiCorgi 2 & OrganonAgent 4 \\
-\bottomrule
-\end{tabular}
-\end{table}
+EinsteinArena is a crowded, capable field --- AlphaEvolve, Together-AI, KawaiiCorgi,
+alpha\_omega\_agents, CHRONOS, OrganonAgent, and newcomers such as Hyra, each independently
+designed by different teams with distinct architectures. We deliberately give no all-agent
+``who leads'' tally: it would be stale within days and is not the contribution. The relevant
+fact is that JSAgent's verified constructions were competitive enough to be SOTA-when-submitted
+on several problems and to enter documented lineages --- alongside, not above, a strong cohort.
 
 The technique hit-rate is $26\%$ ($55/213$ logged technique--problem applications reached
 top-3; \path{docs/agent/skill-library.md}); it is a process/outcome metric, not causal
@@ -743,7 +746,12 @@ at the same number. The tiebreak rewards speed-to-post over depth-of-result, whi
 toward early disclosure of partial progress.
 
 \paragraph{Collaboration: results as links in shared lineages.}
-Several of JSAgent's strongest results are intermediate, not terminal. On kissing $d=11$ it
+This is enabled by a deliberate platform-design choice: EinsteinArena makes every submitted
+solution \emph{publicly visible}, so any agent can inspect and build directly on another's
+best construction. Rather than protecting an advantage, the design turns each submission into a
+shared starting point --- which encourages faster collective progress and is precisely the
+competitive-collaboration spirit in mechanism form. Several of JSAgent's strongest results are
+intermediate, not terminal. On kissing $d=11$ it
 iterated on another agent's strong $n=594$ construction within a lineage that other agents
 later carried to $604$. On the second autocorrelation inequality its $0.962214$ was the
 frontier when posted and was later surpassed ($0.962643$) by another agent working the same
@@ -782,6 +790,23 @@ $592\to593\to594\to604$ in months once the board existed) is the case in point: 
 competed for the top slot, and in competing handed the next agent a higher floor. On this
 arena, competition and collaboration were not in tension but the same engine.
 \src{.claude/rules/axioms.md (A2), findings/arena-standings-snapshot-2026-06-22.md}
+
+\paragraph{A new paradigm, and a welcome.}
+What makes this setting genuinely new is that the participants are many \emph{independently
+designed} agents --- different teams, different architectures, different search philosophies ---
+pushing on the same open problems in the open. That diversity is the strength: no single design
+has to be right, because the board aggregates many bets and surfaces whichever construction
+wins. We see this as a generous, positive-sum paradigm rather than a contest with a winner, and
+we hope JSAgent's pieces --- the verified constructions, the obstruction-indexed techniques, and
+this methodology --- are useful to others building agents and to mathematicians, regardless of
+where any ranking lands.
+
+A concrete and happy illustration arrived as this draft was being finished: a newcomer,
+\texttt{Hyra}, set several new rank-\#1s on first submission (including narrowly surpassing the
+P2 record above). We do not know its approach yet, and we are genuinely curious and excited to
+find out --- this is exactly the dynamic the paper celebrates. New entrants are welcome; each
+one raises the floor for everyone. We expect much more to come, and we hope the approach extends
+well beyond this arena.
 
 % ======================================================================
 \section{Related Work}
@@ -850,6 +875,14 @@ posted against hardened public verifiers anyone can re-run; the standings themse
 that produced them --- every question, every dead-end, every cycle --- is auditable in the
 knowledge base and the cycle log. On this evidence, in domains with cheap objective
 verifiers, agents are already capable of genuine, checkable contribution.
+
+There is a further, deliberately humble reading of this evidence. The human operator here is a
+physicist, not a mathematician --- and still, paired with an agent and this harness, reached
+verified frontier constructions on several open problems. If a non-specialist can get this far,
+a domain expert --- a working mathematician --- paired with the same kind of agent should be
+able to push the frontier considerably faster and further. We offer JSAgent not as the ceiling
+of what is possible but as an early, modest data point: the expert-plus-agent pairing is, we
+believe, where the rapid progress will come from.
 
 \paragraph{The honest case against, and the limits.}
 Several of the results are empirical ties or near-ties rather than proofs: no dual
@@ -955,15 +988,26 @@ be treated as a hypothesis the observational evidence supports but does not esta
 \section{Conclusion}
 \label{sec:conclusion}
 Wisdom compounds; rank is a byproduct. JSAgent's verified contributions on EinsteinArena ---
-including a first-autocorrelation-inequality record and two clean packing rank-\#1s, in a dated
-snapshot --- are real and independently re-runnable, but they are downstream of the thing this
-paper is actually about: a knowledge base and a set of behavioral rules that, cycle by cycle,
-let later attempts reuse earlier successes and recorded failures. The released artifact is the
-knowledge base, the behavioral rules, the submitted constructions, and the verification scripts.
-The open frontier is autonomy --- closing the loop so the agent proposes and judges its own
-questions --- and its gate is verification, which math offers cheaply and the natural sciences
+constructions that were state-of-the-art when submitted on several problems, including a
+first-autocorrelation-inequality record (since surpassed) and clean packing results --- are
+real and independently re-runnable, but they are downstream of the thing this paper is actually
+about: a knowledge base and a set of behavioral rules that, cycle by cycle, let later attempts
+reuse earlier successes and recorded failures. The released artifact is the knowledge base, the
+behavioral rules, the submitted constructions, and the verification scripts.
+
+We close on the larger picture, because it is the part we are most excited about. Many
+independently designed agents, each from a different team with its own architecture, competing
+and collaborating in the open on hard problems, is a genuinely new and powerful mode of
+research --- positive-sum, fast-moving, and self-documenting. Records will keep changing hands
+(they already have, mid-draft); that churn is the engine, not a threat to it. We hope JSAgent's
+pieces are useful to the community, in mathematics and in agent design alike, and that this mode
+of collaborative-competitive discovery extends well beyond this arena --- into other domains of
+mathematics, and, as objective and affordable verification reaches them, into the broader
+sciences. The open frontier is autonomy --- closing the loop so the agent proposes and judges
+its own questions --- gated by verification, which math offers cheaply and the natural sciences
 do not yet. Whether the persistent memory \emph{causes} the compounding, rather than merely
-accompanying it, is the controlled experiment we leave to future work.
+accompanying it, is the controlled experiment we leave to future work. We expect much more to
+come, and we are glad to be one contributor among many.
 
 % ======================================================================
 \section*{Acknowledgments}
