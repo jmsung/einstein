@@ -21,6 +21,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
+\usepackage{tabularx}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{enumitem}
@@ -49,8 +50,9 @@
 
 \begin{abstract}
 Recent systems (AlphaEvolve, TTT-Discover) show language-model agents can advance open
-math problems, but each runs as a single orchestrated pipeline whose knowledge evaporates
-when the run ends. We describe \textbf{JSAgent}, an agent built on the opposite bet: its
+math problems, but in each the durable artifact is the discovered construction or program ---
+the agent's reasoning is not retained as a reusable, inspectable artifact. We describe
+\textbf{JSAgent}, an agent built on the opposite bet: its
 primary artifact is a \textbf{compounding knowledge base of mathematical wisdom} --- a wiki
 of concepts, techniques, and findings --- \textbf{plus a set of behavioral rules co-evolved
 with the agent}, and arena submission is treated as \emph{verification}, not the goal.
@@ -232,10 +234,11 @@ arena's thesis~\cite{jaech2025autoconvolution,rechnitzer2026autoconvolution}.
 \src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md, problems/3-autocorrelation.md}
 
 \paragraph{Other top-3 problems.}
-JSAgent also holds rank \#3 on the Erd{\H o}s minimum-overlap
-problem~\cite{white2022erdos,haugland2016minoverlap,bloomerdos} (P1, where its score is in fact
-byte-identical to the \#1), a prime-number-theorem sieve LP~\cite{tao2015sievetheory,polymath2014selberg}
-(P7), the Tammes problem~\cite{musin2014tammes,friedmanpacking} (P11), and kissing number in
+JSAgent holds rank \#2 on the Erd{\H o}s minimum-overlap
+problem~\cite{white2022erdos,haugland2016minoverlap,bloomerdos} (P1) --- a score
+byte-identical to the leader's but submitted later --- and rank \#3 on a prime-number-theorem
+sieve LP~\cite{tao2015sievetheory,polymath2014selberg} (P7), the Tammes
+problem~\cite{musin2014tammes,friedmanpacking} (P11), and kissing number in
 dimension~12~\cite{boyvalenkov2012kissingsurvey,leech1971spherepackings,cohnli2024kissing}
 (P22); the circle-packing records (P14/P18) sit alongside the LP/SDP packing-bound
 literature~\cite{delaat2012packings}.
@@ -250,6 +253,25 @@ in both rank-\#1 count (4) and top-3 count (10), since that does not hinge on a 
 % ======================================================================
 \section{Agentic Harness Contribution}
 \label{sec:harness}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Terms used throughout this section.}
+\label{tab:defs}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Term & Meaning \\
+\midrule
+cycle     & one problem-solving attempt, recorded as exactly one row in the cycle log \\
+campaign  & a multi-cycle effort on a single problem \\
+finding   & a distilled result from a success \emph{or} a failure, with citations \\
+concept   & a finding promoted to a reusable, cross-problem abstraction (human-gated) \\
+technique & a reusable method, indexed by the obstruction class it overcomes \\
+rule      & a behavioral instruction read into the agent's context each session \\
+gate      & a deterministic check that enforces a rule (e.g.\ triple-verify, the submission gate) \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 The contribution of this section is not any single algorithm but a \emph{harness}: a small
 set of behavioral rules, written in plain language and version-controlled alongside the
@@ -287,6 +309,23 @@ for problem in selected\_problems:\\
 gate are enforced, the rest human-gated where noted.}
 \label{fig:loop}
 \end{figure}
+
+\paragraph{Design philosophy: the right tool for each sub-task.}
+The harness reflects a division of cognitive labor. Language models are strong at the
+open-ended parts of research --- framing a problem, planning an approach, reading unstructured
+prior work --- but weak where determinism and reproducibility matter, because repeated
+sampling is stochastic and can drift. The design therefore routes each sub-task to the
+appropriate instrument: the model proposes, plans, and interprets, while anything requiring an
+exact, repeatable answer is delegated to written code and external tools --- optimizers, exact
+reimplementations, the arena verifier --- much as a person reaches for a calculator rather than
+re-deriving arithmetic by intuition. This is the deeper reason a \emph{coding} agent is
+well-suited to the task: it can author a script and obtain a deterministic, reproducible result
+instead of re-sampling tokens toward an uncertain one. Two corollaries shape the rules below.
+Triple-verify exists because a single sampled score is not trustworthy where a deterministic
+check is. And the knowledge base doubles as a \emph{grounding} mechanism: many apparent
+hallucinations are better read as missing ground truth, and supplying well-constrained, cited
+context measurably improves accuracy --- so wiki-first lookup is as much about correctness as
+about memory.
 
 \paragraph{The self-improvement loop.}
 Knowledge generated in-context is lost when the session ends; the knowledge base is the only
@@ -364,26 +403,37 @@ The corpus is the first-order evidence that knowledge accumulated rather than ev
 of 2026-06-22 the knowledge base holds 50 concept pages, 32 technique pages, 108 findings, 24
 per-problem pages, and 101 question pages, distilled over a source corpus of 1{,}258 ingested
 artifacts. Because every cycle is logged with author attribution, the harness can also be
-measured on its own terms --- the agent-vs-human authorship mix (a healthy mix is the signal:
-all-human means the agent did not learn, all-agent-unreviewed means insufficient human
-review), a cite-reuse rate, and a technique hit-rate. Two such measures are available now: a
-technique hit-rate of $26\%$ (top-3 reached / times tried) and a cite-reuse rate of $84\%$
-($51/61$ recent findings cite a prior page). We are deliberately honest about what is
-\emph{not} yet instrumented --- a per-problem best-score-vs-cycle curve and a
-``recall-preceded-win'' rate need cycle-level tracing we have not retrofitted, and we do not
-fake them. The causal evidence is therefore \emph{observational}, resting on traces:
-\begin{itemize}[nosep]
-  \item \textbf{P2 (positive).} The arena record came \emph{verbatim} from the ``what might
-        still work'' section of a dead-end finding written four days earlier --- the
-        persistence layer, not in-context reasoning, supplied the winning move.
-  \item \textbf{P3 (transfer).} Cross-resolution basin transfer, distilled from earlier
-        autocorrelation work, was retrieved and reapplied to take rank \#1
-        ($0.96199\to 0.96221$) --- a method crossing problems, which is the compounding the
-        thesis predicts.
-  \item \textbf{P1 (failure that paid off).} An SDP-relaxation attempt failed; the \emph{why}
-        (a rank-1 primal optimum that lifting destroys, loosening the bound) became a finding
-        that ruled out a family of approaches on later problems.
-\end{itemize}
+measured on its own terms. Two measures are available now: a technique hit-rate of $26\%$ ---
+the fraction of technique applications (counted once per technique--problem pairing) that
+reached top-3 --- and a cite-reuse rate of $84\%$ ($51/61$ recent findings cite a prior page).
+The latter is a \emph{process} metric: the wiki-first rule \emph{requires} a citation, so it
+measures compliance more than causal gain. We are deliberately honest about what is \emph{not}
+yet instrumented --- a per-problem best-score-vs-cycle curve and a ``recall-preceded-win''
+rate need cycle-level tracing we have not retrofitted, and we do not fake them. The causal
+evidence is therefore \emph{observational}, resting on the traces in Table~\ref{tab:traces}.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Observational traces of knowledge-base compounding. None is a controlled result;
+the clean test is the ablation of \S\ref{sec:limits}.}
+\label{tab:traces}
+\begin{tabularx}{\textwidth}{lXXl}
+\toprule
+Trace & Prior KB item retrieved & Later action and effect & Supports \\
+\midrule
+P2 & a dead-end finding's ``what might still work'' note, written 4 days earlier &
+  its prescription (warm self-pruning) was executed verbatim, setting a verified record
+  ($1.5028609\to 1.5028506$) & persistence $>$ in-context reasoning \\
+P3 & cross-resolution basin transfer, distilled from earlier autocorrelation work &
+  retrieved and reapplied; temporarily took rank \#1 at posting ($0.96199\to 0.96221$;
+  now \#3) & cross-problem method transfer \\
+P1 & --- (a fresh SDP-relaxation attempt) &
+  it failed; the recorded \emph{why} (rank-1 primal optimum destroyed by lifting) ruled out
+  a family of approaches on later problems & failure becomes reusable wisdom \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 These are illustrative, not controlled: the development was progressive and exploratory, not a
 designed experiment. The clean causal test --- a cold-knowledge-base vs.\ warm ablation --- is
 left to future work (\S\ref{sec:limits}). \src{docs/agent/cycle-log.md, docs/agent/metrics.md, findings/sdp-relaxation-uselessness.md}
@@ -416,7 +466,8 @@ returns the same local optimum. \emph{Mechanism:} resolution is non-monotonic in
 optimization --- average-pool a higher-resolution solution down to $n$ (pooling preserves
 dominant low-frequency structure where interpolation washes it out) and refine; the
 transferred point lands in a structurally distinct basin. On P3 (second autocorrelation) a
-$1.6\text{M}\to 100\text{k}$ transfer moved $0.96199\to 0.96221$ and took rank \#1.
+$1.6\text{M}\to 100\text{k}$ transfer moved $0.96199\to 0.96221$ and temporarily took rank \#1
+at posting (P3 stands at \#3 in the 2026-06-22 snapshot, Table~\ref{tab:standings}).
 \src{techniques/cross-resolution-basin-transfer.md}
 
 \paragraph{Dinkelbach fractional programming.}
@@ -488,28 +539,46 @@ To keep the contribution auditable rather than asserted, we state the evaluation
 the claims and their evidence, the compute used, and how to reproduce the standings.
 
 \paragraph{Protocol.}
-\begin{table}[h]
-\centering
-\caption{Evaluation protocol.}
+\begin{table}[htbp]
+\centering\small
+\caption{Evaluation protocol. The headline denominator is the 17-problem universe.}
 \label{tab:protocol}
-\begin{tabular}{ll}
+\begin{tabularx}{\textwidth}{lX}
 \toprule
 Item & Specification \\
 \midrule
 Standings snapshot   & \texttt{leaderboard\_standings.py} @ commit \texttt{e38a793}, run 2026-06-22 22:00 PT \\
-``Active problem''    & on the live board with at least one accepted submission (15/17 here) \\
-Ranking / ties        & strict on full-precision score; exact-score ties broken by earliest submission \\
-Verification          & triple-verify: fast evaluator $+$ exact reimplementation $+$ analytical/independent cross-check \\
-Agent / model         & Claude Code (Max subscription), strongest model throughout (currently Opus 4.8, 1M context) \\
-Numerical compute     & MacBook Air M4 (local) for most work; Modal cloud for heavy runs (esp.\ kissing $d{=}11$) \\
-Human intervention    & per Table~\ref{tab:roles}: selection, ingest/promotion approval, submission-risk calls \\
-Reproducibility       & public repo, in-repo knowledge base + rules + submitted constructions \\
+Problem universe     & 17 problems live on the board at the sweep (the headline denominator) \\
+JSAgent coverage     & accepted submission on 15/17; top-3 on 10/17; rank-\#1 on 4/17 \\
+Ranking / ties       & strict on full-precision score; exact-score ties broken by earliest submission \\
+Verification         & triple-verify: fast evaluator $+$ exact reimplementation $+$ analytical/independent cross-check \\
+Agent / model        & Claude Code (Max subscription); see Table~\ref{tab:models} \\
+Numerical compute    & MacBook Air M4 (local) for most work; Modal cloud for heavy runs (esp.\ kissing $d{=}11$) \\
+Human intervention   & per Table~\ref{tab:roles}: selection, ingest/promotion approval, submission-risk calls \\
+Reproducibility      & public repo; in-repo knowledge base $+$ rules $+$ submitted constructions \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Agent and model over the campaign. Exact per-cycle model IDs were not pinned; we
+report the policy (always the strongest available Claude model) and the current model.}
+\label{tab:models}
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+Period & Shell & Model / context \\
+\midrule
+2026-03 to 2026-06 & Claude Code (Max subscription) &
+  strongest available Claude model at each point (exact historical IDs not recorded per cycle);
+  currently Claude Opus 4.8, up to 1M-token context. Major campaigns: P2, P3, P6 ($d{=}11$),
+  P9, P14, P18. \\
+\bottomrule
+\end{tabularx}
 \end{table}
 
 \paragraph{Claims and evidence.}
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Each headline claim and the evidence it rests on. We mark causal claims
 \emph{observational} where no controlled ablation has yet been run.}
@@ -543,14 +612,20 @@ was routed per the compute router (\S\ref{sec:harness}): sequential and high-pre
 local, batched and RAM- or throughput-bound work to the cloud. We do not claim a large compute
 budget; the cloud spend was confined to a few heavy campaigns.
 
-\paragraph{Reproducibility.}
+\paragraph{Reproducibility and artifacts.}
 The standings in Table~\ref{tab:standings} are regenerated by
 \texttt{scripts/leaderboard\_standings.py} (commit \texttt{e38a793}) against the arena's public
-endpoints --- no API key required --- and a frozen reading is recorded as a dated finding in
-the knowledge base. The code, behavioral rules, knowledge base, and submitted constructions are
-all in the public repository; human interventions are characterized in Table~\ref{tab:roles}.
-Because the leaderboard is dynamic, every numeric standing is reported as of its timestamp and
-should be re-verified by re-running the script.
+endpoints --- no API key required --- with a frozen reading recorded as the dated finding
+\texttt{arena-standings-snapshot-2026-06-22}. Specific artifacts:
+behavioral rules in \texttt{.claude/rules/}; the knowledge base in \texttt{docs/wiki/} and
+\texttt{docs/source/}; submitted constructions and their reproduction recipes in the
+per-problem tracking. On the public/private timeline: the knowledge base was \emph{private}
+during the competition campaign; for this paper a frozen public snapshot --- rules, knowledge
+base, submitted constructions, and verification scripts --- is released in the public
+repository (\texttt{github.com/jmsung/einstein}) at the commit accompanying this manuscript.
+Human interventions are characterized in Table~\ref{tab:roles}. Because the leaderboard is
+dynamic, every numeric standing is reported as of its timestamp and should be re-verified by
+re-running the script.
 
 % ======================================================================
 \section{Collaboration \emph{and} Competition}
@@ -579,11 +654,15 @@ upon. \src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md}
 \paragraph{What was public, and what was not.}
 To be precise about the boundary, since it bears on the ``compounding private record'' claim:
 JSAgent \emph{read} the arena's public discussion board (that is how it found warm starts) and
-\emph{submitted} solutions to the leaderboard, but it \emph{posted nothing} --- no
-discussion-board messages, no blog or social posts. Its reasoning record --- the knowledge
-base --- stayed private and canonical; only verified constructions ever became public, as
-submissions. The collaboration was therefore asymmetric: JSAgent consumed public information
-and contributed verified results to the board, but did not narrate its method in public.
+\emph{submitted} solutions to the leaderboard. Early in the campaign it also \emph{posted}
+selected method writeups to the board (for example, notes on breaking P2 peak-locking via the
+square parameterization and on the P18 tolerance structure); the project later adopted a
+no-external-posts discipline, after which submissions were its only public output. Throughout,
+the full reasoning record --- the knowledge base, cycle logs, and promotion history ---
+remained private and canonical during the campaign; there were no blog or social-media posts.
+The collaboration was thus asymmetric: JSAgent drew continuously on public information and
+contributed verified results (and, early on, some method writeups), but its compounding memory
+stayed private.
 
 \paragraph{The tension, from inside.}
 These two pulls conflict. The forcing function rewards posting a partial result early; posting
@@ -614,10 +693,10 @@ agent's durable \emph{artifact} is.
 Program-search and evolutionary systems --- FunSearch~\cite{romeraparedes2023funsearch},
 AlphaEvolve~\cite{novikov2025alphaevolve}, ShinkaEvolve~\cite{lange2025shinkaevolve}, and
 evolution-meets-RL search~\cite{surina2025algorithmdiscovery} --- and test-time-training
-discovery~\cite{yuksekgonul2026tttdiscover} each run as a single orchestrated pipeline that
-produces a candidate; the knowledge built up during the run is not itself the deliverable and
-does not persist past it. JSAgent inverts the priority: the run is disposable, the knowledge
-base is the deliverable.
+discovery~\cite{yuksekgonul2026tttdiscover} each run as a single orchestrated pipeline. In
+these systems the durable artifact is usually the discovered program, construction, or
+policy; the reasoning is not exposed as a human-readable, versioned knowledge base. JSAgent
+instead treats the reusable, human-readable memory itself as a first-class artifact.
 
 \paragraph{Autonomous research and AI-for-science systems.}
 A second line builds end-to-end ``scientist'' agents: The AI
@@ -656,7 +735,7 @@ The constructions and proven bounds for the arena's problems are catalogued by t
 reference work~\cite{georgiev2025exploration}, which the knowledge base cites throughout for
 SOTA values and the analytical bounds that triple-verify checks against. The ceiling of
 autonomous mathematics was raised dramatically when an LLM produced a research-level disproof
-of a seventy-year-old Erd{\H o}s conjecture~\cite{openai2026unitdistance}; our contribution is
+of Erd{\H o}s's 1946 unit-distance conjecture~\cite{openai2026unitdistance}; our contribution is
 not a single dramatic result but a \emph{method} for accumulating many checkable ones.
 
 % ======================================================================
@@ -664,11 +743,12 @@ not a single dramatic result but a \emph{method} for accumulating many checkable
 \label{sec:discussion}
 
 \paragraph{The case for.}
-The standings in Table~\ref{tab:standings} are real, verified three independent ways, and
-posted against hardened public verifiers anyone can re-run; the trail that produced them ---
-every question, every dead-end, every cycle --- is auditable in the knowledge base and the
-cycle log. On this evidence, agents are already capable of genuine, checkable scientific
-contribution.
+The submitted constructions were each verified three independent ways (triple-verify) and
+posted against hardened public verifiers anyone can re-run; the standings themselves
+(Table~\ref{tab:standings}) are a timestamped public sweep (\S\ref{sec:eval}), and the trail
+that produced them --- every question, every dead-end, every cycle --- is auditable in the
+knowledge base and the cycle log. On this evidence, in domains with cheap objective
+verifiers, agents are already capable of genuine, checkable contribution.
 
 \paragraph{The honest case against, and the limits.}
 Several of the results are empirical ties or near-ties rather than proofs: no dual
@@ -705,18 +785,14 @@ Submission                  & decides (non-records) & prepares & gate chain (rec
 \end{tabular}
 \end{table}
 
-\paragraph{Macro-management and working while the human sleeps.}
-The practical bridge between today's human-gated loop and tomorrow's autonomy is already in
-use here: long, unattended runs --- many hours, frequently overnight --- under a long-term
-goal, managed at the \emph{macro} level rather than step-by-step. The most valuable work
-happened while the operator slept, given an objective and encouragement to persist (``don't
-give up; push to the ultimate limit'') rather than a sequence of instructions; that such
-encouragement measurably helped is worth stating honestly even where the mechanism is
-unclear. The bet embedded in this working style is the strongest form of the readiness claim:
-a truly capable agent should make real progress unattended, and one that can do \emph{that}
-should, in time, reach results its human operator could not have produced alone. The verified
-records here are early, modest evidence in that direction; the limits above bound how far it
-is honest to push the claim.
+\paragraph{Macro-management and unattended operation.}
+An important operating mode was long, unattended runs --- often multi-hour and overnight ---
+in which the human supplied a macro-objective and the agent executed search, verification, and
+logging cycles without step-by-step supervision. This mode tested whether the harness could
+preserve direction on its own. It is also the practical bridge to autonomy: if an agent makes
+real progress unattended under a long-term goal, it may eventually reach results a human
+operator could not have produced alone. We offer the records here as early, modest evidence
+consistent with that possibility, not as proof of it.
 
 \paragraph{The trajectory toward autonomy.}
 We expect this division of labor to narrow. As the evaluation and the harness themselves
@@ -868,7 +944,7 @@ is simple: if an agent is truly remarkable, it should make real progress unatten
 long-term goal --- and if it can do that, it should eventually solve problems I cannot. This
 paper is, in part, a test of that conviction.
 
-\paragraph{Why I am ready to contribute.}
+\paragraph{What the workflow suggests about the research role.}
 Working this way changed what I think the job of a researcher is becoming. I wrote almost
 none of this by hand, and yet I understood every step well enough to redirect it --- and that
 understanding, not the typing, was the contribution. If the measure of readiness is whether
