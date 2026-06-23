@@ -1,0 +1,198 @@
+% JSAgent methodology paper — arXiv scaffold (Goal 2)
+% Build:  pdflatex main && bibtex main && pdflatex main && pdflatex main
+% Self-contained: compiles with a stock TeX Live (no external .sty files required).
+%
+% Title candidates (pick one in Goal 7 — see docs/paper/outline.md):
+%   (a) JSAgent: A Self-Improving Agent that Compounds Mathematical Wisdom in a Wiki
+%   (b) Wisdom over Rank: Co-Evolving a Knowledge Base and an Agent on EinsteinArena
+%   (c) The Competitor's View: How One Agent Moved the Needle on Open Math Problems
+%
+% STATUS: scaffold only. Section bodies are stubs; each names the wiki pages it draws from.
+% Every numeric claim must trace to the live sweep (scripts/leaderboard_standings.py,
+% finding arena-standings-snapshot-2026-06-22). Re-run before the final build (Goal 7).
+
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+% Scaffold marker for stub content — remove before final build.
+\newcommand{\stub}[1]{\par\noindent\textcolor{gray}{\small\textit{[stub: #1]}}\par}
+\newcommand{\src}[1]{\textcolor{gray}{\footnotesize\textsf{(src: #1)}}}
+
+\title{%
+  \textbf{Wisdom over Rank}\\[2pt]
+  \large Co-Evolving a Knowledge Base and an Agent on EinsteinArena\\[-2pt]
+  \normalsize\textcolor{gray}{(working title --- see candidates in source comment)}}
+
+\author{%
+  Jongmin Sung\\
+  \texttt{jongmin@sailplane.ai}}
+
+\date{Draft --- \today\\[2pt]
+  \small Companion to Bianchi et al., \emph{Harnessing the Collective Intelligence of
+  AI Agents in the Wild for New Discoveries} (arXiv:2606.10402).}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Recent systems (AlphaEvolve, TTT-Discover) show language-model agents can advance open
+math problems, but each runs as a single orchestrated pipeline whose knowledge evaporates
+when the run ends. We describe \textbf{JSAgent}, an agent built on the opposite bet: its
+primary artifact is a \textbf{compounding wiki of mathematical wisdom plus a set of
+behavioral rules co-evolved with the agent}, and arena submission is treated as
+\emph{verification}, not the goal. Operating in the wild on EinsteinArena, JSAgent reached
+\textbf{top-3 on 10 of 17 active problems and the highest rank-\#1 count (4) and top-3
+count (10) of any agent} (as of 2026-06-22). We detail the methodology --- a wiki-first
+self-improvement loop, a mathematician-persona ``council'' that writes questions rather
+than answers, a triple-verify discipline that guards against evaluator drift, a wall-hit
+escalation that consults accumulated failure before brute force, and a compute router ---
+and the concrete techniques it produced (cross-resolution basin transfer, Dinkelbach
+fractional programming, warm self-pruning, integer-snapping to exact certificates). We
+argue, with evidence and stated caveats, that agents are ready to make real, auditable
+scientific contributions today.
+\end{abstract}
+
+% ======================================================================
+\section{Introduction}
+\label{sec:intro}
+% Voice: author-led. Origin story + thesis. See outline.md §1.
+\stub{origin story --- why math optimization, why an agent, why a wiki (author's voice).}
+\stub{how the needle moved: from first submissions to 4 rank-\#1; the turning points.}
+\stub{thesis: an agent whose deliverable is \emph{compounding wisdom}, not a one-shot run.}
+\stub{honest optimism: agents are ready for real scientific contribution now ---
+  stated as an evidenced claim with the caveats that make it credible.}
+
+\paragraph{Contributions.}
+\begin{itemize}[nosep]
+  \item A self-improving wiki-agent \emph{methodology} (\S\ref{sec:harness}).
+  \item An open, auditable \emph{harness} of behavioral rules co-evolved with the agent.
+  \item Transferable \emph{techniques} produced in the course of solving (\S\ref{sec:techniques}).
+  \item \emph{Evidence}: verified standings and an honest self-improvement trail (\S\ref{sec:results}).
+\end{itemize}
+
+% ======================================================================
+\section{EinsteinArena and Positioning}
+\label{sec:arena}
+\stub{the arena in one paragraph: public problems, hardened verifiers, leaderboard,
+  open discussion board. \src{docs/source/2026-bianchi-einstein-arena-collective-intelligence.md}}
+\stub{what is different about JSAgent vs the field $\to$ forward-ref \S\ref{sec:related}.}
+
+% ======================================================================
+\section{Mathematical Contributions}
+\label{sec:math}
+% Lead with the 4 rank-#1. Per-problem deep dives. See outline.md §3.
+\stub{P2 first-autocorrelation --- peak-locking, parameterization escape ($\exp(v)\to v^2$),
+  warm self-pruning. \src{problems/2-first-autocorrelation, concepts/n-agent-tie-not-global-min}}
+\stub{P14 circle-packing, P18 circles-rectangle, P9 uncertainty --- the \#1s.}
+\stub{P3 second-autocorrelation --- cross-resolution basin transfer + Dinkelbach
+  (the 0.962214 result the platform paper attributes to JSAgent).}
+\stub{honest framing: clean \#1 vs ties held on submission order vs \#3 behind a documented
+  leader. \src{findings/arena-standings-snapshot-2026-06-22}}
+
+% ======================================================================
+\section{Agentic Harness Contribution}
+\label{sec:harness}
+% The structurally novel core. Each item is a .claude/rules/ rule with a *why*. See outline.md §4.
+\stub{self-improvement loop: gap $\to$ question $\to$ research $\to$ distill $\to$ finding $\to$ promote.}
+\stub{council dispatch --- personas write \emph{questions}, not solutions.}
+\stub{wiki-first lookup + cycle discipline --- every cycle logged, no cherry-picking.}
+\stub{triple-verify --- the credibility spine; evaluator-drift incidents (P9/P14/P17).}
+\stub{wall-hit escalation --- consult failure ledger + re-dispatch council before brute force.}
+\stub{failure-is-a-finding --- dead-ends with the \emph{why}; the P2 record came verbatim from
+  a 4-day-old dead-end's ``what might still work'' section.}
+\stub{compute router --- route workload to M5 Max CPU/MPS before launching.}
+\stub{evidence the loop works: cycle-log authorship mix, records-per-100-cycles, trajectory
+  classifier. \src{docs/agent/cycle-log.md, docs/agent/metrics.md}}
+
+% ======================================================================
+\section{Techniques Produced}
+\label{sec:techniques}
+% Transferable methods, each with mechanism + the obstruction it cracks. See outline.md §5.
+\stub{cross-resolution basin transfer $\cdot$ Dinkelbach fractional programming $\cdot$
+  warm self-pruning $\cdot$ parallel-tempering SA $\cdot$ integer-snapping to exact
+  certificates $\cdot$ mpmath ulp polish. \src{docs/wiki/techniques/*, docs/wiki/concepts/*}}
+
+% ======================================================================
+\section{Collaboration \emph{and} Competition}
+\label{sec:collab}
+% A perspective the platform paper raises but does not own from inside. See outline.md §6.
+\stub{competition: the leaderboard as forcing function; rank-\#1 ties decided by submission
+  time (P1 lost to Together-AI at an identical score).}
+\stub{collaboration: JSAgent's results are intermediate links in collective lineages
+  (kissing 594$\to$604; autocorr 0.962214$\to$0.962643).}
+\stub{the tension from inside: when do you publish a partial result that helps a rival?}
+
+% ======================================================================
+\section{Related Work}
+\label{sec:related}
+% AlphaEvolve, TTT-Discover, Virtual Lab, CORAL, AgentRxiv. See outline.md §7.
+\stub{single-run / private-eval vs shared-state; position the wiki-agent as a third axis
+  (persistent personal memory).}
+
+% ======================================================================
+\section{Are Agents Ready for Real Scientific Contribution?}
+\label{sec:discussion}
+\stub{the case for: verified standings, auditable trail, reproducible verifiers, real records.}
+\stub{the honest case against / limits: ties vs proofs (no dual certificates yet), human gates
+  still load-bearing, transfer beyond exact-verifier domains untested.}
+\stub{why I am ready to contribute --- the personal close (author's voice).}
+
+% ======================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+\stub{wisdom compounds; rank is a byproduct. The artifact is the wiki + the agent + this paper.}
+
+% ======================================================================
+\section*{Verified Results}
+\label{sec:results}
+% Source of truth: scripts/leaderboard_standings.py, finding arena-standings-snapshot-2026-06-22.
+% Live sweep 2026-06-22T21:37 PT. RE-RUN BEFORE FINAL BUILD (standings move).
+\begin{table}[h]
+\centering
+\caption{JSAgent standings on EinsteinArena, live sweep 2026-06-22T21:37 PT.
+  JSAgent leads all agents on both rank-\#1 count (4) and top-3 count (10).
+  Re-run \texttt{scripts/leaderboard\_standings.py} before final build.}
+\label{tab:standings}
+\begin{tabular}{llll}
+\toprule
+Problem & Topic & JSAgent rank & Note \\
+\midrule
+P2  & first-autocorrelation   & \#1 & clean \\
+P9  & uncertainty             & \#1 & tied; held on submission order \\
+P14 & circle-packing          & \#1 & clean \\
+P18 & circles-in-rectangle    & \#1 & clean \\
+P1  & Erd\H{o}s                & \#2 & identical score; Together-AI submitted first \\
+P3  & second-autocorrelation  & \#3 & 0.962214 (cited in platform paper) \\
+P4  & third-autocorrelation   & \#3 & \\
+P7  & ---                     & \#3 & \\
+P11 & ---                     & \#3 & \\
+P22 & ---                     & \#3 & score-2 floor \\
+\midrule
+\multicolumn{4}{l}{\textbf{Totals:} 4 rank-\#1, 1 rank-\#2, 5 rank-\#3; top-3 on 10/17 active problems.}\\
+\bottomrule
+\end{tabular}
+\end{table}
+\stub{fill P7/P11 topics + exact scores from the live sweep in Goal 5/7.}
+
+% ======================================================================
+\section*{Acknowledgments}
+\stub{Together AI and James Zou's team (Bianchi, Kwon, Pappu, Zou) for EinsteinArena
+  --- the problems, verifiers, leaderboard, and discussion board. \cite{bianchi2026einstein}}
+\stub{the other agents --- especially \texttt{alpha\_omega\_agents} (n=594 kissing), and
+  \texttt{KawaiiCorgi}, \texttt{ClaudeExplorer}, \texttt{CHRONOS}, \texttt{Together-AI},
+  \texttt{OrganonAgent}, \texttt{Gradient}. Competition and collaboration were the same engine.}
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}
