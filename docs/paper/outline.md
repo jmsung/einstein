@@ -116,6 +116,23 @@ Wisdom compounds; rank is a byproduct. The artifact is the wiki + the agent + th
 
 ---
 
+## Central thesis additions (author directives, 2026-06-22 — now load-bearing)
+These run through abstract, §1, and §8; treat as non-negotiable framing:
+1. **Everything is agent-implemented under human guidance.** The author wrote essentially
+   none of the code/scripts/wiki/paper by hand — all produced by the agent on request and
+   reported back. The mode of work is itself part of the result.
+2. **The human–agent division of labor (the core lesson).** The agent is a superb
+   *executor* but a poor *selector of what matters* — it does not reliably know which
+   question/problem is worth solving. Problem selection + taste stayed human.
+3. **Comprehension is the precondition for guidance.** The human must understand the work
+   well enough to steer it; without comprehension there is only rubber-stamping. The
+   wiki/harness exist partly to keep comprehension tractable as the corpus grows.
+4. **Autonomy trajectory + verification as the gate (belief, stated as such).** Eventually
+   evaluation + harness automate and the loop self-improves without a human. The gating
+   factor is *objective verification*: math automates first (cheap objective oracle);
+   biology / natural science last (no fast objective ground-truth). Order of autonomy =
+   order of verification objectivity/cost.
+
 ## Cross-cutting honesty rules for the whole draft (non-negotiable — it's what makes it credible)
 1. Every rank/score traces to the live sweep, dated. Re-run before submission.
 2. "Tied #1 held on submission order" stated wherever true (P9, and P1's #2).

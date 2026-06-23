@@ -59,7 +59,12 @@ escalation that consults accumulated failure before brute force, and a compute r
 and the concrete techniques it produced (cross-resolution basin transfer, Dinkelbach
 fractional programming, warm self-pruning, integer-snapping to exact certificates). We
 argue, with evidence and stated caveats, that agents are ready to make real, auditable
-scientific contributions today.
+scientific contributions today. Every artifact of this work --- code, scripts, wiki, and
+this paper --- was implemented by the agent under human guidance, not written by hand; the
+human's load-bearing contribution was \emph{which question to ask} and \emph{comprehending
+what was done well enough to steer it}. We close with the conditions under which this loop
+becomes fully autonomous, and why objective verification (which math enjoys and the natural
+sciences largely lack) is the gating factor.
 \end{abstract}
 
 % ======================================================================
@@ -72,12 +77,29 @@ scientific contributions today.
 \stub{honest optimism: agents are ready for real scientific contribution now ---
   stated as an evidenced claim with the caveats that make it credible.}
 
+\paragraph{How this work was produced (and why it matters to the thesis).}
+% DRAFT (per author): the human-mediated / agent-implemented framing. Author's voice — refine in Goal 7.
+Every artifact described here --- the optimizer code and per-problem scripts, the wiki of
+concepts and findings, the behavioral rules, and the prose of this paper --- was
+\emph{implemented by the agent}, not typed by the author. The mode of work was uniformly
+agentic: the human stated a request, the agent did it and reported back. This is not an
+aside; it is part of the result. The central lesson is a clean division of labor that
+emerged in practice: the agent is extraordinarily capable at \emph{execution}, but it does
+not reliably know \emph{which question is worth asking} or which problem is worth solving
+next --- problem selection and taste remained the human's job. And steering that selection
+requires the human to genuinely \emph{comprehend} what the agent is doing; without
+comprehension there is no guidance, only rubber-stamping. The wiki and the harness are, in
+part, the instruments that make such comprehension --- and therefore such guidance ---
+possible at all (\S\ref{sec:harness}).
+
 \paragraph{Contributions.}
 \begin{itemize}[nosep]
   \item A self-improving wiki-agent \emph{methodology} (\S\ref{sec:harness}).
   \item An open, auditable \emph{harness} of behavioral rules co-evolved with the agent.
   \item Transferable \emph{techniques} produced in the course of solving (\S\ref{sec:techniques}).
   \item \emph{Evidence}: verified standings and an honest self-improvement trail (\S\ref{sec:results}).
+  \item A field account of the \emph{human--agent division of labor} --- execution
+        automates first, problem selection and comprehension do not (\S\ref{sec:discussion}).
 \end{itemize}
 
 % ======================================================================
@@ -234,10 +256,47 @@ trajectory classifier over the cycle log.
 % ======================================================================
 \section{Are Agents Ready for Real Scientific Contribution?}
 \label{sec:discussion}
-\stub{the case for: verified standings, auditable trail, reproducible verifiers, real records.}
-\stub{the honest case against / limits: ties vs proofs (no dual certificates yet), human gates
-  still load-bearing, transfer beyond exact-verifier domains untested.}
-\stub{why I am ready to contribute --- the personal close (author's voice).}
+% DRAFT (per author, Goal 3 extension): the readiness argument + the autonomy trajectory.
+% Author's belief, stated as such; refine voice in Goal 7.
+
+\paragraph{The case for.}
+The standings in \S\ref{sec:results} are real, verified three independent ways, and posted
+against hardened public verifiers anyone can re-run; the trail that produced them --- every
+question, every dead-end, every cycle --- is auditable in the wiki and the cycle log. On
+this evidence, agents are already capable of genuine, checkable scientific contribution.
+
+\paragraph{The honest case against, and the limits.}
+Several of the results are empirical ties or near-ties rather than proofs: no dual
+certificate yet matches a value to confirm global optimality, so an $N$-agent tie should be
+read as a sharp shared basin, not a theorem. Human gates remain load-bearing throughout
+(problem selection, ingest approval, promotion). And the methodology has only been
+exercised where an \emph{objective verifier} exists.
+
+\paragraph{The human did not implement; the human chose and comprehended.}
+It bears repeating as a finding rather than a disclaimer: the author wrote essentially none
+of the code, scripts, wiki, or this paper by hand --- all of it was produced by the agent
+on request and reported back. What did \emph{not} automate was deciding which of the
+twenty-three problems deserved attention, when a ``floor'' claim should be distrusted, and
+when a result was worth the credibility cost of a submission. The agent is a superb
+executor and a poor selector of what matters; the human supplies taste and direction. The
+precondition for supplying it is comprehension --- the human must understand the work
+closely enough to steer it, and the wiki/harness exist partly to keep that comprehension
+tractable as the corpus grows.
+
+\paragraph{The trajectory toward autonomy.}
+I expect this division of labor to narrow. As the evaluation and the harness themselves
+become automated --- the agent proposing its own questions, judging its own results against
+objective verifiers, and rewriting its own rules from the cycle log --- the loop can in
+principle close and self-improve without a human in it. The gating factor is
+\emph{verification}. Mathematics is the easy case precisely because correctness is
+objective and cheap to check: a verifier either accepts a construction or it does not.
+Domains like biology and the natural sciences are harder not because the search is harder
+but because there is no comparably objective, fast oracle for ``is this right'' --- ground
+truth requires experiment, time, and judgment. Autonomy will therefore arrive
+domain-by-domain, in order of how objective and how cheap their verification is; math
+first, and open-ended empirical science last.
+
+\stub{personal close --- why I am ready to contribute (author's voice). Goal 7.}
 
 % ======================================================================
 \section{Conclusion}
