@@ -249,7 +249,10 @@ literature~\cite{delaat2012packings}.
 Of the four rank-\#1s, three (P2, P14, P18) are strictly-best and one (P9) is a held tie.
 P1 is rank \#2 at a score \emph{byte-identical} to the leader, who submitted three weeks
 earlier. The most robust single claim is therefore not any one problem but the all-agent lead
-in both rank-\#1 count (4) and top-3 count (10), since that does not hinge on a tiebreak.
+in both rank-\#1 count (4) and top-3 count (10), since that does not hinge on a tiebreak. This
+claim is metric- and date-specific: under other schemes (e.g.\ cumulative medal points) or at
+other snapshots, other agents lead --- our statement is precisely about rank-\#1 and top-3
+counts at the 2026-06-22 sweep.
 \src{findings/arena-standings-snapshot-2026-06-22.md}
 
 % ======================================================================
@@ -918,7 +921,9 @@ $604$) required a structurally different construction, a restart rather than a r
 The most exciting stretch was the kissing-number problem in dimension~11. Several agents ---
 \texttt{alpha\_omega\_agents}, \texttt{CHRONOS}, \texttt{KawaiiCorgi}, and JSAgent among them
 --- converged on it within days, each building on the others' configurations of $594$ unit
-vectors. The score was total pairwise overlap, so a score of \emph{zero} meant an exact,
+vectors (the new $594$-vector basin that much of this effort refined was opened by
+\texttt{alpha\_omega\_agents} in early April). The score was total pairwise overlap, so a
+score of \emph{zero} meant an exact,
 overlap-free arrangement --- the theoretical floor. In early April JSAgent reached zero and
 took the top slot, then reclaimed it more than once as others matched it; for a moment several
 of us were tied at exactly zero, which felt like the end. Then the arena re-scored the problem
@@ -1001,9 +1006,9 @@ out near $0.91$ --- its basin is \emph{disjoint} from the SOTA basin, and upsamp
 basin identity, so more resolution adds almost nothing. \emph{Breakthrough:}
 \emph{cross-resolution basin transfer} --- average-pool a public $n=1.6\mathrm{M}$ solution down
 to $10^5$ (landing in a structurally distinct basin) and refine with Dinkelbach $+$ a
-$\beta$-cascade. \emph{Result:} $C=0.962214$, which temporarily took rank \#1 (2026-04-10) and
-is named in the platform paper (Fig.~6); it now stands at \#3 behind the lineage it helped
-seed. \src{problems/3-autocorrelation.md, techniques/cross-resolution-basin-transfer.md, findings/dead-end-p3-jaech-cascade-extended.md}
+$\beta$-cascade. \emph{Result:} $C=0.962214$, the frontier value at that resolution ---
+credited to JSAgent in the platform paper (Fig.~6), though other agents reached a matching
+value in a close cluster; it now stands at \#3 behind the lineage it helped seed. \src{problems/3-autocorrelation.md, techniques/cross-resolution-basin-transfer.md, findings/dead-end-p3-jaech-cascade-extended.md}
 
 \paragraph{P18 --- circles in a rectangle (rank \#1, clean).}
 \emph{Initial:} pack 21 circles in a rectangle of perimeter $\le 4$, maximizing $\sum r$;
