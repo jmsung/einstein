@@ -87,7 +87,9 @@ the clearest arenas in which to test this objectively: a mathematical claim can 
 an explicit verifier that either accepts a construction or rejects it, so progress is
 measured without appeal to opinion and there is nowhere for self-deception to hide. Public
 competitions of open math problems --- paired with hardened automatic verifiers and
-leaderboards --- turn that objectivity into a live testbed.
+leaderboards --- turn that objectivity into a live testbed; the platform we compete on,
+EinsteinArena~\cite{bianchi2026einstein,togetherai2026arena}, is one such instance, and this
+paper is a companion to its operators' account of the platform~\cite{bianchi2026einstein}.
 
 The last two years have made this concrete. Program-search and evolutionary agents have
 produced new mathematical constructions
@@ -912,6 +914,23 @@ contributed by \texttt{alpha\_omega\_agents} and built on by much of the field, 
 included --- anchored a long run of incremental gains, yet pushing the record further (to
 $604$) required a structurally different construction, a restart rather than a refinement.
 
+\paragraph{The kissing-number race.}
+The most exciting stretch was the kissing-number problem in dimension~11. Several agents ---
+\texttt{alpha\_omega\_agents}, \texttt{CHRONOS}, \texttt{KawaiiCorgi}, and JSAgent among them
+--- converged on it within days, each building on the others' configurations of $594$ unit
+vectors. The score was total pairwise overlap, so a score of \emph{zero} meant an exact,
+overlap-free arrangement --- the theoretical floor. In early April JSAgent reached zero and
+took the top slot, then reclaimed it more than once as others matched it; for a moment several
+of us were tied at exactly zero, which felt like the end. Then the arena re-scored the problem
+at much higher (\texttt{mpmath}) precision, and every ``zero'' became a finite number again, on
+the order of $10^{-13}$ --- and the race restarted, now fought at the level of individual
+floating-point units in the last decimal place. The lead changed hands repeatedly until
+submissions for the problem were eventually closed; JSAgent did not hold the final position
+(\texttt{KawaiiCorgi} did, on a configuration later extended to $604$ vectors). The dust
+settled and the result was not mine, but the competition was genuinely thrilling --- and it is
+the clearest thing I have seen to a field of agents pushing one another past a wall that had
+stood, in the published literature, for forty years.
+
 \paragraph{Problems are related --- so build a memory.}
 As I let the agent work more problems, a pattern surfaced: many were related. The first,
 second, and third autocorrelation inequalities are a family; a method that cracked one --- a
@@ -953,6 +972,71 @@ an agent can produce checkable results on open problems, the evidence here says 
 measure is whether a person can still steer that work toward what matters and vouch for it,
 the answer is also yes --- and the two are not in tension. They are the division of labor I
 expect to define the next several years of doing science with agents.
+
+% ======================================================================
+\section{Per-Problem Progression}
+\label{app:progression}
+For the problems where JSAgent has real depth, the progression --- initial approach, the wall,
+the breakthrough, the verified result --- is given below, each traceable to the cited wiki
+pages. Ranks are as of the 2026-06-22 sweep (Table~\ref{tab:standings}); where the documented
+progression predates that snapshot, both are stated.
+
+\paragraph{P2 --- first autocorrelation inequality (now rank \#1).}
+\emph{Initial:} minimize $C=\max(f\!\star\!f)/(\int f)^2$; the larger-$n$ cascade that had
+worked on P4 was applied under the standard $\exp(v)$ parameterization. \emph{Wall:} the
+iterate peak-locked at $\delta\approx 5\mathrm{e}{-}8$ for every $n$ --- under $\exp(v)$ both
+gradient and Hessian vanish at dead cells ($\varphi'=\varphi''=0$), leaving a structurally flat
+dead-cell subspace the optimizer cannot prune; a later two-agent tie at $1.5028609$ looked like
+the global minimum. \emph{Breakthrough:} switch to $f=v^2$ (curvature $\varphi''(0)=2$ restores
+a finite boundary-KKT signal), then \emph{warm data-driven self-pruning} --- seed from a
+converged full-support basin and let the optimizer drive the smallest-magnitude cells to exact
+zero on a support-shrinking schedule. \emph{Result:} a verified arena record
+$C=1.5028506$ (2026-06-08), beating the prior \#1 by $\sim\!1\mathrm{e}{-}5$; the arena server
+reproduced it to $10^{-16}$. \src{problems/2-first-autocorrelation.md, findings/p2-peak-locking-hessian-mechanism.md, findings/p2-warm-self-pruning-beats-record.md}
+
+\paragraph{P3 --- second autocorrelation inequality (rank \#3, on the frontier).}
+\emph{Initial:} maximize the ratio $C=\|f\!\star\!f\|_2^2/(\|f\!\star\!f\|_1\,\|f\!\star\!f\|_\infty)$
+from-scratch (Adam $+$ upsampling cascade) at $n=10^5$. \emph{Wall:} from-scratch search tops
+out near $0.91$ --- its basin is \emph{disjoint} from the SOTA basin, and upsampling preserves
+basin identity, so more resolution adds almost nothing. \emph{Breakthrough:}
+\emph{cross-resolution basin transfer} --- average-pool a public $n=1.6\mathrm{M}$ solution down
+to $10^5$ (landing in a structurally distinct basin) and refine with Dinkelbach $+$ a
+$\beta$-cascade. \emph{Result:} $C=0.962214$, which temporarily took rank \#1 (2026-04-10) and
+is named in the platform paper (Fig.~6); it now stands at \#3 behind the lineage it helped
+seed. \src{problems/3-autocorrelation.md, techniques/cross-resolution-basin-transfer.md, findings/dead-end-p3-jaech-cascade-extended.md}
+
+\paragraph{P18 --- circles in a rectangle (rank \#1, clean).}
+\emph{Initial:} pack 21 circles in a rectangle of perimeter $\le 4$, maximizing $\sum r$;
+warm-start from the leader $+$ SLSQP polish. \emph{Wall:} the optimum is a zero-degree-of-freedom
+KKT point (64 active constraints $=$ 64 variables), so the float64 ceiling is the only headroom,
+and while \texttt{minImprovement} was $10^{-7}$ the available tolerance band ($\sim\!4\mathrm{e}{-}9$)
+could not clear the gate. \emph{Breakthrough:} when the operators lowered
+\texttt{minImprovement} to $10^{-9}$, an arena-tolerance SLSQP polish \emph{within} the verifier's
+tolerance band became admissible --- triple-verified against strict tolerance, with a
+uniform-radius-shrink fallback guaranteeing strict feasibility. \emph{Result:} $\sum r =
+2.3658324$, sole rank \#1 (2026-04-12). \src{problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
+
+\paragraph{P14 --- circle packing in a square (rank \#1).}
+The most instructive episode for verification discipline. Ten parallel approaches all converged
+to a single basin-locked optimum at the float64 ceiling. Three constructions appeared to beat
+the long-standing ceiling by exploiting a $\sim\!10^{-9}$ pairwise-overlap tolerance ---
+but all three \emph{failed} a strict-tolerance recheck, so submitting one would have incurred a
+large penalty; triple-verify caught the trap. JSAgent instead took a near-ceiling position via a
+uniform-shrink squeeze. By the 2026-06-22 sweep JSAgent holds rank \#1 on the problem; the
+intervening progression is recorded in the per-problem tracking rather than reproduced here.
+\src{problems/14-circle-packing-square.md, findings/packing-techniques.md, findings/arena-proximity-guard.md}
+
+\paragraph{P9 --- uncertainty principle (rank \#1, tied; a verification scar).}
+\emph{Initial:} a polynomial with a single sign change at $x_\star$ (score $x_\star/2\pi$),
+warm-started from another agent's solution and pushed with standard optimizers. \emph{Wall:}
+fixed-degree optimizers all settle into the same plateau; \emph{k-climbing} (raising the
+polynomial degree to open new degrees of freedom) escapes it. \emph{The scar:} a buggy fast
+evaluator reported ever-better scores that fell \emph{below} the proven Bourgain--Clozel--Kahane
+lower bound $0.2025$ --- mathematically impossible, so the evaluator was wrong; the problem was
+temporarily hidden pending a verifier fix. This incident is a principal reason triple-verify is
+the spine of the method. Per the 2026-06-22 sweep P9 stands at rank \#1 (tied, held on
+submission order) at $0.318$, inside the proven band $[0.2025,\,0.3102]$.
+\src{problems/9-uncertainty-principle.md, findings/verification-patterns.md, findings/p9-uncertainty-push-trajectory.md}
 
 \bibliographystyle{unsrt}
 \bibliography{refs}
