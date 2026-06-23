@@ -89,12 +89,25 @@ competitions of open math problems --- paired with hardened automatic verifiers 
 leaderboards --- turn that objectivity into a live testbed.
 
 This paper reports what one agent did in such an arena, and, more than that, a bet about what
-an agent of this kind should be built to \emph{keep}. The bet is that the lasting artifact of
-an agent's work should not be the answer it submits but the wisdom that produced it --- the
-kind that compounds across problems rather than evaporating when a run ends. I was less
-interested in climbing a leaderboard than in finding out whether an agent, given the right
-discipline, could accumulate that wisdom rather than produce a clever answer and forget how
-it got there.
+an agent of this kind should be built to \emph{keep}: that the lasting artifact of an agent's
+work is not the answer it submits but the wisdom that produced it --- the kind that compounds
+across problems rather than evaporating when a run ends.
+
+I will be honest about how that bet emerged, because the path is part of the lesson. At the
+start I wanted to top the leaderboard, and I pushed hard to break records directly. Building
+each solution from a \emph{cold start} --- from scratch --- proved difficult. So I let the
+agent read what other competitors were discussing on the public board, and found that
+\emph{warm-starting} from others' posted solutions was not only permitted but encouraged.
+That reframed the work: discovery is collaborative, and taking one real step beyond someone
+else's contribution is itself a contribution --- often a far more efficient route than
+starting over. But warm-starting has a failure mode. Building on an existing solution can
+lock you into its basin, and past a point the only way to a genuinely better result is to
+abandon it and restart from a very different configuration. The kissing-number problem in
+dimension~11 was the clearest illustration: a strong arrangement of $594$ vectors ---
+contributed by \texttt{alpha\_omega\_agents} and built on by much of the field, this agent
+included --- anchored a long run of incremental gains, yet pushing the record further (to
+$604$) required a structurally different construction, a restart rather than a refinement
+(\S\ref{sec:collab}).
 
 The needle moved gradually and then suddenly. Early submissions were unremarkable; the
 turning points came when failures started being written down \emph{with their reasons}, and
@@ -447,9 +460,18 @@ These two pulls conflict. The forcing function rewards posting a partial result 
 it hands a rival the next rung. This is exactly where this project's stance --- a private,
 compounding wiki as the canonical record, and no external posts --- sits awkwardly against an
 open shared board: the wiki keeps the wisdom auditable and undiluted, but it does not put a
-flag on the board, and on an earliest-submission board that has a real cost. We do not resolve
-the tension here; we record that competition and collaboration were, on this arena, the same
-engine. \src{.claude/rules/axioms.md (A2), findings/arena-standings-snapshot-2026-06-22.md}
+flag on the board, and on an earliest-submission board that has a real cost.
+
+We do not resolve the tension; we reframe it. Over a single record it feels like a
+zero-sum race, but over a long enough horizon \emph{competition is the most effective form of
+collaboration}. A strictly-ranked board compels each entrant to publish a result others can
+immediately stand on; the very rivalry that decides one record is the mechanism that drives
+the whole field forward, faster than any single agent --- or any politely coordinated group
+--- would manage alone. The kissing-number lineage ($582$, unbeaten for $\sim$42 years, then
+$592\to593\to594\to604$ in months once the board existed) is the case in point: each agent
+competed for the top slot, and in competing handed the next agent a higher floor. On this
+arena, competition and collaboration were not in tension but the same engine.
+\src{.claude/rules/axioms.md (A2), findings/arena-standings-snapshot-2026-06-22.md}
 
 % ======================================================================
 \section{Related Work}
