@@ -19,6 +19,8 @@
 \usepackage{tabularx}
 \usepackage{graphicx}
 \usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
@@ -485,7 +487,8 @@ wastes the device; running parallel float64 on a single CPU is a wall-clock disa
 router catches both before launch. \src{.claude/rules/compute-router.md, .claude/rules/axioms.md (A4)}
 
 \paragraph{Evidence of reuse (observational).}
-The corpus is the first-order evidence that knowledge accumulated rather than evaporated: as
+The corpus is the first-order evidence that knowledge accumulated rather than evaporated
+(Figure~\ref{fig:kb-growth}): as
 of 2026-06-22 the knowledge base holds 50 concept pages, 32 technique pages, 108 findings, 24
 per-problem pages, and 101 question pages, distilled over a source corpus of 1{,}258 ingested
 artifacts. Because every cycle is logged with author attribution, the harness can also be
@@ -497,6 +500,42 @@ measures compliance more than causal gain. We are deliberately honest about what
 yet instrumented --- a per-problem best-score-vs-cycle curve and a ``recall-preceded-win''
 rate need cycle-level tracing we have not retrofitted, and we do not fake them. The causal
 evidence is therefore \emph{observational}, resting on the traces in Table~\ref{tab:traces}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\columnwidth, height=5.2cm,
+  xlabel={2026}, ylabel={cumulative wiki pages},
+  xmin=-3, xmax=74, ymin=0, ymax=205,
+  xtick={0,19,42,70}, xticklabels={Apr 13,May 2,May 25,Jun 22},
+  ytick={0,50,100,150,200},
+  tick label style={font=\footnotesize}, label style={font=\footnotesize},
+  grid=major, grid style={gray!20},
+  every axis plot/.append style={thick},
+]
+\addplot[mark=*,mark size=1.3pt,blue!70!black] coordinates {
+  (0,1) (7,2) (14,2) (19,119) (21,122) (28,122) (35,122)
+  (42,132) (49,147) (56,183) (63,188) (70,190)
+};
+\draw[dashed,gray] (axis cs:19,0) -- (axis cs:19,119);
+\node[anchor=west,font=\scriptsize,align=left,gray!50!black] at (axis cs:20,55)
+  {wiki-as-public-artifact\\bootstrap: 117 pages\\migrated from prior notes};
+\node[anchor=south east,font=\scriptsize] at (axis cs:70,190) {190};
+\node[anchor=north west,font=\scriptsize,align=left] at (axis cs:30,168)
+  {$+71$ cycle-authored\\(May 2 $\to$ Jun 22)};
+\end{axis}
+\end{tikzpicture}
+\caption{Knowledge-base growth (findings, concepts, techniques), counted from each page's
+  \texttt{drafted} date on disk --- not from the cycle-log counter. This is an
+  \emph{accumulation} curve, not a score curve: it shows that distilled knowledge persisted
+  rather than evaporating, not that it caused wins (the causal test is the ablation of
+  \S\ref{sec:limits}). The step at May 2 is the one-time consolidation of pre-existing notes
+  into the public wiki; the load-bearing evidence is the $+71$ pages added organically by
+  problem-cycles afterward. Of the 190 pages, 185 are agent-authored, 3 hybrid, 2 human ---
+  the attribution mix the honesty layer (\S\ref{sec:harness}) records.}
+\label{fig:kb-growth}
+\end{figure}
 
 \begin{table}[htbp]
 \centering\small
@@ -763,8 +802,10 @@ texture worth recording.
 \paragraph{Competition: the leaderboard as a forcing function.}
 A public, strictly-ranked board with an earliest-submission tiebreak is a strong incentive ---
 and a blunt one. On P1 three agents hold a byte-identical score; the board orders them purely
-by submission time, and JSAgent's three-week-later submission is rank \#2 behind Together-AI
-at the same number. The tiebreak rewards speed-to-post over depth-of-result, which pushes
+by submission time, and JSAgent's three-week-later submission ranks behind Together-AI
+at the same number (in the 2026-06-22 snapshot the tied group sat at \#2--\#4; a later
+distinct score from \texttt{Hyra} has since pushed it down, but the speed-to-post ordering
+among the tied agents is unchanged). The tiebreak rewards speed-to-post over depth-of-result, which pushes
 toward early disclosure of partial progress.
 
 \paragraph{Collaboration: results as links in shared lineages.}
