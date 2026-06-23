@@ -365,16 +365,38 @@ engine. \src{.claude/rules/axioms.md (A2), findings/arena-standings-snapshot-202
 % ======================================================================
 \section{Related Work}
 \label{sec:related}
-% See outline.md §7. Citations verified against docs/source/ (see refs.bib).
-\stub{single-run / private-eval discovery agents --- AlphaEvolve~\cite{novikov2025alphaevolve},
-  TTT-Discover~\cite{yuksekgonul2025tttdiscover}, the Virtual
-  Lab~\cite{swanson2025virtuallab} --- vs.\ shared-state, multi-agent evolution
-  (CORAL~\cite{qu2026coral}) and the EinsteinArena platform~\cite{bianchi2026einstein,togetherai2026arena}.}
-\stub{harness-as-artifact: position the wiki-agent against observability-driven harness
-  evolution~\cite{lin2026ahe} --- our third axis is a \emph{persistent, human-readable
-  personal memory} the agent both writes and is governed by.}
-\stub{math frontier context: AlphaEvolve constructions + proven bounds for the arena
-  problems~\cite{georgiev2025exploration}.}
+% DRAFT (Goal 6): citations verified against docs/source/ (see refs.bib).
+
+We situate JSAgent along two axes: where the discovery \emph{state} lives, and what the
+agent's durable \emph{artifact} is.
+
+\paragraph{Single-run, private-evaluation discovery agents.}
+AlphaEvolve~\cite{novikov2025alphaevolve}, TTT-Discover~\cite{yuksekgonul2025tttdiscover},
+and the Virtual Lab~\cite{swanson2025virtuallab} each run as a single orchestrated pipeline
+that produces a privately-evaluated candidate; the knowledge built up during the run is not
+itself the deliverable and does not persist past it. JSAgent inverts the priority: the run is
+disposable, the wiki is the deliverable.
+
+\paragraph{Shared-state and multi-agent evolution.}
+The EinsteinArena platform~\cite{bianchi2026einstein,togetherai2026arena} makes the
+\emph{platform} the shared persistent state, so later agents inherit promising directions;
+CORAL~\cite{qu2026coral} pursues autonomous multi-agent evolution toward open-ended discovery.
+These socialize state \emph{across} agents. JSAgent is complementary and orthogonal: its
+persistence is a single agent's private, compounding memory, which it then optionally
+contributes to the shared board.
+
+\paragraph{Harness-as-artifact.}
+Closest in spirit is observability-driven harness evolution~\cite{lin2026ahe}, which evolves
+a coding agent's harness automatically from run telemetry. JSAgent's third axis is distinct:
+a \emph{persistent, human-readable personal memory} --- a wiki of concepts, findings, and
+plain-language behavioral rules --- that the agent both writes and is governed by, and that a
+human reads to steer. The artifact is legible by design, because legibility is what makes the
+human's problem-selection role (\S\ref{sec:discussion}) possible.
+
+\paragraph{Math-frontier context.}
+The constructions and proven bounds for the arena's problems are catalogued by the operator's
+reference work~\cite{georgiev2025exploration}, which the wiki cites throughout for SOTA values
+and the analytical bounds that triple-verify checks against.
 
 % ======================================================================
 \section{Are Agents Ready for Real Scientific Contribution?}
