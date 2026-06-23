@@ -133,6 +133,15 @@ These run through abstract, §1, and §8; treat as non-negotiable framing:
    biology / natural science last (no fast objective ground-truth). Order of autonomy =
    order of verification objectivity/cost.
 
+5. **Macro-management & long-horizon autonomy (author directive, 2026-06-22).** A key input
+   was long, unattended runs (man-hours, often overnight) under a long-term goal, managed at
+   the *macro* level (set objective + encourage persistence: "never give up, push to the
+   ultimate limit") rather than micromanaged. Encouragement measurably helped (stated
+   honestly, mechanism unclear). Conviction: a truly remarkable agent should make real
+   progress *while the human sleeps*, and if it can, it should eventually solve problems the
+   human cannot. Woven into §1 ("Macro-management, not micro-management") and §8 ("Working
+   while the human sleeps").
+
 ## Cross-cutting honesty rules for the whole draft (non-negotiable — it's what makes it credible)
 1. Every rank/score traces to the live sweep, dated. Re-run before submission.
 2. "Tied #1 held on submission order" stated wherever true (P9, and P1's #2).
