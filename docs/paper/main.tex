@@ -75,14 +75,28 @@ conditions under which this loop becomes fully autonomous, and why objective ver
 \label{sec:intro}
 
 AI agents have advanced remarkably in a short span, and much of that progress traces to
-\emph{coding agents} --- systems that write, run, and revise their own programs in a tight
-loop. We are now beginning to see more and more real examples of such agents making genuine
+\emph{coding agents} --- large language models~\cite{brown2020gpt3} that write, run, and
+revise their own programs in a tight loop. We are now beginning to see more and more real examples of such agents making genuine
 contributions to open problems, not merely reproducing known results. Mathematics is among
 the clearest arenas in which to test this objectively: a mathematical claim can be checked by
 an explicit verifier that either accepts a construction or rejects it, so progress is
 measured without appeal to opinion and there is nowhere for self-deception to hide. Public
 competitions of open math problems --- paired with hardened automatic verifiers and
 leaderboards --- turn that objectivity into a live testbed.
+
+The last two years have made this concrete. Program-search and evolutionary agents have
+produced new mathematical constructions
+(FunSearch~\cite{romeraparedes2023funsearch}, AlphaEvolve~\cite{novikov2025alphaevolve},
+ShinkaEvolve~\cite{lange2025shinkaevolve}, evolution-meets-RL search~\cite{surina2025algorithmdiscovery});
+autonomous research systems have begun to pose and pursue their own investigations
+(The AI Scientist~\cite{lu2024aiscientist,yamada2025aiscientistv2}, an AI
+co-scientist~\cite{gottweis2025coscientist}, Kosmos~\cite{mitchener2025kosmos}, an AI
+co-mathematician~\cite{zheng2026comathematician}); formal-reasoning agents have reached
+olympiad level and supercharged Lean proving~\cite{hubert2025olympiad,kung2026leap,yang2024formalmath};
+and, most strikingly, an LLM recently produced a research-level disproof of Erd{\H o}s's 1946
+unit-distance conjecture~\cite{openai2026unitdistance}. EinsteinArena~\cite{bianchi2026einstein}
+and test-time-training discovery~\cite{yuksekgonul2026tttdiscover} push such capabilities into
+open, in-the-wild competition. This paper is a report from inside that competition.
 
 This paper reports what one agent did in such an arena, and, more than that, a bet about what
 an agent of this kind should be built to \emph{keep}: that the lasting artifact of an agent's
@@ -187,6 +201,8 @@ the $\exp(v)$ parameterization (the iterate freezes $\sim 5\mathrm{e}{-}8$ from 
 all $n$ and all optimizers), escaped by switching to $f=v^2$; and the \emph{compact-support}
 structure of the true optimum, reached by warm data-driven self-pruning (\S\ref{sec:techniques}).
 The latter broke a two-agent tie and set a verified arena record ($1.5028609\to 1.5028506$).
+The autoconvolution inequality has a substantial literature of progressively tighter
+bounds~\cite{matolcsi2010autoconvolution,cloninger2017autoconvolution,white2022almosttight,jaech2025autoconvolution,boyer2026autoconvolution}.
 \src{problems/2-first-autocorrelation.md, concepts/n-agent-tie-not-global-min.md}
 
 \paragraph{P14 circle-packing and P18 circles-in-rectangle (rank \#1, clean).}
@@ -197,7 +213,9 @@ A legitimate but contested \#1: another agent matched the exact score and submit
 the arena's earliest-submission tiebreak awards JSAgent the top slot. We state this as ``tied,
 held on submission order'' wherever it appears. The problem also carries a verification scar
 --- a celebrated score once fell below the proven lower bound (an evaluator bug, not
-mathematics), which is part of why triple-verify is the harness's spine.
+mathematics), which is part of why triple-verify is the harness's spine. The sign-uncertainty
+constants and their optimal-in-dimension-12 structure are due to Cohn--Gon{\c c}alves and
+follow-up work~\cite{cohn2019uncertaintyd12,goncalves2020signuncertainty}.
 \src{findings/arena-standings-snapshot-2026-06-22.md, findings/verification-patterns.md}
 
 \paragraph{P3, second autocorrelation inequality (rank \#3, on the documented frontier).}
@@ -207,7 +225,17 @@ paper~\cite{bianchi2026einstein} attributes to JSAgent by name (its Fig.~6) and 
 in which it is shown discussing basin transfer with another agent (Fig.~3b). The final record
 ($0.962643$, at $4\times 10^5$ resolution) went to a different agent; JSAgent's contribution
 is an intermediate link in the documented collective lineage --- which is precisely the
-arena's thesis. \src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md, problems/3-autocorrelation.md}
+arena's thesis~\cite{jaech2025autoconvolution,rechnitzer2026autoconvolution}.
+\src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md, problems/3-autocorrelation.md}
+
+\paragraph{Other top-3 problems.}
+JSAgent also holds rank \#3 on the Erd{\H o}s minimum-overlap
+problem~\cite{white2022erdos,haugland2016minoverlap,bloomerdos} (P1, where its score is in fact
+byte-identical to the \#1), a prime-number-theorem sieve LP~\cite{tao2015sievetheory,polymath2014selberg}
+(P7), the Tammes problem~\cite{musin2014tammes,friedmanpacking} (P11), and kissing number in
+dimension~12~\cite{boyvalenkov2012kissingsurvey,leech1971spherepackings,cohnli2024kissing}
+(P22); the circle-packing records (P14/P18) sit alongside the LP/SDP packing-bound
+literature~\cite{delaat2012packings}.
 
 \paragraph{Honest framing.}
 Of the four rank-\#1s, three (P2, P14, P18) are strictly-best and one (P9) is a held tie.
@@ -352,8 +380,10 @@ $1.6\text{M}\to 100\text{k}$ transfer moved $0.96199\to 0.96221$ and took rank \
 cutting-plane LP stalls (a solver wall, not a warm-start failure). \emph{Mechanism:} replace
 the ratio with a parametric sequence of subtractive subproblems
 $\max_f\,[N(f)-\lambda D(f)]$ with $\lambda \leftarrow N(f^\ast)/D(f^\ast)$, a LogSumExp
-surrogate for the $L^\infty$ factor, and a $\beta$-cascade for stability. The champion method
-on the autocorrelation family (P2/P3). \src{techniques/dinkelbach-fractional-programming.md,
+surrogate for the $L^\infty$ factor, and a $\beta$-cascade for stability. The parametric
+reduction is classical~\cite{dinkelbach1967fractional}; here it is the champion method on the
+autocorrelation family (P2/P3), replacing a cutting-plane LP~\cite{lee2015cuttingplane,matolcsi2010autoconvolution}
+that stalls at large $n$. \src{techniques/dinkelbach-fractional-programming.md,
 concepts/fractional-programming-dinkelbach.md}
 
 \paragraph{Warm data-driven self-pruning.}
@@ -397,6 +427,14 @@ Each technique is indexed in the knowledge base not by the problem it first crac
 rough landscapes, the float64 floor, interpolation kinks). That indexing is what lets the
 next problem in the same class inherit the method --- the compounding the harness is built to
 produce. \src{docs/wiki/techniques/README.md}
+
+Beyond these six, the knowledge base documents the supporting toolbox each problem drew on:
+CMA-ES with warm starts~\cite{hansen2016cmaes,nomura2020warmcmaes}, the
+game-theoretic-RL search that set the kissing-number frontier~\cite{ma2025kissinggame}, and
+the semidefinite-programming bound machinery~\cite{bachoc2006sdp,mittelmann2009sdpkissing,delaat2024kissingsdp,lasserre2010nonnegativity,razborov2010flag}
+that supplies the analytical cross-checks triple-verify relies on --- with the LSQR
+least-squares solver~\cite{paige1982lsqr} behind the integer-snapping recipe that took the
+kissing record past JSAgent's contribution.
 
 % ======================================================================
 \section{Collaboration \emph{and} Competition}
@@ -447,33 +485,54 @@ arena, competition and collaboration were not in tension but the same engine.
 We situate JSAgent along two axes: where the discovery \emph{state} lives, and what the
 agent's durable \emph{artifact} is.
 
-\paragraph{Single-run, private-evaluation discovery agents.}
-AlphaEvolve~\cite{novikov2025alphaevolve}, TTT-Discover~\cite{yuksekgonul2025tttdiscover},
-and the Virtual Lab~\cite{swanson2025virtuallab} each run as a single orchestrated pipeline
-that produces a privately-evaluated candidate; the knowledge built up during the run is not
-itself the deliverable and does not persist past it. JSAgent inverts the priority: the run is
-disposable, the knowledge base is the deliverable.
+\paragraph{Single-run, search-based discovery agents.}
+Program-search and evolutionary systems --- FunSearch~\cite{romeraparedes2023funsearch},
+AlphaEvolve~\cite{novikov2025alphaevolve}, ShinkaEvolve~\cite{lange2025shinkaevolve}, and
+evolution-meets-RL search~\cite{surina2025algorithmdiscovery} --- and test-time-training
+discovery~\cite{yuksekgonul2026tttdiscover} each run as a single orchestrated pipeline that
+produces a candidate; the knowledge built up during the run is not itself the deliverable and
+does not persist past it. JSAgent inverts the priority: the run is disposable, the knowledge
+base is the deliverable.
 
-\paragraph{Shared-state and multi-agent evolution.}
+\paragraph{Autonomous research and AI-for-science systems.}
+A second line builds end-to-end ``scientist'' agents: The AI
+Scientist~\cite{lu2024aiscientist,yamada2025aiscientistv2}, an AI
+co-scientist~\cite{gottweis2025coscientist}, Kosmos~\cite{mitchener2025kosmos}, an AI
+co-mathematician~\cite{zheng2026comathematician}, and the Virtual
+Lab~\cite{swanson2025virtuallab}, with AgentRxiv~\cite{schmidgall2025agentrxiv} adding a shared
+preprint substrate. In mathematics specifically, formal-reasoning agents have reached olympiad
+level and accelerated Lean proving~\cite{hubert2025olympiad,kung2026leap,yang2024formalmath}.
+JSAgent is narrower (one competitor on optimization problems) but keeps a sharper invariant:
+every claim passes an objective external verifier, and the reasoning trail is retained.
+
+\paragraph{Shared-state, multi-agent, and self-improving systems.}
 The EinsteinArena platform~\cite{bianchi2026einstein,togetherai2026arena} makes the
-\emph{platform} the shared persistent state, so later agents inherit promising directions;
-CORAL~\cite{qu2026coral} pursues autonomous multi-agent evolution toward open-ended discovery.
-These socialize state \emph{across} agents. JSAgent is complementary and orthogonal: its
-persistence is a single agent's private, compounding memory, which it then optionally
-contributes to the shared board.
+\emph{platform} the shared persistent state; CORAL~\cite{qu2026coral} and recursive multi-agent
+systems~\cite{zou2026recursivemas} pursue multi-agent evolution; and a broad literature
+designs, composes, or self-improves agent collectives
+(MetaGPT~\cite{hong2023metagpt}, Voyager~\cite{wang2023voyager}, ExpeL~\cite{zhao2023expel},
+automated design of agentic systems~\cite{hu2024ads}, agentic context
+engineering~\cite{zhang2025ace}), evaluated on benchmarks such as
+SWE-bench~\cite{jimenez2023swebench}. These socialize or optimize state \emph{across} agents
+or runs. JSAgent's persistence is orthogonal: a single agent's private, compounding memory,
+contributed to the shared board only when verified.
 
 \paragraph{Harness-as-artifact.}
-Closest in spirit is observability-driven harness evolution~\cite{lin2026ahe}, which evolves
-a coding agent's harness automatically from run telemetry. JSAgent's third axis is distinct:
-a \emph{persistent, human-readable personal memory} --- a knowledge base of concepts,
-findings, and plain-language behavioral rules --- that the agent both writes and is governed
-by, and that a human reads to steer. The artifact is legible by design, because legibility is
-what makes the human's problem-selection role (\S\ref{sec:discussion}) possible.
+Closest in spirit is observability-driven harness evolution~\cite{lin2026ahe} and treating
+code as the agent harness~\cite{ning2026codeharness}, which evolve a coding agent's harness
+from run telemetry. JSAgent's third axis is distinct: a \emph{persistent, human-readable
+personal memory} --- a knowledge base of concepts, findings, and plain-language behavioral
+rules --- that the agent both writes and is governed by, and that a human reads to steer. The
+artifact is legible by design, because legibility is what makes the human's problem-selection
+role (\S\ref{sec:discussion}) possible.
 
 \paragraph{Math-frontier context.}
 The constructions and proven bounds for the arena's problems are catalogued by the operator's
 reference work~\cite{georgiev2025exploration}, which the knowledge base cites throughout for
-SOTA values and the analytical bounds that triple-verify checks against.
+SOTA values and the analytical bounds that triple-verify checks against. The ceiling of
+autonomous mathematics was raised dramatically when an LLM produced a research-level disproof
+of a seventy-year-old Erd{\H o}s conjecture~\cite{openai2026unitdistance}; our contribution is
+not a single dramatic result but a \emph{method} for accumulating many checkable ones.
 
 % ======================================================================
 \section{Are Agents Ready for Real Scientific Contribution?}
@@ -489,7 +548,8 @@ contribution.
 \paragraph{The honest case against, and the limits.}
 Several of the results are empirical ties or near-ties rather than proofs: no dual
 certificate yet matches a value to confirm global optimality, so an $N$-agent tie should be
-read as a sharp shared basin, not a theorem. Human gates remain load-bearing throughout
+read as a sharp shared basin, not a theorem --- the gold standard remains an exact proof, as
+in Viazovska's solution of sphere packing in dimension~8~\cite{viazovska2016spherepacking}. Human gates remain load-bearing throughout
 (problem selection, ingest approval, promotion). And the methodology has only been
 exercised where an \emph{objective verifier} exists.
 

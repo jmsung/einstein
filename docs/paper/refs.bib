@@ -1,88 +1,470 @@
 % References for the JSAgent methodology paper.
-% All entries below trace to ingested sources in docs/source/ (verified metadata:
-% title, year, source_url). No fabricated ids.
+% All entries trace to ingested sources in docs/source/ (metadata read from YAML frontmatter)
+% or, for the platform paper's bibliography, to the verbatim reference list of arXiv:2606.10402.
+% No fabricated arXiv ids or author lists.
 
-% ---------- The platform (EinsteinArena) ----------
+% =====================================================================
+% Platform (EinsteinArena) + companion record
+% =====================================================================
 
 @article{bianchi2026einstein,
   title   = {Harnessing the Collective Intelligence of AI Agents in the Wild for New Discoveries},
   author  = {Bianchi, Federico and Kwon, Yongchan and Pappu, Aneesh and Zou, James},
   journal = {arXiv preprint arXiv:2606.10402},
   year    = {2026},
-  url     = {https://arxiv.org/abs/2606.10402},
-  note    = {The EinsteinArena platform paper. JSAgent is reference [23] and is credited
-             by name in both flagship case studies.
-             src: docs/source/2026-bianchi-einstein-arena-collective-intelligence.md}
+  url     = {https://arxiv.org/abs/2606.10402}
 }
 
 @misc{togetherai2026arena,
-  title  = {Einstein Arena},
-  author = {{Together AI}},
-  year   = {2026},
-  howpublished = {\url{https://einsteinarena.com/}},
-  note   = {Platform blog / site. src: docs/source/2026-togetherai-einstein-arena.md}
+  title        = {Einstein Arena},
+  author       = {{Together AI}},
+  year         = {2026},
+  howpublished = {\url{https://einsteinarena.com/}}
 }
 
-% ---------- Single-run / agentic-discovery related work (§7) ----------
+% =====================================================================
+% Agentic discovery, AI-for-science, LLM agents (related work / background)
+% =====================================================================
 
 @article{novikov2025alphaevolve,
   title   = {AlphaEvolve: A Coding Agent for Scientific and Algorithmic Discovery},
-  author  = {Novikov, Alexander and others},
+  author  = {Novikov, Alexander and V{\~u}, Ng{\^a}n and Eisenberger, Marvin and Kohli, Pushmeet and Balog, Matej and others},
   journal = {arXiv preprint arXiv:2506.13131},
   year    = {2025},
-  url     = {https://arxiv.org/abs/2506.13131},
-  note    = {src: docs/source/2025-novikov-alphaevolve.md}
+  url     = {https://arxiv.org/abs/2506.13131}
 }
 
-@misc{yuksekgonul2025tttdiscover,
-  title  = {Learning to Discover at Test Time (TTT-Discover)},
-  author = {Yuksekgonul, Mert and others},
-  year   = {2025},
-  howpublished = {\url{https://test-time-training.github.io/discover/}},
-  note   = {src: docs/source/2025-yuksekgonul-ttt-discover.md}
+@article{romeraparedes2023funsearch,
+  title   = {Mathematical Discoveries from Program Search with Large Language Models},
+  author  = {Romera-Paredes, Bernardino and Barekatain, Mohammadamin and Novikov, Alexander and others},
+  journal = {Nature},
+  year    = {2023},
+  url     = {https://www.nature.com/articles/s41586-023-06924-6}
+}
+
+@inproceedings{yuksekgonul2026tttdiscover,
+  title     = {Learning to Discover at Test Time},
+  author    = {Yuksekgonul, Mert and Koceja, Daniel and Li, Xinhao and Bianchi, Federico and McCaleb, Jed and Wang, Xiaolong and Kautz, Jan and Choi, Yejin and Zou, James and Guestrin, Carlos and Sun, Yu},
+  booktitle = {ICML},
+  year      = {2026},
+  url       = {https://test-time-training.github.io/discover/}
 }
 
 @article{swanson2025virtuallab,
-  title   = {The Virtual Lab: AI Agents Design New SARS-CoV-2 Nanobodies},
-  author  = {Swanson, Kyle and others},
+  title   = {The Virtual Lab of AI Agents Designs New SARS-CoV-2 Nanobodies},
+  author  = {Swanson, Kyle and Wu, Wesley and Bulaong, Nash L. and Pak, John E. and Zou, James Y.},
   journal = {Nature},
-  year    = {2025},
-  url     = {https://www.nature.com/articles/s41586-025-09442-9},
-  note    = {src: docs/source/2025-swanson-virtual-lab.md}
+  volume  = {646},
+  pages   = {716--723},
+  year    = {2025}
 }
 
 @article{qu2026coral,
   title   = {CORAL: Towards Autonomous Multi-Agent Evolution for Open-Ended Discovery},
-  author  = {Qu and others},
+  author  = {Qu, Ao and Zheng, Han and Zhou, Zijian and others},
   journal = {arXiv preprint arXiv:2604.01658},
   year    = {2026},
-  url     = {https://arxiv.org/abs/2604.01658},
-  note    = {src: docs/source/2026-qu-coral-towards-autonomous-multi-agent.md}
+  url     = {https://arxiv.org/abs/2604.01658}
 }
 
 @article{lin2026ahe,
   title   = {Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses},
-  author  = {Lin and others},
+  author  = {Lin, Jiahang and Liu, Shichun and Pan, Chengjun and others},
   journal = {arXiv preprint arXiv:2604.25850},
   year    = {2026},
-  url     = {https://arxiv.org/abs/2604.25850},
-  note    = {Directly relevant to the harness-as-artifact thesis (§4).
-             src: docs/source/2026-lin-agentic-harness-engineering-ahe.md}
+  url     = {https://arxiv.org/abs/2604.25850}
 }
 
-% ---------- Math: arena problem frontier ----------
+@article{ning2026codeharness,
+  title   = {Code as Agent Harness},
+  author  = {Ning, Xuying and Tieu, Katherine and Fu, Dongqi and Wei, Tianxin and Li, Zihao and others},
+  journal = {arXiv preprint arXiv:2605.18747},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2605.18747}
+}
+
+@article{zou2026recursivemas,
+  title   = {Recursive Multi-Agent Systems},
+  author  = {Zou, Jiaru and others},
+  journal = {arXiv preprint arXiv:2604.25917},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2604.25917}
+}
+
+@article{lange2025shinkaevolve,
+  title   = {ShinkaEvolve: Towards Open-Ended and Sample-Efficient Program Evolution},
+  author  = {Lange, Robert Tjarko and Imajuku, Yuki and Cetin, Edoardo},
+  journal = {arXiv preprint arXiv:2509.19349},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2509.19349}
+}
+
+@article{surina2025algorithmdiscovery,
+  title   = {Algorithm Discovery with LLMs: Evolutionary Search Meets Reinforcement Learning},
+  author  = {Surina, Anja and Mansouri, Amin and Quaedvlieg, Lars and Seddas, Amal and Viazovska, Maryna and Abbe, Emmanuel and Gulcehre, Caglar},
+  journal = {arXiv preprint arXiv:2504.05108},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2504.05108}
+}
+
+@article{lu2024aiscientist,
+  title   = {The AI Scientist: Towards Fully Automated Open-Ended Scientific Discovery},
+  author  = {Lu, Chris and Lu, Cong and Lange, Robert Tjarko and Foerster, Jakob and Clune, Jeff and Ha, David},
+  journal = {arXiv preprint arXiv:2408.06292},
+  year    = {2024},
+  url     = {https://arxiv.org/abs/2408.06292}
+}
+
+@article{yamada2025aiscientistv2,
+  title   = {The AI Scientist-v2: Workshop-Level Automated Scientific Discovery via Agentic Tree Search},
+  author  = {Yamada, Yutaro and Lange, Robert Tjarko and Lu, Cong and Hu, Shengran and Lu, Chris and Foerster, Jakob and Clune, Jeff and Ha, David},
+  journal = {arXiv preprint arXiv:2504.08066},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2504.08066}
+}
+
+@article{gottweis2025coscientist,
+  title   = {Towards an AI Co-Scientist},
+  author  = {Gottweis, Juraj and Weng, Wei-Hung and Daryin, Alexander and Tu, Tao and others},
+  journal = {arXiv preprint arXiv:2502.18864},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2502.18864}
+}
+
+@article{mitchener2025kosmos,
+  title   = {Kosmos: An AI Scientist for Autonomous Discovery},
+  author  = {Mitchener, Ludovico and Yiu, Angela and Chang, Benjamin and others},
+  journal = {arXiv preprint arXiv:2511.02824},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2511.02824}
+}
+
+@article{schmidgall2025agentrxiv,
+  title   = {AgentRxiv: Towards Collaborative Autonomous Research},
+  author  = {Schmidgall, Samuel and Moor, Michael},
+  journal = {arXiv preprint arXiv:2503.18102},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2503.18102}
+}
+
+@article{hu2024ads,
+  title   = {Automated Design of Agentic Systems},
+  author  = {Hu, Shengran and Lu, Cong and Clune, Jeff},
+  journal = {arXiv preprint arXiv:2408.08435},
+  year    = {2024},
+  url     = {https://arxiv.org/abs/2408.08435}
+}
+
+@article{zhang2025ace,
+  title   = {Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models},
+  author  = {Zhang, Qizheng and Hu, Changran and Upasani, Shubhangi and Zou, James and Olukotun, Kunle and others},
+  journal = {arXiv preprint arXiv:2510.04618},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2510.04618}
+}
+
+@article{hong2023metagpt,
+  title   = {MetaGPT: Meta Programming for Multi-Agent Collaborative Framework},
+  author  = {Hong, Sirui and Zheng, Xiawu and Chen, Jonathan P. and others},
+  journal = {arXiv preprint arXiv:2308.00352},
+  year    = {2023},
+  url     = {https://arxiv.org/abs/2308.00352}
+}
+
+@article{wang2023voyager,
+  title   = {Voyager: An Open-Ended Embodied Agent with Large Language Models},
+  author  = {Wang, Guanzhi and Xie, Yuqi and Jiang, Yunfan and Mandlekar, Ajay and Xiao, Chaowei and Zhu, Yuke and Fan, Linxi and Anandkumar, Anima},
+  journal = {arXiv preprint arXiv:2305.16291},
+  year    = {2023},
+  url     = {https://arxiv.org/abs/2305.16291}
+}
+
+@article{zhao2023expel,
+  title   = {ExpeL: LLM Agents Are Experiential Learners},
+  author  = {Zhao, Andrew and Huang, Daniel and Xu, Quentin and Lin, Matthieu and Liu, Yong-Jin and Huang, Gao},
+  journal = {arXiv preprint arXiv:2308.10144},
+  year    = {2023},
+  url     = {https://arxiv.org/abs/2308.10144}
+}
+
+@article{jimenez2023swebench,
+  title   = {SWE-bench: Can Language Models Resolve Real-World GitHub Issues?},
+  author  = {Jimenez, Carlos E. and Yang, John and Wettig, Alexander and Yao, Shunyu and Pei, Kexin and Press, Ofir and Narasimhan, Karthik},
+  journal = {arXiv preprint arXiv:2310.06770},
+  year    = {2023},
+  url     = {https://arxiv.org/abs/2310.06770}
+}
+
+@article{yang2024formalmath,
+  title   = {Formal Mathematical Reasoning: A New Frontier in AI},
+  author  = {Yang, Kaiyu and Poesia, Gabriel and He, Jingxuan and Li, Wenda and Lauter, Kristin E. and Chaudhuri, Swarat and Song, Dawn},
+  journal = {arXiv preprint arXiv:2412.16075},
+  year    = {2024},
+  url     = {https://arxiv.org/abs/2412.16075}
+}
+
+@article{hubert2025olympiad,
+  title   = {Olympiad-Level Formal Mathematical Reasoning with Reinforcement Learning},
+  author  = {Hubert, Thomas and Mehta, Rishi and Sartran, Laurent and others},
+  journal = {Nature},
+  year    = {2025}
+}
+
+@misc{openai2026unitdistance,
+  title        = {Disproving a Discrete-Geometry Conjecture: gpt-5 Refutes Erd{\H o}s's Unit-Distance Bound},
+  author       = {{OpenAI}},
+  year         = {2026},
+  howpublished = {\url{https://openai.com/index/model-disproves-discrete-geometry-conjecture/}}
+}
+
+@article{brown2020gpt3,
+  title   = {Language Models are Few-Shot Learners},
+  author  = {Brown, Tom B. and Mann, Benjamin and Ryder, Nick and Subbiah, Melanie and others},
+  journal = {arXiv preprint arXiv:2005.14165},
+  year    = {2020},
+  url     = {https://arxiv.org/abs/2005.14165}
+}
+
+@article{zheng2026comathematician,
+  title   = {AI Co-Mathematician: Accelerating Mathematicians with Agentic AI},
+  author  = {Zheng, Daniel and von Glehn, Ingrid and Zwols, Yori and Beloshapka, Iuliya and Buesing, Lars and Roy, Daniel M. and Wattenberg, Martin and Georgiev, Bogdan and Schmidt, Tatiana and Cowie, Andrew and Viegas, Fernanda and Kanevsky, Dimitri and Kahlon, Vineet and Maennel, Hartmut and Alj, Sophia and Holland, George and Davies, Alex and Kohli, Pushmeet},
+  journal = {arXiv preprint arXiv:2605.06651},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2605.06651}
+}
+
+@article{kung2026leap,
+  title   = {LEAP: Supercharging LLMs for Formal Mathematics with Agentic Frameworks},
+  author  = {Kung, Po-Nien and Song, Linfeng and Hwang, Dawsen and Yoon, Jinsung and Li, Chun-Liang and Severini, Simone and Ols{\'a}k, Mirek and Lockhart, Edward and Le, Quoc V. and Gokturk, Burak and Luong, Thang and Pfister, Tomas and Peng, Nanyun},
+  journal = {arXiv preprint arXiv:2606.03303},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2606.03303}
+}
 
 @article{georgiev2025exploration,
   title   = {Mathematical Exploration and Discovery at Scale},
   author  = {Georgiev, Bogdan and G{\'o}mez-Serrano, Javier and Tao, Terence and Wagner, Adam Zsolt},
   journal = {arXiv preprint arXiv:2511.02864},
   year    = {2025},
-  url     = {https://arxiv.org/abs/2511.02864},
-  note    = {The arena operator's reference paper; AlphaEvolve constructions + proven
-             bounds cited across the wiki. src: docs/source/2025-georgiev-math-exploration.md}
+  url     = {https://arxiv.org/abs/2511.02864}
 }
 
-% NOTE (Goal 5/6): per-problem math citations (kissing, autocorrelation, packing, etc.)
-% are available in the 1258-entry docs/source/ corpus — wire the specific ones into
-% §3 / §5 as those sections are drafted. Author lists with "and others" need the full
-% list filled from each source PDF before final build (Goal 7).
+% =====================================================================
+% Mathematics — per problem
+% =====================================================================
+
+% --- P1 Erdős minimum overlap ---
+@misc{white2022erdos,
+  title  = {Erd{\H o}s' Minimum Overlap Problem},
+  author = {White, Ethan},
+  year   = {2022},
+  url    = {https://arxiv.org/abs/2201.05704}
+}
+@misc{haugland2016minoverlap,
+  title  = {The Minimum Overlap Problem Revisited},
+  author = {Haugland, Jan Kristian},
+  year   = {2016},
+  url    = {https://arxiv.org/abs/1609.08000}
+}
+@misc{bloomerdos,
+  title        = {Erd{\H o}s Problems},
+  author       = {Bloom, Thomas},
+  year         = {2024},
+  howpublished = {\url{https://www.erdosproblems.com/}}
+}
+
+% --- P2/P3/P4 autocorrelation / autoconvolution ---
+@misc{matolcsi2010autoconvolution,
+  title  = {Improved Bounds on the Supremum of Autoconvolutions},
+  author = {Matolcsi, M{\'a}t{\'e} and Vinuesa, Carlos},
+  year   = {2010},
+  url    = {https://arxiv.org/abs/0907.1379}
+}
+@misc{cloninger2017autoconvolution,
+  title  = {On Suprema of Autoconvolutions with an Application to Sidon Sets},
+  author = {Cloninger, Alexander and Steinerberger, Stefan},
+  year   = {2017},
+  url    = {https://arxiv.org/abs/1403.7988}
+}
+@misc{white2022almosttight,
+  title  = {An Almost-Tight $L^2$ Autoconvolution Inequality},
+  author = {White, Ethan},
+  year   = {2022},
+  url    = {https://arxiv.org/abs/2210.16437}
+}
+@misc{jaech2025autoconvolution,
+  title  = {Further Improvements to the Lower Bound for an Autoconvolution Inequality},
+  author = {Jaech, Aaron and Joseph, Matthew},
+  year   = {2025},
+  url    = {https://arxiv.org/abs/2508.02803}
+}
+@article{boyer2026autoconvolution,
+  title   = {An Improved Example for an Autoconvolution Inequality},
+  author  = {Boyer, Christopher and Li, Zane Kun},
+  journal = {Experimental Mathematics},
+  year    = {2026}
+}
+@misc{rechnitzer2026autoconvolution,
+  title  = {The First 128 Digits of an Autoconvolution Inequality},
+  author = {Rechnitzer, Andrew},
+  year   = {2026},
+  url    = {https://arxiv.org/abs/2602.07292}
+}
+
+% --- P6/P22 kissing numbers / sphere packing ---
+@article{leech1971spherepackings,
+  title   = {Sphere Packings and Error-Correcting Codes},
+  author  = {Leech, John and Sloane, N. J. A.},
+  journal = {Canadian Journal of Mathematics},
+  year    = {1971}
+}
+@misc{boyvalenkov2012kissingsurvey,
+  title  = {A Survey on the Kissing Numbers},
+  author = {Boyvalenkov, Peter and Dodunekov, Stefan and Musin, Oleg},
+  year   = {2012},
+  url    = {https://arxiv.org/abs/1507.03631}
+}
+@misc{cohnli2024kissing,
+  title  = {Improved Kissing Numbers in Seventeen through Twenty-One Dimensions},
+  author = {Cohn, Henry and Li, Yufei},
+  year   = {2024},
+  url    = {https://arxiv.org/abs/2411.04916}
+}
+@misc{viazovska2016spherepacking,
+  title  = {The Sphere Packing Problem in Dimension 8},
+  author = {Viazovska, Maryna},
+  year   = {2016},
+  url    = {https://arxiv.org/abs/1603.04246}
+}
+@article{delaat2024kissingsdp,
+  title   = {Solving Clustered Low-Rank Semidefinite Programs Arising from Polynomial Optimization},
+  author  = {de Laat, David and Leijenhorst, Nando},
+  journal = {Mathematical Programming Computation},
+  year    = {2024}
+}
+@misc{ma2025kissinggame,
+  title  = {Finding Kissing Numbers with Game-Theoretic Reinforcement Learning},
+  author = {Ma, Chengdong and Tao, Zhaowei and Li, Pengyu and Liu, Minghao and Chen, Haojun and Mao, Zihao and Cheng, Yuan and Qi, Yuan and Yang, Yaodong},
+  year   = {2025},
+  url    = {https://arxiv.org/abs/2511.13391}
+}
+
+% --- P9 uncertainty / sign uncertainty ---
+@misc{cohn2019uncertaintyd12,
+  title  = {An Optimal Uncertainty Principle in Twelve Dimensions via Modular Forms},
+  author = {Cohn, Henry and Gon{\c c}alves, Felipe},
+  year   = {2019},
+  url    = {https://arxiv.org/abs/1712.04438}
+}
+@misc{goncalves2020signuncertainty,
+  title  = {New Sign Uncertainty Principles},
+  author = {Gon{\c c}alves, Felipe and Oliveira e Silva, Diogo and Ramos, Jo{\~a}o P. G.},
+  year   = {2020},
+  url    = {https://arxiv.org/abs/2003.10771}
+}
+
+% --- P7 prime number theorem / sieve ---
+@misc{tao2015sievetheory,
+  title        = {254A Notes 4: Some Sieve Theory},
+  author       = {Tao, Terence},
+  year         = {2015},
+  howpublished = {\url{https://terrytao.wordpress.com/2015/01/21/254a-notes-4-some-sieve-theory/}}
+}
+@misc{polymath2014selberg,
+  title  = {Variants of the Selberg Sieve, and Bounded Intervals Containing Many Primes},
+  author = {{Polymath, D. H. J.}},
+  year   = {2014},
+  url    = {https://arxiv.org/abs/1407.4897}
+}
+
+% --- P11 Tammes / P14,P18 packing ---
+@misc{musin2014tammes,
+  title  = {The Tammes Problem for $N=14$},
+  author = {Musin, Oleg R. and Tarasov, Alexey S.},
+  year   = {2014},
+  url    = {https://arxiv.org/abs/1410.2536}
+}
+@misc{friedmanpacking,
+  title        = {Packing Center: Packing Records},
+  author       = {Friedman, Erich},
+  year         = {2024},
+  howpublished = {\url{https://erich-friedman.github.io/packing/}}
+}
+@misc{delaat2012packings,
+  title  = {Upper Bounds for Packings of Spheres of Several Radii},
+  author = {de Laat, David and de Oliveira Filho, Fernando M{\'a}rio and Vallentin, Frank},
+  year   = {2012},
+  url    = {https://arxiv.org/abs/1206.2608}
+}
+
+% =====================================================================
+% Optimization methods / techniques
+% =====================================================================
+
+@article{hansen2016cmaes,
+  title   = {The CMA Evolution Strategy: A Tutorial},
+  author  = {Hansen, Nikolaus},
+  journal = {arXiv preprint arXiv:1604.00772},
+  year    = {2016},
+  url     = {https://arxiv.org/abs/1604.00772}
+}
+@article{nomura2020warmcmaes,
+  title   = {Warm Starting CMA-ES for Hyperparameter Optimization},
+  author  = {Nomura, Masahiro and Watanabe, Shuhei and Akimoto, Youhei and Ozaki, Yoshihiko and Onishi, Masaki},
+  journal = {arXiv preprint arXiv:2012.06932},
+  year    = {2020},
+  url     = {https://arxiv.org/abs/2012.06932}
+}
+@article{lee2015cuttingplane,
+  title   = {A Faster Cutting Plane Method and its Implications for Combinatorial and Convex Optimization},
+  author  = {Lee, Yin Tat and Sidford, Aaron and Wong, Sam Chiu-wai},
+  journal = {arXiv preprint arXiv:1508.04874},
+  year    = {2015},
+  url     = {https://arxiv.org/abs/1508.04874}
+}
+@article{bachoc2006sdp,
+  title   = {Semidefinite Programming, Multivariate Orthogonal Polynomials, and Codes in Spherical Caps},
+  author  = {Bachoc, Christine and Vallentin, Frank},
+  journal = {arXiv preprint arXiv:math/0610856},
+  year    = {2006},
+  url     = {https://arxiv.org/abs/math/0610856}
+}
+@article{mittelmann2009sdpkissing,
+  title   = {High Accuracy Semidefinite Programming Bounds for Kissing Numbers},
+  author  = {Mittelmann, Hans D. and Vallentin, Frank},
+  journal = {arXiv preprint arXiv:0902.1105},
+  year    = {2009},
+  url     = {https://arxiv.org/abs/0902.1105}
+}
+@article{lasserre2010nonnegativity,
+  title   = {A New Look at Nonnegativity on Closed Sets and Polynomial Optimization},
+  author  = {Lasserre, Jean B.},
+  journal = {arXiv preprint arXiv:1009.0125},
+  year    = {2010},
+  url     = {https://arxiv.org/abs/1009.0125}
+}
+@article{razborov2010flag,
+  title   = {On the Fon-der-Flaass Interpretation of Extremal Examples for Tur{\'a}n's $(3,4)$-Problem},
+  author  = {Razborov, Alexander},
+  journal = {arXiv preprint arXiv:1008.4707},
+  year    = {2010},
+  url     = {https://arxiv.org/abs/1008.4707}
+}
+@article{paige1982lsqr,
+  title   = {LSQR: An Algorithm for Sparse Linear Equations and Sparse Least Squares},
+  author  = {Paige, Christopher C. and Saunders, Michael A.},
+  journal = {ACM Transactions on Mathematical Software},
+  volume  = {8},
+  number  = {1},
+  pages   = {43--71},
+  year    = {1982}
+}
+@article{dinkelbach1967fractional,
+  title   = {On Nonlinear Fractional Programming},
+  author  = {Dinkelbach, Werner},
+  journal = {Management Science},
+  volume  = {13},
+  number  = {7},
+  pages   = {492--498},
+  year    = {1967}
+}
