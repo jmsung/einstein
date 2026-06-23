@@ -224,10 +224,73 @@ trajectory classifier over the cycle log.
 % ======================================================================
 \section{Techniques Produced}
 \label{sec:techniques}
-% Transferable methods, each with mechanism + the obstruction it cracks. See outline.md §5.
-\stub{cross-resolution basin transfer $\cdot$ Dinkelbach fractional programming $\cdot$
-  warm self-pruning $\cdot$ parallel-tempering SA $\cdot$ integer-snapping to exact
-  certificates $\cdot$ mpmath ulp polish. \src{docs/wiki/techniques/*, docs/wiki/concepts/*}}
+% DRAFT (Goal 4): grounded in docs/wiki/techniques/*. Each entry verified against its page.
+% NOTE (Goal 7): reconcile abstract wording "integer-snapping to exact certificates" with
+% the documented boundary-snap technique below — soften or rename for accuracy.
+
+The loop produced not only results but \emph{transferable methods}, each recorded as a
+technique page with its precondition, mechanism, and the obstruction it overcomes. We
+summarize the six most generalizable; all are local-CPU unless noted.
+
+\paragraph{Cross-resolution basin transfer.}
+\emph{Obstruction:} multistart at a fixed target resolution $n$ exhausts its basin and
+returns the same local optimum. \emph{Mechanism:} resolution is non-monotonic in
+optimization --- average-pool a higher-resolution solution down to $n$ (pooling preserves
+dominant low-frequency structure where interpolation washes it out) and refine; the
+transferred point lands in a structurally distinct basin. On P3 (second autocorrelation) a
+$1.6\text{M}\to 100\text{k}$ transfer moved $0.96199\to 0.96221$ and took rank \#1.
+\src{techniques/cross-resolution-basin-transfer.md}
+
+\paragraph{Dinkelbach fractional programming.}
+\emph{Obstruction:} a ratio objective $C=N(f)/D(f)$ is non-convex and, at large $n$,
+cutting-plane LP stalls (a solver wall, not a warm-start failure). \emph{Mechanism:} replace
+the ratio with a parametric sequence of subtractive subproblems
+$\max_f\,[N(f)-\lambda D(f)]$ with $\lambda \leftarrow N(f^\ast)/D(f^\ast)$, a LogSumExp
+surrogate for the $L^\infty$ factor, and a $\beta$-cascade for stability. The champion method
+on the autocorrelation family (P2/P3). \src{techniques/dinkelbach-fractional-programming.md,
+concepts/fractional-programming-dinkelbach.md}
+
+\paragraph{Warm data-driven self-pruning.}
+\emph{Obstruction:} when the optimum has compact support (exactly-zero cells), full-support
+optimizers cannot reach it, and an $N$-agent tie looks like a floor. \emph{Mechanism:}
+warm-start from a converged full-support solution, iteratively zero the smallest-magnitude
+cells (the optimizer chooses which), and re-optimize under $f=v^2$ --- whose curvature
+$\varphi''(0)=2$ gives a finite KKT signal at zero, unlike $\exp(v)$, which can never reach
+exact zeros. This broke a two-agent tie on P2 and set a verified arena record
+($1.5028609\to 1.5028506$). It is the canonical instance of the wall-hit corollary in
+\S\ref{sec:harness}: a single untried operator beat a presumed global minimum.
+\src{techniques/warm-self-pruning-compact-support.md, findings/p2-warm-self-pruning-beats-record.md}
+
+\paragraph{Parallel-tempering simulated annealing.}
+\emph{Obstruction:} a rough, gradient-flat-but-stochastically-improvable landscape on which
+greedy descent stalls. \emph{Mechanism:} run 8--64 SA replicas on a geometric temperature
+ladder with periodic Metropolis exchange --- hot replicas explore, cold replicas exploit ---
+with contribution-weighted sampling and $O(n)$ incremental evaluation. On kissing-number
+$d=11$ it beat single-replica greedy by $730\times$. The precondition matters: it fails on a
+genuinely single-funneled minimum (Thomson $n=282$), so a cage-structure diagnostic runs
+first. \src{techniques/parallel-tempering-sa.md}
+
+\paragraph{mpmath ULP-step coordinate descent.}
+\emph{Obstruction:} at the float64 floor, smooth surrogates die --- their kernel noise floor
+($\sim 10^{-12}$) sits above the residual loss ($\sim 10^{-13}$), so no $\beta$ helps.
+\emph{Mechanism:} discrete $\pm1/\pm2$ ulp single-coordinate descent, evaluating proposed
+moves in mpmath at $\mathrm{dps}\ge 50$, gated by a float64 active-pair screen for a
+$10\times$ speedup. Drove P6 from $1.97\mathrm{e}{-}13$ to $1.59\mathrm{e}{-}13$ in minutes.
+\src{techniques/mpmath-ulp-polish.md}
+
+\paragraph{Boundary-snap for interpolation kinks.}
+\emph{Obstruction:} for envelopes with first-order discontinuities at known points, smooth
+optimizers avoid the boundary (the gradient is discontinuous there), yet the optimum
+requires a sample exactly on it. \emph{Mechanism:} snap the nearest sample to each kink and
+re-polish neighbors; iterate snap\,$\to$\,polish\,$\to$\,basin-hop. On P13 each round yielded
+$\sim 1.24\mathrm{e}{-}8$, compounding over a few rounds. \src{techniques/boundary-snap-for-kinks.md}
+
+\paragraph{Why these generalize.}
+Each technique is indexed in the wiki not by the problem it first cracked but by the
+\emph{obstruction class} it addresses (basin exhaustion, ratio objectives, compact support,
+rough landscapes, the float64 floor, interpolation kinks). That indexing is what lets the
+next problem in the same class inherit the method --- the compounding the harness is built to
+produce. \src{docs/wiki/techniques/README.md}
 
 % ======================================================================
 \section{Collaboration \emph{and} Competition}
