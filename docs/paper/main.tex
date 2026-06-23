@@ -32,18 +32,12 @@
 \title{\textbf{JSAgent: Compounding Mathematical Discovery\\
   Through Persistent Agent Memory}}
 
-% Authorship: JSAgent (the agent) is listed as main author; Jongmin Sung is corresponding
-% author and takes responsibility for all claims. NOTE: arXiv permits this byline, but several
-% peer-reviewed venues (Nature, Science, ICMJE journals) prohibit AI as a listed author —
-% adjust the byline (move JSAgent to an acknowledgment / contribution statement) before any
-% such submission.
+% Authorship: per arXiv policy (verified), generative-AI tools may NOT be listed as authors;
+% the signing human takes full responsibility. JSAgent's central role is credited prominently
+% in the AI Contribution Statement right after the abstract, and JSAgent is the named
+% system-under-study throughout. Byline is the human author alone.
 \author{%
-  JSAgent\thanks{The AI agent (Claude Code on a frontier Claude model) that produced the code,
-    knowledge base, submitted constructions, and manuscript drafts; see \S\ref{sec:eval}.}\\
-  \emph{(AI agent)}\\[4pt]
-  Jongmin Sung\thanks{Corresponding author; takes responsibility for all claims. The human
-    selected problems, approved knowledge promotion, judged submission risk, steered direction,
-    and verified the submitted results (Table~\ref{tab:roles}).}\\
+  Jongmin Sung\\
   Independent Researcher\\
   \texttt{jongmin.sung@gmail.com}}
 
@@ -55,32 +49,45 @@
 \maketitle
 
 \begin{abstract}
-Recent language-model agents can produce new mathematical constructions, but their durable
-artifact is usually the construction itself rather than the reasoning that led to it. This
-paper reports \textbf{JSAgent}, a mathematical-optimization agent designed around persistent,
+Recent language-model agents can produce mathematical constructions that pass objective
+verifiers, but the reusable reasoning behind them usually disappears when a run ends. We
+report \textbf{JSAgent}, a mathematical-optimization agent built around persistent,
 human-readable memory: a knowledge base of concepts, failed attempts, techniques, and
-behavioral rules, reused across problem-solving cycles, with submissions to a public arena
-serving as external verification rather than the goal. We describe the harness that supports
-this --- wiki-first retrieval, a triple-verify discipline that guards against evaluator drift,
-a wall-hit escalation that consults accumulated failure before brute force, obstruction-indexed
-technique reuse, and a compute router --- and illustrate it through cases including a
-first-autocorrelation-inequality record produced by warm self-pruning after a prior dead-end
-finding. As field evidence, JSAgent produced verified, independently re-runnable constructions
-that were state-of-the-art when submitted on several EinsteinArena problems, and contributed
-documented links to collective lineages that other agents later carried further. We report
-dated leaderboard snapshots only as historical context: the board is a live, multi-agent
-ecosystem in which records are continually set and surpassed, so any single ranking is
-transient by design --- which is exactly the thesis that rank is a byproduct of a process
-whose durable value (the knowledge base) persists. The evidence is an auditable case study,
-not a controlled ablation: logs show persistent memory was repeatedly reused, but causal gains
-from the knowledge base remain to be established. The
-broader lesson is that \emph{in domains with cheap objective verifiers}, agent contributions
-can be made auditable when discovery is embedded in a reproducible verification-and-memory
-loop. The work used an agent-primary workflow --- the agent produced the code, scripts,
-knowledge-base pages, and manuscript drafts; the human selected problems, approved knowledge
-promotion, judged submission risk, steered direction, verified the submitted results, and
-takes responsibility for all claims here.
+behavioral rules, reused across problem-solving cycles, with arena submission serving as
+external verification rather than the goal. The harness combines wiki-first retrieval, triple
+verification, wall-hit escalation, obstruction-indexed technique reuse, and compute routing.
+As an auditable case study, JSAgent produced verified, re-runnable constructions that were
+state-of-the-art when submitted on several EinsteinArena problems --- including clean
+circle-packing results and a former first-autocorrelation record (since surpassed) --- and
+entered documented collective lineages. Logs show repeated reuse of stored failures and
+techniques, including a record-producing move retrieved from an earlier dead-end note; the
+evidence is observational, however, and a cold-versus-warm memory ablation remains future
+work. We report dated leaderboard snapshots only as historical context --- the board is a
+live ecosystem in which records are continually set and surpassed, so rank is transient by
+design. The broader, deliberately scoped claim is that \emph{in domains with cheap objective
+verifiers}, agentic discovery can be made auditable through a verification-and-memory loop,
+with human judgment remaining central for problem selection, promotion, and submission.
 \end{abstract}
+
+\paragraph{AI contribution statement.}
+This work used an agent-primary workflow. \textbf{JSAgent}, an AI agent implemented through
+Claude Code on a frontier Claude model, generated the optimizer code, per-problem scripts,
+knowledge-base pages, verification workflows, and drafts of this manuscript. The human author
+selected which problems to pursue, approved promotion of findings to rules and concepts, judged
+submission risk, verified the submitted results, and edited and accepts full responsibility for
+the final manuscript (the division of labor is detailed in Table~\ref{tab:roles}). Per arXiv
+policy, the AI agent is named as the system under study and credited here, but is not listed as
+an author.
+
+\paragraph{What this paper claims --- and does not.}
+\emph{We do not claim:} a proof of global optimality for any submitted construction; that
+persistent memory \emph{causally} improves performance (no ablation yet); that JSAgent is
+autonomous; that JSAgent currently leads EinsteinArena; or that the agent trajectory is exactly
+replayable. \emph{We do claim:} JSAgent produced externally verified constructions that were
+state-of-the-art when submitted; the system maintained a persistent, human-readable memory and
+rule harness; logs show repeated retrieval and reuse of prior findings; the released artifacts
+make the constructions and their verification auditable; and the case study motivates --- but
+does not establish --- a controlled memory ablation as the clear next step.
 
 % ======================================================================
 \section{Introduction}
@@ -214,7 +221,7 @@ P22 & kissing-d12             & $2.001403$     & \#3 & \#3 \\
 The richest methodology case, and a clean illustration of the lineage dynamic. Two obstructions
 were diagnosed and recorded: \emph{peak-locking} under the $\exp(v)$ parameterization (the
 iterate freezes $\sim 5\mathrm{e}{-}8$ from SOTA across all $n$ and all optimizers), escaped by
-switching to $f=v^2$; and the \emph{compact-support} structure of the true optimum, reached by
+switching to $f=v^2$; and the \emph{compact-support} structure of the best-known solution, reached by
 warm data-driven self-pruning (\S\ref{sec:techniques}). The latter broke a two-agent tie and
 set a verified arena record ($1.5028609\to 1.5028506$) on 2026-06-08 --- rank \#1 at the time
 (Figure~\ref{fig:p2}).
@@ -265,7 +272,16 @@ basin-locked optimum; three candidates appeared to beat the long-standing ceilin
 a $\sim 10^{-9}$ overlap-tolerance band, but \emph{all three failed a strict-tolerance recheck}
 --- so submitting one would have incurred a large penalty. Triple-verify caught the trap, and
 JSAgent took a near-ceiling rank-\#1 position ($2.6359830849$) via a uniform-shrink squeeze
-rather than a tolerance exploit. \src{problems/14-circle-packing-square.md, problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
+rather than a tolerance exploit.
+
+\emph{Verifier tolerance versus invalid exploitation.} To be unambiguous, since these results
+operate near the verifier's numerical tolerance: we treat a candidate as legitimate \emph{only}
+if it can be made strictly feasible by a deterministic shrink/polish with negligible score
+change \emph{and} the strict evaluator (tolerance $=0$) agrees. A candidate that passes only by
+the arena's overlap tolerance but fails strict recheck is rejected --- which is exactly what
+happened to the three P14 candidates above. P18's submitted result is strictly feasible under
+this standard (the uniform-radius-shrink fallback guarantees it); the gain over the prior record
+is real, not tolerance-borrowed. \src{problems/14-circle-packing-square.md, problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
 
 \paragraph{P9 uncertainty principle (a verification-scar case, not a clean record).}
 We single this one out for honesty rather than as a win. The arena scores it as
@@ -620,7 +636,7 @@ Item & Specification \\
 \midrule
 Standings snapshot   & \texttt{leaderboard\_standings.py} @ commit \texttt{e38a793}, run 2026-06-22 22:00 PT \\
 Problem universe     & 17 problems live on the board at the sweep (the headline denominator) \\
-JSAgent coverage     & accepted submission on 15/17; top-3 on 10/17; rank-\#1 on 4/17 \\
+JSAgent coverage     & accepted submission on 15/17; top-3 on 10/17 (06-22); raw rank-\#1 on 4/17 --- of which 3 are clean (P14, P18, and the former P2), 1 verifier-contested (P9) \\
 Ranking / ties       & strict on full-precision score; exact-score ties broken by earliest submission \\
 Verification         & triple-verify: fast evaluator $+$ exact reimplementation $+$ analytical/independent cross-check \\
 Agent / model        & Claude Code (Max subscription); see Table~\ref{tab:models} \\
@@ -816,7 +832,27 @@ well beyond this arena.
 \label{sec:related}
 
 We situate JSAgent along two axes: where the discovery \emph{state} lives, and what the
-agent's durable \emph{artifact} is.
+agent's durable \emph{artifact} is (Table~\ref{tab:related}).
+
+\begin{table}[htbp]
+\centering\small
+\caption{Where JSAgent sits. ``Human-readable memory'' means a versioned, inspectable record
+  of concepts/failures/techniques/rules (not weights, traces, or prompt context); ``controlled
+  eval'' means a reported ablation isolating the studied mechanism. Entries are characterizations
+  for positioning, not scores.}
+\label{tab:related}
+\begin{tabularx}{\textwidth}{Xcccc}
+\toprule
+System & human-readable memory & external verifier & cross-cycle reuse & controlled eval \\
+\midrule
+FunSearch / AlphaEvolve & program/evolutionary state & yes & limited & yes \\
+TTT-Discover & model (test-time) & yes & within run & yes \\
+Voyager / ExpeL / ACE & skills / lessons / context & task-dependent & yes & partial \\
+EinsteinArena (platform) & shared public board & yes & across agents & platform-level \\
+\textbf{JSAgent} & \textbf{yes (private KB + rules)} & yes & within agent & no (ablation future work) \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \paragraph{Single-run, search-based discovery agents.}
 Program-search and evolutionary systems --- FunSearch~\cite{romeraparedes2023funsearch},
@@ -877,7 +913,8 @@ posted against hardened public verifiers anyone can re-run; the standings themse
 (Table~\ref{tab:standings}) are a timestamped public sweep (\S\ref{sec:eval}), and the trail
 that produced them --- every question, every dead-end, every cycle --- is auditable in the
 knowledge base and the cycle log. On this evidence, in domains with cheap objective
-verifiers, agents are already capable of genuine, checkable contribution.
+verifiers and under human-directed problem selection and submission judgment, agent-primary
+workflows are already capable of genuine, checkable contribution.
 
 There is a further, deliberately humble reading of this evidence. The human operator here is a
 physicist, not a mathematician --- and still, paired with an agent and this harness, reached
