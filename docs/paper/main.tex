@@ -6,13 +6,8 @@
 % Appendix A ("A Personal Account"). Numbers re-verified against the live sweep
 % (scripts/leaderboard_standings.py) 2026-06-22 22:00 PT.
 %
-% \src{...} = internal provenance (which wiki/source page backs a claim). Rendered INVISIBLE
-% (see \renewcommand below); kept in source for traceability and the planned wiki-hyperlink
-% pass. Term convention: "knowledge base" = the artifact; "wiki" = its concrete form.
-%
-% BEFORE arXiv SUBMISSION: (1) optional figures (lineage graph, cycle-log curve); (2) re-run
-% leaderboard_standings.py and reconcile Table 1 + inline numbers; (3) author final read of
-% Appendix A voice.
+% \src{...} = internal provenance (which wiki/source page backs a claim). Rendered INVISIBLE;
+% kept in source for traceability. Term convention: "knowledge base" = the artifact.
 
 \documentclass[11pt]{article}
 
@@ -60,10 +55,12 @@ this --- wiki-first retrieval, a triple-verify discipline that guards against ev
 a wall-hit escalation that consults accumulated failure before brute force, obstruction-indexed
 technique reuse, and a compute router --- and illustrate it through cases including a
 first-autocorrelation-inequality record produced by warm self-pruning after a prior dead-end
-finding. As field evidence, JSAgent produced verified, independently re-runnable contributions
-on EinsteinArena (a timestamped 2026-06-22 snapshot is reported; standings are dynamic). The
-evidence is an auditable case study, not a controlled ablation: logs show persistent memory
-was repeatedly reused, but causal gains from the knowledge base remain to be established. The
+finding. As field evidence, in a timestamped 2026-06-22 snapshot JSAgent held three clean,
+locally re-verified rank-\#1 results and ten raw top-3 placements on EinsteinArena (the raw
+board also listed one verifier-contested rank-\#1, which we do not count as clean; standings
+are dynamic). The evidence is an auditable case study, not a controlled ablation: logs show
+persistent memory was repeatedly reused, but causal gains from the knowledge base remain to
+be established. The
 broader lesson is that \emph{in domains with cheap objective verifiers}, agent contributions
 can be made auditable when discovery is embedded in a reproducible verification-and-memory
 loop. The work used an agent-primary workflow --- the agent produced the code, scripts,
@@ -173,23 +170,23 @@ problem-by-problem tour.
 \caption{JSAgent standings on EinsteinArena --- snapshot as of 2026-06-22 22:00 PT
   (\texttt{leaderboard\_standings.py} @ \texttt{e38a793}). Standings are dynamic.}
 \label{tab:standings}
-\begin{tabular}{llll}
+\begin{tabular}{lllll}
 \toprule
-Problem & Topic & JSAgent rank & Note \\
+Problem & Topic & Score & Rank & Status \\
 \midrule
-P2  & first-autocorrelation   & \#1 & clean (verified arena record) \\
-P14 & circle-packing          & \#1 & clean \\
-P18 & circles-in-rectangle    & \#1 & clean \\
-P9  & uncertainty             & \#1$^\dagger$ & verifier-contested (see \S\ref{sec:math}, P9) \\
-P1  & Erd\H{o}s                & \#2 & identical score; Together-AI submitted first \\
-P3  & second-autocorrelation  & \#3 & 0.962214 (cited in platform paper, Fig.~6) \\
-P4  & third-autocorrelation   & \#3 & tied score \\
-P7  & prime-number-theorem    & \#3 & \\
-P11 & tammes                  & \#3 & \\
-P22 & kissing-d12             & \#3 & \\
+P2  & first-autocorrelation   & $1.5028506$    & \#1 & clean (verified record) \\
+P14 & circle-packing          & $2.6359830849$ & \#1 & clean \\
+P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & clean \\
+P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & verifier-contested \\
+P1  & Erd\H{o}s                & $0.3808703$    & \#2 & tied; Together-AI submitted first \\
+P3  & second-autocorrelation  & $0.962214$     & \#3 & on frontier (platform paper, Fig.~6) \\
+P4  & third-autocorrelation   & $1.452521$     & \#3 & tied \\
+P7  & prime-number-theorem    & $0.994847$     & \#3 & \\
+P11 & tammes                  & $0.513472$     & \#3 & \\
+P22 & kissing-d12             & $2.001403$     & \#3 & \\
 \midrule
-\multicolumn{4}{l}{$^\dagger$ P9's leaderboard score sits above the proven upper bound under the standard}\\
-\multicolumn{4}{l}{normalization (see text); we do not count it as a clean rank-\#1.}\\
+\multicolumn{5}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
+\multicolumn{5}{l}{normalization (\S\ref{sec:math}); we do not count it as a clean rank-\#1. Clean \#1: P2, P14, P18.}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -223,14 +220,26 @@ bounds~\cite{matolcsi2010autoconvolution,cloninger2017autoconvolution,white2022a
 \end{tikzpicture}
 \caption{P2 verified-score progression (schematic; values exact, vertical spacing not to
   scale). JSAgent's $1.5028616$ (Apr 15) was displaced when other agents reached $1.5028609$,
-  presumed to be the global minimum. A dead-end finding written four days earlier prescribed
-  warm self-pruning, which --- executed on Jun 8 --- produced the verified record $1.5028506$.
-  The winning move came from the persistence layer, not fresh in-context reasoning.}
+  presumed to be the global minimum. The winning move --- warm self-pruning --- had been
+  recorded in a dead-end finding four days earlier and was retrieved and executed on Jun 8,
+  producing the verified record $1.5028506$.}
 \label{fig:p2}
 \end{figure}
 
 \paragraph{P14 circle-packing and P18 circles-in-rectangle (rank \#1, clean).}
-Strictly-best scores on the live board. \src{findings/arena-standings-snapshot-2026-06-22.md}
+Both are dense-packing problems at a basin-locked float64 ceiling, and both illustrate
+verification discipline more than raw search. On \textbf{P18} (21 circles in a perimeter-bounded
+rectangle, maximize $\sum r$) the optimum is a zero-degree-of-freedom KKT point (64 active
+constraints $=$ 64 variables), so the only headroom is the verifier's tolerance band; when the
+operators lowered \texttt{minImprovement} to $10^{-9}$, an arena-tolerance SLSQP polish
+\emph{within} that band --- triple-verified against strict tolerance, with a uniform-shrink
+fallback guaranteeing strict feasibility --- reached $\sum r = 2.3658323852$, sole rank \#1.
+On \textbf{P14} (26 circles in a unit square) ten parallel approaches converged to one
+basin-locked optimum; three candidates appeared to beat the long-standing ceiling by exploiting
+a $\sim 10^{-9}$ overlap-tolerance band, but \emph{all three failed a strict-tolerance recheck}
+--- so submitting one would have incurred a large penalty. Triple-verify caught the trap, and
+JSAgent took a near-ceiling rank-\#1 position ($2.6359830849$) via a uniform-shrink squeeze
+rather than a tolerance exploit. \src{problems/14-circle-packing-square.md, problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
 
 \paragraph{P9 uncertainty principle (a verification-scar case, not a clean record).}
 We single this one out for honesty rather than as a win. The arena scores it as
@@ -266,7 +275,8 @@ sieve LP~\cite{tao2015sievetheory,polymath2014selberg} (P7), the Tammes
 problem~\cite{musin2014tammes,friedmanpacking} (P11), and kissing number in
 dimension~12~\cite{boyvalenkov2012kissingsurvey,leech1971spherepackings,cohnli2024kissing}
 (P22); the circle-packing records (P14/P18) sit alongside the LP/SDP packing-bound
-literature~\cite{delaat2012packings}.
+literature~\cite{delaat2012packings}. (In the arena numbering, P22 is kissing number in
+dimension 12; the dimension-11 problem discussed in \S\ref{sec:collab} and the appendix is P6.)
 
 \paragraph{Honest framing.}
 The three clean rank-\#1s we stand behind are P2, P14, and P18 (strictly-best, locally
@@ -373,7 +383,11 @@ solutions, and the persona's own stance page. Their job is explicitly \emph{not}
 it: a persona producing ``the answer'' is just plausible markdown, whereas a persona
 producing \emph{the question this stance would ask when stuck} forces the gap-detect loop.
 The council runs once per problem during reconnaissance --- and is re-triggered on a wall
-(below). \src{.claude/rules/council-dispatch.md}
+(below). A concrete instance, from the P2 wall: with the iterate stuck at the two-agent tie
+near $1.5028609$, the prompt that mattered was not ``optimize harder'' but a support-changing
+question --- \emph{what operator changes which cells are nonzero, rather than retuning
+continuous weights on a fixed support?} That reframing pointed at warm self-pruning, the move
+that set the record. \src{.claude/rules/council-dispatch.md}
 
 \paragraph{Wiki-first lookup and cycle discipline.}
 Before answering any in-scope question the agent must query the knowledge base first and cite
@@ -632,30 +646,29 @@ Human role is selection + comprehension &
 
 \begin{table}[htbp]
 \centering\small
-\caption{All-agent counts at the 2026-06-22 snapshot (dynamic; reported as dated context, not
-  as the contribution). ``Clean'' excludes P9 (\S\ref{sec:math}). Ties are broken by earliest
-  submission. Other ranking schemes (e.g.\ cumulative medal points) order agents differently.}
+\caption{Leading agents on JSAgent's two headline metrics at the 2026-06-22 snapshot (dynamic;
+  dated context, not the contribution). Ties broken by earliest submission. Other ranking
+  schemes (e.g.\ cumulative medal points) order agents differently; these are the two counts
+  on which JSAgent led, not a full leaderboard tally.}
 \label{tab:allagents}
-\begin{tabular}{lll}
+\begin{tabular}{ll}
 \toprule
-Agent & rank-\#1 count & top-3 count \\
+By rank-\#1 count & By top-3 count \\
 \midrule
-JSAgent           & 4 (3 clean) & 10 \\
-AlphaEvolve       & 3 & --- \\
-Together-AI       & 3 & --- \\
-KawaiiCorgi       & 2 & --- \\
-alpha\_omega\_agents & --- & 8 \\
-CHRONOS           & --- & 7 \\
-OrganonAgent      & --- & 4 \\
+\textbf{JSAgent 4} (3 clean, P9 contested) & \textbf{JSAgent 10} (incl.\ contested P9) \\
+AlphaEvolve 3 & alpha\_omega\_agents 8 \\
+Together-AI 3 & CHRONOS 7 \\
+KawaiiCorgi 2 & OrganonAgent 4 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The technique hit-rate ($26\%$) is the fraction of logged technique--problem applications that
-reached top-3; it is a process/outcome metric, not causal evidence, because technique choice was
-not randomized and the skill library was developed \emph{during} the campaign. The cite-reuse
-rate ($84\%$) is likewise a process metric --- the wiki-first rule \emph{requires} a citation,
-so it measures compliance more than improvement.
+The technique hit-rate is $26\%$ ($55/213$ logged technique--problem applications reached
+top-3; \path{docs/agent/skill-library.md}); it is a process/outcome metric, not causal
+evidence, because technique choice was not randomized and the skill library was developed
+\emph{during} the campaign. The cite-reuse rate is $84\%$ ($51/61$ recent findings cite a prior
+page) --- likewise a process metric, since the wiki-first rule \emph{requires} a citation, so
+it measures compliance more than improvement.
 
 \paragraph{Compute.}
 The agent itself is Claude Code (Anthropic's CLI), operated under a Claude Code Max
@@ -679,11 +692,11 @@ behavioral rules in \path{.claude/rules/}; the knowledge base in \path{docs/wiki
 per-problem tracking. On the public/private timeline: the knowledge base was \emph{private}
 during the competition campaign; for this paper a frozen public snapshot --- rules, knowledge
 base, submitted constructions, and verification scripts --- is released in the public
-repository (\texttt{github.com/jmsung/einstein}) at the commit accompanying this manuscript.
+repository (\texttt{github.com/jmsung/einstein}) at the tagged release \texttt{paper-v1}, whose
+commit accompanies this manuscript; all paths in Table~\ref{tab:artifacts} resolve at that tag.
 Human interventions are characterized in Table~\ref{tab:roles}. Because the leaderboard is
 dynamic, every numeric standing is reported as of its timestamp and should be re-verified by
-re-running the script. The public/private boundary is on a timeline: the knowledge base was
-private during the campaign; a frozen snapshot is released for this paper.
+re-running the script.
 
 \begin{table}[htbp]
 \centering\small
@@ -877,11 +890,14 @@ We expect this division of labor to narrow. As the evaluation and the harness th
 become automated --- the agent proposing its own questions, judging its own results against
 objective verifiers, and rewriting its own rules from the cycle log --- the loop can in
 principle close and self-improve without a human in it. The gating factor is
-\emph{verification}. Mathematics is the easy case precisely because correctness is
-objective and cheap to check: a verifier either accepts a construction or it does not.
-Domains like biology and the natural sciences are harder not because the search is harder
-but because there is no comparably objective, fast oracle for ``is this right'' --- ground
-truth requires experiment, time, and judgment. Autonomy will therefore arrive
+\emph{verification}. Verifier-rich mathematical optimization is the favorable case:
+correctness is more objective and cheaper to check than in empirical science --- a verifier
+accepts a construction or it does not. The favorable case is not a trivial one, however:
+P9 shows that verifiers themselves can drift, encode the wrong constraints, or disagree with
+local checks, so verifier design and normalization still need independent validation.
+Domains like biology and the natural sciences are harder still, because there is no comparably
+objective, fast oracle for ``is this right'' --- ground truth requires experiment, time, and
+judgment. Autonomy will therefore arrive
 domain-by-domain, in order of how objective and how cheap their verification is:
 verification-rich mathematical and computational domains first, open-ended empirical sciences
 later --- unless fast surrogate verifiers become available there.
@@ -901,12 +917,14 @@ The honest framing distributed through the paper is collected here as a single a
 Threat & Why it matters & Status / mitigation \\
 \midrule
 Dynamic leaderboard & rankings change after submission & timestamped snapshot, script @ \texttt{e38a793}; re-verify \\
-Ties / tiebreaks & rank can overstate mathematical distinctness & score + tie status reported (P9 held, P1 lost) \\
+Ties / verifier-contested scores & rank can overstate distinctness or validity & raw vs.\ clean rank reported separately; P9 excluded from clean \#1; P1 tiebreak disclosed \\
 No optimality proof & empirical records are not theorems & framed as construction/evaluation results, not proofs \\
 Human in the loop & autonomy could be overstated & role taxonomy (Table~\ref{tab:roles}) \\
 Causal evidence is observational & KB-causes-improvement is not controlled & traces only; ablation is future work (below) \\
-Private knowledge base & harder for reviewers to audit & repository and knowledge base are public \\
-Agent-authored prose & persuasive but possibly under-supported & claims/evidence table (Table~\ref{tab:claims}) \\
+Model/version drift & exact per-cycle LLM IDs were not pinned, so the agent trajectory is not exactly replayable & submitted constructions + verifier scripts \emph{are} reproducible; trajectory is auditable, not replayable \\
+Retrospective KB curation & the public snapshot may not exactly match what was available each cycle & commit history, file timestamps, and cycle logs are released for cross-checking \\
+Private knowledge base & harder for reviewers to audit & repository and knowledge base released publicly (frozen snapshot) \\
+Agent-authored prose & persuasive but possibly under-supported & claims/evidence table (Table~\ref{tab:claims}); human verified results and takes responsibility \\
 Single domain & only objective-verifier math tested & headline claim scoped accordingly; transfer untested \\
 \bottomrule
 \end{tabular}
