@@ -128,6 +128,15 @@ should be able to make real progress unattended under a long-term goal --- and i
 that, it should eventually solve problems I cannot. This paper is, in part, a test of that
 conviction.
 
+\paragraph{Plan first.}
+Every campaign began with planning, not code: a detailed plan document stating, in writing,
+exactly what to do and why before any optimizer ran (\S\ref{sec:harness} formalizes this as
+the protocol's first steps). At the outset this was a \emph{manual} process --- I wrote and
+curated the plans, and the self-improvement steps happened because I asked for them. The arc
+of the project was to make that discipline progressively self-driving, culminating in a
+meta-learning harness loop that enforces the once-discretionary planning and capture steps
+automatically (\S\ref{sec:harness}). The shorthand for why: discretion decays, gates compound.
+
 \paragraph{Contributions.}
 \begin{itemize}[nosep]
   \item A self-improving wiki-agent \emph{methodology} (\S\ref{sec:harness}).
@@ -308,6 +317,20 @@ days earlier --- a case where the persistence layer, not in-context reasoning, s
 winning move. \src{docs/agent/cycle-log.md, docs/agent/metrics.md}
 % NOTE (final build): if compounding_metrics.py is re-run, fold in cite-reuse % and
 % technique hit-rate with their date; do not cite the stale 132-page / 44-source figures.
+
+\paragraph{From manual discipline to a meta-learning loop.}
+The rules above began as \emph{discretionary} --- written advice the human enforced by
+asking. That is fragile: a rule is something the agent can rationalize past, and in practice
+the decisive capture of a record-winning idea once happened only because a human explicitly
+asked for it. The project's principle for fixing this is ``discretion decays, gates
+compound'': convert the discretionary self-improvement steps into deterministic gates (hooks
+that fire on cycle boundaries), add an unattended driver (a scheduler that runs cycles by
+priority), and add quality control (pruning) so automatic capture does not degrade into spam.
+This meta-learning layer is partially deployed --- the enforcement gates, the submission gate
+chain, and an instrumented headless inner agent exist and have been cost- and
+reliability-tested; the always-on scheduler remains gated behind explicit readiness
+conditions. We report it as an architecture in progress, not a finished system.
+\src{docs/agent/meta-learning-automation.md, docs/agent/unattended-runbook.md, src/einstein/meta\_loop/}
 
 % ======================================================================
 \section{Techniques Produced}
