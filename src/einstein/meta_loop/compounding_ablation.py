@@ -32,11 +32,13 @@ from __future__ import annotations
 
 import enum
 import hashlib
+import json
+import statistics
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from einstein.meta_loop.ablation import dead_ends_avoided
+from einstein.meta_loop.ablation import dead_ends_avoided, is_firewalled
 from einstein.meta_loop.trajectory import TrajectoryPoint
 
 # ---------------- arms (the one independent variable: the memory loop) ----------------
@@ -484,3 +486,196 @@ def load_problems(config_path: str | Path) -> list[Problem]:
             )
         )
     return problems
+
+
+# ---------------- logging (§10.5) ----------------
+
+
+def append_record(record: RunRecord, results_path: str | Path) -> None:
+    """Append one run record as a JSON line (the §10 schema). The run log is
+    append-only — one line per (problem, arm, seed) — so a crashed batch keeps the
+    records it already produced (no cherry-picking; cycle-discipline rule)."""
+    results_path = Path(results_path)
+    results_path.parent.mkdir(parents=True, exist_ok=True)
+    with results_path.open("a") as fh:
+        fh.write(json.dumps(record.to_dict()) + "\n")
+
+
+def load_records(results_path: str | Path) -> list[dict]:
+    """Read the append-only JSONL run log back into dicts."""
+    results_path = Path(results_path)
+    if not results_path.exists():
+        return []
+    return [json.loads(line) for line in results_path.read_text().splitlines() if line.strip()]
+
+
+# ---------------- analysis (§10.6) ----------------
+
+
+def _pooled_stdev(records: list[dict]) -> float:
+    """Pooled per-cell stdev of gap_closed: sqrt(mean of per-(problem,arm) cell
+    variances). The §9 decision rules compare effect sizes against this."""
+    cells: dict[tuple[str, str], list[float]] = {}
+    for r in records:
+        cells.setdefault((r["problem_id"], r["arm"]), []).append(r["gap_closed"])
+    variances = [statistics.pvariance(v) for v in cells.values() if len(v) >= 2]
+    if not variances:
+        return 0.0
+    return statistics.fmean(variances) ** 0.5
+
+
+def mean_gap_closed(records: list[dict], arm: str) -> float:
+    vals = [r["gap_closed"] for r in records if r["arm"] == arm]
+    return statistics.fmean(vals) if vals else 0.0
+
+
+@dataclass(frozen=True)
+class DeltaK:
+    """Per-problem Warm-minus-Cold advantage at sequence position k (pre-reg §9 H2)."""
+
+    sequence_index: int
+    problem_id: str
+    warm_mean: float
+    cold_mean: float
+    delta: float
+
+
+def delta_k_trend(records: list[dict]) -> list[DeltaK]:
+    """Δ_k = mean gap_closed(Warm, k) − mean gap_closed(Cold, k), per problem,
+    ordered by sequence position. The slope of this is the compounding signal."""
+    by_seq: dict[int, dict[str, list[float]]] = {}
+    pid_of: dict[int, str] = {}
+    for r in records:
+        si = r["sequence_index"]
+        by_seq.setdefault(si, {}).setdefault(r["arm"], []).append(r["gap_closed"])
+        pid_of[si] = r["problem_id"]
+    out: list[DeltaK] = []
+    for si in sorted(by_seq):
+        warm = by_seq[si].get("warm", [])
+        cold = by_seq[si].get("cold", [])
+        wm = statistics.fmean(warm) if warm else 0.0
+        cm = statistics.fmean(cold) if cold else 0.0
+        out.append(DeltaK(si, pid_of[si], wm, cm, wm - cm))
+    return out
+
+
+def _slope(xs: list[float], ys: list[float]) -> float:
+    """Least-squares slope of ys vs xs (0.0 if degenerate)."""
+    n = len(xs)
+    if n < 2:
+        return 0.0
+    mx = statistics.fmean(xs)
+    my = statistics.fmean(ys)
+    denom = sum((x - mx) ** 2 for x in xs)
+    if denom == 0:
+        return 0.0
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True)) / denom
+
+
+@dataclass(frozen=True)
+class Decision:
+    supported: bool
+    detail: str
+
+
+@dataclass(frozen=True)
+class AnalysisReport:
+    n_records: int
+    warm_mean: float
+    cold_mean: float
+    pooled_stdev: float
+    delta_k: list[DeltaK]
+    delta_slope: float
+    h1: Decision  # level effect — knowledge helps
+    h2: Decision  # slope effect — it compounds
+
+
+def analyze(records: list[dict]) -> AnalysisReport:
+    """Compute the pre-reg §9 H1/H2 decisions from the run log.
+
+    H1 (level): supported iff mean gap_closed(Warm) exceeds Cold by MORE than the
+    pooled per-cell stdev (clear separation, not overlap).
+    H2 (slope/compounding): supported iff Δ_k trends upward — positive least-squares
+    slope of Δ_k vs k AND later-third mean Δ exceeds first-third mean Δ by more than
+    the pooled stdev. H2 is the headline ("compounds").
+    """
+    warm_mean = mean_gap_closed(records, "warm")
+    cold_mean = mean_gap_closed(records, "cold")
+    pooled = _pooled_stdev(records)
+    dks = delta_k_trend(records)
+
+    h1_gap = warm_mean - cold_mean
+    h1 = Decision(
+        supported=h1_gap > pooled and pooled >= 0,
+        detail=f"warm−cold={h1_gap:+.4f} vs pooled_stdev={pooled:.4f} "
+        f"→ {'separation' if h1_gap > pooled else 'overlap'}",
+    )
+
+    seqs = [d.sequence_index for d in dks]
+    deltas = [d.delta for d in dks]
+    slope = _slope([float(s) for s in seqs], deltas)
+    # first-third vs later-third (L=6 → {0,1} vs {4,5}); generalizes by thirds.
+    third = max(1, len(dks) // 3)
+    first_mean = statistics.fmean(deltas[:third]) if deltas else 0.0
+    later_mean = statistics.fmean(deltas[-third:]) if deltas else 0.0
+    trend_up = later_mean - first_mean > pooled
+    h2 = Decision(
+        supported=slope > 0 and trend_up,
+        detail=f"Δ_k slope={slope:+.4f}; later-third Δ̄={later_mean:+.4f} vs "
+        f"first-third Δ̄={first_mean:+.4f} (need Δ>{pooled:.4f}) "
+        f"→ {'compounding' if (slope > 0 and trend_up) else 'no compounding'}",
+    )
+    return AnalysisReport(
+        n_records=len(records),
+        warm_mean=warm_mean,
+        cold_mean=cold_mean,
+        pooled_stdev=pooled,
+        delta_k=dks,
+        delta_slope=slope,
+        h1=h1,
+        h2=h2,
+    )
+
+
+# ---------------- transcript auditor (§10.7) ----------------
+
+
+@dataclass(frozen=True)
+class AuditReceipt:
+    """Pass/fail receipt for one session's tool-call targets (pre-reg §9, §10.7)."""
+
+    arm: str
+    passed: bool
+    forbidden_hits: list[str]
+
+
+def audit_session(
+    targets: list[str], *, arm: Arm, allow_web: bool, own_kb_root: str | None
+) -> AuditReceipt:
+    """Audit one session's tool-call targets for forbidden retrieval.
+
+    Flags, for every target the session reached:
+    - the **answer key** (reuses `ablation.is_firewalled` — leaderboard, this
+      repo, any solution/SOTA dump) — forbidden for BOTH arms;
+    - a **web URL** when web is off for the arm (v1: off for both) — the session
+      must reason from the statement + (Warm) its own lessons, not the internet;
+    - a **cross-arm / foreign run-kb path** — a Cold session touching any run-kb,
+      or a Warm session touching a run-kb that is not its own.
+
+    `own_kb_root` is the run's own KB dir (None for Cold). A run-kb reference is a
+    target containing 'run-kb' or 'lesson-' that does not start with own_kb_root.
+    """
+    hits: list[str] = []
+    for t in targets:
+        low = t.lower()
+        if is_firewalled(t):
+            hits.append(f"answer-key:{t}")
+            continue
+        if not allow_web and ("://" in low or low.startswith("www.")):
+            hits.append(f"web:{t}")
+            continue
+        is_kb_ref = "run-kb" in low or "/lesson-" in low or low.startswith("lesson-")
+        if is_kb_ref:
+            if own_kb_root is None or not t.startswith(own_kb_root):
+                hits.append(f"foreign-kb:{t}")
+    return AuditReceipt(arm=arm.value, passed=not hits, forbidden_hits=hits)
