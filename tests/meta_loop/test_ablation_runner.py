@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -181,6 +182,52 @@ def test_telemetry_captures_cost_and_scores(tmp_path):
     assert len(tel) == 1
     assert tel[0]["cost_usd"] == 0.42 and tel[0]["arm"] == "cold"
     assert "score_final" in tel[0]
+
+
+def test_drops_stale_api_key_during_session_and_restores(tmp_path, monkeypatch):
+    root = _checkout(tmp_path)
+    p = _problem(4)
+    grid = ev.cold_init(4, ar._init_seed(4, 1))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-stale-invalid")
+
+    seen = {}
+
+    def run(prompt, **kw):
+        import os as _os
+
+        seen["key_present_during_call"] = "ANTHROPIC_API_KEY" in _os.environ
+        Path(kw["cwd"]).joinpath(ar.RESULT_FILENAME).write_text(
+            json.dumps({"centers": [[float(x), float(y)] for x, y in grid], "lesson": "ok"})
+        )
+        return FakeResult()
+
+    ar.make_solve_fn(root, headless_run=run, drop_api_key=True)(
+        p, ca.ARM_CONFIGS[ca.Arm.COLD], 1, _spec(p, ca.Arm.COLD)
+    )
+    assert seen["key_present_during_call"] is False  # dropped for the subprocess
+    assert os.environ.get("ANTHROPIC_API_KEY") == "sk-stale-invalid"  # restored after
+
+
+def test_keeps_api_key_when_drop_disabled(tmp_path, monkeypatch):
+    root = _checkout(tmp_path)
+    p = _problem(4)
+    grid = ev.cold_init(4, ar._init_seed(4, 1))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-valid")
+    seen = {}
+
+    def run(prompt, **kw):
+        import os as _os
+
+        seen["present"] = "ANTHROPIC_API_KEY" in _os.environ
+        Path(kw["cwd"]).joinpath(ar.RESULT_FILENAME).write_text(
+            json.dumps({"centers": [[float(x), float(y)] for x, y in grid], "lesson": "ok"})
+        )
+        return FakeResult()
+
+    ar.make_solve_fn(root, headless_run=run, drop_api_key=False)(
+        p, ca.ARM_CONFIGS[ca.Arm.COLD], 1, _spec(p, ca.Arm.COLD)
+    )
+    assert seen["present"] is True  # kept when opted into API-key billing
 
 
 def test_cold_init_shared_across_arms_for_same_seed(tmp_path):

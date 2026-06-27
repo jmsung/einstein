@@ -40,6 +40,11 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--seeds", default="1,2,3")
     ap.add_argument("--model", default=None)
     ap.add_argument("--timeout", type=int, default=1800)
+    ap.add_argument(
+        "--use-api-key",
+        action="store_true",
+        help="use ANTHROPIC_API_KEY (pay-per-token) instead of the Claude Code login",
+    )
     args = ap.parse_args(argv[1:])
 
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
@@ -64,7 +69,11 @@ def main(argv: list[str]) -> int:
     problems = ca.load_problems(args.config)
     telemetry: list = []
     solve_fn = ar.make_solve_fn(
-        checkout_root, model=args.model, timeout_seconds=args.timeout, telemetry=telemetry
+        checkout_root,
+        model=args.model,
+        timeout_seconds=args.timeout,
+        telemetry=telemetry,
+        drop_api_key=not args.use_api_key,
     )
 
     print(

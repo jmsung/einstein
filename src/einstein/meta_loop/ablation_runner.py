@@ -23,10 +23,12 @@ The agent result contract: the session writes `ablation_result.json` into its cw
 
 from __future__ import annotations
 
+import contextlib
 import json
+import os
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import numpy as np
@@ -41,6 +43,28 @@ RESULT_FILENAME = "ablation_result.json"
 # Read/Write/Edit + Bash (run python solvers) + Glob/Grep. Deliberately excludes
 # WebSearch, WebFetch, and Task (a subagent could re-acquire web).
 ALLOWED_TOOLS = ["Read", "Write", "Edit", "Bash", "Glob", "Grep"]
+
+
+@contextlib.contextmanager
+def _without_external_api_key(drop: bool) -> Iterator[None]:
+    """Temporarily remove ANTHROPIC_API_KEY from the env so the headless `claude`
+    subprocess falls back to the authenticated Claude Code login.
+
+    Why default-on: a stale/invalid `ANTHROPIC_API_KEY` in the shell makes
+    `claude -p` 401 ("Invalid API key") instead of using the OAuth session — it
+    would silently kill an unattended 36-cell batch. The runner is sequential, so
+    mutating os.environ around the call (and restoring it) is safe. Set
+    drop=False to deliberately use a (valid) API key for pay-per-token billing.
+    """
+    if not drop:
+        yield
+        return
+    saved = os.environ.pop("ANTHROPIC_API_KEY", None)
+    try:
+        yield
+    finally:
+        if saved is not None:
+            os.environ["ANTHROPIC_API_KEY"] = saved
 
 
 def _init_seed(n: int, seed: int) -> int:
@@ -130,13 +154,16 @@ def make_solve_fn(
     model: str | None = None,
     timeout_seconds: int = 1800,
     telemetry: list | None = None,
+    drop_api_key: bool = True,
 ) -> Callable[[Problem, ArmConfig, int, SessionSpec], SolveResult]:
     """Build the production `solve_fn` the harness drives.
 
     `checkout_root` holds `einstein-cold/` and `einstein-warm/` (from
     build_ablation_repos.sh). `headless_run` is injected in tests; defaults to the
     repo's `claude_headless.run`. Per-cell cost/error telemetry is appended to
-    `telemetry` if provided.
+    `telemetry` if provided. `drop_api_key` (default True) removes a stale
+    ANTHROPIC_API_KEY for the session so it uses the Claude Code login; set False
+    to use a valid API key (pay-per-token billing).
     """
     checkout_root = Path(checkout_root)
     run = headless_run or _default_headless_run()
@@ -162,7 +189,8 @@ def make_solve_fn(
         }
         if model:
             kw["model"] = model
-        res = run(prompt, **kw)
+        with _without_external_api_key(drop_api_key):
+            res = run(prompt, **kw)
         wall = time.monotonic() - t0
 
         centers, lesson, techniques = parse_result(cwd, problem.n)
