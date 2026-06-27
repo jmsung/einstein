@@ -22,11 +22,12 @@ do not rewrite past entries (correct via a dated note). Confirmatory verdicts ge
 
 ## 0. Claim → evidence status (keep current)
 
-| Claim | Estimand | Evidence | Status |
+| Claim | Estimand | Evidence | Status (Stage C FINAL, S=18) |
 |---|---|---|---|
-| **A** Warm > Cold (level) | mean Δ > 0 (H1) | Stage B + Stage C | **borderline +** (CI straddles 0 at S≤18) |
-| **B** compounds over time | Δ-vs-banked slope > 0 (H2) | Stage B/C; long-seq v4 pending | **null so far** (flat); short design can't test fully |
-| **C** statistically significant | tight CI excluding 0 | power analysis | **underpowered** at S=18 (~68%) |
+| **A** Warm > Cold (level) | mean Δ > 0 (H1) | Stage C 216/216 | **NOT supported** — Δ=+2.9 pts, 95% CI **[−2.3, +8.3]** (includes 0). Effect *shrank* with power: +13→+6.5→+2.9 |
+| **B** compounds over time | Δ-vs-banked slope > 0 (H2) | Stage C | **null** — slope +0.012, CI [−0.016, +0.042]; long-range shape still needs v4 |
+| **C** statistically significant | tight CI excluding 0 | Stage C | **no** — CI includes 0 even at S=18 |
+| **D (emergent) Warm is more EFFICIENT** | timeout rate / wall-clock | Stage C telemetry | **SUPPORTED** — cold times out **26.9%** vs warm **4.6%** (~6×); mean wall cold 370s vs warm 242s. The cleanest result. |
 
 ---
 
@@ -74,10 +75,31 @@ GO/NO-GO: all pass (manipulation OK, cold non-saturated 26–66%, Δ ≥ 0) → 
 **Note for paper:** the effect *halved* from the 2-seed interim (+13.3 → +6.5) as the 3rd
 seed landed — a clean illustration of why S=3 is exploratory, not confirmatory.
 
-### 2.2 Stage C — confirmatory, S=18 (216 cells) — IN PROGRESS (launched 2026-06-27)
-Interim @134 clean cells: **Cold 44.4% · Warm 50.6% · Δ = +6.2 pts**, Warm 4/6.
-Per-problem Δ: n11 +6.8, n12 +1.1, n13 +14.9, n14 +13.6, n15 −0.4, n16 +0.9.
-→ FINAL verdict + CI pending run completion (apply §7 H1/H2 ONCE). **TODO: paste FINAL table here.**
+### 2.2 Stage C — confirmatory, S=18 (216 cells) — 2026-06-27 — **FINAL**
+Mean gap_closed: **Cold 44.5% · Warm 47.4% · Δ = +2.9 pts**; Warm wins 4/6.
+
+| problem | cold% | warm% | Δ |
+|---|---|---|---|
+| n11 | 61.1 | 66.5 | +5.4 |
+| n12 | 54.2 | 56.3 | +2.2 |
+| n13 | 45.4 | 54.4 | +9.1 |
+| n14 | 38.6 | 43.7 | +5.1 |
+| n15 | 38.4 | 35.9 | −2.5 |
+| n16 | 29.3 | 27.7 | −1.6 |
+
+**§7 decision rules applied ONCE (confirmatory):**
+- **H1 (level): NOT supported.** mean Δ = +0.029, 95% CI **[−0.023, +0.083]** → includes 0.
+- **H2 (compounding): NOT supported.** within-problem Δ-vs-banked slope = +0.012, CI [−0.016, +0.042].
+- **Verdict: null** (pre-committed to reporting). Pooled per-cell stdev 0.192.
+- **Effect shrank monotonically with power:** +13.3 (2 seeds) → +6.5 (S=3) → **+2.9 (S=18)** — the
+  textbook signature of a small/near-zero true effect regressing to truth as power rose. The
+  early "warm wins big" was an underpowered illusion.
+
+**Data-quality note (timeouts are valid, not failures):** 34/216 cells hit the 600 s budget
+(`ok=false`, `error_kind=timeout`); **32 still produced triple-verified results** (only 2 truly
+bad: 1 outside-square, 1 unparseable). Timeout-capped cells are legitimate budgeted results and
+are KEPT — the all-cells analysis above is correct. Excluding them would *bias* Δ upward (drops
+hard-fought cold cells). The earlier hourly "7 ok=false" counts were a grep-pattern error.
 
 ### 2.3 Compounding (H2) — INTERIM, NULL
 - Within-problem slope of Δ on lessons-banked = **−0.0043**, 95% CI **[−0.043, +0.038]** → no compounding.
@@ -99,6 +121,22 @@ Per-problem Δ: n11 +6.8, n12 +1.1, n13 +14.9, n14 +13.6, n15 −0.4, n16 +0.9.
 ### 2.6 Heavy-tailed benefit — 2026-06-27
 - Warm's advantage is intermittent-large, not steady: per-seed Δ e.g. n14 **[−2, +61, +5]**, n13 **[−10, +55, +25]**; cold per-seed means 55.1 / 35.8 / 40.4.
 - **Paper implication:** the mean-Δ test may *understate* a real "occasionally unlocks a much better basin" effect → add a secondary **win-rate / quantile** read, not just the mean.
+
+### 2.7 EFFICIENCY — the emergent clean result (D) — 2026-06-27 — FINAL
+On the same S=18 Stage C data, the arms differ sharply in *how hard they have to work*:
+
+| arm | timeout rate | mean wall-clock |
+|---|---|---|
+| cold | **26.9%** (29/108) | 370 s |
+| warm | **4.6%** (5/108) | 242 s |
+
+Cold hits the 600 s budget ~**6× more often** and runs ~**35% longer** on average. Even where the
+*final* gap_closed is statistically indistinguishable (A is null), **Warm reaches comparable
+solutions far faster and far more reliably within budget.** This is a *time-to-solution /
+sample-efficiency* claim — well-controlled (same budget, paired cold-init) and the strongest
+signal in the dataset. **Paper framing:** the loop's value here is **efficiency, not capability** —
+memory lets the agent skip rediscovery and finish in budget, rather than reaching a higher ceiling.
+(Mechanistically consistent with the heavy-tail read §2.6 and the v2 "efficiency-DV" intuition.)
 
 ---
 
