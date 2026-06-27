@@ -27,6 +27,46 @@ sequence. The harness scores the output independently and triple-verifies it.
 The **only** difference between arms is the memory loop. Nothing is submitted to
 the arena (pre-reg §8).
 
+## Pre-flight status & findings (2026-06-26 live smoke) — READ FIRST
+
+**Wiring: VALIDATED end-to-end** via live single cold sessions:
+
+| cell | ok | wall | gap_closed | triple-verify | cost (equiv) |
+|---|---|---|---|---|---|
+| csq-n10 / cold / seed1 | ✓ | 73s | **1.000** | ok | ~$1.09 |
+| csq-n15 / cold / seed1 | ✓ | 79s | **1.000** | ok | ~$1.25 |
+
+Prompt → session → `ablation_result.json` contract → independent scoring →
+triple-verify → telemetry all work. **Auth fix:** headless `claude -p` preferred a
+stale/invalid `ANTHROPIC_API_KEY` (401) over the login; `make_solve_fn` now drops
+it by default so the session uses the Claude Code login (`--use-api-key` opts back
+into pay-per-token API billing with a valid key).
+
+**⚠️ CEILING FINDING — the primary DV is saturated for this problem set.**
+Both the *easiest* (n=10) and *hardest* (n=15) problems were solved to the **exact
+reference optimum** by a single cold Opus session using multistart
+SLSQP-with-radius-as-variable. So `gap_closed` will be ≈1.0 for **both** arms and
+there is no room for Warm to close *more* — a full 36-cell run would very likely
+return a **null by ceiling**, which the pre-reg (§6 req.4, §12 "too easy") warns is
+*not* the same as "no compounding." Do not interpret a gap_closed null here as
+evidence against the loop.
+
+**Mitigations — choose before spending on the full matrix:**
+1. **Efficiency secondaries (cheapest pivot, pre-reg §8):** measure
+   cycles-/wall-clock-/cost-to-optimum instead of gap_closed. Warm may reach the
+   same optimum *faster/cheaper* by reusing the method rather than rediscovering
+   it. Requires the runner to cap + record a per-session budget (today each
+   session self-paces to the optimum, so wall-clock isn't yet a clean DV).
+2. **Harder problem set:** larger n (≈25–40, optima genuinely hard / best-known
+   only) restores primary-DV headroom. Frozen-config change → **new
+   pre-registration**.
+3. **Tighter per-session budget:** cap multistart count / timeout / cycles so cold
+   often stops short of the optimum → headroom returns on gap_closed. **New
+   pre-registration.**
+
+Status: runner is **technically ready**; the **problem set needs a headroom
+decision** before the full run is worth its cost.
+
 ## One-time setup
 
 ```bash
