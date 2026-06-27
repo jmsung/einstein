@@ -215,3 +215,127 @@ def make_solve_fn(
         )
 
     return solve_fn
+
+
+# ---------------- batch runner (§10.4-7) ----------------
+
+
+def audit_checkout(checkout: str | Path) -> dict:
+    """Air-gap receipt for one clean-room checkout (pre-reg §10.7).
+
+    Reuses the firewall block-list (`ablation.is_firewalled`) to prove no
+    answer-key file leaked into the checkout, and confirms no web tool is in the
+    session allow-list. Passing is the structural guarantee — the agent could not
+    have reached an answer key because it physically isn't there and the web tool
+    isn't granted.
+    """
+    from einstein.meta_loop.ablation import is_firewalled
+
+    checkout = Path(checkout)
+    leaked = [
+        str(p.relative_to(checkout))
+        for p in checkout.rglob("*")
+        if p.is_file() and is_firewalled(str(p))
+    ]
+    web_tools = [t for t in ALLOWED_TOOLS if "web" in t.lower()]
+    return {
+        "checkout": str(checkout),
+        "leaked_answer_key_files": leaked,
+        "web_tools_in_allowlist": web_tools,
+        "passed": not leaked and not web_tools,
+    }
+
+
+def _completed_sequences(records: list[dict], problems, seeds) -> set[tuple[str, int]]:
+    """(arm, seed) sequences whose every problem_id already has a record — fully
+    done, safe to skip on resume."""
+    want = {p.problem_id for p in problems}
+    seen: dict[tuple[str, int], set[str]] = {}
+    for r in records:
+        seen.setdefault((r["arm"], r["seed"]), set()).add(r["problem_id"])
+    return {key for key, pids in seen.items() if want.issubset(pids)}
+
+
+def _purge_sequence(log_path: Path, arm: str, seed: int) -> None:
+    """Drop any partial records for one (arm, seed) so an interrupted sequence is
+    cleanly re-run (Warm threading makes mid-sequence resume unsafe, so the unit
+    of resume is a whole (arm, seed) sequence)."""
+    if not log_path.exists():
+        return
+    kept = [
+        line
+        for line in log_path.read_text().splitlines()
+        if line.strip() and not (lambda o: o["arm"] == arm and o["seed"] == seed)(json.loads(line))
+    ]
+    log_path.write_text("\n".join(kept) + ("\n" if kept else ""))
+
+
+def run_experiment(
+    problems,
+    seeds,
+    solve_fn,
+    *,
+    results_dir: str | Path,
+    checkout_root: str | Path,
+    known_dead_ends: set[str] | None = None,
+    max_lesson_chars: int | None = None,
+) -> dict:
+    """Resumable batch driver over the (seed x arm x problem) matrix (§10.4-7).
+
+    Per (arm, seed) sequence: skip if already complete; otherwise purge any
+    partial records, run the sequence (Warm threads its run-KB; the harness
+    enforces the §9 sanity checks), append records, and write an air-gap receipt.
+    Returns a summary {ran, skipped, n_records, audits}.
+    """
+    from einstein.meta_loop.compounding_ablation import (
+        Arm,
+        RunKB,
+        append_record,
+        load_records,
+        run_arm_sequence,
+    )
+
+    results_dir = Path(results_dir)
+    results_dir.mkdir(parents=True, exist_ok=True)
+    log_path = results_dir / "runs.jsonl"
+    audit_path = results_dir / "audit.jsonl"
+    checkout_root = Path(checkout_root)
+
+    completed = _completed_sequences(load_records(log_path), problems, seeds)
+    ran: list[str] = []
+    skipped: list[str] = []
+    audits: list[dict] = []
+
+    for seed in seeds:
+        for arm in Arm:
+            key = (arm.value, seed)
+            if key in completed:
+                skipped.append(f"{arm.value}-seed{seed}")
+                continue
+            _purge_sequence(log_path, arm.value, seed)
+            kb = RunKB(results_dir / "run-kb" / f"{arm.value}-{seed}")
+            records = run_arm_sequence(
+                arm,
+                seed,
+                problems,
+                solve_fn,
+                kb,
+                known_dead_ends=known_dead_ends,
+                max_lesson_chars=max_lesson_chars,
+            )
+            for rec in records:
+                append_record(rec, log_path)
+            ran.append(f"{arm.value}-seed{seed}")
+
+            receipt = audit_checkout(checkout_root / f"einstein-{arm.value}")
+            receipt.update({"arm": arm.value, "seed": seed})
+            audits.append(receipt)
+            with audit_path.open("a") as fh:
+                fh.write(json.dumps(receipt) + "\n")
+
+    return {
+        "ran": ran,
+        "skipped": skipped,
+        "n_records": len(load_records(log_path)),
+        "audits": audits,
+    }
