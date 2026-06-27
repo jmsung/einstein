@@ -81,8 +81,17 @@ reported, effect or null. No dropping a family after seeing its Δ.
 For each selected family, run v2 exactly:
 - Arms (§v2.3), counterbalanced cyclic order (§v2.5), paired cold-init + equal context
   budget + reflection-equalized + air-gap (§v2.6), manipulation checks (run void on fail).
-- DV = `gap_closed`, harness triple-verified; **S = 12** (two Latin squares), matching
-  the v2 Stage-C freeze.
+- DV = `gap_closed`, harness triple-verified; **S = 18** (three Latin squares), matching
+  the v2 Stage-C freeze (raised from 12 by v2's measured within-problem SD ≈ 28 pts).
+- **`--replicates 2`** (k-replicate variance reduction, branch `js/feat/ablation-kreplicate`):
+  each cell is solved twice with independent cold-inits (shared across arms per replicate)
+  and `gap_closed` is the mean of the two. **Note — this is NOT a power bargain:** SE of
+  the per-family mean Δ scales as 1/√(S·k) at cost ∝ S·k, so k=2 is compute-equivalent to
+  doubling S for the *level* test. It is specified here for what seeds *don't* give:
+  (a) tighter per-cell `gap_closed` (σ/√2), which the per-problem **dose-response / H2
+  shape** and the **heavy-tail diagnosis** need; (b) precision decoupled from the
+  Latin-square block size. If the level effect is all that's wanted, k=1 at S=24 is an
+  equally valid substitute — record the choice before the run.
 - L = 6 consecutive instances spanning the family's headroom band (set per family from
   the probe; frozen before that family's run).
 
@@ -118,13 +127,19 @@ banked, problem fixed effect, bootstrap CIs).
 1. **Screen (~$2–4):** the §3 probes across the candidate pool. Record → freeze the 2–3
    families.
 2. **Per family, Stage C only** (the v2 pipeline is already validated, so no per-family
-   smoke beyond a 1-session wiring check): S=12 × 6 problems × 2 arms = 144 sessions
-   ≈ **$66/family**. Two families ≈ $132; three ≈ $198. Sequential, resumable, one
-   seed-batch at a time (v2 §9 execution rules carry over unchanged).
+   smoke beyond a 1-session wiring check): S=18 × 6 problems × 2 arms × **k=2 replicates**
+   = 432 sessions ≈ **$198/family** (≈ $0.46/session). Two families ≈ $396; three ≈ $594.
+   Sequential, resumable, one seed-batch at a time (v2 §9 execution rules carry over).
+   *Cost lever:* dropping to k=1 halves this to ≈ $99/family and still answers the level
+   test (G1) at S=18 — k=2's spend buys the per-cell precision for the dose-response /
+   heavy-tail reads, not the headline mean Δ.
 3. **Meta-analysis** once all families' records are in.
 
 Run families **sequentially**, each fully resumable; a family is analyzable the moment
-its 144 cells complete, independent of the others.
+its 432 cells complete, independent of the others.
+
+**Dependency:** `--replicates` requires branch `js/feat/ablation-kreplicate` merged into
+the runner first; until then v3 falls back to k=1 (S=18) with no design change.
 
 ---
 
