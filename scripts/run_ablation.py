@@ -47,6 +47,12 @@ def main(argv: list[str]) -> int:
         help="per-session spend cap (held equal across arms) — the efficiency-DV lever",
     )
     ap.add_argument(
+        "--max-lesson-chars",
+        type=int,
+        default=None,
+        help="cap on Warm's accumulated-lesson context (equal max context across arms, §6)",
+    )
+    ap.add_argument(
         "--use-api-key",
         action="store_true",
         help="use ANTHROPIC_API_KEY (pay-per-token) instead of the Claude Code login",
@@ -94,9 +100,11 @@ def main(argv: list[str]) -> int:
         solve_fn,
         results_dir=args.results_dir,
         checkout_root=checkout_root,
+        max_lesson_chars=args.max_lesson_chars,
     )
 
-    print(f"\nran sequences:     {summary['ran'] or '(none — all complete)'}")
+    print(f"\nran sequences:     {summary['ran'] or '(none)'}")
+    print(f"resumed sequences: {summary['resumed'] or '(none)'}")
     print(f"skipped (done):    {summary['skipped'] or '(none)'}")
     print(f"total records:     {summary['n_records']}")
 
