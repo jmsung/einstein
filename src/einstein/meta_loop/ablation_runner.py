@@ -34,6 +34,7 @@ from pathlib import Path
 import numpy as np
 
 from einstein.ablation_packing import evaluator as ev
+from einstein.ablation_packing.families import get_family
 from einstein.meta_loop.compounding_ablation import ArmConfig, Problem, SessionSpec, SolveResult
 from einstein.meta_loop.trajectory import TrajectoryPoint
 
@@ -97,10 +98,10 @@ Begin from exactly these centers and improve the common radius:
 {lessons_block}
 ## Rules
 - Use ONLY general-purpose optimizers you write yourself with numpy/scipy
-  (e.g. SLSQP with the radius as a variable, Nelder-Mead, basin-hopping,
-  multistart). Do NOT look up or hardcode any known/optimal configuration.
-- Maximize the common radius r = min(0.5*min pairwise distance, nearest wall).
-- Triple-check your own best radius before finishing.
+  (e.g. Nelder-Mead, SLSQP, basin-hopping, simulated annealing, multistart).
+  Do NOT look up or hardcode any known/optimal configuration.
+- Maximize the objective described above.
+- Triple-check your own best objective value before finishing.
 - Your budget for this problem is LIMITED. Spend it well — go straight to the
   approach you judge most efficient rather than exploring exhaustively.
 
@@ -181,8 +182,9 @@ def make_solve_fn(
 
     def solve_fn(problem: Problem, cfg: ArmConfig, seed: int, spec: SessionSpec) -> SolveResult:
         cwd = checkout_root / f"einstein-{cfg.arm.value}"
+        family = get_family(problem.family)
         init = ev.cold_init(problem.n, _init_seed(problem.n, seed))
-        score_coldinit = ev.common_radius(init)
+        score_coldinit = family.score(init)
 
         # Clear any prior result so a failed session can't reuse a stale file.
         result_path = cwd / RESULT_FILENAME
@@ -211,7 +213,7 @@ def make_solve_fn(
         # HARNESS-SIDE scoring — never the agent's self-report. Infeasible/missing
         # output scores at the cold baseline (gap_closed → 0), recorded honestly.
         if centers is not None:
-            tv = ev.triple_verify_radius(centers)
+            tv = family.triple_verify(centers)
             score_final = tv.fast if tv.passed else min(score_coldinit, tv.fast)
             verify_note = tv.reason
         else:

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 _REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO / "src"))
@@ -268,3 +269,25 @@ def test_prompt_requires_incremental_write_under_budget(tmp_path):
     init = ev.cold_init(4, ar._init_seed(4, 1))
     prompt = ar.build_prompt(p, _spec(p, ca.Arm.COLD), init)
     assert "OVERWRITE" in prompt and "budget" in prompt.lower()
+
+
+def test_solve_fn_uses_the_family_scorer_for_heilbronn(tmp_path):
+    from einstein.ablation_packing import heilbronn as heil
+
+    root = _checkout(tmp_path)
+    p = ca.Problem(
+        "heil-n4",
+        n=4,
+        sequence_index=0,
+        reference_optimum=0.05,
+        statement="min triangle area",
+        family="heilbronn_triangle",
+    )
+    square = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])  # min triangle area 0.5
+    fake = _fake_run_writing(square)
+    res = ar.make_solve_fn(root, headless_run=fake)(
+        p, ca.ARM_CONFIGS[ca.Arm.COLD], 1, _spec(p, ca.Arm.COLD)
+    )
+    # scored by the Heilbronn objective, NOT circle radius
+    assert res.score_final == pytest.approx(heil.min_triangle_area(square))
+    assert res.score_final == pytest.approx(0.5)
