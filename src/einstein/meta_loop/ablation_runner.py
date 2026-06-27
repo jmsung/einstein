@@ -92,8 +92,8 @@ def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray) -> str:
 
 {problem.statement}
 
-## Your starting configuration ({problem.n} centers in [0,1]^2)
-Begin from exactly these centers and improve the common radius:
+## Your starting configuration ({problem.n} points in [0,1]^2)
+Begin from exactly these points and improve the objective described above:
 {json.dumps(centers)}
 {lessons_block}
 ## Rules
