@@ -1,0 +1,136 @@
+---
+type: results-ledger
+author: hybrid
+drafted: 2026-06-27
+status: live                 # append-only; updated as runs/analyses land
+pre_regs:
+  - 2026-06-26-heilbronn-haiku-compounding-preregistration.md   # v2 (level + compounding, Heilbronn×Haiku)
+  - 2026-06-26-cross-family-generalization-preregistration.md   # v3 (generalization, draft)
+paper_hook: "main.tex §6 (controlled compounding test) + §10 (methodology)"
+purpose: "Capture every paper-worthy intermediate record so nothing is lost at write-up. The result tables are the deliverable; the intermediate analyses + design rationale are the methodology narrative."
+---
+
+# Paper evidence ledger — controlled Cold-vs-Warm compounding test
+
+**This file is for the write-up.** Every entry below is something the paper can cite —
+a number, a table, a mechanism, or a design decision with its rationale. Append-only;
+do not rewrite past entries (correct via a dated note). Confirmatory verdicts get the
+§7 decision rules applied ONCE (see v2 pre-reg) and are marked FINAL.
+
+> Honesty contract (pre-committed): nulls are reported, not hidden. The compounding
+> null below is a *result*, not a failure — it ships.
+
+## 0. Claim → evidence status (keep current)
+
+| Claim | Estimand | Evidence | Status |
+|---|---|---|---|
+| **A** Warm > Cold (level) | mean Δ > 0 (H1) | Stage B + Stage C | **borderline +** (CI straddles 0 at S≤18) |
+| **B** compounds over time | Δ-vs-banked slope > 0 (H2) | Stage B/C; long-seq v4 pending | **null so far** (flat); short design can't test fully |
+| **C** statistically significant | tight CI excluding 0 | power analysis | **underpowered** at S=18 (~68%) |
+
+---
+
+## 1. Methodology (paper §10) — verbatim-usable design facts
+
+- **Controlled A/B, one variable.** Cold vs Warm identical in base model (claude-haiku-4-5),
+  tools, solver code, compute budget, problem statement, cold-init. The ONLY difference:
+  Warm reads + persists lessons across the sequence; Cold's memory is wiped between
+  problems (and its reflection is written-then-discarded to equalize effort).
+- **Air-gap by construction.** Clean-room checkout with the knowledge layer stripped +
+  tool set omits all web/retrieval tools → the agent physically cannot reach an answer
+  key. Per-cell air-gap receipt logged (§10.7). Manipulation checks void the run on breach.
+- **Paired cold-init.** For each (problem, seed) both arms start from the SAME random
+  configuration → Δ is a paired difference; cold-init noise cancels between arms.
+- **Harness-side scoring.** `gap_closed = (final − coldinit)/(ref − coldinit)`, clamped
+  [0,1], recomputed by an independent generic evaluator + triple-verify (A1). The agent's
+  self-reported score is ignored — it cannot inflate the DV.
+- **Counterbalanced order (Latin square).** Each seed runs the L=6 Heilbronn problems
+  (n=11..16) in cyclic rotation `k = seed mod 6`, so each problem is met with 0,1,2,3,4,5
+  lessons banked across seeds → decouples *accumulation* from *difficulty*. S=18 = three
+  full Latin squares.
+- **Family choice rationale (why Heilbronn, not circle packing):** circle packing is
+  recallable from training → Cold never flails → no signal. Heilbronn (max min triangle
+  area) is non-smooth/deceptive → Cold lands mid-range (0.2–0.6) → genuine headroom.
+- **Pre-registration discipline:** design frozen before confirmatory data; decision rules
+  applied once; nulls pre-committed to publication.
+
+---
+
+## 2. Results ledger (append-only)
+
+### 2.1 Stage B — exploratory, S=3 (36 cells) — 2026-06-26 — FINAL (exploratory)
+Mean gap_closed: **Cold 43.0% · Warm 49.5% · Δ = +6.5 pts**; Warm wins 4/6 problems.
+
+| problem | cold% | warm% | Δ |
+|---|---|---|---|
+| n11 | 49.1 | 68.8 | +19.8 |
+| n12 | 66.2 | 49.6 | −16.6 |
+| n13 | 41.1 | 64.5 | +23.4 |
+| n14 | 26.1 | 47.7 | +21.7 |
+| n15 | 44.2 | 46.5 | +2.4 |
+| n16 | 31.7 | 19.9 | −11.8 |
+
+GO/NO-GO: all pass (manipulation OK, cold non-saturated 26–66%, Δ ≥ 0) → GO to Stage C.
+**Note for paper:** the effect *halved* from the 2-seed interim (+13.3 → +6.5) as the 3rd
+seed landed — a clean illustration of why S=3 is exploratory, not confirmatory.
+
+### 2.2 Stage C — confirmatory, S=18 (216 cells) — IN PROGRESS (launched 2026-06-27)
+Interim @134 clean cells: **Cold 44.4% · Warm 50.6% · Δ = +6.2 pts**, Warm 4/6.
+Per-problem Δ: n11 +6.8, n12 +1.1, n13 +14.9, n14 +13.6, n15 −0.4, n16 +0.9.
+→ FINAL verdict + CI pending run completion (apply §7 H1/H2 ONCE). **TODO: paste FINAL table here.**
+
+### 2.3 Compounding (H2) — INTERIM, NULL
+- Within-problem slope of Δ on lessons-banked = **−0.0043**, 95% CI **[−0.043, +0.038]** → no compounding.
+- Raw r(banked, Δ) ≈ **−0.02**. Re-test against banked *chars* (substance, not count): slope ≈ 0, r ≈ −0.004 → still flat.
+- Δ by banked level (0→5 lessons): **[+8.2, +4.6, −2.2, +24.5, +3.6, −0.8]** pts — flat/noisy, no monotone rise. (+24.5 at banked=3 is a small-n artifact.)
+- **Paper framing:** "H1-maybe, H2-no" — *having* memory gives a small constant lift; *accumulating more* of it does not (yet) help more, over this 0–5 banked range.
+
+### 2.4 Mechanism — why compounding is flat (lesson-quality analysis) — 2026-06-27
+- Lessons are NOT near-duplicates: pairwise token Jaccard **0.27**, char SequenceMatcher **0.14**.
+- But substance is wildly uneven: lesson length **42–1910 chars** (mean 677, cap 4000); some are throwaway.
+- Novel tokens added by each successive lesson (banked 0→5): **[54, 48, 5, 51, 35, 12]** — lumpy, not decaying → "not every lesson helps" (relevance/quality variance), so banked *count* is a poor proxy for *useful* knowledge.
+- **Paper value:** this is the constructive finding — the lever is lesson *quality/diversity*, not count; and the dose axis (0–5) is too short to see plateau-vs-climb (motivates v4 long-sequence).
+
+### 2.5 Noise & power — 2026-06-27
+- Per-cell within-problem SD ≈ **28–30 pts**; signal/noise per cell ≈ **0.23** (effect is ¼ of one cell's noise). Noise is **seed-dominated** (cold-init lottery + LLM sampling), NOT problem-dominated → problem-fixed-effect control barely helps.
+- Power for the level effect (A): S=12 → 51%, S=18 → 68%, S=24 → 80%, S=30 → 88%, S=40 → 95%.
+- **k-replicate vs more-seeds:** SE ∝ 1/√(S·k) at cost ∝ S·k → compute-EQUIVALENT for A. k-replicate's distinct value is per-cell precision (for H2 shape + heavy-tail), not a power bargain. (Worth a methods footnote — a subtlety easy to get wrong.)
+
+### 2.6 Heavy-tailed benefit — 2026-06-27
+- Warm's advantage is intermittent-large, not steady: per-seed Δ e.g. n14 **[−2, +61, +5]**, n13 **[−10, +55, +25]**; cold per-seed means 55.1 / 35.8 / 40.4.
+- **Paper implication:** the mean-Δ test may *understate* a real "occasionally unlocks a much better basin" effect → add a secondary **win-rate / quantile** read, not just the mean.
+
+---
+
+## 3. Design decisions + rationale (paper §10 / footnotes)
+
+| Decision | Why | Record |
+|---|---|---|
+| Heilbronn × Haiku (not circle packing × Opus) | circle packing saturates (cold solves it from training) → no signal; Haiku keeps headroom + buys seed count | v2 §1 |
+| Counterbalanced Latin square | fixed increasing-n order confounds "Δ grows with position" with difficulty | v2 §5 |
+| Freeze S=18 (raised from 12) | measured within-problem SD ≈28pts → S=12 CI still straddles 0; S=18 clears it | v2 §8 (set pre-verdict) |
+| k-replicate option | per-cell denoising for H2 shape + heavy-tail (NOT cheaper than seeds for level) | branch `js/feat/ablation-kreplicate` |
+| Long-sequence v4 (planned) | banked range 0–5 too short to show plateau-vs-climb | v4 (to draft) |
+
+---
+
+## 4. Figures / tables the paper needs (with data source)
+
+1. **Cold-vs-Warm gap table** (per-problem + mean) — `results/ablation-heilbronn/runs.jsonl` → `scripts/summarize_ablation.py` → `SUMMARY.md`. (Stage C FINAL.)
+2. **Δ-vs-banked scatter + within-problem regression** (the H2 / compounding figure) — `scripts/analyze_ablation.py`.
+3. **Power curve** (CI half-width vs S, and S·k equivalence) — power analysis in this ledger §2.5.
+4. **Lesson-substance figure** (length distribution + novel-token growth) — §2.4 analysis.
+5. **Heavy-tail figure** (per-seed Δ distribution / win-rate) — §2.6.
+6. **Design schematic** (air-gap, paired cold-init, Latin square) — §1.
+
+---
+
+## 5. Honest negatives to report (pre-committed)
+
+- **Compounding (H2) is flat so far** over the 0–5 banked range — reported, not hidden.
+- **Level (H1) is borderline** at S≤18 — report the CI honestly, don't over-claim significance.
+- These are strengths, not weaknesses, of a controlled pre-registered design.
+
+---
+
+*Maintenance: append after every run/analysis. Cross-ref the roadmap (`mb/active/compounding-ablation-roadmap.md`) for branch state + next actions.*
