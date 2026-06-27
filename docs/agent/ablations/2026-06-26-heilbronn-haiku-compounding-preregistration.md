@@ -190,6 +190,32 @@ applied **once**. Peeking at the exploratory stages may inform S and GO/NO-GO, b
 - **Freeze S** from Stage B's variance: smallest multiple of 6 whose expected 95% CI
   of mean Δ is narrower than the observed Δ — **min S = 6**, **target S = 12**.
   Record the chosen S here, then freeze.
+
+  **FROZEN S = 18 (three full Latin squares, seeds 0–17), set 2026-06-26 from the
+  Stage B measured variance** — *before* the H1/H2 verdict was computed (variance is
+  an explicitly-permitted exploratory quantity for setting S; §8). This supersedes an
+  initial S=12 pre-commit: the Stage B data triggered the pre-registered "raise S if
+  per-cell stdev materially exceeds the pilot read" clause.
+
+  **Measured Stage B variance (S=3, 18 paired Δ):** grand mean Δ = **+6.5 pts**
+  (warm − cold gap_closed); within-problem (across-seed) pooled SD = **28.4 pts** —
+  the noise is dominated by **seed** (cold-init + LLM stochasticity), not problem, so
+  the problem-fixed-effect design barely reduces it. Projected 95% half-width of mean Δ
+  (problem fixed, 6 problems treated as fixed population): S=12 → ±6.6 pts (**still
+  straddles 0** at Δ=+6.5); **S=18 → ±5.4 pts (excludes 0)**. Hence S=18.
+
+  **Seed reuse pre-committed:** Stage B seeds **1, 2, 3 count toward the confirmatory
+  S=18** (seeds 0–17); Stage C runs the remaining **0, 4, 5, 6, 7, …, 17** = 15 seeds
+  × 12 cells = **180 sessions (≈ $83 incremental; ≈ $99 for the full 216-session
+  confirmatory set)**. Conditional on Stage B's GO/NO-GO (§8 i–iii) — **all passed**
+  (manipulation checks OK: warm reads 0→5 lessons, cold always 0; 36/36 scored; cold
+  gap_closed 26–66 % = non-saturated, non-floored; Δ = +6.5 ≥ 0). **GO.**
+
+  **Note for interpretation (not a design change):** the per-seed Δ vectors are
+  heavy-tailed — warm's benefit is intermittent-large (e.g. n14 seeds [−2, +61, +5])
+  rather than a steady lift. The mean-Δ test may *understate* a real "occasionally
+  unlocks a better basin" effect; a secondary quantile / win-rate read is worth adding
+  to the confirmatory analysis (does not alter the frozen H1/H2 decision rules).
 - **Stage C — confirmatory run:** extend to the frozen S (resumable — Stage B's
   seeds count toward S only if S was pre-committed to include them; otherwise
   Stage C uses fresh seeds). Apply §7 decision rules **once** to the confirmatory
