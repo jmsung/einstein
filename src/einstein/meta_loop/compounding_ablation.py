@@ -166,7 +166,8 @@ class Problem:
     sequence_index: int
     reference_optimum: float
     statement: str
-    minimize: bool = False  # circle packing maximizes the common radius
+    minimize: bool = False  # all current families maximize
+    family: str = "equal_circles_in_unit_square"  # scorer key (ablation_packing.families)
 
 
 @dataclass(frozen=True)
@@ -470,6 +471,7 @@ def load_problems(config_path: str | Path) -> list[Problem]:
     config_path = Path(config_path)
     data = yaml.safe_load(config_path.read_text())
     minimize = bool(data.get("minimize", False))
+    family = str(data.get("family", "equal_circles_in_unit_square"))
     repo_root = config_path.resolve().parent.parent  # config/ -> repo root
     problems: list[Problem] = []
     for p in data["problems"]:
@@ -483,6 +485,7 @@ def load_problems(config_path: str | Path) -> list[Problem]:
                 reference_optimum=float(p["reference_optimum"]),
                 statement=statement,
                 minimize=minimize,
+                family=family,
             )
         )
     return problems
