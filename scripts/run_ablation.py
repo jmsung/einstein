@@ -41,6 +41,12 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--model", default=None)
     ap.add_argument("--timeout", type=int, default=1800)
     ap.add_argument(
+        "--max-budget-usd",
+        type=float,
+        default=None,
+        help="per-session spend cap (held equal across arms) — the efficiency-DV lever",
+    )
+    ap.add_argument(
         "--use-api-key",
         action="store_true",
         help="use ANTHROPIC_API_KEY (pay-per-token) instead of the Claude Code login",
@@ -72,13 +78,15 @@ def main(argv: list[str]) -> int:
         checkout_root,
         model=args.model,
         timeout_seconds=args.timeout,
+        max_budget_usd=args.max_budget_usd,
         telemetry=telemetry,
         drop_api_key=not args.use_api_key,
     )
 
+    cap = f"${args.max_budget_usd}/session" if args.max_budget_usd else "uncapped"
     print(
         f"running {len(problems)} problems × 2 arms × {len(seeds)} seeds "
-        f"= {len(problems) * 2 * len(seeds)} cells (resumable)"
+        f"= {len(problems) * 2 * len(seeds)} cells (resumable; budget {cap})"
     )
     summary = ar.run_experiment(
         problems,
@@ -92,9 +100,28 @@ def main(argv: list[str]) -> int:
     print(f"skipped (done):    {summary['skipped'] or '(none)'}")
     print(f"total records:     {summary['n_records']}")
 
+    # Persist per-cell telemetry (cost/wall = the efficiency-DV data) append-only.
+    import json as _json
+
+    tel_path = Path(args.results_dir) / "telemetry.jsonl"
+    with tel_path.open("a") as fh:
+        for c in telemetry:
+            fh.write(_json.dumps(c) + "\n")
+
     cost = sum(c["cost_usd"] or 0.0 for c in telemetry)
     fails = [c for c in telemetry if not c["ok"]]
     print(f"session cost this run: ${cost:.2f}  ({len(telemetry)} cells, {len(fails)} failed)")
+    if telemetry:
+        import statistics as _st
+
+        for arm in ("cold", "warm"):
+            cells = [c for c in telemetry if c["arm"] == arm]
+            if cells:
+                mc = _st.fmean(c["cost_usd"] or 0.0 for c in cells)
+                mw = _st.fmean(c["wall_clock_s"] for c in cells)
+                print(
+                    f"  {arm}: mean ${mc:.2f}/session, {mw:.0f}s  (efficiency DV → telemetry.jsonl)"
+                )
 
     bad_audits = [a for a in summary["audits"] if not a["passed"]]
     if bad_audits:
