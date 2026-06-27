@@ -68,10 +68,12 @@ def _without_external_api_key(drop: bool) -> Iterator[None]:
             os.environ["ANTHROPIC_API_KEY"] = saved
 
 
-def _init_seed(n: int, seed: int) -> int:
-    """Per-(problem, seed) init seed — identical across arms (paired design),
-    independent across problems and seeds."""
-    return seed * 1000 + n
+def _init_seed(n: int, seed: int, replicate: int = 0) -> int:
+    """Per-(problem, seed, replicate) init seed — identical across arms (paired
+    design), independent across problems, seeds, and within-cell replicates. The
+    replicate offset (1e6) is far above the seed*1000+n range so distinct replicates
+    never alias another (seed, n) cell's cold-init."""
+    return replicate * 1_000_000 + seed * 1000 + n
 
 
 def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray) -> str:
@@ -183,7 +185,7 @@ def make_solve_fn(
     def solve_fn(problem: Problem, cfg: ArmConfig, seed: int, spec: SessionSpec) -> SolveResult:
         cwd = checkout_root / f"einstein-{cfg.arm.value}"
         family = get_family(problem.family)
-        init = ev.cold_init(problem.n, _init_seed(problem.n, seed))
+        init = ev.cold_init(problem.n, _init_seed(problem.n, seed, spec.replicate))
         score_coldinit = family.score(init)
 
         # Clear any prior result so a failed session can't reuse a stale file.
@@ -232,6 +234,7 @@ def make_solve_fn(
                     "cell": spec.problem_id,
                     "arm": cfg.arm.value,
                     "seed": seed,
+                    "replicate": spec.replicate,
                     "ok": ok,
                     "error_kind": getattr(res, "error_kind", ""),
                     "cost_usd": getattr(res, "cost_usd", None),
@@ -328,6 +331,7 @@ def run_experiment(
     checkout_root: str | Path,
     known_dead_ends: set[str] | None = None,
     max_lesson_chars: int | None = None,
+    replicates: int = 1,
 ) -> dict:
     """Resumable, crash-resilient batch driver over the matrix (pre-reg v2 §8-9).
 
@@ -392,6 +396,7 @@ def run_experiment(
                 order=cyclic_order(problems, seed),
                 skip_done=done,
                 on_record=lambda rec: append_record(rec, log_path),  # durable per-cell
+                replicates=replicates,
             )
             (resumed if is_resume else ran).append(label)
 
