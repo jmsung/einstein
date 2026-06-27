@@ -1,0 +1,79 @@
+# ablation_heilbronn_problems.yaml — FROZEN problem set for the v2 Heilbronn ×
+# Haiku knowledge-compounding ablation (pre-reg 2026-06-26-heilbronn-haiku, §4).
+#
+# DO NOT EDIT after the first confirmatory run (pre-registration discipline).
+#
+# Family: Heilbronn triangle — place n points in the unit square; maximize the
+# MINIMUM triangle area over all C(n,3) triples. Non-smooth, deceptive landscape;
+# a cold agent genuinely flails (probe: Haiku cold n=11→0.63, n=16→0.20), giving
+# the headroom that circle packing lacked.
+#
+# OBJECTIVE (scored by ablation_packing.heilbronn.min_triangle_area; the agent's
+# self-report is ignored, triple-verified harness-side):
+#   variables : n points (x_i, y_i) in [0,1]^2
+#   score     : min over all triples (i,j,k) of area(p_i, p_j, p_k)   — maximize
+#
+# DEPENDENT VARIABLE: gap_closed = (final - coldinit) / (ref - coldinit), [0,1].
+#
+# COLD-INIT: n points i.i.d. uniform in [0,1]^2, seeded per (problem, seed); same
+# init for both arms (paired). No known/optimal layout ever (pre-reg §5).
+
+family: heilbronn_triangle
+objective: maximize_min_triangle_area
+minimize: false
+reference_source: "https://erich-friedman.github.io/packing/heilbronn/"   # best-known table
+reference_note: >
+  Best-known min triangle area for n points in the unit square. n=11 (1/27) and
+  n=16 (7/341) are exact closed forms; n=12-15 are best-known to the precision
+  shown on Friedman's table (refinable). The reference only sets the gap_closed
+  denominator and scales the PAIRED Δ (Warm-Cold) uniformly, so the H1/H2
+  inference is robust to this precision. None is proven optimal.
+cold_init:
+  distribution: uniform
+  domain: "[0,1]^2"
+  rng: numpy_default_rng     # default_rng(seed*1000 + n)
+canonical_order: by_n_ascending   # cyclic-rotated per seed at run time (pre-reg §5)
+
+problems:
+  - id: heil-n11
+    n: 11
+    sequence_index: 0
+    reference_optimum: 0.0370370370370370    # 1/27, Goldberg 1972 (exact)
+    proven_optimal: false
+    statement_file: config/heilbronn_statements/heilbronn-n11.md
+  - id: heil-n12
+    n: 12
+    sequence_index: 1
+    reference_optimum: 0.0325                 # Comellas-Yebra 2001 (best-known, 3 s.f.)
+    proven_optimal: false
+    statement_file: config/heilbronn_statements/heilbronn-n12.md
+  - id: heil-n13
+    n: 13
+    sequence_index: 2
+    reference_optimum: 0.0270                 # Karpov 2011 (best-known, 3 s.f.)
+    proven_optimal: false
+    statement_file: config/heilbronn_statements/heilbronn-n13.md
+  - id: heil-n14
+    n: 14
+    sequence_index: 3
+    reference_optimum: 0.0243                 # Beyleveld 2006 (best-known, 3 s.f.)
+    proven_optimal: false
+    statement_file: config/heilbronn_statements/heilbronn-n14.md
+  - id: heil-n15
+    n: 15
+    sequence_index: 4
+    reference_optimum: 0.0211                 # Karpov 2011 (best-known, 3 s.f.)
+    proven_optimal: false
+    statement_file: config/heilbronn_statements/heilbronn-n15.md
+  - id: heil-n16
+    n: 16
+    sequence_index: 5
+    reference_optimum: 0.0205278592375367    # 7/341, Beyleveld 2006 (exact)
+    proven_optimal: false
+    statement_file: config/heilbronn_statements/heilbronn-n16.md
+
+# Held-out justification (pre-reg §4):
+#   - Heilbronn is scored by the generic objective only; no problem-specific plugin
+#     or stored configuration is provided. The clean-room strip + these held-out n
+#     withhold any discovered method.
+#   - Consecutive n in one family → a technique lesson on problem k can transfer.
