@@ -289,20 +289,17 @@ def audit_checkout(checkout: str | Path) -> dict:
     }
 
 
-def _completed_sequences(records: list[dict], problems, seeds) -> set[tuple[str, int]]:
-    """(arm, seed) sequences whose every problem_id already has a record — fully
-    done, safe to skip on resume."""
-    want = {p.problem_id for p in problems}
-    seen: dict[tuple[str, int], set[str]] = {}
+def _done_pids(records: list[dict]) -> dict[tuple[str, int], set[str]]:
+    """Map (arm, seed) → set of problem_ids already logged."""
+    d: dict[tuple[str, int], set[str]] = {}
     for r in records:
-        seen.setdefault((r["arm"], r["seed"]), set()).add(r["problem_id"])
-    return {key for key, pids in seen.items() if want.issubset(pids)}
+        d.setdefault((r["arm"], r["seed"]), set()).add(r["problem_id"])
+    return d
 
 
 def _purge_sequence(log_path: Path, arm: str, seed: int) -> None:
-    """Drop any partial records for one (arm, seed) so an interrupted sequence is
-    cleanly re-run (Warm threading makes mid-sequence resume unsafe, so the unit
-    of resume is a whole (arm, seed) sequence)."""
+    """Drop all logged records for one (arm, seed) — used only as the fallback when
+    an interrupted sequence's on-disk KB no longer matches the log."""
     if not log_path.exists():
         return
     kept = [
@@ -323,17 +320,21 @@ def run_experiment(
     known_dead_ends: set[str] | None = None,
     max_lesson_chars: int | None = None,
 ) -> dict:
-    """Resumable batch driver over the (seed x arm x problem) matrix (§10.4-7).
+    """Resumable, crash-resilient batch driver over the matrix (pre-reg v2 §8-9).
 
-    Per (arm, seed) sequence: skip if already complete; otherwise purge any
-    partial records, run the sequence (Warm threads its run-KB; the harness
-    enforces the §9 sanity checks), append records, and write an air-gap receipt.
-    Returns a summary {ran, skipped, n_records, audits}.
+    Per (arm, seed): skip if every problem is logged; else **resume per-cell** —
+    run only the not-yet-logged problems in this seed's counterbalanced order,
+    reusing the on-disk Warm run-KB (records are appended as each cell finishes, so
+    a crash keeps completed cells). If the on-disk KB no longer matches the log
+    (e.g. a crash mid-write), fall back to a clean restart of that sequence.
+    Returns {ran, resumed, skipped, n_records, audits}.
     """
     from einstein.meta_loop.compounding_ablation import (
+        ARM_CONFIGS,
         Arm,
         RunKB,
         append_record,
+        cyclic_order,
         load_records,
         run_arm_sequence,
     )
@@ -343,21 +344,35 @@ def run_experiment(
     log_path = results_dir / "runs.jsonl"
     audit_path = results_dir / "audit.jsonl"
     checkout_root = Path(checkout_root)
+    want = {p.problem_id for p in problems}
 
-    completed = _completed_sequences(load_records(log_path), problems, seeds)
+    done_map = _done_pids(load_records(log_path))
     ran: list[str] = []
+    resumed: list[str] = []
     skipped: list[str] = []
     audits: list[dict] = []
 
     for seed in seeds:
         for arm in Arm:
-            key = (arm.value, seed)
-            if key in completed:
-                skipped.append(f"{arm.value}-seed{seed}")
+            label = f"{arm.value}-seed{seed}"
+            done = done_map.get((arm.value, seed), set())
+            if want.issubset(done):
+                skipped.append(label)
                 continue
-            _purge_sequence(log_path, arm.value, seed)
+
             kb = RunKB(results_dir / "run-kb" / f"{arm.value}-{seed}")
-            records = run_arm_sequence(
+            is_resume = bool(done)
+            if is_resume:
+                # KB-vs-log consistency: Warm must have one persisted lesson per
+                # completed problem; otherwise the crash left them out of sync.
+                consistent = (not ARM_CONFIGS[arm].write_kb) or (kb.lesson_count() == len(done))
+                if not consistent:
+                    _purge_sequence(log_path, arm.value, seed)
+                    kb.wipe()
+                    done = set()
+                    is_resume = False
+
+            run_arm_sequence(
                 arm,
                 seed,
                 problems,
@@ -365,10 +380,11 @@ def run_experiment(
                 kb,
                 known_dead_ends=known_dead_ends,
                 max_lesson_chars=max_lesson_chars,
+                order=cyclic_order(problems, seed),
+                skip_done=done,
+                on_record=lambda rec: append_record(rec, log_path),  # durable per-cell
             )
-            for rec in records:
-                append_record(rec, log_path)
-            ran.append(f"{arm.value}-seed{seed}")
+            (resumed if is_resume else ran).append(label)
 
             receipt = audit_checkout(checkout_root / f"einstein-{arm.value}")
             receipt.update({"arm": arm.value, "seed": seed})
@@ -378,6 +394,7 @@ def run_experiment(
 
     return {
         "ran": ran,
+        "resumed": resumed,
         "skipped": skipped,
         "n_records": len(load_records(log_path)),
         "audits": audits,

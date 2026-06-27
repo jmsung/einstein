@@ -335,3 +335,40 @@ def test_build_script_strips_exactly_the_frozen_paths(fixture_repo):
     # cleanup worktrees registered against the fixture repo
     _git(["worktree", "remove", "--force", str(out / "einstein-cold")], fixture_repo)
     _git(["worktree", "remove", "--force", str(out / "einstein-warm")], fixture_repo)
+
+
+# ---------------- counterbalanced order (pre-reg v2 §5) ----------------
+
+
+def test_cyclic_order_is_a_latin_square():
+    probs = _problems(6)  # sequence_index 0..5
+    ids = [p.problem_id for p in sorted(probs, key=lambda p: p.sequence_index)]
+    orders = [ca.cyclic_order(probs, s) for s in range(6)]
+    for s, o in enumerate(orders):
+        assert o == ids[s:] + ids[:s]  # rotation k=s
+    for pos in range(6):  # each problem visits each position once over 6 seeds
+        assert sorted(o[pos] for o in orders) == sorted(ids)
+
+
+# ---------------- per-cell resume (crash-resilience, §9) ----------------
+
+
+def test_run_arm_sequence_resume_skips_done_and_reuses_kb(tmp_path):
+    probs = _problems(4)
+    order = ca.cyclic_order(probs, 0)  # [p0,p1,p2,p3]
+    kb = ca.RunKB(tmp_path / "w")
+    # simulate a crash after the first 2 problems: KB already holds their lessons
+    kb.write_lesson(order[0], "lesson 0")
+    kb.write_lesson(order[1], "lesson 1")
+    recs = ca.run_arm_sequence(
+        ca.Arm.WARM,
+        0,
+        probs,
+        _compounding_solver(0.1),
+        kb,
+        order=order,
+        skip_done={order[0], order[1]},
+    )
+    assert {r.problem_id for r in recs} == {order[2], order[3]}  # only remaining solved
+    assert kb.lesson_count() == 4  # KB not wiped; completed + new
+    assert recs[0].lessons_read == 2  # the two already banked were read
