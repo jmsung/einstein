@@ -64,8 +64,44 @@ evidence against the loop.
    often stops short of the optimum → headroom returns on gap_closed. **New
    pre-registration.**
 
-Status: runner is **technically ready**; the **problem set needs a headroom
-decision** before the full run is worth its cost.
+### Efficiency-DV calibration (capped budget) — also does NOT yield a window here
+
+Tried to restore headroom by capping per-session budget (so Cold, rediscovering
+the method, would fall short of Warm). Two levers, both ruled out empirically:
+
+- **`--max-budget-usd`** — unusable. There is a **~$0.65 fixed floor per session**
+  (Claude Code system prompt + tool schemas): a trivial "say OK" already reports
+  $0.66. Caps below ~$0.7 raise `error_max_budget_usd` *before any work* (and the
+  agent writes nothing → gap_closed 0 for both arms); caps above ~$1.2 reach the
+  optimum (→ 1.0). The window is too narrow, and the cap errors instead of
+  returning best-so-far.
+- **wall-clock timeout + incremental write** — at a 30s cap the Cold n=15 session
+  had written **nothing** (gap_closed 0); uncapped it reaches the optimum at ~75s
+  (gap_closed 1). The curve is a near **step-function**: fixed startup (load
+  context, write the optimizer script) eats the first ~minute, then multistart
+  SLSQP solves n≤15 essentially instantly. No gradient to measure.
+
+**Root cause (the real blocker):** the model **already knows** the optimal method
+(SLSQP-with-radius-as-variable + multistart) from training, so a Cold agent does
+not flail — the lesson Warm accumulates is *not* knowledge Cold lacks. Neither a
+different metric nor a budget cap can recover a compounding signal that isn't
+there: the task doesn't require accumulated knowledge.
+
+**Conclusion:** the equal-circle family (n=10–15) cannot test the
+knowledge-compounding loop with this agent — saturated on gap_closed and a
+step-function under capped budget. A real test needs a **harder / less-familiar
+problem family** where Cold genuinely flails without accumulated lessons and a
+transferable lesson on problem *k* materially helps *k+1*. That is a problem-set
+redesign → **new pre-registration** (pre-reg §6 req.1 "least likely the model has
+memorized" + req.4 "genuine headroom"). The runner infrastructure (air-gap,
+independent scoring, run-KB threading, budget/timeout caps, incremental write,
+telemetry) is reusable as-is for the redesigned set.
+
+Status: runner is **validated and reusable**; the **equal-circle problem set is
+unsuitable** — both gap_closed (ceiling) and capped-budget efficiency
+(step-function) are ruled out because the task is within the model's training. A
+harder/less-familiar family (new pre-reg) is required before a full run is worth
+its cost.
 
 ## One-time setup
 

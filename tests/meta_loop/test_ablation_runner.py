@@ -236,3 +236,35 @@ def test_cold_init_shared_across_arms_for_same_seed(tmp_path):
     a = ev.cold_init(p.n, ar._init_seed(p.n, 2))
     b = ev.cold_init(p.n, ar._init_seed(p.n, 2))
     assert np.array_equal(a, b)
+
+
+# ---------------- efficiency DV: budget cap + incremental write ----------------
+
+
+def test_budget_cap_passed_through_when_set(tmp_path):
+    root = _checkout(tmp_path)
+    p = _problem(4)
+    grid = ev.cold_init(4, ar._init_seed(4, 1))
+    fake = _fake_run_writing(grid)
+    ar.make_solve_fn(root, headless_run=fake, max_budget_usd=0.3)(
+        p, ca.ARM_CONFIGS[ca.Arm.COLD], 1, _spec(p, ca.Arm.COLD)
+    )
+    assert fake.last_kw["max_budget_usd"] == 0.3
+
+
+def test_no_budget_cap_when_unset(tmp_path):
+    root = _checkout(tmp_path)
+    p = _problem(4)
+    grid = ev.cold_init(4, ar._init_seed(4, 1))
+    fake = _fake_run_writing(grid)
+    ar.make_solve_fn(root, headless_run=fake)(
+        p, ca.ARM_CONFIGS[ca.Arm.COLD], 1, _spec(p, ca.Arm.COLD)
+    )
+    assert "max_budget_usd" not in fake.last_kw
+
+
+def test_prompt_requires_incremental_write_under_budget(tmp_path):
+    p = _problem(4)
+    init = ev.cold_init(4, ar._init_seed(4, 1))
+    prompt = ar.build_prompt(p, _spec(p, ca.Arm.COLD), init)
+    assert "OVERWRITE" in prompt and "budget" in prompt.lower()

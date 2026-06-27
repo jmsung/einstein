@@ -101,14 +101,18 @@ Begin from exactly these centers and improve the common radius:
   multistart). Do NOT look up or hardcode any known/optimal configuration.
 - Maximize the common radius r = min(0.5*min pairwise distance, nearest wall).
 - Triple-check your own best radius before finishing.
+- Your budget for this problem is LIMITED. Spend it well — go straight to the
+  approach you judge most efficient rather than exploring exhaustively.
 
-## Deliverable (required)
+## Deliverable (required) — write it INCREMENTALLY
 Write a file named `{RESULT_FILENAME}` in the current directory with JSON:
-  {{"centers": [[x, y], ...],   // your best {problem.n} centers
+  {{"centers": [[x, y], ...],   // your best {problem.n} centers so far
     "lesson": "<= one page: which operator/parameterization worked, dead-ends to
                skip, any transferable structural observation>",
     "techniques": ["slsqp", "multistart", ...]}}
-The `lesson` field is required even if progress was small.
+Write this file as soon as you have ANY improved configuration, and OVERWRITE it
+every time you find a better one — so your current best is always saved even if
+you run out of budget. The `lesson` field is required even if progress was small.
 """
 
 
@@ -153,6 +157,7 @@ def make_solve_fn(
     headless_run: Callable | None = None,
     model: str | None = None,
     timeout_seconds: int = 1800,
+    max_budget_usd: float | None = None,
     telemetry: list | None = None,
     drop_api_key: bool = True,
 ) -> Callable[[Problem, ArmConfig, int, SessionSpec], SolveResult]:
@@ -164,6 +169,12 @@ def make_solve_fn(
     `telemetry` if provided. `drop_api_key` (default True) removes a stale
     ANTHROPIC_API_KEY for the session so it uses the Claude Code login; set False
     to use a valid API key (pay-per-token billing).
+
+    `max_budget_usd` caps each session's spend (held EQUAL across arms, pre-reg
+    §3) — this is the efficiency-DV lever: under a tight cap a Cold session that
+    must rediscover the method closes less of the gap than a Warm session that
+    reuses it, so `gap_closed` becomes discriminating again and cost/wall measure
+    efficiency. None = uncapped (the saturated regime).
     """
     checkout_root = Path(checkout_root)
     run = headless_run or _default_headless_run()
@@ -189,6 +200,8 @@ def make_solve_fn(
         }
         if model:
             kw["model"] = model
+        if max_budget_usd is not None:
+            kw["max_budget_usd"] = max_budget_usd
         with _without_external_api_key(drop_api_key):
             res = run(prompt, **kw)
         wall = time.monotonic() - t0
