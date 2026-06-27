@@ -64,11 +64,16 @@ def main(argv: list[str]) -> int:
     print("-" * 54)
     print(f"{'MEAN':<12} {rep.cold_mean:>14.3f} {rep.warm_mean:>14.3f}")
     print(f"\npooled per-cell stdev: {rep.pooled_stdev:.4f}")
-    print(f"Δ_k slope (vs sequence position): {rep.delta_slope:+.4f}\n")
+    print(
+        f"Δ-vs-sequence-position slope (descriptive, difficulty-confounded): "
+        f"{rep.delta_slope:+.4f}\n"
+    )
 
     print(f"H1 (level — knowledge helps):   {'SUPPORTED' if rep.h1.supported else 'not supported'}")
     print(f"    {rep.h1.detail}")
-    print(f"H2 (slope — it compounds):      {'SUPPORTED' if rep.h2.supported else 'not supported'}")
+    print(
+        f"H2 (compounding — within-problem): {'SUPPORTED' if rep.h2.supported else 'not supported'}"
+    )
     print(f"    {rep.h2.detail}")
 
     if rep.h1.supported and rep.h2.supported:
