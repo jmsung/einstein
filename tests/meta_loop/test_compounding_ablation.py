@@ -165,23 +165,95 @@ def _records_from(tmp_path, solver, seeds=(1, 2, 3)):
     )
 
 
-def test_analyze_supports_h1_and_h2_on_compounding_fixture(tmp_path):
-    recs = [r.to_dict() for r in _records_from(tmp_path, _compounding_solver(0.08))]
+def _counterbalanced_records(*, banked_gain, difficulty_gain=0.1, n_seeds=6):
+    """Synthetic counterbalanced records (pre-reg v2 §5). Cold gap_closed falls with
+    difficulty (sequence_index); Warm = Cold + banked_gain * (lessons banked at this
+    position). So Δ depends only on banked, with difficulty present but orthogonal."""
+    probs = _problems(6)
+    recs = []
+    for s in range(n_seeds):
+        order = ca.cyclic_order(probs, s)
+        for pos, pid in enumerate(order):
+            seq = next(p.sequence_index for p in probs if p.problem_id == pid)
+            cold_gc = max(0.0, 0.7 - difficulty_gain * seq)
+            warm_gc = min(1.0, cold_gc + banked_gain * pos)
+            for arm, gc, read, wrote in (("cold", cold_gc, 0, 0), ("warm", warm_gc, pos, 1)):
+                recs.append(
+                    ca.RunRecord(
+                        pid,
+                        arm,
+                        s,
+                        seq,
+                        0.05,
+                        0.0,
+                        1.0,
+                        gc,
+                        1,
+                        0.0,
+                        [(0, 0.05)],
+                        wrote,
+                        read,
+                        0,
+                        ca.EMPTY_KB_HASH,
+                        "x",
+                    ).to_dict()
+                )
+    return recs
+
+
+def test_analyze_supports_h1_and_h2_on_counterbalanced_compounding():
+    recs = _counterbalanced_records(banked_gain=0.08)
     rep = ca.analyze(recs)
-    assert rep.n_records == 36
+    assert rep.n_records == 72
     assert rep.warm_mean > rep.cold_mean
-    assert rep.h1.supported is True
-    assert rep.delta_slope > 0
-    assert rep.h2.supported is True  # advantage grows with sequence position
+    assert rep.h1.supported is True  # mean Δ CI excludes 0
+    assert rep.banked_slope > 0 and rep.banked_slope_ci[0] > 0
+    assert rep.h2.supported is True  # within-problem Δ rises with banked
 
 
-def test_analyze_null_when_warm_equals_cold(tmp_path):
-    # per_lesson_gain = 0 → Warm reads but gains nothing → Warm ≈ Cold
-    recs = [r.to_dict() for r in _records_from(tmp_path, _compounding_solver(0.0))]
+def test_analyze_null_when_no_banked_gain():
+    recs = _counterbalanced_records(banked_gain=0.0)
     rep = ca.analyze(recs)
-    assert rep.warm_mean == pytest.approx(rep.cold_mean)
-    assert rep.h1.supported is False
+    assert rep.h1.supported is False  # Δ ≈ 0
     assert rep.h2.supported is False  # the pre-committed honest negative
+
+
+def test_h2_isolates_accumulation_from_difficulty():
+    # Warm advantage depends ONLY on difficulty (sequence_index), NOT on banked:
+    # within a problem Δ is constant across seeds → no banked slope → H2 not supported,
+    # even though Warm helps on average (H1) and Δ correlates with difficulty.
+    probs = _problems(6)
+    recs = []
+    for s in range(6):
+        order = ca.cyclic_order(probs, s)
+        for pos, pid in enumerate(order):
+            seq = next(p.sequence_index for p in probs if p.problem_id == pid)
+            cold_gc, warm_gc = 0.5, 0.5 + 0.08 * seq  # advantage from difficulty, not pos
+            for arm, gc, read, wrote in (("cold", cold_gc, 0, 0), ("warm", warm_gc, pos, 1)):
+                recs.append(
+                    ca.RunRecord(
+                        pid,
+                        arm,
+                        s,
+                        seq,
+                        0.05,
+                        0.0,
+                        1.0,
+                        gc,
+                        1,
+                        0.0,
+                        [(0, 0.05)],
+                        wrote,
+                        read,
+                        0,
+                        ca.EMPTY_KB_HASH,
+                        "x",
+                    ).to_dict()
+                )
+    rep = ca.analyze(recs)
+    assert rep.h1.supported is True  # Warm helps on average
+    assert rep.h2.supported is False  # but NOT via accumulation — the rigor guarantee
+    assert abs(rep.banked_slope) < 1e-9
 
 
 def test_delta_k_trend_ordered_by_sequence(tmp_path):
