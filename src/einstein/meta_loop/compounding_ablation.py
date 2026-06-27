@@ -343,6 +343,16 @@ class SanityViolation(RuntimeError):
 # ---------------- driver (§10.4) ----------------
 
 
+def cyclic_order(problems: Sequence[Problem], seed: int) -> list[str]:
+    """Counterbalanced run order (pre-reg v2 §5): cyclic rotation k = seed mod L of
+    the sequence_index-ascending order. Over any L consecutive seeds each problem
+    visits each position 0…L-1 exactly once (a Latin square), so "lessons banked
+    before a problem" is decoupled from the problem's difficulty."""
+    ids = [p.problem_id for p in sorted(problems, key=lambda p: p.sequence_index)]
+    k = seed % len(ids)
+    return ids[k:] + ids[:k]
+
+
 def run_arm_sequence(
     arm: Arm,
     seed: int,
@@ -352,22 +362,41 @@ def run_arm_sequence(
     *,
     known_dead_ends: set[str] | None = None,
     max_lesson_chars: int | None = None,
+    order: list[str] | None = None,
+    skip_done: set[str] | None = None,
+    on_record: Callable[[RunRecord], None] | None = None,
 ) -> list[RunRecord]:
-    """Run one arm's full problem sequence for one seed, threading the run KB.
+    """Run one arm's problem sequence for one seed, threading the run KB.
 
-    Warm: KB starts empty (start of run), grows by one lesson per problem, is read
-    before each later problem. Cold: KB wiped before every problem, so it is
-    provably empty at each problem start. Enforces the pre-reg §9 sanity checks
-    per cell and raises `SanityViolation` on any breach.
+    `order` (list of problem_ids) sets the run order; None → sequence_index order.
+    Warm: KB grows one lesson per problem, read before each later problem. Cold:
+    KB wiped before every problem (provably empty at each start). Enforces the §9
+    sanity checks; raises `SanityViolation` on a breach.
+
+    Resume (crash-resilience, pre-reg v2 §9): `skip_done` is the set of problem_ids
+    already completed in a prior (interrupted) run — they are NOT re-solved and the
+    KB is NOT wiped at start (Warm reuses the lessons already persisted on disk).
+    `on_record` is called after each problem so records are durable per-cell.
     """
     cfg = ARM_CONFIGS[arm]
     known_dead_ends = known_dead_ends or set()
-    ordered = sorted(problems, key=lambda p: p.sequence_index)
+    skip_done = skip_done or set()
+    by_id = {p.problem_id: p for p in problems}
+    ordered = (
+        [by_id[pid] for pid in order]
+        if order is not None
+        else sorted(problems, key=lambda p: p.sequence_index)
+    )
+    resuming = bool(skip_done)
 
-    run_kb.wipe()  # empty at start of run (pre-reg §3: both arms start blank)
+    if not resuming:
+        run_kb.wipe()  # fresh start: empty at start of run (pre-reg §3)
     records: list[RunRecord] = []
 
     for problem in ordered:
+        if problem.problem_id in skip_done:
+            continue  # completed in a prior run; (Warm) its lesson is already on disk
+
         # Cold: memory wiped between problems -> empty KB at each problem start.
         if not cfg.read_kb:
             run_kb.wipe()
@@ -395,33 +424,34 @@ def run_arm_sequence(
             problem.reference_optimum,
             minimize=problem.minimize,
         )
-        records.append(
-            RunRecord(
-                problem_id=problem.problem_id,
-                arm=arm.value,
-                seed=seed,
-                sequence_index=problem.sequence_index,
-                score_coldinit=result.score_coldinit,
-                score_final=result.score_final,
-                score_optimum_ref=problem.reference_optimum,
-                gap_closed=gc,
-                cycles=len(result.trajectory),
-                wall_clock_s=result.wall_clock_s,
-                trajectory=[(p.cycle_id, p.best_score) for p in result.trajectory],
-                lessons_written=lessons_written,
-                lessons_read=lessons_read,
-                dead_ends_avoided=dead_ends_avoided(result.attempted_techniques, known_dead_ends),
-                kb_state_hash_before=hash_before,
-                kb_state_hash_after=hash_after,
-            )
+        rec = RunRecord(
+            problem_id=problem.problem_id,
+            arm=arm.value,
+            seed=seed,
+            sequence_index=problem.sequence_index,
+            score_coldinit=result.score_coldinit,
+            score_final=result.score_final,
+            score_optimum_ref=problem.reference_optimum,
+            gap_closed=gc,
+            cycles=len(result.trajectory),
+            wall_clock_s=result.wall_clock_s,
+            trajectory=[(p.cycle_id, p.best_score) for p in result.trajectory],
+            lessons_written=lessons_written,
+            lessons_read=lessons_read,
+            dead_ends_avoided=dead_ends_avoided(result.attempted_techniques, known_dead_ends),
+            kb_state_hash_before=hash_before,
+            kb_state_hash_after=hash_after,
         )
+        records.append(rec)
+        if on_record is not None:
+            on_record(rec)  # durable now, so a later crash keeps this cell
 
-    # Warm manipulation check (pre-reg §9): KB grew >=1 lesson per problem and was
-    # read on later problems (lessons_read increases along the sequence).
+    # Warm manipulation check (pre-reg §9): after the sequence the KB holds one
+    # lesson per problem (skipped ones already on disk), and lessons were reused.
     if cfg.write_kb:
         if run_kb.lesson_count() < len(ordered):
             raise SanityViolation(
-                f"Warm KB grew {run_kb.lesson_count()} lessons for {len(ordered)} problems"
+                f"Warm KB has {run_kb.lesson_count()} lessons for {len(ordered)} problems"
             )
         reads = [r.lessons_read for r in records]
         if len(reads) > 1 and max(reads) == 0:

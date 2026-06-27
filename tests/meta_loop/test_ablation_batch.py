@@ -5,6 +5,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 _REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO / "src"))
 
@@ -124,9 +126,91 @@ def test_run_experiment_purges_partial_sequence(tmp_path):
         )
         ca.append_record(rec, log)
     assert len(ca.load_records(log)) == 3
-    # resume seed 1: the partial cold sequence is purged + fully re-run (no dupes)
+    # resume seed 1: the remaining 3 are run (cold needs no KB), no dupes
     ar.run_experiment(probs, [1], _fake_solver, results_dir=res, checkout_root=co)
     recs = ca.load_records(log)
     cold1 = [r for r in recs if r["arm"] == "cold" and r["seed"] == 1]
     assert len(cold1) == 6  # exactly the 6 problems, not 3 + 6
     assert len({r["problem_id"] for r in cold1}) == 6
+
+
+# ---------------- counterbalanced order + crash-resilient resume (v2) ----------------
+
+
+def test_counterbalanced_order_varies_banked_per_seed(tmp_path):
+    co = _checkout(tmp_path)
+    res = tmp_path / "results"
+    ar.run_experiment(_problems(), [1, 2], _fake_solver, results_dir=res, checkout_root=co)
+    warm = [r for r in ca.load_records(res / "runs.jsonl") if r["arm"] == "warm"]
+    pid = "csq-n12"  # sequence_index 2
+    banked = {
+        s: next(r["lessons_read"] for r in warm if r["problem_id"] == pid and r["seed"] == s)
+        for s in (1, 2)
+    }
+    assert banked[1] != banked[2]  # different rotation → different #lessons banked
+
+
+def test_warm_per_cell_resume_after_crash(tmp_path):
+    co = _checkout(tmp_path)
+    res = tmp_path / "results"
+    probs = _problems()
+    calls = {"warm": 0}
+
+    def crashy(problem, cfg, seed, spec):
+        if cfg.write_kb:  # warm only
+            calls["warm"] += 1
+            if calls["warm"] > 3:
+                raise RuntimeError("simulated crash")
+        return _fake_solver(problem, cfg, seed, spec)
+
+    with pytest.raises(RuntimeError):
+        ar.run_experiment(probs, [1], crashy, results_dir=res, checkout_root=co)
+    warm1 = [
+        r for r in ca.load_records(res / "runs.jsonl") if r["arm"] == "warm" and r["seed"] == 1
+    ]
+    assert 0 < len(warm1) < 6  # some cells durable, sequence incomplete
+
+    # resume with a clean solver → continues from the on-disk KB, no dupes
+    summary = ar.run_experiment(probs, [1], _fake_solver, results_dir=res, checkout_root=co)
+    warm1 = [
+        r for r in ca.load_records(res / "runs.jsonl") if r["arm"] == "warm" and r["seed"] == 1
+    ]
+    assert len(warm1) == 6 and len({r["problem_id"] for r in warm1}) == 6
+    assert "warm-seed1" in summary["resumed"]
+
+
+def test_resume_falls_back_when_kb_inconsistent(tmp_path):
+    co = _checkout(tmp_path)
+    res = tmp_path / "results"
+    res.mkdir(parents=True)
+    log = res / "runs.jsonl"
+    probs = _problems()
+    # plant 3 WARM records but NO on-disk KB (simulating a lost/corrupt KB)
+    order = ca.cyclic_order(probs, 1)
+    for pid in order[:3]:
+        sidx = next(p.sequence_index for p in probs if p.problem_id == pid)
+        ca.append_record(
+            ca.RunRecord(
+                pid,
+                "warm",
+                1,
+                sidx,
+                0.05,
+                0.05,
+                1.0,
+                0.0,
+                1,
+                0.0,
+                [(0, 0.05)],
+                1,
+                sidx,
+                0,
+                ca.EMPTY_KB_HASH,
+                "deadbeef",
+            ),
+            log,
+        )
+    # KB dir does not exist → lesson_count 0 ≠ 3 done → fallback purges + reruns fresh
+    ar.run_experiment(probs, [1], _fake_solver, results_dir=res, checkout_root=co)
+    warm1 = [r for r in ca.load_records(log) if r["arm"] == "warm" and r["seed"] == 1]
+    assert len(warm1) == 6 and len({r["problem_id"] for r in warm1}) == 6
