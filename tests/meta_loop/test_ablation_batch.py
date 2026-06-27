@@ -61,7 +61,31 @@ def test_audit_checkout_flags_leaked_answer_key(tmp_path):
     (co / "docs" / "wiki" / "problems" / "2-foo.md").write_text("SOTA scores here")
     receipt = ar.audit_checkout(co)
     assert receipt["passed"] is False
-    assert any("problems" in f for f in receipt["leaked_answer_key_files"])
+    assert "docs/wiki" in receipt["leaked_answer_key_files"]
+
+
+def test_audit_checkout_does_not_flag_code_with_firewall_substring_names(tmp_path):
+    # regression: a clean-room still has tool code like leaderboard_standings.py /
+    # solution_artifact.py — filenames contain firewall substrings but are NOT
+    # answer-key data; the receipt must pass.
+    co = tmp_path / "einstein-cold"
+    (co / "scripts").mkdir(parents=True)
+    (co / "scripts" / "leaderboard_standings.py").write_text("# tool")
+    (co / "src").mkdir(parents=True)
+    (co / "src" / "solution_artifact.py").write_text("# tool")
+    receipt = ar.audit_checkout(co)
+    assert receipt["passed"] is True and receipt["leaked_answer_key_files"] == []
+
+
+def test_audit_checkout_flags_solution_dumps(tmp_path):
+    co = tmp_path / "einstein-cold"
+    (co / "x").mkdir(parents=True)
+    (co / "x" / "solution-best.json").write_text("{}")
+    (co / "problems" / "4" / "solutions").mkdir(parents=True)
+    (co / "problems" / "4" / "solutions" / "best.json").write_text("{}")
+    receipt = ar.audit_checkout(co)
+    assert receipt["passed"] is False
+    assert len(receipt["leaked_answer_key_files"]) == 2
 
 
 # ---------------- run_experiment ----------------

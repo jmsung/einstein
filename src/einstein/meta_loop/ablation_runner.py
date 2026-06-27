@@ -263,22 +263,31 @@ def make_solve_fn(
 # ---------------- batch runner (§10.4-7) ----------------
 
 
+# Answer-key DATA the §7 strip removes — their presence in a checkout is a leak.
+# (Directories of pre-built knowledge/SOTA + solution dumps. NOT source files: the
+# URL/substring firewall in `ablation.is_firewalled` is for transcript tool-call
+# targets, not filesystem paths — applied to every file it false-flags code like
+# `scripts/leaderboard_standings.py`.)
+_ANSWER_KEY_DIRS = ("docs/wiki", "docs/source", "docs/agent", "mb", "results")
+
+
 def audit_checkout(checkout: str | Path) -> dict:
     """Air-gap receipt for one clean-room checkout (pre-reg §10.7).
 
-    Reuses the firewall block-list (`ablation.is_firewalled`) to prove no
-    answer-key file leaked into the checkout, and confirms no web tool is in the
-    session allow-list. Passing is the structural guarantee — the agent could not
-    have reached an answer key because it physically isn't there and the web tool
-    isn't granted.
+    Verifies the §7 strip held: the pre-built knowledge layer + answer/solution
+    dumps are physically absent, and no web tool is in the session allow-list.
+    Passing is the structural guarantee — the agent could not reach an answer key
+    because it isn't on disk and the web tool isn't granted.
     """
-    from einstein.meta_loop.ablation import is_firewalled
-
     checkout = Path(checkout)
-    leaked = [
+    leaked = [d for d in _ANSWER_KEY_DIRS if (checkout / d).exists()]
+    leaked += [
+        str(p.relative_to(checkout)) for p in checkout.rglob("solution-best*") if p.is_file()
+    ]
+    leaked += [
         str(p.relative_to(checkout))
         for p in checkout.rglob("*")
-        if p.is_file() and is_firewalled(str(p))
+        if p.is_file() and "/solutions/" in str(p)
     ]
     web_tools = [t for t in ALLOWED_TOOLS if "web" in t.lower()]
     return {
