@@ -605,6 +605,56 @@ def _slope(xs: list[float], ys: list[float]) -> float:
     return sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True)) / denom
 
 
+def paired_deltas(records: list[dict]) -> list[tuple[str, int, float, int]]:
+    """Pair Warm/Cold by (problem_id, seed): returns (problem_id, seed, Δ, banked)
+    where Δ = gap_closed(Warm) − gap_closed(Cold) (paired by the shared cold-init)
+    and `banked` = lessons in the Warm KB when the problem was reached
+    (= its position in that seed's counterbalanced order)."""
+    warm = {(r["problem_id"], r["seed"]): r for r in records if r["arm"] == "warm"}
+    cold = {(r["problem_id"], r["seed"]): r for r in records if r["arm"] == "cold"}
+    out: list[tuple[str, int, float, int]] = []
+    for key, w in warm.items():
+        c = cold.get(key)
+        if c is not None:
+            out.append((key[0], key[1], w["gap_closed"] - c["gap_closed"], int(w["lessons_read"])))
+    return out
+
+
+def _within_problem_slope(pairs: list[tuple[str, int, float, int]]) -> float:
+    """Fixed-effect slope of Δ on `banked`, controlling for the problem: center Δ
+    and banked within each problem (removes the difficulty effect), pool, OLS slope.
+    This is the pre-reg v2 §7 H2 statistic — accumulation isolated from difficulty.
+    Needs banked to vary within a problem (guaranteed by counterbalanced order)."""
+    by_p: dict[str, list[tuple[float, int]]] = {}
+    for pid, _seed, d, b in pairs:
+        by_p.setdefault(pid, []).append((d, b))
+    xs: list[float] = []
+    ys: list[float] = []
+    for vals in by_p.values():
+        if len(vals) < 2:
+            continue
+        mb = statistics.fmean(b for _d, b in vals)
+        md = statistics.fmean(d for d, _b in vals)
+        for d, b in vals:
+            xs.append(b - mb)
+            ys.append(d - md)
+    return _slope(xs, ys)
+
+
+def _bootstrap_ci(items, stat, *, n_boot: int = 2000, seed: int = 12345):
+    """Point estimate + percentile 95% bootstrap CI of `stat(items)` (seeded →
+    reproducible). Resamples `items` with replacement."""
+    import random
+
+    point = stat(items)
+    n = len(items)
+    if n == 0:
+        return point, 0.0, 0.0
+    rng = random.Random(seed)
+    boots = sorted(stat([items[rng.randrange(n)] for _ in range(n)]) for _ in range(n_boot))
+    return point, boots[int(0.025 * n_boot)], boots[int(0.975 * n_boot)]
+
+
 @dataclass(frozen=True)
 class Decision:
     supported: bool
@@ -618,53 +668,64 @@ class AnalysisReport:
     cold_mean: float
     pooled_stdev: float
     delta_k: list[DeltaK]
-    delta_slope: float
+    delta_slope: float  # descriptive Δ-vs-sequence-position (confounded by difficulty)
+    mean_delta: float
+    mean_delta_ci: tuple[float, float]
+    banked_slope: float  # within-problem Δ-vs-banked (the §7 compounding statistic)
+    banked_slope_ci: tuple[float, float]
     h1: Decision  # level effect — knowledge helps
-    h2: Decision  # slope effect — it compounds
+    h2: Decision  # compounding — within-problem Δ rises with lessons banked
 
 
 def analyze(records: list[dict]) -> AnalysisReport:
-    """Compute the pre-reg §9 H1/H2 decisions from the run log.
+    """Compute the pre-reg v2 §7 H1/H2 decisions from the run log.
 
-    H1 (level): supported iff mean gap_closed(Warm) exceeds Cold by MORE than the
-    pooled per-cell stdev (clear separation, not overlap).
-    H2 (slope/compounding): supported iff Δ_k trends upward — positive least-squares
-    slope of Δ_k vs k AND later-third mean Δ exceeds first-third mean Δ by more than
-    the pooled stdev. H2 is the headline ("compounds").
+    Both use the PAIRED Δ = gap_closed(Warm) − gap_closed(Cold) (same cold-init):
+    - **H1 (level):** mean Δ > 0 with a 95% bootstrap CI excluding 0.
+    - **H2 (compounding):** the within-problem slope of Δ on lessons-banked is
+      positive with a 95% bootstrap CI excluding 0. Counterbalanced order makes
+      banked vary within each problem, so this isolates accumulation from
+      difficulty. (`delta_slope`, the Δ-vs-sequence-position trend, is reported
+      descriptively but is confounded by difficulty — not the decision.)
     """
     warm_mean = mean_gap_closed(records, "warm")
     cold_mean = mean_gap_closed(records, "cold")
     pooled = _pooled_stdev(records)
     dks = delta_k_trend(records)
+    pairs = paired_deltas(records)
+    deltas = [d for _pid, _s, d, _b in pairs]
 
-    h1_gap = warm_mean - cold_mean
+    # H1 — paired mean Δ, bootstrap CI excludes 0
+    mean_delta, d_lo, d_hi = _bootstrap_ci(deltas, lambda v: statistics.fmean(v) if v else 0.0)
     h1 = Decision(
-        supported=h1_gap > pooled and pooled >= 0,
-        detail=f"warm−cold={h1_gap:+.4f} vs pooled_stdev={pooled:.4f} "
-        f"→ {'separation' if h1_gap > pooled else 'overlap'}",
+        supported=mean_delta > 0 and d_lo > 0,
+        detail=f"mean Δ={mean_delta:+.4f}, 95% CI [{d_lo:+.4f}, {d_hi:+.4f}] "
+        f"→ {'knowledge helps' if (mean_delta > 0 and d_lo > 0) else 'inconclusive'}",
     )
 
-    seqs = [d.sequence_index for d in dks]
-    deltas = [d.delta for d in dks]
-    slope = _slope([float(s) for s in seqs], deltas)
-    # first-third vs later-third (L=6 → {0,1} vs {4,5}); generalizes by thirds.
-    third = max(1, len(dks) // 3)
-    first_mean = statistics.fmean(deltas[:third]) if deltas else 0.0
-    later_mean = statistics.fmean(deltas[-third:]) if deltas else 0.0
-    trend_up = later_mean - first_mean > pooled
+    # H2 — within-problem Δ-vs-banked slope, bootstrap CI excludes 0 and positive
+    banked_slope, s_lo, s_hi = _bootstrap_ci(pairs, _within_problem_slope)
     h2 = Decision(
-        supported=slope > 0 and trend_up,
-        detail=f"Δ_k slope={slope:+.4f}; later-third Δ̄={later_mean:+.4f} vs "
-        f"first-third Δ̄={first_mean:+.4f} (need Δ>{pooled:.4f}) "
-        f"→ {'compounding' if (slope > 0 and trend_up) else 'no compounding'}",
+        supported=banked_slope > 0 and s_lo > 0,
+        detail=f"within-problem Δ-vs-banked slope={banked_slope:+.4f}, "
+        f"95% CI [{s_lo:+.4f}, {s_hi:+.4f}] "
+        f"→ {'compounding' if (banked_slope > 0 and s_lo > 0) else 'no compounding'}",
     )
+
+    # descriptive (confounded) Δ-vs-sequence-position trend, for context only
+    delta_slope = _slope([float(d.sequence_index) for d in dks], [d.delta for d in dks])
+
     return AnalysisReport(
         n_records=len(records),
         warm_mean=warm_mean,
         cold_mean=cold_mean,
         pooled_stdev=pooled,
         delta_k=dks,
-        delta_slope=slope,
+        delta_slope=delta_slope,
+        mean_delta=mean_delta,
+        mean_delta_ci=(d_lo, d_hi),
+        banked_slope=banked_slope,
+        banked_slope_ci=(s_lo, s_hi),
         h1=h1,
         h2=h2,
     )
