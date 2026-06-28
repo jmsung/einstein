@@ -45,6 +45,47 @@ Keep the §4–§7 machinery; swap the estimand from gap-Δ to the efficiency DV
 
 ---
 
+## 0b. TWO DESIGNS — Transfer (PRIMARY) + Replication (supporting)  (set 2026-06-28)
+
+"Cross-problem wisdom" has two distinct meanings; v3 runs both, transfer as the headline.
+
+### Design B — TRANSFER (primary): does wisdom cross problem TYPES?
+The real README claim ("the wiki compounds across all 23 problems"). Two phases:
+1. **Train:** a Warm agent solves family **A**'s sequence, accumulating lessons → a **frozen** `KB_A`.
+2. **Test on a DIFFERENT family B:**
+   - **Warm-transfer arm:** starts with `KB_A` (frozen — A's lessons), reads them, solves B.
+   - **Cold arm:** no KB, solves B fresh.
+   - ONE variable: presence of A's frozen lessons. Paired cold-init on B; equal solve budget;
+     equal-max-context (cap A's lessons to the same char budget, Cold's empty); air-gap; isolated
+     cwd (the now-fixed runner); harness-side triple-verify.
+- **Transfer-distance gradient (the strong design):** run **near** transfer (Heilbronn→Tammes —
+  both geometric spreading/packing) AND **far** transfer (Heilbronn→autocorrelation — unrelated).
+  The *gradient* is the finding: generic meta-strategy (multi-phase opt, basin-hopping, derivative-
+  free-first) should transfer *near*; problem-specific lessons should not transfer *far*. A clean
+  monotone "near helps, far doesn't" is more informative than a single yes/no.
+- **DV:** efficiency (timeout rate, wall, time-to-target) on B + gap_closed (non-inferiority).
+  **H-transfer:** mean Δ(warm-transfer − cold) on B > 0; bootstrap CI excludes 0.
+- **Honest prior:** likely NULL for far transfer, maybe positive for near — and that map is the result.
+- **Harness work:** the current `compounding_ablation` threads a run-KB *within one arm's sequence*.
+  Transfer needs: (i) build+persist `KB_A` from family A, (ii) load it as the *fixed*
+  `accumulated_lessons` for family B's warm-transfer arm (a new "frozen-KB inject" path), (iii) a
+  family-B evaluator + cold_init registered. Reuses everything else.
+
+### Design A — REPLICATION (supporting): does the within-family effect generalize?
+The original v3 (§1–§7 below): re-run the within-family Cold/Warm design on ≥2 more families,
+efficiency DV, cross-family mixed model (G1/G2). Cheaper; shows the #4 effect isn't Heilbronn-only.
+
+### Shared readiness (both designs)
+- **Family headroom screen (§3):** keep only families where COLD has headroom (cold sometimes
+  fails to finish in budget). Known: Heilbronn ✅, Tammes ✅ (evaluator exists, non-smooth → cold
+  stalls), Thomson ❌ (smooth, screened out). autocorrelation / kissing / min-dist-ratio → probe.
+- **Wiring:** register chosen families into `ablation_packing/families.py` (`.score`,
+  `.triple_verify`, `cold_init`); Tammes is the cheapest add (evaluator already in `src/einstein/tammes/`).
+- **Cost:** LLM-in-loop, expensive — gate the actual run on #4's clean verdict + an explicit go.
+  Stage it: headroom probe (~$3) → small exploratory per family/pair (~$40) → freeze S → confirmatory.
+
+---
+
 ## 1. Why a separate v3 (the threat it kills)
 
 v2, however clean, tests **one family**. The strongest attack on the paper's
