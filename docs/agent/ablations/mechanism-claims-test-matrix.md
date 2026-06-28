@@ -41,8 +41,8 @@ the paper; only un-tested assertion is weak.
 | 3 | **Problem-specific plugins** | each plugin > generic optimizer on its family | plugin vs generic baseline, per family | score / time-to-target | **family must have generic headroom** (NOT saturated) | 🟢 code | **DONE✓ SUPPORTED** | Tammes n=50, 30 seeds: Riemannian plugin **0.499 vs generic 0.285**, Δ=**+0.214** CI [+0.185,+0.242], **100% win**, ~30× faster. Thomson screened out (smooth→no headroom). |
 | 4 | **KB cross-problem wisdom** | curated wiki > firewalled web > model-only | 3-arm (Cold/Warm is the 2-arm slice) | gap_closed + efficiency | air-gap, paired, power | 💸 LLM | **DONE✓ (2-arm) / reframed** | capability NULL; **efficiency win** (warm timeout 4.6% vs cold 26.9%) |
 | 5 | **AlphaEvolve mutate engine** | mutate-K + strict-improve climbs on *stuck* problems | mutate-engine vs random-restart | Δ over champion @ budget | only on stuck-WITH-headroom problems | 🟡 code-ish | asserted | — |
-| 6 | **Trajectory classifier** | labels improving/solved/stuck correctly | accuracy vs ground truth (not A/B) | classification accuracy | label leakage | 🟢 valid. | **DONE✓ SUPPORTED** | 13 labeled cases (all 4 classes + precedence + min/max + window-boundary + empty): **100% accuracy**. Robustness note: strict-gain rule has no noise threshold. `scripts/validate_classifier.py` |
-| 7 | **Triple-verify** | catches fake scores / evaluator drift | inject drifted evaluators + bad configs | catch rate | — (real saves: P9/P14/P17) | 🟢 valid. | **DONE✓ SUPPORTED** | 200 configs: **0% false alarms** (no drift), **100% catch** for drift > tol (1e-8+), 0% flag below tol (tolerates noise); boundary at exactly tol. `scripts/validate_triple_verify.py` |
+| 6 | **Trajectory classifier** | labels improving/solved/stuck correctly | accuracy vs ground truth (not A/B) | classification accuracy | label leakage | 🟢 valid. | **DONE (narrow) + BUG (red-team)** | 13 cases 100% (honest), BUT `certificate_of` accepts placeholder strings (`tbd`/`???`) → false SOLVED_AT_FLOOR. Overstated as "SUPPORTED"; bug to fix. `scripts/validate_classifier.py` |
+| 7 | **Triple-verify** | catches fake scores / evaluator drift | inject drifted evaluators + bad configs | catch rate | — (real saves: P9/P14/P17) | 🟢 valid. | **DONE (narrow) + BUG (red-team)** | drift catch real (100% >tol, 0% FP). BUT infeasible configs (out-of-square / neg-radius / dup) pass `passed=True`, and no claimed-score check. "catches fake scores" overstated → catches arithmetic drift only. Repo-wide safeguard bug to fix. |
 | 8 | **Meta-learning "evolves over time"** | the loop makes the agent measurably better across cycles | = the controlled compounding slices (v2/v3/v4) | gap/efficiency vs cycle | arena trajectory is observational | 💸 LLM | in progress (via 4) | — |
 
 ## Strategic order (cheap-deterministic → expensive-LLM → validation)
@@ -101,6 +101,36 @@ triple-verify safeguard provably catches evaluator drift, not just anecdotally (
 `scripts/validate_triple_verify.py`; data: `results/ablation-mechanism/triple-verify.json`.
 
 **#4 KB compounding — reframed null** (see evidence ledger): capability null, efficiency win.
+
+---
+
+## Red-team audit (2026-06-27) — adversarial attack on #2/#3/#6/#7
+
+An independent adversarial agent re-derived all four from raw JSONL (matched to machine
+precision — no recording-layer fabrication) and tried to break each. Outcome:
+
+- **#3 plugins — SURVIVES (HIGH).** Plugin `score` is byte-for-byte the arena objective (diff
+  ≤5e-16); a *fair* generic at **700× compute** still loses (Δ +0.18→+0.09, never collapses);
+  headroom honest. Caveat: current JSONL = **n=5** seeds (the 30-seed headline data was
+  overwritten) → re-run 30 seeds to restore it.
+- **#2 adaptive — NULL holds (HIGH), explanation CORRECTED.** `get_strategy_priors("continuous")`
+  returns `[]`, so "adaptive" locks onto hillclimb from iter 0 (insertion-order tie-break) — it is
+  NOT "learning to favor winners". It *does* schedule strictly better (hillclimb 12/12 vs 3/12),
+  yet still ties because hillclimb self-saturates and the other 3 never improve. Null is real; the
+  prior docstring/ledger mechanism story ("boosts winners → learns") is wrong — corrected.
+- **#6 classifier — OVERSTATED (downgrade to SUPPORTED-narrow + BUG).** 13 cases honest, but
+  `certificate_of` (trajectory.py:178) accepts any non-empty string incl. **`tbd`/`???`** →
+  false `SOLVED_AT_FLOOR` (the exact frozen≠proven failure it exists to prevent). Real FP vector
+  the suite missed. **FIX NEEDED.**
+- **#7 triple-verify — OVERSTATED (downgrade + BUG).** Injected-drift catch is real, but
+  **infeasible configs pass `passed=True`** — out-of-square / negative-radius / duplicate centers
+  (feasibility checks vacuous when r≤0; evaluator.py:104-113); and there's **no claimed-score
+  check** (recomputes from centers, so a formula bug shared by all 3 paths, or a "claim 0.9 submit
+  0.2" optimizer, isn't caught). Catches arithmetic drift, NOT invalid geometry / fake scores.
+  **FIX NEEDED** — this safeguard is repo-wide (arena submissions), so the gap matters beyond this study.
+
+**Net:** the two headline verdicts (#3 SUPPORTED, #2 NULL) survive adversarial attack; #6/#7 were
+overstated by me and have real bugs; #2's mechanism explanation was wrong. The audit is doing its job.
 
 ---
 
