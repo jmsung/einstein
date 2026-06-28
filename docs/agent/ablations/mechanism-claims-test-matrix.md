@@ -41,7 +41,7 @@ the paper; only un-tested assertion is weak.
 | 3 | **Problem-specific plugins** | each plugin > generic optimizer on its family | plugin vs generic baseline, per family | score / time-to-target | **family must have generic headroom** (NOT saturated) | 🟢 code | **DONE✓ SUPPORTED** | Tammes n=50, 30 seeds: Riemannian plugin **0.499 vs generic 0.285**, Δ=**+0.214** CI [+0.185,+0.242], **100% win**, ~30× faster. Thomson screened out (smooth→no headroom). |
 | 4 | **KB cross-problem wisdom** | curated wiki > firewalled web > model-only | 3-arm (Cold/Warm is the 2-arm slice) | gap_closed + efficiency | air-gap, paired, power | 💸 LLM | **DONE✓ (2-arm) / reframed** | capability NULL; **efficiency win** (warm timeout 4.6% vs cold 26.9%) |
 | 5 | **AlphaEvolve mutate engine** | mutate-K + strict-improve climbs on *stuck* problems | mutate-engine vs random-restart | Δ over champion @ budget | only on stuck-WITH-headroom problems | 🟡 code-ish | asserted | — |
-| 6 | **Trajectory classifier** | labels improving/solved/stuck correctly | accuracy vs ground truth (not A/B) | classification accuracy | label leakage | 🟢 valid. | asserted | — |
+| 6 | **Trajectory classifier** | labels improving/solved/stuck correctly | accuracy vs ground truth (not A/B) | classification accuracy | label leakage | 🟢 valid. | **DONE✓ SUPPORTED** | 13 labeled cases (all 4 classes + precedence + min/max + window-boundary + empty): **100% accuracy**. Robustness note: strict-gain rule has no noise threshold. `scripts/validate_classifier.py` |
 | 7 | **Triple-verify** | catches fake scores / evaluator drift | inject drifted evaluators + bad configs | catch rate | — (real saves: P9/P14/P17) | 🟢 valid. | **DONE✓ SUPPORTED** | 200 configs: **0% false alarms** (no drift), **100% catch** for drift > tol (1e-8+), 0% flag below tol (tolerates noise); boundary at exactly tol. `scripts/validate_triple_verify.py` |
 | 8 | **Meta-learning "evolves over time"** | the loop makes the agent measurably better across cycles | = the controlled compounding slices (v2/v3/v4) | gap/efficiency vs cycle | arena trajectory is observational | 💸 LLM | in progress (via 4) | — |
 
@@ -60,11 +60,20 @@ the paper; only un-tested assertion is weak.
 
 ## Results (paper-ready) — 2026-06-27
 
-So far **2 confirmations + 2 nulls** — exactly the spread that makes the program credible
-(not "everything we built works"). Confirmed: specialization (#3) + the verification safeguard
-(#7). Null: cross-problem memory on *capability* (#4, → efficiency) + adaptive scheduling (#2).
-Pattern emerging: **what the agent KNOWS/uses (plugins, verification) matters; cleverness in HOW
-it schedules/remembers is marginal in these regimes.**
+So far **3 confirmations + 2 nulls** — exactly the spread that makes the program credible
+(not "everything we built works"). Confirmed: specialization (#3), the verification safeguard
+(#7), the trajectory classifier (#6). Null: cross-problem memory on *capability* (#4, → efficiency)
++ adaptive scheduling (#2). Pattern emerging: **what the agent KNOWS/uses + its
+correctness/measurement scaffolding (plugins, verification, honest status) is what holds;
+cleverness in HOW it schedules/remembers is marginal in these regimes.**
+
+**#6 Trajectory classifier — SUPPORTED.** 13 labeled trajectories spanning all four classes plus
+the hard cases (certificate precedence, minimize vs maximize, the window boundary where an old
+gain must NOT read as improving, empty trajectory): **100% correctly classified**. The classifier
+faithfully implements its precedence spec (cert → improving → stuck → unknown). Robustness caveat
+for the paper: the gain test is strict with no noise floor (a 1e-12 improvement labels IMPROVING)
+— sound for verified best-scores, worth a guard if inputs are noisy. Tool/data:
+`scripts/validate_classifier.py`, `results/ablation-mechanism/classifier.json`.
 
 **#2 Adaptive scheduling — NULL.** Tammes n=50, 30 seeds, 8 iters × 2 picks from the 4-strategy
 pool (real effectiveness variance: gradient strategies stall on the non-smooth objective,
