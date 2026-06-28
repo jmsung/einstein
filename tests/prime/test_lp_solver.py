@@ -12,7 +12,7 @@ import pytest
 from einstein.prime.evaluator import compute_score_only
 
 highspy = pytest.importorskip("highspy")
-from einstein.prime.lp_solver import solve_sieve_lp  # noqa: E402
+from einstein.prime.lp_solver import colgen_sieve_lp, solve_sieve_lp  # noqa: E402
 
 
 def _squarefree(n: int) -> list[int]:
@@ -40,3 +40,27 @@ def test_solver_returns_feasible_optimum_small_n():
     assert compute_score_only(pf) == pytest.approx(base, abs=1e-9)
     # A nontrivial certificate scores well below the theoretical max of 1.0 at small N.
     assert 0.0 < base < 1.0
+
+
+def test_colgen_does_not_worsen_seed_base():
+    from sympy import mobius
+
+    # Seed support = squarefree to 40; candidate pool extends to 90 (extra keys to price).
+    support = _squarefree(40)
+    candidates = _squarefree(90)
+    seed = {k: float(mobius(k)) for k in support}
+    # First, the seed-support LP optimum (the baseline colgen must not fall below).
+    f0, base0, _, _ = solve_sieve_lp(support, seed, time_limit=60, max_rounds=6, log=lambda *_: None)
+    pf, base, worst_g = colgen_sieve_lp(
+        seed,
+        candidates,
+        max_keys=len(support),
+        add_per_round=10,
+        rounds=2,
+        time_limit=60,
+        log=lambda *_: None,
+    )
+    assert pf is not None, "colgen returned no feasible solution"
+    assert worst_g <= 1.0 + 1e-7, f"colgen infeasible: worst_G={worst_g}"
+    # Column generation only adds improving columns, so it cannot beat-down the base.
+    assert base >= base0 - 1e-9

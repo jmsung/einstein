@@ -58,33 +58,25 @@ def _violations(keys_arr: np.ndarray, f: np.ndarray, max_n: int, tol: float = 1e
     return worst, viols
 
 
-def solve_sieve_lp(
-    keys: list[int],
-    seed_pf: dict[int, float],
+def _solve_cutting_plane(
+    ka: np.ndarray,
+    c: np.ndarray,
+    active: list[int],
+    max_n: int,
     *,
-    xcap_mult: int = 10,
-    ipm_tol: float = 1e-8,
-    time_limit: int = 1200,
-    max_rounds: int = 12,
-    log=print,
-) -> tuple[np.ndarray | None, float, float, int]:
-    """Solve the P7 sieve LP over `keys`, warm-started from `seed_pf`.
+    ipm_tol: float,
+    time_limit: int,
+    max_rounds: int,
+    log,
+) -> dict:
+    """Crossover-off HiGHS solve with integer-grid cutting planes over a fixed key set.
 
-    Returns (f_vec, base_score, worst_G, n_rounds). f_vec is aligned to sorted(keys).
-    Requires `highspy` (HiGHS Python interface) for the crossover-off IPM solve.
+    Returns dict(f, score, worst, active, row_dual, feasible, rounds). `row_dual` is
+    aligned to the returned `active` constraint order (for column-generation pricing).
     """
     import highspy
 
-    keys = sorted(keys)
-    ka = np.array(keys, dtype=np.float64)
-    n = len(keys)
-    max_n = xcap_mult * int(ka[-1])
-    c = np.array([math.log(k) / k for k in keys], dtype=np.float64)
-
-    g_seed = _g_of_seed(seed_pf, max_n)
-    active = sorted(set(int(i) for i in np.where(g_seed > 0.5)[0]) | set(range(1, max_n + 1, 200)))
-    log(f"  vars={n} maxkey={int(ka[-1])} range=[1,{max_n}] init_cons={len(active)}")
-
+    n = len(ka)
     inf = highspy.kHighsInf
     h = highspy.Highs()
     for opt, val in [
@@ -109,27 +101,166 @@ def solve_sieve_lp(
         h.addRows(r, np.full(r, -inf), np.full(r, 1.0), r * n, starts, idx, a.flatten())
 
     add_rows(active)
-    best_f, best_score, best_worst = None, -1e18, 0.0
+    best = {"f": None, "score": -1e18, "worst": 0.0, "feasible": False}
     for rnd in range(max_rounds):
         t0 = time.time()
         h.run()
         status = h.modelStatusToString(h.getModelStatus())
-        f = np.array(h.getSolution().col_value)
+        sol = h.getSolution()
+        f = np.array(sol.col_value)
         score = -float(c @ f)
         worst, viols = _violations(ka, f, max_n)
         log(
             f"  R{rnd}: status={status} base={score:.10f} worstG={worst:.10f} "
             f"viol={len(viols)} cons={len(active)} {time.time() - t0:.0f}s"
         )
-        if "Optimal" not in status and best_f is not None:
-            break
-        if score > best_score and worst <= 1.0 + 1e-9:
-            best_f, best_score, best_worst = f.copy(), score, worst
+        if "Optimal" in status and worst <= 1.0 + 1e-9 and score > best["score"]:
+            best = {
+                "f": f.copy(),
+                "score": score,
+                "worst": worst,
+                "active": list(active),
+                "row_dual": np.array(sol.row_dual),
+                "feasible": True,
+                "rounds": rnd + 1,
+            }
         if not viols:
-            return f.copy(), score, worst, rnd + 1
+            best["active"] = list(active)
+            best["row_dual"] = np.array(sol.row_dual)
+            best["rounds"] = rnd + 1
+            return best
+        if "Optimal" not in status and best["f"] is not None:
+            break
         new = [v for v in viols[:5000] if v not in set(active)]
         if not new:
             break
         active = sorted(set(active) | set(new))
         add_rows(new)
-    return best_f, best_score, best_worst, max_rounds
+    best.setdefault("active", list(active))
+    best.setdefault("row_dual", np.zeros(len(active)))
+    best.setdefault("rounds", max_rounds)
+    return best
+
+
+def solve_sieve_lp(
+    keys: list[int],
+    seed_pf: dict[int, float],
+    *,
+    xcap_mult: int = 10,
+    ipm_tol: float = 1e-8,
+    time_limit: int = 1200,
+    max_rounds: int = 12,
+    log=print,
+) -> tuple[np.ndarray | None, float, float, int]:
+    """Solve the P7 sieve LP over `keys`, warm-started from `seed_pf`.
+
+    Returns (f_vec, base_score, worst_G, n_rounds). f_vec is aligned to sorted(keys).
+    Requires `highspy` (HiGHS Python interface) for the crossover-off IPM solve.
+    """
+    keys = sorted(keys)
+    ka = np.array(keys, dtype=np.float64)
+    max_n = xcap_mult * int(ka[-1])
+    c = np.array([math.log(k) / k for k in keys], dtype=np.float64)
+    g_seed = _g_of_seed(seed_pf, max_n)
+    active = sorted(set(int(i) for i in np.where(g_seed > 0.5)[0]) | set(range(1, max_n + 1, 200)))
+    log(f"  vars={len(keys)} maxkey={int(ka[-1])} range=[1,{max_n}] init_cons={len(active)}")
+    r = _solve_cutting_plane(
+        ka, c, active, max_n, ipm_tol=ipm_tol, time_limit=time_limit, max_rounds=max_rounds, log=log
+    )
+    return r["f"], r["score"], r["worst"], r["rounds"]
+
+
+def colgen_sieve_lp(
+    seed_pf: dict[int, float],
+    candidate_keys: list[int],
+    *,
+    max_keys: int = 1999,
+    add_per_round: int = 80,
+    rounds: int = 8,
+    xcap_mult: int = 10,
+    time_limit: int = 600,
+    log=print,
+) -> tuple[dict[int, float] | None, float, float]:
+    """Column generation on the P7 sieve LP.
+
+    Start from the seed's support (warm/feasible), solve, then price every candidate
+    key by dual reduced cost rc_k = c_k − Σ_i y_i·A_ik over the active constraints. Add
+    the few |rc| largest improving keys (so few new violations appear), re-solve, trim
+    to `max_keys` by post-solve objective contribution, repeat. Returns
+    (pf_dict_over_keys, base_score, worst_G) for the best feasible solution found.
+
+    Adding only a handful of well-priced columns per round avoids the constraint blow-up
+    that kills bulk support-swaps (Exp 12): the new binding constraints are few.
+    """
+    support = sorted(k for k in seed_pf if k >= 2)
+    cand = sorted(set(candidate_keys) - set(support))
+    best_pf, best_score, best_worst = None, -1e18, 0.0
+
+    for rnd in range(rounds):
+        keys = sorted(support)
+        ka = np.array(keys, dtype=np.float64)
+        max_n = xcap_mult * int(ka[-1])
+        c = np.array([math.log(k) / k for k in keys], dtype=np.float64)
+        g_seed = _g_of_seed(seed_pf, max_n)
+        active = sorted(
+            set(int(i) for i in np.where(g_seed > 0.5)[0]) | set(range(1, max_n + 1, 200))
+        )
+        log(f"[colgen {rnd}] support={len(keys)} maxkey={int(ka[-1])}")
+        res = _solve_cutting_plane(
+            ka, c, active, max_n, ipm_tol=1e-8, time_limit=time_limit, max_rounds=10, log=log
+        )
+        if not res["feasible"]:
+            log("  master infeasible/timeout — stop")
+            break
+        score, f = res["score"], res["f"]
+        if score > best_score:
+            best_pf = {k: float(v) for k, v in zip(keys, f) if abs(v) > 1e-15}
+            best_score, best_worst = score, res["worst"]
+        log(f"  master base={score:.10f} worstG={res['worst']:.10f} (best={best_score:.10f})")
+
+        # Price candidate keys by dual reduced cost over the final active constraint set.
+        ns = np.array(res["active"], dtype=np.float64)
+        y = res["row_dual"]
+        cand_arr = np.array(cand, dtype=np.float64)
+        c_cand = np.log(cand_arr) / cand_arr
+        # rc_k = c_k - Σ_i y_i (floor(n_i/k) - n_i/k); chunk candidates to bound memory.
+        rc = np.empty(len(cand))
+        step = max(1, 4_000_000 // max(1, len(ns)))
+        for s in range(0, len(cand), step):
+            e = min(s + step, len(cand))
+            a = np.floor(ns[:, None] / cand_arr[None, s:e]) - ns[:, None] / cand_arr[None, s:e]
+            rc[s:e] = c_cand[s:e] - a.T @ y
+        order = np.argsort(-np.abs(rc))
+        improving = [cand[i] for i in order[:add_per_round] if abs(rc[i]) > 1e-9]
+        if not improving:
+            log("  no improving columns — converged")
+            break
+        log(f"  +{len(improving)} columns (max|rc|={abs(rc[order[0]]):.2e})")
+
+        # Add columns, then trim back to max_keys by post-solve contribution.
+        grown = sorted(set(support) | set(improving))
+        gka = np.array(grown, dtype=np.float64)
+        gmax_n = xcap_mult * int(gka[-1])
+        gc = np.log(gka) / gka
+        g2 = _g_of_seed(seed_pf, gmax_n)
+        gactive = sorted(
+            set(int(i) for i in np.where(g2 > 0.5)[0]) | set(range(1, gmax_n + 1, 200))
+        )
+        res2 = _solve_cutting_plane(
+            gka, gc, gactive, gmax_n, ipm_tol=1e-8, time_limit=time_limit, max_rounds=10, log=log
+        )
+        if not res2["feasible"]:
+            log("  grown master infeasible/timeout — keep best, stop")
+            break
+        f2 = res2["f"]
+        contrib = sorted(
+            ((abs(f2[j]) * math.log(k) / k, k) for j, k in enumerate(grown)), reverse=True
+        )
+        support = sorted(k for _, k in contrib[:max_keys])
+        cand = sorted(set(cand) - set(support))
+        if res2["score"] > best_score:
+            best_pf = {k: float(v) for k, v in zip(grown, f2) if abs(v) > 1e-15}
+            best_score, best_worst = res2["score"], res2["worst"]
+        log(f"  grown base={res2['score']:.10f} -> trimmed support={len(support)}")
+
+    return best_pf, best_score, best_worst
