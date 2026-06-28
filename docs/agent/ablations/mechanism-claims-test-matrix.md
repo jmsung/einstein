@@ -38,11 +38,11 @@ the paper; only un-tested assertion is weak.
 |---|---|---|---|---|---|---|---|---|
 | 1 | **Council of personas** | persona *questions* before optimizing improve outcomes | council-on vs off (solve directly) | gap_closed + time-to-target | **budget-match** (off-arm gets equal tokens) | 💸 LLM | asserted | — |
 | 2 | **Adaptive optimizer** (boost recent winners) | adaptive scheduling > fixed/uniform | `select_strategies` adaptive vs uniform/round-robin | score @ fixed budget | isolate scheduling from plugin set | 🟢 code | asserted | — |
-| 3 | **Problem-specific plugins** | each plugin > generic optimizer on its family | plugin vs generic baseline, per family | score / time-to-target | **family must have generic headroom** (NOT saturated) | 🟢 code | designed (harness skeleton) | — |
+| 3 | **Problem-specific plugins** | each plugin > generic optimizer on its family | plugin vs generic baseline, per family | score / time-to-target | **family must have generic headroom** (NOT saturated) | 🟢 code | **DONE✓ SUPPORTED** | Tammes n=50, 30 seeds: Riemannian plugin **0.499 vs generic 0.285**, Δ=**+0.214** CI [+0.185,+0.242], **100% win**, ~30× faster. Thomson screened out (smooth→no headroom). |
 | 4 | **KB cross-problem wisdom** | curated wiki > firewalled web > model-only | 3-arm (Cold/Warm is the 2-arm slice) | gap_closed + efficiency | air-gap, paired, power | 💸 LLM | **DONE✓ (2-arm) / reframed** | capability NULL; **efficiency win** (warm timeout 4.6% vs cold 26.9%) |
 | 5 | **AlphaEvolve mutate engine** | mutate-K + strict-improve climbs on *stuck* problems | mutate-engine vs random-restart | Δ over champion @ budget | only on stuck-WITH-headroom problems | 🟡 code-ish | asserted | — |
 | 6 | **Trajectory classifier** | labels improving/solved/stuck correctly | accuracy vs ground truth (not A/B) | classification accuracy | label leakage | 🟢 valid. | asserted | — |
-| 7 | **Triple-verify** | catches fake scores / evaluator drift | inject drifted evaluators + bad configs | catch rate | — (real saves: P9/P14/P17) | 🟢 valid. | partly evidenced (anecdotal) | P9/P14/P17 |
+| 7 | **Triple-verify** | catches fake scores / evaluator drift | inject drifted evaluators + bad configs | catch rate | — (real saves: P9/P14/P17) | 🟢 valid. | **DONE✓ SUPPORTED** | 200 configs: **0% false alarms** (no drift), **100% catch** for drift > tol (1e-8+), 0% flag below tol (tolerates noise); boundary at exactly tol. `scripts/validate_triple_verify.py` |
 | 8 | **Meta-learning "evolves over time"** | the loop makes the agent measurably better across cycles | = the controlled compounding slices (v2/v3/v4) | gap/efficiency vs cycle | arena trajectory is observational | 💸 LLM | in progress (via 4) | — |
 
 ## Strategic order (cheap-deterministic → expensive-LLM → validation)
@@ -55,6 +55,30 @@ the paper; only un-tested assertion is weak.
 - **Headroom screen** — the family/regime must let the *baseline* fail (so there's room to show an effect); a saturated family gives a null for the wrong reason (why circle packing is a bad plugin-ablation target despite being "clean").
 - **Budget-match** — any arm that does extra work (council, KB) must be compared at equal total compute, else "it helps" = "more compute."
 - **Paired** by seed/cold-init; **pre-register**; **apply the decision rule ONCE**; **power** it (per-cell noise can dwarf the effect — see ledger §2.5); **report nulls** (pre-committed).
+
+---
+
+## Confirmed results (paper-ready) — 2026-06-27
+
+So far **2 confirmations + 1 reframed null** — the spread that makes the program credible.
+
+**#3 Problem-specific plugins — SUPPORTED.** On Tammes (n=50, sphere; non-smooth min-pairwise-
+angle objective with genuine headroom — Thomson screened out as too smooth), a manifold-aware
+Riemannian projected-gradient plugin vs the generic flat optimizer, paired by cold-init, 30 seeds:
+**plugin 0.499 vs generic 0.285, paired Δ = +0.214, 95% CI [+0.185, +0.242], 100% win-rate, ~30×
+faster** (0.07s vs 2.06s). Mechanism: the generic finite-difference optimizer sees ~zero gradient
+on the non-smooth objective and stalls at cold-init; the specialized smooth-surrogate + manifold
+retraction climbs. *Paper:* clean evidence that specialization beats the generic loop where the
+problem structure demands it — and is far cheaper. Data: `results/ablation-mechanism/sphere-plugins.jsonl`.
+
+**#7 Triple-verify — SUPPORTED.** Reproduces the P9/P14/P17 failure mode (a local evaluator
+drifting from truth) by injecting drift δ into one of the three independent score paths over 200
+configs: **0% false alarms at zero drift, 100% catch for δ above tolerance (≥1e-8), 0% flags below
+tolerance** (correctly tolerates numerical noise) — a textbook threshold detector. *Paper:* the
+triple-verify safeguard provably catches evaluator drift, not just anecdotally (P9/P14/P17). Tool:
+`scripts/validate_triple_verify.py`; data: `results/ablation-mechanism/triple-verify.json`.
+
+**#4 KB compounding — reframed null** (see evidence ledger): capability null, efficiency win.
 
 ---
 
