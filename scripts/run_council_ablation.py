@@ -36,7 +36,6 @@ from pathlib import Path
 
 from einstein.council import build_enriched_prompt, dispatch
 from einstein.meta_loop.ablation_runner import (
-    ALLOWED_TOOLS,
     _default_headless_run,
     _without_external_api_key,
     audit_checkout,
