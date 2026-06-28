@@ -104,6 +104,13 @@ def triple_verify_radius(centers, *, tol: float = 1e-9) -> TripleVerify:
     # feasibility: radius r actually achievable? (different KIND of check)
     r = fast
     feasible = True
+    # Red-team 2026-06-27: explicitly reject degenerate/invalid geometry — otherwise a
+    # non-positive radius makes the gap/wall checks below vacuously true, so out-of-square
+    # points, duplicate centers, and negative radii all passed `feasible=True`.
+    if r <= tol:
+        feasible = False  # duplicate/coincident centers (r≈0) or out-of-square (r<0)
+    if np.any(c < -tol) or np.any(c > 1.0 + tol):
+        feasible = False  # a center lies outside the unit square
     if len(c) >= 2:
         gaps = pdist(c)
         if np.any(gaps < 2 * r - tol):
