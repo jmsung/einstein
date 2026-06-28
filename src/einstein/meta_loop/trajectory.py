@@ -172,14 +172,23 @@ def classify(
 
 # ---------------- certificate resolution ----------------
 
-_CERT_FALSY = {"", "none", "false", "no", "0", "off", "n/a"}
+_CERT_FALSY = {
+    "", "none", "false", "no", "0", "off", "n/a", "na",
+    # placeholders — a frozen-but-unproven problem must NOT read as solved-at-floor
+    # (red-team 2026-06-27: `tbd`/`???` slipped through → false SOLVED_AT_FLOOR):
+    "tbd", "tba", "todo", "pending", "wip", "draft", "unknown", "placeholder",
+    "?", "??", "???", "xxx", "-", "--", "...",
+}
 
 
 def certificate_of(frontmatter: dict) -> str | None:
     """Resolve the `certificate:` frontmatter field to a cert name or None.
 
     Treats absent / falsy / placeholder values as *no certificate*, so a
-    problem is only ``solved-at-floor`` when a real proof is named.
+    problem is only ``solved-at-floor`` when a real proof is named. Placeholder
+    strings (``tbd``, ``???`` …) are rejected too — otherwise a typo'd/aspirational
+    certificate would falsely mark an unsolved problem as proven-at-floor and drop
+    it from the work queue.
     """
     raw = str(frontmatter.get("certificate", "")).strip()
     if raw.lower() in _CERT_FALSY:
