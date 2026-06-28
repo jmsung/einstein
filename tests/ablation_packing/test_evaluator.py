@@ -70,3 +70,21 @@ def test_cold_init_deterministic_and_in_range():
 
 def test_cold_init_varies_by_seed():
     assert not np.array_equal(ev.cold_init(12, seed=1), ev.cold_init(12, seed=2))
+
+
+# ---------------- triple-verify rejects infeasible geometry (red-team 2026-06-27) ----------------
+
+
+@pytest.mark.parametrize("centers", [
+    [[0.5, 0.5], [0.5, -0.05]],   # a center outside the unit square
+    [[0.3, 0.3], [0.3, 0.3]],     # duplicate / coincident centers (r≈0)
+    [[1.5, 1.5], [0.2, 0.2]],     # wildly out of square (r<0)
+])
+def test_triple_verify_rejects_infeasible(centers):
+    tv = ev.triple_verify_radius(np.array(centers, dtype=float))
+    assert tv.feasible is False and tv.passed is False
+
+
+def test_triple_verify_accepts_valid():
+    tv = ev.triple_verify_radius(np.array([[0.25, 0.25], [0.75, 0.75]], dtype=float))
+    assert tv.feasible is True and tv.passed is True
