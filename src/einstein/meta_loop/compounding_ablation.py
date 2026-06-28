@@ -223,6 +223,28 @@ class SessionSpec:
     #                     each replicate stays a paired Cold/Warm comparison.
 
 
+def _cap_lessons(lessons: tuple[str, ...], max_chars: int | None) -> tuple[str, ...]:
+    """Cap a lesson list to `max_chars` total by dropping whole lessons from the end
+    (never truncating one), matching RunKB.read_lessons' equal-max-context policy."""
+    if max_chars is None:
+        return tuple(lessons)
+    out: list[str] = []
+    total = 0
+    for t in lessons:
+        if total + len(t) > max_chars:
+            break
+        out.append(t)
+        total += len(t)
+    return tuple(out)
+
+
+def load_frozen_kb(kb_root: str | Path, *, max_chars: int | None = None) -> tuple[str, ...]:
+    """Load a frozen KB_A (a prior family-A Warm run's lesson directory) as a fixed
+    lesson tuple for a cross-family warm-transfer arm. The directory is read-only here
+    — the transfer arm never writes back into it, keeping A's lessons the ONE variable."""
+    return tuple(RunKB(Path(kb_root)).read_lessons(max_chars=max_chars))
+
+
 def build_session_spec(
     problem: Problem,
     arm: Arm,
@@ -231,18 +253,27 @@ def build_session_spec(
     run_kb: RunKB | None,
     max_lesson_chars: int | None = None,
     replicate: int = 0,
+    frozen_kb_lessons: tuple[str, ...] | None = None,
 ) -> SessionSpec:
     """Build the launch spec for one cell. Warm gets read access to its run KB and
     the accumulated lessons (capped); Cold gets neither. Web/personas come from
     the (constant-in-v1) arm config. `replicate` indexes the within-cell repeat used
     for variance reduction; it changes only the cold-init draw, identically for both
-    arms, so each replicate is still a paired Cold/Warm comparison."""
+    arms, so each replicate is still a paired Cold/Warm comparison.
+
+    `frozen_kb_lessons` (cross-family transfer design, pre-reg §0b): a FROZEN KB_A from
+    a different family, prepended ahead of any within-run lessons for KB-reading arms.
+    For a pure transfer cell (run_kb empty) the warm arm's knowledge IS exactly KB_A —
+    the one manipulated variable. None → unchanged within-family behavior."""
     cfg = ARM_CONFIGS[arm]
     lessons: tuple[str, ...] = ()
     kb_path: str | None = None
-    if cfg.read_kb and run_kb is not None:
-        lessons = tuple(run_kb.read_lessons(max_chars=max_lesson_chars))
-        kb_path = str(run_kb.root)
+    if cfg.read_kb:
+        within = tuple(run_kb.read_lessons(max_chars=None)) if run_kb is not None else ()
+        if run_kb is not None:
+            kb_path = str(run_kb.root)
+        frozen = tuple(frozen_kb_lessons) if frozen_kb_lessons else ()
+        lessons = _cap_lessons(frozen + within, max_lesson_chars)
     return SessionSpec(
         problem_id=problem.problem_id,
         arm=arm,
@@ -434,15 +465,21 @@ def run_arm_sequence(
         spec = None
         for r in range(max(1, replicates)):
             spec = build_session_spec(
-                problem, arm, seed, run_kb=run_kb,
-                max_lesson_chars=max_lesson_chars, replicate=r,
+                problem,
+                arm,
+                seed,
+                run_kb=run_kb,
+                max_lesson_chars=max_lesson_chars,
+                replicate=r,
             )
             res_r = solve_fn(problem, cfg, seed, spec)
             rep_results.append(res_r)
             rep_gaps.append(
                 gap_closed(
-                    res_r.score_coldinit, res_r.score_final,
-                    problem.reference_optimum, minimize=problem.minimize,
+                    res_r.score_coldinit,
+                    res_r.score_final,
+                    problem.reference_optimum,
+                    minimize=problem.minimize,
                 )
             )
         lessons_read = len(spec.accumulated_lessons)  # identical across replicates
