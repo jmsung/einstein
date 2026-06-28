@@ -42,6 +42,40 @@ def test_solver_returns_feasible_optimum_small_n():
     assert 0.0 < base < 1.0
 
 
+def test_solver_result_contract_is_complete():
+    """_solve_cutting_plane always returns a fully-populated dict; feasible => f present.
+
+    Guards the fixed path where a grid-feasible round under a non-Optimal status must not
+    be dropped to f=None, and the returned dict must never be missing keys.
+    """
+    import math
+
+    import numpy as np
+
+    from einstein.prime.lp_solver import _solve_cutting_plane
+
+    keys = _squarefree(40)
+    from sympy import mobius
+
+    seed = {k: float(mobius(k)) for k in keys}
+    ka = np.array(keys, dtype=np.float64)
+    max_n = 10 * int(ka[-1])
+    c = np.array([math.log(k) / k for k in keys])
+    from einstein.prime.lp_solver import _g_of_seed
+
+    g = _g_of_seed(seed, max_n)
+    active = sorted(set(int(i) for i in np.where(g > 0.5)[0]) | set(range(1, max_n + 1, 200)))
+    res = _solve_cutting_plane(
+        ka, c, active, max_n, ipm_tol=1e-8, time_limit=60, max_rounds=6, log=lambda *_: None
+    )
+    for key in ("f", "score", "worst", "feasible", "active", "row_dual", "rounds"):
+        assert key in res, f"missing key {key} in solver result"
+    # The invariant the fix guarantees: a feasible result carries a usable f.
+    if res["feasible"]:
+        assert res["f"] is not None
+        assert res["worst"] <= 1.0 + 1e-7
+
+
 def test_colgen_does_not_worsen_seed_base():
     from sympy import mobius
 
@@ -50,7 +84,9 @@ def test_colgen_does_not_worsen_seed_base():
     candidates = _squarefree(90)
     seed = {k: float(mobius(k)) for k in support}
     # First, the seed-support LP optimum (the baseline colgen must not fall below).
-    f0, base0, _, _ = solve_sieve_lp(support, seed, time_limit=60, max_rounds=6, log=lambda *_: None)
+    f0, base0, _, _ = solve_sieve_lp(
+        support, seed, time_limit=60, max_rounds=6, log=lambda *_: None
+    )
     pf, base, worst_g = colgen_sieve_lp(
         seed,
         candidates,

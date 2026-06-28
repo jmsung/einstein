@@ -101,7 +101,23 @@ def _solve_cutting_plane(
         h.addRows(r, np.full(r, -inf), np.full(r, 1.0), r * n, starts, idx, a.flatten())
 
     add_rows(active)
-    best = {"f": None, "score": -1e18, "worst": 0.0, "feasible": False}
+    # `best` always holds the highest-score grid-feasible point seen, so a feasible f is
+    # never lost. `feasible` means *converged* (status Optimal): only converged points are
+    # trustworthy as an optimum, so colgen gates its support-trim on this flag and never
+    # selects keys from a non-converged (time-limited) solution.
+    best = {"f": None, "score": -1e18, "worst": 0.0, "feasible": False, "active": list(active)}
+
+    def capture(f, score, worst, active, sol, converged, rnd):
+        best.update(
+            f=f.copy(),
+            score=score,
+            worst=worst,
+            active=list(active),
+            row_dual=np.array(sol.row_dual),
+            feasible=converged,
+            rounds=rnd + 1,
+        )
+
     for rnd in range(max_rounds):
         t0 = time.time()
         h.run()
@@ -114,30 +130,27 @@ def _solve_cutting_plane(
             f"  R{rnd}: status={status} base={score:.10f} worstG={worst:.10f} "
             f"viol={len(viols)} cons={len(active)} {time.time() - t0:.0f}s"
         )
-        if "Optimal" in status and worst <= 1.0 + 1e-9 and score > best["score"]:
-            best = {
-                "f": f.copy(),
-                "score": score,
-                "worst": worst,
-                "active": list(active),
-                "row_dual": np.array(sol.row_dual),
-                "feasible": True,
-                "rounds": rnd + 1,
-            }
+        converged = "Optimal" in status
+        grid_feasible = worst <= 1.0 + 1e-9
+        # Keep the best grid-feasible point. Prefer a converged one; only let a
+        # non-converged point fill an empty slot (never overwrite a converged best).
+        if grid_feasible and (
+            (converged and score > best["score"]) or (best["f"] is None and not best["feasible"])
+        ):
+            capture(f, score, worst, active, sol, converged, rnd)
         if not viols:
             best["active"] = list(active)
             best["row_dual"] = np.array(sol.row_dual)
             best["rounds"] = rnd + 1
             return best
-        if "Optimal" not in status and best["f"] is not None:
+        if not converged and best["f"] is not None:
             break
         new = [v for v in viols[:5000] if v not in set(active)]
         if not new:
             break
         active = sorted(set(active) | set(new))
         add_rows(new)
-    best.setdefault("active", list(active))
-    best.setdefault("row_dual", np.zeros(len(active)))
+    best.setdefault("row_dual", np.zeros(len(best["active"])))
     best.setdefault("rounds", max_rounds)
     return best
 

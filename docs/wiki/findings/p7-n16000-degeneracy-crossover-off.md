@@ -54,7 +54,7 @@ h.setOptionValue("run_crossover", "off")   # <-- the fix
 
 solves the same 5338×1999 LP to **Optimal in ~320s**, reproducing the leader base
 0.9962211 exactly (worst_G=1.0, zero violations). Implemented in
-[`einstein/prime/lp_solver.py`](../../src/einstein/prime/lp_solver.py).
+[`einstein/prime/lp_solver.py`](../../../src/einstein/prime/lp_solver.py).
 
 ## What this rules out / what still works
 
