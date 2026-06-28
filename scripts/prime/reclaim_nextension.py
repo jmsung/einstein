@@ -1,28 +1,22 @@
-"""P7 reclaim — warm-start LP from a leader's N=16000 support, then push N.
+"""P7 reclaim — warm-start the N=16000 sieve LP (crossover-off HiGHS), re-select keys.
 
-Experiment 9 (2026-06-28) recon showed the live lever is base-LP N-extension to
-~16000 with sparse key selection, NOT the (saturated) tolerance scale. The leaders
-MAOJIASONG/CHRONOS reach maxkey=16000; we froze at 3349.
-
-Solver lesson (this branch): a dense cutting-plane LP that starts from the FULL
-1..16000 constraint set does not converge (HiGHS IPM timed out at 311s on an
-18880x2990 dense matrix). The fix is `warm_extend.py`'s recipe — restrict the LP
-VARIABLES to a leader's ~2000-key support (not all ~9700 squarefree to 16000) and
-warm-start the CONSTRAINTS from that leader's tight points (G_seed > 0.5) plus a
-sparse sample. That keeps the LP the size of the original successful N=3350 runs.
+Experiment 9 (2026-06-28) recon showed the live lever is base-LP N-extension to ~16000
+with sparse key selection, NOT the (saturated) tolerance scale. Experiment 10 hit a
+solver wall: scipy.linprog stalls on the degenerate N=16000 LP. The fix lives in
+`einstein.prime.lp_solver.solve_sieve_lp` (HiGHS IPM, crossover OFF) — it solves the
+same LP to Optimal in ~320s.
 
 Pipeline:
-  1. Load a seed solution (default: CHRONOS, unscaled, feasible at maxC~1.0).
-  2. Variables = seed support, optionally extended with squarefree keys in
-     (maxkey_seed, N] for the N-extension test.
-  3. Warm-started sparse cutting-plane LP, margin=0 (solve to constraint <= 1).
-  4. Scale by (1+ARENA_TOL)/worst_G to sit at the tolerance band; verify on the
-     exact integer grid; report base + scaled score vs the leader.
+  1. Pool of candidate keys = union of leader supports (and/or squarefree to N).
+  2. Phase 1: solve the LP on the full pool.
+  3. Phase 2: select the top <=1999 keys by objective contribution, re-solve (the
+     cardinality cap is <=2000 squarefree coefficients).
+  4. Scale by (1+ARENA_TOL)/worst_G to the tolerance band; verify on the exact integer
+     grid; report base + scaled vs the leader.
 
 Usage:
-    uv run python scripts/prime/reclaim_nextension.py                       # re-solve CHRONOS support
-    uv run python scripts/prime/reclaim_nextension.py --extend-n 20000      # push N past 16000
-    uv run python scripts/prime/reclaim_nextension.py --seed MAOJIASONG
+    uv run python scripts/prime/reclaim_nextension.py                 # union of leaders
+    uv run python scripts/prime/reclaim_nextension.py --extend-n 20000
 """
 
 from __future__ import annotations
@@ -33,20 +27,18 @@ import json
 import math
 import os
 import sys
-import time
 from pathlib import Path
 
 import numpy as np
-from scipy.optimize import linprog
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from einstein.prime.evaluator import compute_score_only  # noqa: E402
+from einstein.prime.lp_solver import solve_sieve_lp  # noqa: E402
 from scripts.prime.optimize_prime_reclaim import build_solution, get_squarefree  # noqa: E402
-from scripts.prime.warm_extend import build_sparse, check_viols  # noqa: E402
 
 ARENA_TOL = 1e-4
-LEADER_BASE = 0.9962211  # CHRONOS / MAOJIASONG unscaled base at N=16000
-LEADER_SCALED = 0.9963197  # MAOJIASONG scaled
+LEADER_BASE = 0.9962211
+LEADER_SCALED = 0.9963197
 MB_SOL = Path(__file__).resolve().parents[2] / ".mb/problems/7-prime-number-theorem/solutions"
 
 
@@ -55,12 +47,19 @@ def log(msg: str = "") -> None:
 
 
 def load_seed(name: str) -> dict[int, float]:
-    """Load a saved leader solution by agent-name substring (k >= 2)."""
     matches = [f for f in glob.glob(str(MB_SOL / "leader-*.json")) if name in f]
     if not matches:
-        raise FileNotFoundError(f"no leader solution matching {name!r} in {MB_SOL}")
+        raise FileNotFoundError(f"no leader solution matching {name!r}")
     pf = json.load(open(sorted(matches)[-1]))["partial_function"]
     return {int(k): float(v) for k, v in pf.items() if int(k) >= 2}
+
+
+def all_leader_keys() -> set[int]:
+    keys: set[int] = set()
+    for fn in glob.glob(str(MB_SOL / "leader-*.json")):
+        pf = json.load(open(fn))["partial_function"]
+        keys.update(int(k) for k in pf if int(k) >= 2)
+    return keys
 
 
 def exact_max_constraint(pf: dict[int, float], xcap_mult: int = 10) -> float:
@@ -71,142 +70,68 @@ def exact_max_constraint(pf: dict[int, float], xcap_mult: int = 10) -> float:
     for start in range(1, x_max + 1, 200_000):
         end = min(start + 200_000, x_max + 1)
         xs = np.arange(start, end, dtype=np.int64)
-        g = (xs[:, None] // keys[None, :]).astype(np.float64) @ vals
-        best = max(best, float(g.max()))
+        best = max(best, float(((xs[:, None] // keys[None, :]).astype(np.float64) @ vals).max()))
     return best
 
 
-def g_of_seed(seed_pf: dict[int, float], max_n: int) -> np.ndarray:
-    """G_seed(n) = sum f(k)(floor(n/k) - n/k) over the seed support, n in [0, max_n]."""
-    keys = np.array(sorted(seed_pf), dtype=np.float64)
-    vals = np.array([seed_pf[int(k)] for k in keys], dtype=np.float64)
-    g = np.zeros(max_n + 1)
-    for start in range(1, max_n + 1, 100_000):
-        end = min(start + 100_000, max_n + 1)
-        ns = np.arange(start, end, dtype=np.float64)
-        a = np.floor(ns[:, None] / keys[None, :]) - ns[:, None] / keys[None, :]
-        g[start:end] = a @ vals
-    return g
-
-
-def solve_warmstarted(
-    keys: list[int],
-    seed_pf: dict[int, float],
-    *,
-    xcap_mult: int = 10,
-    time_limit: int = 600,
-    max_rounds: int = 40,
-) -> tuple[np.ndarray | None, float, float]:
-    """Warm-started cutting-plane LP. Returns (f_vec, base_score, worst_G)."""
-    n_vars = len(keys)
-    max_key = max(keys)
-    max_n = xcap_mult * max_key
-    c_obj = np.array([math.log(k) / k for k in keys], dtype=np.float64)
-    bounds = [(-10.0, 10.0)] * n_vars
-
-    g_seed = g_of_seed(seed_pf, max_n)
-    tight = [n for n in range(1, max_n + 1) if g_seed[n] > 0.5]
-    active_ns = sorted(set(tight) | set(range(1, max_n + 1, 200)))
-    log(
-        f"  vars={n_vars} maxkey={max_key} range=[1,{max_n}] tight={len(tight)} init_cons={len(active_ns)}"
-    )
-
-    margin = 0.0
-    best_f, best_score, best_worst = None, -np.inf, 0.0
-    for rnd in range(max_rounds):
-        t0 = time.time()
-        a = build_sparse(keys, active_ns)
-        b = np.full(len(active_ns), 1.0 - margin)
-        res = linprog(
-            c_obj,
-            A_ub=a,
-            b_ub=b,
-            bounds=bounds,
-            method="highs",
-            options={
-                "time_limit": time_limit,
-                "primal_feasibility_tolerance": 1e-9,
-                "dual_feasibility_tolerance": 1e-9,
-            },
-        )
-        dt = time.time() - t0
-        if not res.success:
-            log(f"  R{rnd}: FAIL {res.message} ({dt:.0f}s); margin->")
-            margin = max(margin * 2, 1e-8)
-            if margin > 0.01:
-                break
-            continue
-        score = -res.fun
-        _, worst_G, viols = check_viols(keys, res.x, max_n)
-        log(
-            f"  R{rnd}: base={score:.10f} cons={len(active_ns)} viol={len(viols)} worstG={worst_G:.10f} {dt:.0f}s"
-        )
-        if not viols:
-            return res.x.copy(), score, worst_G
-        if score > best_score:
-            best_f, best_score, best_worst = res.x.copy(), score, worst_G
-        new = [n for n in viols[:5000] if n not in set(active_ns)]
-        if not new:
-            margin = max(margin * 2, 1e-8)
-            if margin > 0.01:
-                break
-            continue
-        active_ns = sorted(set(active_ns) | set(new))
-    return best_f, best_score, best_worst
+def select_top(keys: list[int], f: np.ndarray, max_keys: int = 1999) -> list[int]:
+    contrib = sorted(((abs(f[j]) * math.log(k) / k, k) for j, k in enumerate(keys)), reverse=True)
+    return sorted(k for _, k in contrib[:max_keys])
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--seed", default="CHRONOS-0.9962211", help="leader solution name substring")
+    ap.add_argument("--seed", default="CHRONOS-0.9962211", help="warm-start seed solution")
     ap.add_argument(
-        "--extend-n", type=int, default=0, help="add squarefree keys in (maxkey_seed, N]"
+        "--extend-n", type=int, default=0, help="add squarefree keys up to N to the pool"
     )
-    ap.add_argument("--time-limit", type=int, default=600)
+    ap.add_argument("--time-limit", type=int, default=1200)
     args = ap.parse_args()
 
     seed_pf = load_seed(args.seed)
-    seed_keys = sorted(seed_pf)
-    keys = set(seed_keys)
-    label = f"seed={args.seed}"
-    if args.extend_n > max(seed_keys):
-        ext = [k for k in get_squarefree(args.extend_n) if k > max(seed_keys)]
-        keys |= set(ext)
-        label += f"+sf({max(seed_keys)},{args.extend_n}]={len(ext)}"
-    keys = sorted(keys)
+    full_seed = dict(seed_pf)
+    full_seed[1] = float(np.clip(-sum(v / k for k, v in seed_pf.items()), -10.0, 10.0))
 
-    log(f"\n{'=' * 70}\n{label}: {len(keys)} vars\n{'=' * 70}")
-    f, base, worst_G = solve_warmstarted(keys, seed_pf, time_limit=args.time_limit)
-    if f is None or worst_G <= 0:
-        log("  no feasible base solution")
+    pool = all_leader_keys()
+    label = f"union-leaders({len(pool)})"
+    if args.extend_n:
+        pool |= set(get_squarefree(args.extend_n))
+        label = f"union+sf<={args.extend_n}({len(pool)})"
+    pool = sorted(pool)
+
+    log(f"\n{'=' * 70}\n{label}: pool={len(pool)} vars (seed={args.seed})\n{'=' * 70}")
+    log("Phase 1: solve LP on full pool")
+    f1, base1, worst1, _ = solve_sieve_lp(pool, full_seed, time_limit=args.time_limit, log=log)
+    if f1 is None:
+        log("  phase-1 infeasible")
+        return
+    selected = select_top(pool, f1, 1999)
+    log(f"Phase 2: re-solve on top {len(selected)} keys (maxkey={max(selected)})")
+    f2, base2, worst2, _ = solve_sieve_lp(selected, full_seed, time_limit=args.time_limit, log=log)
+    if f2 is None:
+        log("  phase-2 infeasible")
         return
 
-    safe_scale = 1.0 + 0.999 * ((1.0 + ARENA_TOL) / worst_G - 1.0)
-    pf = build_solution(keys, f)
-    base_chk = compute_score_only(pf)
-    scaled_pf = {k: float(np.clip(v * safe_scale, -10.0, 10.0)) for k, v in pf.items()}
-    scaled = compute_score_only(scaled_pf)
-    mc_scaled = exact_max_constraint(scaled_pf)
-    feasible = mc_scaled <= 1.0 + ARENA_TOL + 1e-9
+    pf = build_solution(selected, f2)
+    base = compute_score_only({k: v for k, v in pf.items() if k >= 2})
+    safe = 1.0 + 0.999 * ((1.0 + ARENA_TOL) / worst2 - 1.0) if worst2 > 0 else 1.0
+    scaled_pf = {k: float(np.clip(v * safe, -10.0, 10.0)) for k, v in pf.items()}
+    scaled = compute_score_only({k: v for k, v in scaled_pf.items() if k >= 2})
+    mc = exact_max_constraint(scaled_pf)
+    feasible = mc <= 1.0 + ARENA_TOL + 1e-9
 
-    log(f"\n  base={base_chk:.10f}  worstG={worst_G:.10f}  scale={safe_scale:.7f}")
-    log(
-        f"  scaled={scaled:.10f}  exact maxC={mc_scaled:.10f}  feasible(<=1+{ARENA_TOL:g})={feasible}"
-    )
-    log(
-        f"  vs leader: base Δ={base_chk - LEADER_BASE:+.2e}  scaled Δ={scaled - LEADER_SCALED:+.2e}"
-    )
+    log(f"\n  base={base:.10f} (leader {LEADER_BASE:.7f}, Δ={base - LEADER_BASE:+.2e})")
+    log(f"  scale={safe:.7f} scaled={scaled:.10f} exact maxC={mc:.10f} feasible={feasible}")
+    log(f"  vs MAOJIASONG #1 {LEADER_SCALED:.7f}: scaled Δ={scaled - LEADER_SCALED:+.2e}")
 
     os.makedirs("results/problem-7-prime", exist_ok=True)
-    tag = (
-        label.replace("=", "").replace("(", "").replace("]", "").replace(",", "_").replace(" ", "")
-    )
-    out = f"results/problem-7-prime/nextension_{tag}.json"
+    out = f"results/problem-7-prime/nextension_{args.seed}_{label.split('(')[0]}.json"
     json.dump({"partial_function": {str(k): v for k, v in scaled_pf.items()}}, open(out, "w"))
     log(f"  saved -> {out}")
-    if scaled > LEADER_SCALED and feasible:
-        log(
-            f"  *** BEATS arena #1 {LEADER_SCALED:.7f} by {scaled - LEADER_SCALED:.2e} (pre triple-verify) ***"
-        )
+    if base > LEADER_BASE + 1e-9 and feasible:
+        log(f"  *** base BEATS leader by {base - LEADER_BASE:.2e} — real basin advance ***")
+    elif scaled > LEADER_SCALED and feasible:
+        log("  *** scaled edges #1 (tolerance lever) — verify before any submit ***")
 
 
 if __name__ == "__main__":
