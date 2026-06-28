@@ -26,7 +26,9 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import shutil
 import sys
+import tempfile
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -163,6 +165,7 @@ def make_solve_fn(
     max_budget_usd: float | None = None,
     telemetry: list | None = None,
     drop_api_key: bool = True,
+    transcripts_dir: str | Path | None = None,
 ) -> Callable[[Problem, ArmConfig, int, SessionSpec], SolveResult]:
     """Build the production `solve_fn` the harness drives.
 
@@ -183,34 +186,49 @@ def make_solve_fn(
     run = headless_run or _default_headless_run()
 
     def solve_fn(problem: Problem, cfg: ArmConfig, seed: int, spec: SessionSpec) -> SolveResult:
-        cwd = checkout_root / f"einstein-{cfg.arm.value}"
         family = get_family(problem.family)
         init = ev.cold_init(problem.n, _init_seed(problem.n, seed, spec.replicate))
         score_coldinit = family.score(init)
 
-        # Clear any prior result so a failed session can't reuse a stale file.
-        result_path = cwd / RESULT_FILENAME
-        if result_path.exists():
-            result_path.unlink()
+        # PER-CELL ISOLATED CWD (fixes cross-cell filesystem contamination): each cell
+        # runs in a fresh empty dir, removed after, so a later cell can never read an
+        # earlier cell's scratch — the cold arm's "no memory" guarantee is restored, and
+        # the empty dir is air-gapped by emptiness (no answers reachable). The agent
+        # writes its own numpy/scipy solver here; python/venv is env-level, not cwd-bound.
+        # (Note: not a hard sandbox — absolute-path access remains; containerize for an
+        # adversarial threat model. This closes the *accidental* channel.)
+        cell = f"{problem.problem_id}-{cfg.arm.value}-s{seed}-r{spec.replicate}"
+        cwd = Path(tempfile.mkdtemp(prefix=f"ablcell-{cell}-"))
+        try:
+            prompt = build_prompt(problem, spec, init)
+            t0 = time.monotonic()
+            kw = {
+                "allowed_tools": ALLOWED_TOOLS,
+                "timeout_seconds": timeout_seconds,
+                "output_format": "json",
+                "permission_mode": "acceptEdits",
+                "cwd": cwd,
+            }
+            if model:
+                kw["model"] = model
+            if max_budget_usd is not None:
+                kw["max_budget_usd"] = max_budget_usd
+            with _without_external_api_key(drop_api_key):
+                res = run(prompt, **kw)
+            wall = time.monotonic() - t0
 
-        prompt = build_prompt(problem, spec, init)
-        t0 = time.monotonic()
-        kw = {
-            "allowed_tools": ALLOWED_TOOLS,
-            "timeout_seconds": timeout_seconds,
-            "output_format": "json",
-            "permission_mode": "acceptEdits",
-            "cwd": cwd,
-        }
-        if model:
-            kw["model"] = model
-        if max_budget_usd is not None:
-            kw["max_budget_usd"] = max_budget_usd
-        with _without_external_api_key(drop_api_key):
-            res = run(prompt, **kw)
-        wall = time.monotonic() - t0
+            centers, lesson, techniques = parse_result(cwd, problem.n)
 
-        centers, lesson, techniques = parse_result(cwd, problem.n)
+            # Transcript log (auditability — was a channel used?): save prompt + the
+            # session's stdout per cell before the cwd is removed.
+            if transcripts_dir is not None:
+                td = Path(transcripts_dir)
+                td.mkdir(parents=True, exist_ok=True)
+                (td / f"{cell}.txt").write_text(
+                    f"PROMPT:\n{prompt}\n\n--- STDOUT ---\n{getattr(res, 'stdout', '') or ''}"
+                )
+        finally:
+            shutil.rmtree(cwd, ignore_errors=True)
 
         # HARNESS-SIDE scoring — never the agent's self-report. Infeasible/missing
         # output scores at the cold baseline (gap_closed → 0), recorded honestly.
