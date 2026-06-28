@@ -75,7 +75,22 @@ GO/NO-GO: all pass (manipulation OK, cold non-saturated 26–66%, Δ ≥ 0) → 
 **Note for paper:** the effect *halved* from the 2-seed interim (+13.3 → +6.5) as the 3rd
 seed landed — a clean illustration of why S=3 is exploratory, not confirmatory.
 
-### 2.2 Stage C — confirmatory, S=18 (216 cells) — 2026-06-27 — **FINAL**
+### 2.2-CLEAN — confirmatory RE-RUN, S=18 (216 cells), isolated cwds — 2026-06-28 — **FINAL (supersedes 2.2)**
+After the cross-cell filesystem contamination was fixed (per-cell isolated cwd, commit 457d3eb),
+the whole S=18 was re-run clean in `results/ablation-heilbronn-clean`. **The verdict held — the
+contamination was NOT the cause of the null:**
+- **H1 (capability): NOT supported.** Cold 42.9% · Warm 46.6% · mean Δ = **+3.6 pts**, 95% CI
+  **[−0.7, +7.9]** (includes 0, *barely*). Warm wins **5/6**. (Contaminated was Δ+2.9, CI[−2.3,+8.3].)
+- **H2 (compounding): NOT supported.** within-problem slope +0.006, CI [−0.022, +0.034].
+- **Efficiency (D): SUPPORTED.** cold timeout **26%** vs warm **9%** (~3×); mean wall cold 344s vs warm 255s.
+- **Noise dropped** with isolation (pooled per-cell SD 0.158 vs contaminated 0.19) → the clean CI is
+  *tighter* and the effect slightly larger (+3.6 vs +2.9), so capability is now **borderline** (lower
+  bound −0.7, right at 0) rather than clearly null — but per the pre-reg rule it does not clear 0 → inconclusive.
+- **Headline confirmed, contamination-free:** *memory buys efficiency, not capability.* The clean run
+  ≈ the contaminated run, so the cross-cell channel wasn't masking a hidden Warm advantage. The bug
+  was a real validity fix; it didn't change the science.
+
+### 2.2 Stage C — confirmatory, S=18 (216 cells) — 2026-06-27 — **SUPERSEDED by 2.2-CLEAN (was confounded by cwd contamination)**
 Mean gap_closed: **Cold 44.5% · Warm 47.4% · Δ = +2.9 pts**; Warm wins 4/6.
 
 | problem | cold% | warm% | Δ |
