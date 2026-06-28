@@ -24,6 +24,27 @@ paper_hook: "main.tex §6, §10 — external validity: the loop compounds across
 
 ---
 
+## 0. REVISED FRAMING — generalize the EFFICIENCY win (post Stage C, 2026-06-27)
+
+Stage C (S=18) found the Heilbronn *capability* effect null (Δ gap_closed CI includes 0) but a
+clean **efficiency** effect (cold timeout 26.9% vs warm 4.6%; wall 370 s vs 242 s) — see evidence
+ledger §2.7. So the thing worth generalizing is **efficiency, not capability**.
+
+**v3's generalization claim pivots accordingly:**
+- **Primary per-family DV:** the efficiency measures (timeout rate, mean wall-clock, and — once v4's
+  timestamped trajectory lands — `time_to_target`), with gap_closed as a secondary non-inferiority
+  check (warm must not score *worse*).
+- **G1-eff (level generalizes):** warm is more efficient than cold (lower timeout rate / faster) in
+  **every** run family.
+- **G2-eff (it generalizes as a property):** the efficiency advantage holds in the cross-family
+  mixed model (family random effect), not just one family.
+- Family **headroom screen** (§3) still applies, but read "headroom" as *cold must sometimes fail to
+  finish in budget* (so there's an efficiency gap to close), not only *cold scores mid-range*.
+
+Keep the §4–§7 machinery; swap the estimand from gap-Δ to the efficiency DV. Freeze before run 1.
+
+---
+
 ## 1. Why a separate v3 (the threat it kills)
 
 v2, however clean, tests **one family**. The strongest attack on the paper's
