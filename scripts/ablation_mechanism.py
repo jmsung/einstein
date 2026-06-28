@@ -21,10 +21,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 # ---------------------------------------------------------------- arm contract
@@ -111,11 +110,17 @@ def run_ablation(
         d = t.score - b.score
         deltas.append(d)
         wins += 1 if d >= 0 else 0
-        st.append(t.score); sb.append(b.score); wt.append(t.wall_s); wb.append(b.wall_s)
+        st.append(t.score)
+        sb.append(b.score)
+        wt.append(t.wall_s)
+        wb.append(b.wall_s)
         rows.append({"seed": seed, "delta": d,
                      "treatment": asdict(t), "baseline": asdict(b)})
     n = len(seeds)
-    mean = lambda x: sum(x) / len(x) if x else float("nan")
+
+    def mean(x):
+        return sum(x) / len(x) if x else float("nan")
+
     md = mean(deltas)
     ci = _bootstrap_ci(deltas)
     verdict = AblationVerdict(
@@ -126,7 +131,8 @@ def run_ablation(
         supported=(ci[0] > 0),
     )
     if out_path:
-        out = Path(out_path); out.parent.mkdir(parents=True, exist_ok=True)
+        out = Path(out_path)
+        out.parent.mkdir(parents=True, exist_ok=True)
         with out.open("w") as fh:
             fh.write(json.dumps({"verdict": asdict(verdict)}) + "\n")
             for r in rows:
@@ -152,8 +158,9 @@ def make_plugin_arms(family_name: str, n: int):
       - confirm the plugin's call signature + that it returns a comparable scored config.
     """
     import numpy as np
-    from einstein.ablation_packing import families
+
     from einstein import optimizer as opt
+    from einstein.ablation_packing import families
 
     fam = families.get_family(family_name)
     score = fam.score  # centers -> float (maximize)
