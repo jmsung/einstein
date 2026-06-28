@@ -3,10 +3,16 @@ type: question
 author: agent
 drafted: 2026-06-28
 asked_by: agent
-status: open
+status: answered
+answer_finding: ../findings/p7-n16000-degeneracy-crossover-off.md
 related_problems: [P7]
 related_concepts: [sieve-theory-as-lp.md, lp-cutting-plane-warmstart.md]
 ---
+
+> **Answered (2026-06-28):** the LP is tractable — the wall was a *degenerate optimal
+> face* (Mertens identity binds ~2600 constraints), and HiGHS default crossover stalls
+> on it. Fix: `solver=ipm`, `run_crossover=off` → solves in ~320s. See
+> [p7-n16000-degeneracy-crossover-off](../findings/p7-n16000-degeneracy-crossover-off.md).
 
 # How do the leaders solve the P7 base LP at N=16000 fast, when our cutting-plane stack walls?
 
