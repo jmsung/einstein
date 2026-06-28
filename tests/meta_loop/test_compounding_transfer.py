@@ -1,6 +1,89 @@
 """Tests for the cross-family frozen-KB injection path (pre-reg §0b transfer design)."""
 
 from einstein.meta_loop import compounding_ablation as ca
+from einstein.meta_loop.trajectory import TrajectoryPoint
+
+
+def _mock_solve_fn(*, warm_bonus: float = 0.5):
+    """A no-LLM solve_fn: warm cells (lessons present) close more of the gap than cold.
+    Lets us test the transfer orchestration deterministically."""
+
+    def solve_fn(problem, cfg, seed, spec):
+        read = len(spec.accumulated_lessons)
+        final = problem.reference_optimum if read else (0.5 * problem.reference_optimum)
+        return ca.SolveResult(
+            trajectory=[TrajectoryPoint(cycle_id=0, best_score=final)],
+            score_coldinit=0.0,
+            score_final=final,
+            lesson_text=f"lesson for {problem.problem_id} (read={read})",
+            attempted_techniques={"slsqp"},
+            wall_clock_s=1.0,
+        )
+
+    return solve_fn
+
+
+def _fam(family, ids):
+    return [
+        ca.Problem(
+            problem_id=pid,
+            n=8,
+            sequence_index=i,
+            reference_optimum=1.0,
+            statement="maximize",
+            family=family,
+        )
+        for i, pid in enumerate(ids)
+    ]
+
+
+def test_run_transfer_experiment_pairs_cold_and_warm_transfer(tmp_path):
+    a = _fam("heilbronn_triangle", ["heil-0", "heil-1"])
+    b = _fam("tammes_sphere", ["tam-0"])
+    out = ca.run_transfer_experiment(
+        a,
+        b,
+        seeds=[1, 2],
+        solve_fn=_mock_solve_fn(),
+        results_dir=tmp_path,
+        replicates=1,
+    )
+    recs = out["records"]
+    # 2 seeds × 1 B-problem × {cold, warm_transfer} = 4 records
+    assert len(recs) == 4
+    assert out["family_a"] == "heilbronn_triangle" and out["family_b"] == "tammes_sphere"
+    cold = [r for r in recs if r.arm == "cold"]
+    warm = [r for r in recs if r.arm == "warm_transfer"]
+    assert len(cold) == 2 and len(warm) == 2
+    # The one variable: warm-transfer read KB_A lessons; cold read none.
+    assert all(r.lessons_read == 0 for r in cold)
+    assert all(r.lessons_read == len(a) for r in warm)  # KB_A has one lesson per A problem
+    # Warm-transfer closes more gap than cold (the mock's manipulation).
+    assert all(r.gap_closed == 0.5 for r in cold)
+    assert all(r.gap_closed == 1.0 for r in warm)
+    # KB_A hash is recorded and stable per seed.
+    assert set(out["kb_a_hashes"]) == {1, 2}
+    assert all(r.kb_a_hash == out["kb_a_hashes"][r.seed] for r in recs)
+
+
+def test_headroom_probe_flags_in_band_families(tmp_path):
+    def solve_fn(problem, cfg, seed, spec):
+        # easy family closes ~0.95 of the gap; medium ~0.5; hard ~0.05
+        frac = {"easy": 0.95, "medium": 0.5, "hard": 0.05}[problem.family]
+        return ca.SolveResult(
+            trajectory=[TrajectoryPoint(0, frac)],
+            score_coldinit=0.0,
+            score_final=frac * problem.reference_optimum,
+            lesson_text=None,
+        )
+
+    problems = (
+        _fam("easy", ["e0", "e1"]) + _fam("medium", ["m0", "m1"]) + _fam("hard", ["h0", "h1"])
+    )
+    out = ca.headroom_probe(problems, solve_fn, seeds=[1], results_dir=tmp_path, band=(0.2, 0.8))
+    assert out["eligible"] == {"easy": False, "medium": True, "hard": False}
+    medium_rows = [r for r in out["results"] if r.family == "medium"]
+    assert all(r.in_band for r in medium_rows)
 
 
 def _problem() -> ca.Problem:
@@ -12,6 +95,23 @@ def _problem() -> ca.Problem:
         statement="maximize ...",
         family="autocorrelation_seq",
     )
+
+
+def test_load_problems_supports_per_problem_family_and_inline_statement(tmp_path):
+    cfg = tmp_path / "transfer.yaml"
+    cfg.parent.mkdir(parents=True, exist_ok=True)
+    cfg.write_text(
+        "family: heilbronn_triangle\n"
+        "minimize: false\n"
+        "problems:\n"
+        "  - id: a0\n    n: 7\n    sequence_index: 0\n    reference_optimum: 1.0\n"
+        "    statement: build KB here\n"
+        "  - id: b0\n    family: tammes_sphere\n    n: 12\n    sequence_index: 1\n"
+        "    reference_optimum: 1.05\n    statement: transfer target\n"
+    )
+    probs = ca.load_problems(cfg)
+    assert [p.family for p in probs] == ["heilbronn_triangle", "tammes_sphere"]
+    assert probs[1].statement == "transfer target"
 
 
 def test_load_frozen_kb_reads_prior_run(tmp_path):
