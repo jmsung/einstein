@@ -49,7 +49,7 @@ nulls** — pre-committed, no quiet re-runs.
 | Triple-verification | inject evaluator drift, 200 configs | **Confirmed** — 0% false alarm, 100% catch above tolerance |
 | Trajectory classifier | 13 labeled trajectories, all classes + edges | **Confirmed** — 100% accuracy |
 | Adaptive scheduling | boost-winners vs round-robin, Tammes n=50, 30 seeds | **Null** — Δ=−0.0008 [−0.010,+0.009] |
-| Compounding knowledge base | Cold vs Warm, Heilbronn, S=18 (216 sessions) | **Null on capability; efficiency win** |
+| Compounding knowledge base | Cold vs Warm, Heilbronn, S=18 (216 sessions, contamination-free re-run) | **Null on capability; efficiency win** |
 
 **Problem-specific plugins help, decisively.** On the Tammes problem (maximize the minimum
 pairwise angle of n points on the sphere; non-smooth, so a generic finite-difference optimizer
@@ -80,13 +80,20 @@ Both plateau well below the specialized plugin. The *pool* sets the ceiling; cle
 **Cross-problem memory helps efficiency, not capability.** Our largest test (pre-registered, 216
 air-gapped sessions) compared an agent that accumulates and reuses human-readable lessons (Warm)
 against an identical agent whose memory is wiped between problems (Cold), on the Heilbronn family.
-On solution *quality* the loop is null: mean gap-closed advantage +2.9 points, 95% CI
-[−2.3, +8.3] — and crucially the apparent advantage *shrank as statistical power grew*
-(+13 → +6.5 → +2.9 across seed counts), the signature of a near-zero true effect. But on
-*efficiency* the loop wins cleanly: the Warm agent exceeds its time budget 4.6% of the time
-versus 26.9% for Cold (~6× fewer), and finishes ~35% faster (242 s vs 370 s). Memory lets the
-agent skip rediscovery rather than reach a higher ceiling — an efficiency claim, not a capability
-claim, and we frame it as such.
+On solution *quality* the loop is null: mean gap-closed advantage **+3.6 points, 95% CI
+[−0.7, +7.9]** — the interval includes zero (Warm wins 5 of 6 problems, so the effect is
+positive-but-borderline, not clearly absent). But on *efficiency* the loop wins cleanly: the Warm
+agent exceeds its time budget **9% of the time versus 26% for Cold (~3× fewer)**, and finishes
+~26% faster (255 s vs 344 s). Memory lets the agent skip rediscovery rather than reach a higher
+ceiling — an efficiency claim, not a capability claim, and we frame it as such.
+
+This result is **contamination-free**: an initial run was confounded by a cross-cell filesystem
+channel (the Cold arm could read earlier cells' scratch, violating its "no memory" guarantee). We
+fixed it (per-cell isolated working directories) and re-ran the full S=18. The clean verdict
+(+3.6) closely matched the confounded one (+2.9), establishing that the channel was *not* masking a
+Warm advantage — the capability null is a property of the loop, not an artifact. (Isolation also
+lowered per-cell noise, tightening the interval, which is why the clean effect is borderline rather
+than clearly null.)
 
 ## 6.4 What the pattern says
 
