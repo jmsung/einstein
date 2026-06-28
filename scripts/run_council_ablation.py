@@ -65,7 +65,9 @@ def _trunc(s: str, n: int = 400) -> str:
 
 def gather_council_questions(
     *,
-    problem_id: int,
+    statement: str,
+    family: str,
+    n: int,
     model: str,
     timeout_s: int,
     cap_usd: float,
@@ -77,17 +79,30 @@ def gather_council_questions(
     so the literature block is "(no relevant hits)" — isolates persona framing
     from the KB claim. Air-gapped: a no-web allow-list (`ALLOWED_TOOLS`) and the
     Claude Code login (stale ANTHROPIC_API_KEY dropped).
+
+    IMPORTANT: the personas are given the ACTUAL problem statement and told to ignore
+    any arena problem-number framing — `build_enriched_prompt` labels prompts "Problem
+    P{id}", and a bare id (e.g. 13) makes a persona reason about arena problem 13
+    (edges-vs-triangles) instead of the Heilbronn instance. The prepended statement +
+    disclaimer is what keeps them on the real problem.
     """
     run = _default_headless_run()
     personas = dispatch(PROBLEM_CATEGORY, path=COUNCIL_FILE)
     if not personas:
         raise SystemExit(f"no personas dispatched from {COUNCIL_FILE}")
+    preamble = (
+        "## The exact problem you are advising on\n\n"
+        f"{statement.strip()}\n\n"
+        f"(Family: {family}, n={n}. Reason ONLY about the problem stated above. Any "
+        "'Problem P<number>' label below is an internal id, NOT an arena problem — do "
+        "not map it to a different problem.)\n\n"
+    )
     questions: dict[str, str] = {}
     telem: list[dict] = []
     for p in personas:
-        prompt = build_enriched_prompt(
+        prompt = preamble + build_enriched_prompt(
             p,
-            problem_id=problem_id,
+            problem_id=n,
             problem_category=PROBLEM_CATEGORY,
             hits=[],  # WIKI-LESS: force "(no relevant hits)" (qmd IS on PATH here)
             qmd_runner=None,
@@ -167,7 +182,9 @@ def main() -> int:
     # ---- COUNCIL-ON: gather wiki-less persona questions ----
     print("\n[1] Council dispatch (wiki-less personas writing questions)…")
     questions, council_telem = gather_council_questions(
-        problem_id=problem.n,
+        statement=problem.statement,
+        family=problem.family,
+        n=problem.n,
         model=args.model,
         timeout_s=args.persona_timeout,
         cap_usd=args.persona_cap,
