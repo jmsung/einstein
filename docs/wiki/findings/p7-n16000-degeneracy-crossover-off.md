@@ -70,10 +70,16 @@ solves the same 5338×1999 LP to **Optimal in ~320s**, reproducing the leader ba
   support just returns their base — they are LP-optimal on it.
   **Re-selection via primal cutting planes FAILED** (Exp 12): a support disjoint from
   the seed makes each round discover thousands of new violations and re-solve a growing
-  constraint set with no warm basis, so it times out (R2 at 1999×15338 returned a
-  garbage non-converged point). The correct, still-untried tool is **column generation**
-  — keep the constraint set warm, price out new keys by dual reduced cost
-  (`colgen_prime.py`), add only improving columns. That is the next door.
+  constraint set with no warm basis, so it times out.
+  **Column generation also fails to beat (Exp 14)**: pricing all squarefree candidates
+  ≤18000 by dual reduced cost, the largest |rc| was only **2.35e-5** — the leaders'
+  ~2000-key support to maxkey 16000 is *near LP-optimal for the cardinality cap*, so no
+  key meaningfully improves it. And adding even 150 columns still explodes the
+  constraint set (34114 new violations → timeout), because each new key binds at all its
+  multiples. **Conclusion: the field's 0.99622 base is at/near the true LP ceiling; it
+  is reproducible but not beatable by re-selection or column generation.** A real beat
+  would need a fundamentally different solver (dual/Lagrangian, or persistent warm-basis
+  column adds) or a non-LP structural insight — open, out of current reach.
 
 ## Wisdom hook
 A degenerate LP that "won't solve" is often the solver insisting on a vertex it doesn't
