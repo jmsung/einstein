@@ -94,6 +94,7 @@ def main(argv: list[str]) -> int:
         max_budget_usd=args.max_budget_usd,
         telemetry=telemetry,
         drop_api_key=not args.use_api_key,
+        transcripts_dir=Path(args.results_dir) / "transcripts",  # per-cell audit log
     )
 
     cap = f"${args.max_budget_usd}/session" if args.max_budget_usd else "uncapped"

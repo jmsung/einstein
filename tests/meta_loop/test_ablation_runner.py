@@ -91,7 +91,12 @@ def test_prompt_embeds_cold_init_and_tools_have_no_web(tmp_path):
     assert "WebSearch" not in ar.ALLOWED_TOOLS and "WebFetch" not in ar.ALLOWED_TOOLS
     assert "Task" not in ar.ALLOWED_TOOLS
     assert fake.last_kw["allowed_tools"] == ar.ALLOWED_TOOLS
-    assert fake.last_kw["cwd"] == root / "einstein-cold"
+    # cwd is a fresh PER-CELL isolated dir (not the shared checkout) — this is the
+    # fix for cross-cell filesystem contamination: each cell starts in an empty dir
+    # so a later cell can't read an earlier cell's scratch.
+    cwd = Path(fake.last_kw["cwd"])
+    assert cwd != root / "einstein-cold"
+    assert cwd.name.startswith("ablcell-")
     assert "starting configuration" in fake.last_prompt
 
 
