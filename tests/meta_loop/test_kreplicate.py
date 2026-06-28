@@ -11,6 +11,8 @@ import statistics
 from dataclasses import dataclass
 from pathlib import Path
 
+import pytest
+
 from einstein.meta_loop import compounding_ablation as ca
 
 
@@ -48,11 +50,11 @@ def test_replicates_average_gap_and_preserve_kb_invariant(tmp_path):
         order=ca.cyclic_order(_problems(), 0), replicates=3,
     )
     for r in recs:
-        assert r.gap_closed == 0.2  # mean of 0.1, 0.2, 0.3
+        assert r.gap_closed == pytest.approx(0.2)  # mean of 0.1, 0.2, 0.3
         assert r.replicates == 3
-        assert r.gap_closed_reps == (0.1, 0.2, 0.3)
-        assert r.gap_closed_std == statistics.stdev([0.1, 0.2, 0.3])
-        assert r.wall_clock_s == 3.0  # summed across replicates (total cell compute)
+        assert r.gap_closed_reps == pytest.approx((0.1, 0.2, 0.3))
+        assert r.gap_closed_std == pytest.approx(statistics.stdev([0.1, 0.2, 0.3]))
+        assert r.wall_clock_s == pytest.approx(3.0)  # summed across replicates (total cell compute)
     # one lesson per problem, and it is the FIRST replicate's (banked-count intact)
     assert kb.lesson_count() == 2
     for p in sorted((tmp_path / "warm-kb").glob("lesson-*.md")):
@@ -66,10 +68,10 @@ def test_replicates_one_reproduces_legacy(tmp_path):
         order=ca.cyclic_order(_problems(), 0), replicates=1,
     )
     for r in recs:
-        assert r.gap_closed == 0.1  # rep0 only
+        assert r.gap_closed == pytest.approx(0.1)  # rep0 only
         assert r.replicates == 1
         assert r.gap_closed_std == 0.0
-        assert r.gap_closed_reps == (0.1,)
+        assert r.gap_closed_reps == pytest.approx((0.1,))
 
 
 def test_to_dict_carries_replicate_fields(tmp_path):
@@ -80,7 +82,7 @@ def test_to_dict_carries_replicate_fields(tmp_path):
     )
     d = recs[0].to_dict()
     assert d["replicates"] == 2
-    assert d["gap_closed_reps"] == [0.1, 0.2]
+    assert d["gap_closed_reps"] == pytest.approx([0.1, 0.2])
     assert "gap_closed_std" in d
 
 
@@ -91,4 +93,4 @@ def test_default_replicates_is_legacy(tmp_path):
         ca.Arm.WARM, 0, _problems(), _solve_fn, kb,
         order=ca.cyclic_order(_problems(), 0),
     )
-    assert all(r.replicates == 1 and r.gap_closed == 0.1 for r in recs)
+    assert all(r.replicates == 1 and r.gap_closed == pytest.approx(0.1) for r in recs)
