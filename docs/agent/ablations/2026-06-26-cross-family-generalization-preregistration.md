@@ -86,6 +86,37 @@ efficiency DV, cross-family mixed model (G1/G2). Cheaper; shows the #4 effect is
 
 ---
 
+## 0c. MODEL STRENGTH AS A FACTOR — the wisdom×capability gradient  (set 2026-06-28)
+
+Run the transfer test (and replication) at **TWO model tiers — Haiku and Opus** — because the
+deepest hypothesis is that *the value of accumulated wisdom decreases as raw capability rises*
+(a weak agent needs the notes; a strong one already knows the method). This is the question that
+matters for whether the wiki investment keeps paying off as models improve, and it answers the
+external-validity worry ("Haiku isn't the agent we ship — Opus is").
+
+- **Factor:** `model ∈ {haiku, opus}`. **Primary interaction H-model:** the transfer/within-family
+  Δ is **larger for Haiku than Opus** (wisdom helps the weaker agent more). Test the model×arm
+  interaction, not just each model alone.
+- **Model-MATCHED difficulty (required).** Opus *saturates* the easy families (solves cold →
+  zero headroom → wrong-reason null), so you cannot run both models on the same instances. Each
+  model runs problems where **it** has cold headroom (cold sometimes fails in budget): Haiku on
+  the current band (Heilbronn n=11–16 / Tammes), Opus on **harder** instances/families found by a
+  **per-model headroom probe**. Each model is tested in its own flailing regime — "does wisdom
+  help this model where it struggles."
+- **THE RIGOR CATCH + fix.** Matched-difficulty confounds *model* with *difficulty* — a Haiku>Opus
+  gap could be "weaker model" OR "easier problems." Mitigation: also run an **OVERLAP band** — a
+  difficulty hard enough that Opus still has headroom yet not impossible for Haiku — and compare
+  the two models **within that band**. The overlap gives the clean, difficulty-controlled model
+  effect; the matched-difficulty arms give the broader picture. Report both; lead with the overlap
+  for the causal model claim.
+- **Cost:** Opus ≈ 2–3× Haiku/call → the Opus tier dominates the budget. Stage Haiku first (cheaper,
+  has #4 continuity); add Opus only if Haiku shows the within-tier effect worth chasing, OR run the
+  overlap band on both as the minimal model-comparison if budget is tight.
+- **Don't:** run Opus on the *current easy* families (saturates), or swap the whole program to Opus
+  (loses the #4 Haiku comparison, headroom, and budget).
+
+---
+
 ## 1. Why a separate v3 (the threat it kills)
 
 v2, however clean, tests **one family**. The strongest attack on the paper's
