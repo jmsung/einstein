@@ -95,8 +95,9 @@ def test_prompt_embeds_cold_init_and_tools_have_no_web(tmp_path):
     # fix for cross-cell filesystem contamination: each cell starts in an empty dir
     # so a later cell can't read an earlier cell's scratch.
     cwd = Path(fake.last_kw["cwd"])
-    assert cwd != root / "einstein-cold"
-    assert cwd.name.startswith("ablcell-")
+    assert cwd != root / "einstein-cold"            # not the shared checkout root
+    assert "_cells" in cwd.parts                     # isolated per-cell subdir
+    assert (root / "einstein-cold") in cwd.parents   # but inside the checkout (env resolves)
     assert "starting configuration" in fake.last_prompt
 
 
