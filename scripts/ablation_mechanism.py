@@ -281,15 +281,66 @@ def make_sphere_plugin_arms(problem: str, n: int):
     return plugin, generic
 
 
-def make_adaptive_arms(family_name: str, n: int, iters: int = 20):
-    """Claim #2: adaptive strategy scheduling vs fixed/uniform round-robin.
+def make_adaptive_arms(family_name: str, n: int, iters: int = 8, picks: int = 2):
+    """Claim #2: adaptive strategy scheduling (boost recent winners) vs uniform
+    round-robin, isolated — same strategy pool, same cold-init, same budget (picks ×
+    iters strategy-calls), only the SELECTION differs.
 
-    Treatment: let Optimizer.select_strategies() self-select (boosts recent winners).
-    Baseline: pass an explicit fixed strategy list every iteration (uniform).
-    Same plugin pool, same cold-init, same budget -> isolates the SCHEDULING.
-    TODO: confirm select_strategies() works without a knowledge.yaml, or stub priors.
+    Both arms run the generic Optimizer over `iters` iterations on Tammes (n on S^2),
+    each iteration running `picks` of the 4 built-in strategies. The pool has real
+    effectiveness variance on this NON-SMOOTH objective: the gradient/simplex strategies
+    (lbfgsb, nelder_mead) stall (finite-diff sees ~zero gradient), while the
+    derivative-free ones (hillclimb, perturbation) make progress — so concentrating
+    compute on the winners (adaptive) CAN beat spreading it uniformly. That variance is
+    the headroom; if the pool were uniform-effectiveness there'd be nothing to schedule.
+
+    - adaptive (treatment): `o.select_strategies(picks)` each iter — boosts strategies
+      that improved in recent history (+3.0), so it learns to favor the working ones.
+    - uniform (baseline): deterministic round-robin over the 4-strategy pool, `picks`
+      per iter, ignoring history — every strategy gets equal airtime.
     """
-    raise NotImplementedError("Symmetric to make_plugin_arms; wire after #3 is validated.")
+    import numpy as np
+
+    from einstein import optimizer as opt
+
+    if family_name != "tammes":
+        raise NotImplementedError(
+            f"adaptive ablation family {family_name!r} not wired; use 'tammes' "
+            "(its 4-strategy pool has the effectiveness variance the test needs).")
+
+    dim = 3
+    pool = list(opt.BUILTIN_STRATEGIES)  # hillclimb, nelder_mead, lbfgsb, perturbation
+
+    def cold_init(seed: int):
+        rng = np.random.default_rng(seed)
+        x = rng.standard_normal((n, dim))
+        return list((x / np.linalg.norm(x, axis=1, keepdims=True)).flatten())
+
+    def score(flat) -> float:
+        pts = np.asarray(flat, dtype=float).reshape(n, dim)
+        norms = np.linalg.norm(pts, axis=1, keepdims=True)
+        norms[norms < 1e-12] = 1e-12
+        pts = pts / norms
+        gram = pts @ pts.T
+        iu = np.triu_indices(n, 1)
+        return float(np.sqrt(2.0 * (1.0 - np.clip(gram[iu], -1.0, 1.0)).min()))
+
+    def _run(seed: int, adaptive: bool) -> ArmResult:
+        o = opt.Optimizer(score_fn=score, direction="maximize", category="continuous")
+        cur = cold_init(seed)
+        t0 = time.time()
+        for i in range(iters):
+            if adaptive:
+                strat = o.select_strategies(max_strategies=picks)  # boosts recent winners
+            else:
+                k = len(pool)  # deterministic uniform round-robin
+                strat = [pool[(picks * i + j) % k] for j in range(picks)]
+            rec = o.run_iteration(cur, strategies=strat, seed=seed + i)
+            cur = rec["best_solution"]
+        return ArmResult(seed=seed, score=o.best_score, wall_s=time.time() - t0,
+                         extra={"iters": iters, "picks": picks})
+
+    return (lambda s: _run(s, adaptive=True)), (lambda s: _run(s, adaptive=False))
 
 
 # ---------------------------------------------------------------- CLI
@@ -315,8 +366,8 @@ def main(argv: list[str]) -> int:
         lt = f"plugin-riemann/{args.problem}-n{args.n}"
         lb = f"generic-flat/{args.problem}-n{args.n}"
     else:
-        treatment, baseline = make_adaptive_arms(args.family, args.n)
-        lt, lb = "adaptive", "uniform"
+        treatment, baseline = make_adaptive_arms(args.problem, args.n)
+        lt, lb = f"adaptive/{args.problem}-n{args.n}", f"uniform/{args.problem}-n{args.n}"
 
     out = args.out or f"results/ablation-mechanism/{args.claim}.jsonl"
     verdict = run_ablation(treatment, baseline, seeds,

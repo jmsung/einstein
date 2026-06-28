@@ -37,7 +37,7 @@ the paper; only un-tested assertion is weak.
 | # | Mechanism (README claim) | Falsifiable claim | Ablation: toggle ONE var | Primary DV | Key confound | Cost | Status | Result |
 |---|---|---|---|---|---|---|---|---|
 | 1 | **Council of personas** | persona *questions* before optimizing improve outcomes | council-on vs off (solve directly) | gap_closed + time-to-target | **budget-match** (off-arm gets equal tokens) | 💸 LLM | asserted | — |
-| 2 | **Adaptive optimizer** (boost recent winners) | adaptive scheduling > fixed/uniform | `select_strategies` adaptive vs uniform/round-robin | score @ fixed budget | isolate scheduling from plugin set | 🟢 code | asserted | — |
+| 2 | **Adaptive optimizer** (boost recent winners) | adaptive scheduling > fixed/uniform | `select_strategies` adaptive vs uniform/round-robin | score @ fixed budget | isolate scheduling from plugin set | 🟢 code | **DONE✓ NULL** | Tammes n=50, 30 seeds, 8 iters × 2 picks: adaptive **0.391 vs uniform 0.392**, Δ=**−0.0008** CI [−0.010,+0.009], 40% win. Pool sets the ceiling; scheduling doesn't move it. (null in this regime) |
 | 3 | **Problem-specific plugins** | each plugin > generic optimizer on its family | plugin vs generic baseline, per family | score / time-to-target | **family must have generic headroom** (NOT saturated) | 🟢 code | **DONE✓ SUPPORTED** | Tammes n=50, 30 seeds: Riemannian plugin **0.499 vs generic 0.285**, Δ=**+0.214** CI [+0.185,+0.242], **100% win**, ~30× faster. Thomson screened out (smooth→no headroom). |
 | 4 | **KB cross-problem wisdom** | curated wiki > firewalled web > model-only | 3-arm (Cold/Warm is the 2-arm slice) | gap_closed + efficiency | air-gap, paired, power | 💸 LLM | **DONE✓ (2-arm) / reframed** | capability NULL; **efficiency win** (warm timeout 4.6% vs cold 26.9%) |
 | 5 | **AlphaEvolve mutate engine** | mutate-K + strict-improve climbs on *stuck* problems | mutate-engine vs random-restart | Δ over champion @ budget | only on stuck-WITH-headroom problems | 🟡 code-ish | asserted | — |
@@ -58,9 +58,22 @@ the paper; only un-tested assertion is weak.
 
 ---
 
-## Confirmed results (paper-ready) — 2026-06-27
+## Results (paper-ready) — 2026-06-27
 
-So far **2 confirmations + 1 reframed null** — the spread that makes the program credible.
+So far **2 confirmations + 2 nulls** — exactly the spread that makes the program credible
+(not "everything we built works"). Confirmed: specialization (#3) + the verification safeguard
+(#7). Null: cross-problem memory on *capability* (#4, → efficiency) + adaptive scheduling (#2).
+Pattern emerging: **what the agent KNOWS/uses (plugins, verification) matters; cleverness in HOW
+it schedules/remembers is marginal in these regimes.**
+
+**#2 Adaptive scheduling — NULL.** Tammes n=50, 30 seeds, 8 iters × 2 picks from the 4-strategy
+pool (real effectiveness variance: gradient strategies stall on the non-smooth objective,
+derivative-free ones work). Adaptive (boost recent winners) **0.391 vs uniform round-robin
+0.392**, Δ=−0.0008, CI [−0.010,+0.009], 40% win-rate, ~equal wall. Both plateau ~0.39 (≪ plugin
+0.499). *Paper:* the strategy POOL sets the ceiling; bandit-style scheduling over it doesn't move
+the result here. Honest null (this regime — larger pools / more iters untested). Data:
+`results/ablation-mechanism/adaptive.jsonl`.
+
 
 **#3 Problem-specific plugins — SUPPORTED.** On Tammes (n=50, sphere; non-smooth min-pairwise-
 angle objective with genuine headroom — Thomson screened out as too smooth), a manifold-aware
