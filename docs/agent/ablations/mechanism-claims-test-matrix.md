@@ -1,0 +1,80 @@
+---
+type: claims-test-matrix
+author: hybrid
+drafted: 2026-06-27
+status: live                 # the master tracker for "prove every JSAgent claim with a controlled test"
+paper_hook: "main.tex — every claimed mechanism gets a controlled-evidence row or an honest null"
+relates:
+  - results-compounding-evidence.md          # the per-result evidence ledger (numbers land there)
+  - 2026-06-26-heilbronn-haiku-compounding-preregistration.md   # v2 (claim 4, done)
+  - 2026-06-26-cross-family-generalization-preregistration.md   # v3
+  - 2026-06-27-longsequence-compounding-preregistration.md      # v4
+purpose: "Turn each JSAgent README claim into a falsifiable, pre-registered, controlled test. Track status + result for every one so the paper's claims are EVIDENCE-BACKED, not asserted. Nothing tested gets lost; every result flows to the evidence ledger and the paper."
+---
+
+# Mechanism-claims test matrix — prove (or honestly reframe) every JSAgent claim
+
+**Principle (learned from claim 4):** a plausible mechanism may NOT survive a powered controlled
+test — the Cold/Warm "memory helps capability" claim went *null* and reframed to *efficiency*.
+So every mechanism below gets the same treatment: isolate it (toggle ONE variable), control the
+confound, power it, pre-register, apply the decision rule ONCE, and **report the result whatever
+it is.** Outcome is either a *controlled-evidence* claim or an *honest reframing* — both strengthen
+the paper; only un-tested assertion is weak.
+
+## Status legend
+`asserted` (claimed, untested) · `designed` (pre-reg written) · `running` · `DONE✓` (verdict in) · `reframed` (claim changed by data)
+
+## Recording protocol (so nothing is lost, all → paper)
+1. Each claim gets a pre-reg (or a §here for cheap code tests) before data.
+2. Numbers land in `results-compounding-evidence.md` (or a sibling `results-<claim>.md`).
+3. This matrix's **Status / Result / Paper-§** columns are updated the moment a verdict lands.
+4. Figures/tables enumerated per claim feed the paper directly.
+
+---
+
+## The matrix
+
+| # | Mechanism (README claim) | Falsifiable claim | Ablation: toggle ONE var | Primary DV | Key confound | Cost | Status | Result |
+|---|---|---|---|---|---|---|---|---|
+| 1 | **Council of personas** | persona *questions* before optimizing improve outcomes | council-on vs off (solve directly) | gap_closed + time-to-target | **budget-match** (off-arm gets equal tokens) | 💸 LLM | asserted | — |
+| 2 | **Adaptive optimizer** (boost recent winners) | adaptive scheduling > fixed/uniform | `select_strategies` adaptive vs uniform/round-robin | score @ fixed budget | isolate scheduling from plugin set | 🟢 code | asserted | — |
+| 3 | **Problem-specific plugins** | each plugin > generic optimizer on its family | plugin vs generic baseline, per family | score / time-to-target | **family must have generic headroom** (NOT saturated) | 🟢 code | designed (harness skeleton) | — |
+| 4 | **KB cross-problem wisdom** | curated wiki > firewalled web > model-only | 3-arm (Cold/Warm is the 2-arm slice) | gap_closed + efficiency | air-gap, paired, power | 💸 LLM | **DONE✓ (2-arm) / reframed** | capability NULL; **efficiency win** (warm timeout 4.6% vs cold 26.9%) |
+| 5 | **AlphaEvolve mutate engine** | mutate-K + strict-improve climbs on *stuck* problems | mutate-engine vs random-restart | Δ over champion @ budget | only on stuck-WITH-headroom problems | 🟡 code-ish | asserted | — |
+| 6 | **Trajectory classifier** | labels improving/solved/stuck correctly | accuracy vs ground truth (not A/B) | classification accuracy | label leakage | 🟢 valid. | asserted | — |
+| 7 | **Triple-verify** | catches fake scores / evaluator drift | inject drifted evaluators + bad configs | catch rate | — (real saves: P9/P14/P17) | 🟢 valid. | partly evidenced (anecdotal) | P9/P14/P17 |
+| 8 | **Meta-learning "evolves over time"** | the loop makes the agent measurably better across cycles | = the controlled compounding slices (v2/v3/v4) | gap/efficiency vs cycle | arena trajectory is observational | 💸 LLM | in progress (via 4) | — |
+
+## Strategic order (cheap-deterministic → expensive-LLM → validation)
+1. **🟢 #3 plugins, #2 adaptive** — pure optimizer code, no LLM → thousands of seeds, tight CIs, minutes, ~free, most likely to CONFIRM. Do first. (#3 harness skeleton: `scripts/ablation_mechanism.py`.)
+2. **🟡 #5 mutate engine** — code-ish; needs stuck-with-headroom problem set.
+3. **🟢 #6 classifier, #7 triple-verify** — validation/accuracy framing, cheap; #7 partly writable from existing saves.
+4. **💸 #1 council, #4 3-arm KB, #8 system** — LLM-in-loop, expensive, riskiest (claims may not survive). Use the `compounding_ablation` harness; budget S×k seeds each.
+
+## Design rules every test inherits (from claim 4)
+- **Headroom screen** — the family/regime must let the *baseline* fail (so there's room to show an effect); a saturated family gives a null for the wrong reason (why circle packing is a bad plugin-ablation target despite being "clean").
+- **Budget-match** — any arm that does extra work (council, KB) must be compared at equal total compute, else "it helps" = "more compute."
+- **Paired** by seed/cold-init; **pre-register**; **apply the decision rule ONCE**; **power** it (per-cell noise can dwarf the effect — see ledger §2.5); **report nulls** (pre-committed).
+
+---
+
+## Architecture call-map (so the harness work isn't lost) — from the optimizer Explore, 2026-06-27
+
+**Generic optimizer** — `src/einstein/optimizer.py`:
+- `class Optimizer(score_fn, direction, category, verify_fn)` (L130/140)
+- `run_iteration(solution, strategies=None, seed=None) -> {best_score, best_solution, strategy_results}` (L185). Per-strategy RNG `RandomState(seed + hash(name)%10000)` (L214) → seed-paired.
+- `add_strategy(name, fn)` (L163); built-in strategy fns: `_strategy_hillclimb` (L27), `_strategy_nelder_mead` (L62), `_strategy_lbfgsb` (L83), `_strategy_perturbation` (L102). Strategy fn sig: `fn(solution_list, score_fn, rng, is_better) -> (candidate, score)`.
+- **Adaptive scheduling (claim 2)** — `select_strategies(max_strategies)` (L167) boosts improved strategies (+3.0, L177) from `knowledge.get_strategy_priors(category)`. Toggle: pass explicit `strategies=[...]` (fixed) vs let it self-select (adaptive); or empty knowledge → uniform.
+
+**Plugins (claim 3):**
+- Circle packing SLSQP: `src/einstein/circle_packing_square/polish.py::polish` (L82). ⚠️ circle packing is SATURATED — null for the wrong reason; pick a family with generic headroom.
+- Sphere PT-SA / Riemannian: `src/einstein/gpu_tempering/` `run_fused_tempering(vectors, ...)`, `manifolds.py::SphereManifold/FlatManifold` (needs torch/MPS).
+- Manifest dispatch: `src/einstein/optimizer_dispatch.py::dispatch(problem_id, strategy)` (L137) + `optimizer_manifest.yaml`.
+
+**Evaluators:** `src/einstein/ablation_packing/families.py::get_family(name)` → `.score`, `.triple_verify` (only `equal_circles_in_unit_square`, `heilbronn_triangle` registered). Per-problem: `src/einstein/{problem}/evaluator.py::evaluate(data)->float` (arena-exact, higher=better).
+
+**Open decision for #3:** pick a (family, plugin) pair with BOTH an existing evaluator AND generic headroom. Circle packing fails the headroom screen. Best candidates: a sphere problem (Thomson/Tammes) with the Riemannian/PT-SA plugin vs generic flat optimizer — needs a sphere family/evaluator wired into the screen. Finalize before running #3 for real.
+
+---
+
+*Maintenance: update Status/Result the moment any verdict lands; push numbers to the evidence ledger; keep the roadmap (`mb/active/compounding-ablation-roadmap.md`) cross-linked.*
