@@ -217,6 +217,10 @@ class SessionSpec:
     run_kb_readable: bool
     run_kb_path: str | None
     accumulated_lessons: tuple[str, ...]
+    replicate: int = 0  # within-cell repeat index for variance reduction; 0 = first/only.
+    #                     The production solve_fn folds this into the cold-init seed, so
+    #                     replicates draw independent starts that are SHARED across arms —
+    #                     each replicate stays a paired Cold/Warm comparison.
 
 
 def build_session_spec(
@@ -226,10 +230,13 @@ def build_session_spec(
     *,
     run_kb: RunKB | None,
     max_lesson_chars: int | None = None,
+    replicate: int = 0,
 ) -> SessionSpec:
     """Build the launch spec for one cell. Warm gets read access to its run KB and
     the accumulated lessons (capped); Cold gets neither. Web/personas come from
-    the (constant-in-v1) arm config."""
+    the (constant-in-v1) arm config. `replicate` indexes the within-cell repeat used
+    for variance reduction; it changes only the cold-init draw, identically for both
+    arms, so each replicate is still a paired Cold/Warm comparison."""
     cfg = ARM_CONFIGS[arm]
     lessons: tuple[str, ...] = ()
     kb_path: str | None = None
@@ -246,6 +253,7 @@ def build_session_spec(
         run_kb_readable=cfg.read_kb,
         run_kb_path=kb_path,
         accumulated_lessons=lessons,
+        replicate=replicate,
     )
 
 
@@ -314,6 +322,9 @@ class RunRecord:
     dead_ends_avoided: int
     kb_state_hash_before: str
     kb_state_hash_after: str
+    replicates: int = 1  # within-cell repeats averaged into gap_closed (1 = legacy behavior).
+    gap_closed_std: float = 0.0  # stdev of per-replicate gap_closed (0 when replicates==1).
+    gap_closed_reps: tuple[float, ...] = ()  # per-replicate gaps, for transparency/re-analysis.
 
     def to_dict(self) -> dict:
         return {
@@ -333,6 +344,9 @@ class RunRecord:
             "dead_ends_avoided": self.dead_ends_avoided,
             "kb_state_hash_before": self.kb_state_hash_before,
             "kb_state_hash_after": self.kb_state_hash_after,
+            "replicates": self.replicates,
+            "gap_closed_std": self.gap_closed_std,
+            "gap_closed_reps": list(self.gap_closed_reps),
         }
 
 
@@ -365,6 +379,7 @@ def run_arm_sequence(
     order: list[str] | None = None,
     skip_done: set[str] | None = None,
     on_record: Callable[[RunRecord], None] | None = None,
+    replicates: int = 1,
 ) -> list[RunRecord]:
     """Run one arm's problem sequence for one seed, threading the run KB.
 
@@ -377,6 +392,12 @@ def run_arm_sequence(
     already completed in a prior (interrupted) run — they are NOT re-solved and the
     KB is NOT wiped at start (Warm reuses the lessons already persisted on disk).
     `on_record` is called after each problem so records are durable per-cell.
+
+    `replicates` (variance reduction): solve each cell this many times with
+    independent cold-inits and record the MEAN of the per-replicate gap_closed,
+    cutting per-cell DV noise ~1/√replicates. Exactly one lesson (the first
+    replicate's) is persisted, so Warm's one-lesson-per-problem KB invariant and the
+    banked-count semantics are unchanged. replicates=1 reproduces legacy behavior.
     """
     cfg = ARM_CONFIGS[arm]
     known_dead_ends = known_dead_ends or set()
@@ -404,43 +425,63 @@ def run_arm_sequence(
                 raise SanityViolation(f"Cold KB not empty at start of {problem.problem_id}")
 
         hash_before = run_kb.state_hash()
-        spec = build_session_spec(
-            problem, arm, seed, run_kb=run_kb, max_lesson_chars=max_lesson_chars
-        )
-        lessons_read = len(spec.accumulated_lessons)
+        # Variance reduction: run `replicates` independent solves of this cell, each
+        # with its own cold-init (shared across arms via spec.replicate), and average
+        # the per-replicate gap_closed. The DV is mean-OF-gaps — each gap uses its own
+        # cold-init, which is NOT the same as the gap of the mean scores.
+        rep_results: list[SolveResult] = []
+        rep_gaps: list[float] = []
+        spec = None
+        for r in range(max(1, replicates)):
+            spec = build_session_spec(
+                problem, arm, seed, run_kb=run_kb,
+                max_lesson_chars=max_lesson_chars, replicate=r,
+            )
+            res_r = solve_fn(problem, cfg, seed, spec)
+            rep_results.append(res_r)
+            rep_gaps.append(
+                gap_closed(
+                    res_r.score_coldinit, res_r.score_final,
+                    problem.reference_optimum, minimize=problem.minimize,
+                )
+            )
+        lessons_read = len(spec.accumulated_lessons)  # identical across replicates
 
-        result = solve_fn(problem, cfg, seed, spec)
-
-        # Warm persists a lesson; Cold's reflection is discarded (effort equalized).
+        # Persist exactly ONE lesson (first replicate's) so Warm keeps one lesson per
+        # problem — banked-count semantics and the §9 manipulation check are unchanged.
+        primary = rep_results[0]
         lessons_written = 0
-        if cfg.write_kb and result.lesson_text:
-            run_kb.write_lesson(problem.problem_id, result.lesson_text)
+        if cfg.write_kb and primary.lesson_text:
+            run_kb.write_lesson(problem.problem_id, primary.lesson_text)
             lessons_written = 1
         hash_after = run_kb.state_hash()
 
-        gc = gap_closed(
-            result.score_coldinit,
-            result.score_final,
-            problem.reference_optimum,
-            minimize=problem.minimize,
-        )
+        k = len(rep_gaps)
+        gc = sum(rep_gaps) / k
+        gc_std = (sum((g - gc) ** 2 for g in rep_gaps) / (k - 1)) ** 0.5 if k > 1 else 0.0
+        techniques: set[str] = set()
+        for rr in rep_results:
+            techniques |= rr.attempted_techniques
         rec = RunRecord(
             problem_id=problem.problem_id,
             arm=arm.value,
             seed=seed,
             sequence_index=problem.sequence_index,
-            score_coldinit=result.score_coldinit,
-            score_final=result.score_final,
+            score_coldinit=sum(rr.score_coldinit for rr in rep_results) / k,
+            score_final=sum(rr.score_final for rr in rep_results) / k,
             score_optimum_ref=problem.reference_optimum,
             gap_closed=gc,
-            cycles=len(result.trajectory),
-            wall_clock_s=result.wall_clock_s,
-            trajectory=[(p.cycle_id, p.best_score) for p in result.trajectory],
+            cycles=len(primary.trajectory),
+            wall_clock_s=sum(rr.wall_clock_s for rr in rep_results),
+            trajectory=[(p.cycle_id, p.best_score) for p in primary.trajectory],
             lessons_written=lessons_written,
             lessons_read=lessons_read,
-            dead_ends_avoided=dead_ends_avoided(result.attempted_techniques, known_dead_ends),
+            dead_ends_avoided=dead_ends_avoided(techniques, known_dead_ends),
             kb_state_hash_before=hash_before,
             kb_state_hash_after=hash_after,
+            replicates=k,
+            gap_closed_std=gc_std,
+            gap_closed_reps=tuple(rep_gaps),
         )
         records.append(rec)
         if on_record is not None:
@@ -468,9 +509,12 @@ def run_matrix(
     *,
     known_dead_ends: set[str] | None = None,
     max_lesson_chars: int | None = None,
+    replicates: int = 1,
 ) -> list[RunRecord]:
     """Run the full (seed x arm x problem-sequence) matrix. `kb_root_for(arm, seed)`
-    returns a distinct KB directory per (arm, seed) cell so runs never share a KB."""
+    returns a distinct KB directory per (arm, seed) cell so runs never share a KB.
+    `replicates` averages each cell over that many independent solves (variance
+    reduction; see run_arm_sequence)."""
     out: list[RunRecord] = []
     for seed in seeds:
         for arm in Arm:
@@ -484,6 +528,7 @@ def run_matrix(
                     kb,
                     known_dead_ends=known_dead_ends,
                     max_lesson_chars=max_lesson_chars,
+                    replicates=replicates,
                 )
             )
     return out

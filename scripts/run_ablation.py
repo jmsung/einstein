@@ -53,6 +53,13 @@ def main(argv: list[str]) -> int:
         help="cap on Warm's accumulated-lesson context (equal max context across arms, §6)",
     )
     ap.add_argument(
+        "--replicates",
+        type=int,
+        default=1,
+        help="within-cell repeats averaged into gap_closed (variance reduction); "
+        "cuts per-cell DV noise ~1/sqrt(k) at ~k× cost. Default 1 (legacy).",
+    )
+    ap.add_argument(
         "--use-api-key",
         action="store_true",
         help="use ANTHROPIC_API_KEY (pay-per-token) instead of the Claude Code login",
@@ -90,9 +97,10 @@ def main(argv: list[str]) -> int:
     )
 
     cap = f"${args.max_budget_usd}/session" if args.max_budget_usd else "uncapped"
+    k = max(1, args.replicates)
     print(
-        f"running {len(problems)} problems × 2 arms × {len(seeds)} seeds "
-        f"= {len(problems) * 2 * len(seeds)} cells (resumable; budget {cap})"
+        f"running {len(problems)} problems × 2 arms × {len(seeds)} seeds × {k} replicates "
+        f"= {len(problems) * 2 * len(seeds) * k} sessions (resumable; budget {cap})"
     )
     summary = ar.run_experiment(
         problems,
@@ -101,6 +109,7 @@ def main(argv: list[str]) -> int:
         results_dir=args.results_dir,
         checkout_root=checkout_root,
         max_lesson_chars=args.max_lesson_chars,
+        replicates=k,
     )
 
     print(f"\nran sequences:     {summary['ran'] or '(none)'}")
