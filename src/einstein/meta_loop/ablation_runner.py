@@ -283,14 +283,24 @@ def audit_checkout(checkout: str | Path) -> dict:
     because it isn't on disk and the web tool isn't granted.
     """
     checkout = Path(checkout)
+
+    def _is_env(p: Path) -> bool:
+        # Skip the Python environment: its packages (e.g. osqp) ship test fixtures
+        # under .../tests/solutions/*.npz that are NOT problem answer keys — a
+        # `/solutions/` substring false-positive, not a real leak.
+        s = str(p)
+        return "/.venv/" in s or "/site-packages/" in s
+
     leaked = [d for d in _ANSWER_KEY_DIRS if (checkout / d).exists()]
     leaked += [
-        str(p.relative_to(checkout)) for p in checkout.rglob("solution-best*") if p.is_file()
+        str(p.relative_to(checkout))
+        for p in checkout.rglob("solution-best*")
+        if p.is_file() and not _is_env(p)
     ]
     leaked += [
         str(p.relative_to(checkout))
         for p in checkout.rglob("*")
-        if p.is_file() and "/solutions/" in str(p)
+        if p.is_file() and "/solutions/" in str(p) and not _is_env(p)
     ]
     web_tools = [t for t in ALLOWED_TOOLS if "web" in t.lower()]
     return {
