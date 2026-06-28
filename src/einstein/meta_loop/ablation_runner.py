@@ -198,7 +198,13 @@ def make_solve_fn(
         # (Note: not a hard sandbox — absolute-path access remains; containerize for an
         # adversarial threat model. This closes the *accidental* channel.)
         cell = f"{problem.problem_id}-{cfg.arm.value}-s{seed}-r{spec.replicate}"
-        cwd = Path(tempfile.mkdtemp(prefix=f"ablcell-{cell}-"))
+        # Fresh per-cell subdir INSIDE the arm checkout (not /tmp): `uv run`/python must
+        # resolve the project env (pyproject + .venv found upward) — an empty /tmp dir
+        # breaks `uv run` (no numpy). Inside the checkout the env resolves AND the cell
+        # still starts empty (isolation); removed after, so cells never share scratch.
+        cell_parent = checkout_root / f"einstein-{cfg.arm.value}" / "_cells"
+        cell_parent.mkdir(parents=True, exist_ok=True)
+        cwd = Path(tempfile.mkdtemp(prefix=f"{cell}-", dir=str(cell_parent)))
         try:
             prompt = build_prompt(problem, spec, init)
             t0 = time.monotonic()
