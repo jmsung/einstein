@@ -132,6 +132,13 @@ precision — no recording-layer fabrication) and tried to break each. Outcome:
 **Net:** the two headline verdicts (#3 SUPPORTED, #2 NULL) survive adversarial attack; #6/#7 were
 overstated by me and have real bugs; #2's mechanism explanation was wrong. The audit is doing its job.
 
+**Both red-team bugs FIXED (commit 99ac298, regression-tested, full suite 1820 passed):**
+- `certificate_of` now rejects placeholder strings (`tbd`/`???`/…) → no more false SOLVED_AT_FLOOR.
+- `triple_verify_radius` now rejects r≤0 and out-of-square centers → infeasible geometry fails `passed`.
+(Pre-existing `tests/ops/test_launchd_plist.py` failures are unrelated — fail on clean HEAD.)
+Deeper #7 point NOT fixed (out of scope): the 3 verify paths share one formula, so a definitional
+bug would pass all three; a structurally-independent 4th check is future work.
+
 ---
 
 ## Architecture call-map (so the harness work isn't lost) — from the optimizer Explore, 2026-06-27
