@@ -165,9 +165,40 @@ memory lets the agent skip rediscovery and finish in budget, rather than reachin
 
 ## 5. Honest negatives to report (pre-committed)
 
-- **Compounding (H2) is flat so far** over the 0–5 banked range — reported, not hidden.
-- **Level (H1) is borderline** at S≤18 — report the CI honestly, don't over-claim significance.
+- **Capability (H1, level) NOT supported** at S=18 — Δ gap_closed CI includes 0; effect shrank
+  with power (+13→+6.5→+2.9). Report the null plainly; do not over-claim.
+- **Compounding (H2) null** over the 0–5 banked range — reported, not hidden; long-range (v4) open.
 - These are strengths, not weaknesses, of a controlled pre-registered design.
+
+---
+
+## 6. Revised paper narrative (post Stage C, 2026-06-27)
+
+The controlled test rewrites the paper's compounding section — to its benefit. The old draft hook
+("warm scores higher / compounds") would have rested on an effect that **vanished under power**.
+The honest, stronger arc:
+
+1. **Setup.** A pre-registered, air-gapped, paired Cold-vs-Warm A/B on a non-smooth family
+   (Heilbronn) where the agent genuinely flails — the one regime that can show a memory effect.
+2. **Capability is null (honest negative).** With adequate power (S=18, paired, counterbalanced),
+   accumulated human-readable lessons do **not** raise the solution ceiling (Δ gap_closed CI
+   [−2.3,+8.3]) and do **not** compound on score. The naïve few-seed signal was an underpowered
+   illusion — a cautionary, methodologically valuable result on its own.
+3. **Efficiency is the real, clean win.** Same data: warm hits the budget **6× less** (4.6% vs
+   26.9% timeout) and solves **~35% faster** (242 s vs 370 s). Memory's value is **skipping
+   rediscovery**, not a higher ceiling → a *time-to-solution / sample-efficiency* claim.
+4. **Mechanism.** Lessons are uneven (42–1910 chars; "not every lesson helps"); the benefit is
+   heavy-tailed (occasionally large). Count is a poor proxy for *useful* knowledge.
+5. **Open / future (v3, v4).** Does the efficiency win (a) *compound* over a long sequence and
+   plateau (v4, efficiency dose-response), and (b) *generalize* across families (v3, efficiency
+   meta-test)? These are now framed around the efficiency DV (`time_to_target`), not gap_closed.
+
+**One-line claim for the abstract:** *"In a controlled, pre-registered test, a reusable lesson
+memory did not improve solution quality but made the agent substantially more time-efficient —
+it reached comparable solutions ~35% faster and ran out of budget 6× less often."*
+
+Section/figure mapping unchanged from §4, with the **efficiency figure (timeout rate + wall-clock
+by arm; later time-to-target survival curve)** promoted to the headline.
 
 ---
 

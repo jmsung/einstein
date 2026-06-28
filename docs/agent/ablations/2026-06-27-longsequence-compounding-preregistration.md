@@ -25,6 +25,35 @@ paper_hook: "main.tex §6 — the dose-response of compounding; the headline 'do
 
 ---
 
+## 0. REVISED FRAMING — efficiency, not capability (post Stage C, 2026-06-27)
+
+**Stage C (S=18) changed what v4 should measure.** The *capability* claim is dead at this
+power: mean Δ(gap_closed) = +2.9 pts, 95% CI [−2.3, +8.3] (null); compounding slope null. But a
+clean **efficiency** result emerged: cold timed out **26.9%** vs warm **4.6%** (~6×), mean wall
+370 s vs 242 s. Warm reaches *comparable* solutions **faster and within budget far more often** —
+the loop's value is efficiency, not a higher ceiling (evidence ledger §2.7).
+
+**So v4's primary DV pivots from gap_closed to time-to-solution.** The compounding question
+becomes: **does the agent get FASTER as it banks more knowledge, and does that speed-up plateau?**
+
+- **Primary DV (v4):** `time_to_target` — wall-clock (or token cost) to first reach a fixed
+  gap_closed target τ (e.g. τ = the cold median gap for that n), right-censored at the 600 s
+  budget; plus the binary **within-budget success** and **timeout rate**. gap_closed becomes a
+  *secondary/quality* DV (must not be *worse* for warm — a non-inferiority check).
+- **H2-eff (the real test):** within-problem slope of (cold − warm) `time_to_target` on banked > 0
+  (warm's time advantage grows with banked knowledge), and its **shape** (sustained vs plateau).
+- **Build addition:** the harness currently logs only (coldinit, final) + total wall. v4 needs a
+  **timestamped best-so-far trajectory** per cell so time-to-target is computable (survival
+  analysis: Cox / Kaplan–Meier on time-to-τ, banked as covariate, problem stratum). This replaces
+  the gap-centric §7 below as primary; gap H1/H2 are retained as secondary.
+- Everything else (L≈18 long sequence, context-cap control §6, randomized order §5, k-replicate)
+  carries over unchanged — they serve the efficiency dose-response just as well.
+
+The rest of this doc is written gap-first (pre-Stage-C); read §7's H-set as **secondary** now,
+with the efficiency H2-eff above as the headline. Freeze the DV choice before run 1.
+
+---
+
 ## 1. Why v4 (the specific gap v2 left)
 
 From the v2 evidence (`results-compounding-evidence.md` §2.3–2.4):
