@@ -39,6 +39,15 @@ def _load(config: str, family_filter: str | None) -> list[ca.Problem]:
     return [p for p in problems if family_filter is None or p.family == family_filter]
 
 
+def _config_frozen(config: str) -> bool:
+    """Pre-reg §3 freeze gate: a config is runnable for REAL cells only when it declares
+    `frozen: true` — set after the headroom screen fixes the instances + reference_optima.
+    The template ships `frozen: false`, so it can only drive --probe / --dry-run."""
+    import yaml
+
+    return bool(yaml.safe_load(Path(config).read_text()).get("frozen", False))
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default=str(_REPO / "config" / "ablation_transfer.template.yaml"))
@@ -91,6 +100,17 @@ def main(argv: list[str]) -> int:
         out = ca.headroom_probe(probe_problems, solve_fn, seeds, results_dir=results_dir / "probe")
         print(json.dumps({"eligible": out["eligible"], "band": out["band"]}, indent=2))
         return 0
+
+    # Pre-reg §3 freeze gate — no real transfer cell against an unfrozen config.
+    if not _config_frozen(args.config):
+        print(
+            f"REFUSED: {args.config} is not frozen (frozen: false).\n"
+            "Real transfer cells require a FROZEN config — run --probe first, fix the\n"
+            "instances + reference_optima from the headroom screen, set `frozen: true`,\n"
+            "and commit it before any cell (pre-reg §3). Use --probe / --dry-run to plan.",
+            file=sys.stderr,
+        )
+        return 2
 
     records: list[ca.TransferRecord] = []
     out = ca.run_transfer_experiment(
