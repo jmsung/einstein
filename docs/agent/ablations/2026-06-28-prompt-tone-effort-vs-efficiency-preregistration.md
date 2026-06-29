@@ -129,6 +129,26 @@ regime measures the effort channel explicitly. Report both — do not collapse t
 - **Single-family** — a tone effect could be family-specific; if Haiku separates, replicate
   across ≥2 families (borrow v3 §3 headroom screen) before any general claim.
 - **Persistence confound** — addressed by the budget-regime crossing; must report both columns.
+- **Air-gap fidelity (audited 2026-06-28).** The runner air-gap is two mechanisms:
+  (a) `ALLOWED_TOOLS` omits every web/retrieval tool (`ablation_runner.py:51` — no
+  `WebSearch`/`WebFetch`/`Task`), and (b) the clean-room checkout physically strips the
+  knowledge layer (`build_ablation_repos.sh` `rm -rf docs/wiki docs/source docs/agent mb
+  results`), verified by `audit_checkout` (`_ANSWER_KEY_DIRS`). Consequence for *this*
+  ablation and the live v3 runs: the 2026-06-29 knowledge ingest (PR #134, +1147
+  `docs/source/` pages) is **outside** the checkout the arms run in **regardless of which
+  commit the checkout is built from** — the build deletes `docs/source/` wholesale — so it
+  cannot contaminate any arm. **Residual hole:** the cwd lives inside the arm checkout (so
+  `uv run` resolves the venv) and is explicitly *"not a hard sandbox — absolute-path access
+  remains"* (`ablation_runner.py:198-199`); `Bash`/`qmd` could in principle reach the *real*
+  repo by absolute path. A solving prompt never points there, but it is not impossible.
+  **Mitigation (now implemented on this branch):** `audit_checkout` was a post-hoc receipt
+  that did not abort on a leak — it is now a **hard gate** (`assert_clean_checkout` +
+  `AirGapViolation`): `run_experiment` pre-flight-audits **both** arm checkouts before any
+  compute and aborts on breach, and the post-run receipt now also raises on mid-run drift
+  (`phase: preflight|postrun` in `audit.jsonl`). **Verification step before pooling any run:**
+  confirm every `audit.jsonl` receipt is `passed:true`, and `grep` the per-cell transcripts
+  (saved at `ablation_runner.py:230-235`) for `qmd`/`docs/`/absolute repo paths to rule out
+  an absolute-path escape. Question: `../../wiki/questions/2026-06-28-does-prompt-tone-change-agent-performance.md`.
 
 ## 8. Implications
 

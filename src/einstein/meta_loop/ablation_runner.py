@@ -335,6 +335,37 @@ def audit_checkout(checkout: str | Path) -> dict:
     }
 
 
+class AirGapViolation(RuntimeError):
+    """A clean-room checkout failed the air-gap audit (pre-reg §7).
+
+    Raised by `assert_clean_checkout` so the batch driver REFUSES to run on a
+    contaminated checkout — the audit is a hard gate, not just a post-hoc
+    receipt (air-gap fidelity audit, 2026-06-28). A leaked answer-key/wiki dir
+    or a web tool in the allow-list aborts before any compute is spent.
+    """
+
+
+def assert_clean_checkout(checkout: str | Path) -> dict:
+    """Pre-flight HARD GATE: audit the checkout and raise on any breach.
+
+    Returns the passing receipt; raises `AirGapViolation` if the checkout is
+    missing or `audit_checkout` reports a leak / a web tool. Use this (not the
+    bare `audit_checkout` receipt) wherever a contaminated checkout must STOP
+    the run rather than merely be recorded.
+    """
+    checkout = Path(checkout)
+    if not checkout.exists():
+        raise AirGapViolation(f"clean-room checkout missing: {checkout}")
+    receipt = audit_checkout(checkout)
+    if not receipt["passed"]:
+        raise AirGapViolation(
+            f"air-gap breached in {checkout}: "
+            f"leaked_answer_key_files={receipt['leaked_answer_key_files']} "
+            f"web_tools_in_allowlist={receipt['web_tools_in_allowlist']}"
+        )
+    return receipt
+
+
 def _done_pids(records: list[dict]) -> dict[tuple[str, int], set[str]]:
     """Map (arm, seed) → set of problem_ids already logged."""
     d: dict[tuple[str, int], set[str]] = {}
@@ -399,6 +430,25 @@ def run_experiment(
     skipped: list[str] = []
     audits: list[dict] = []
 
+    # PRE-FLIGHT HARD GATE (pre-reg §7): audit BOTH arm checkouts before any
+    # compute. A leaked wiki/answer-key dir or a web tool aborts the batch here —
+    # the audit is a gate, not just the post-hoc receipt below. Receipts are
+    # recorded first so the audit log shows what was checked even on abort.
+    for arm in Arm:
+        checkout = checkout_root / f"einstein-{arm.value}"
+        try:
+            receipt = assert_clean_checkout(checkout)
+        except AirGapViolation:
+            fail = {**audit_checkout(checkout), "arm": arm.value, "phase": "preflight"}
+            audits.append(fail)
+            with audit_path.open("a") as fh:
+                fh.write(json.dumps(fail) + "\n")
+            raise
+        receipt.update({"arm": arm.value, "phase": "preflight"})
+        audits.append(receipt)
+        with audit_path.open("a") as fh:
+            fh.write(json.dumps(receipt) + "\n")
+
     for seed in seeds:
         for arm in Arm:
             label = f"{arm.value}-seed{seed}"
@@ -434,11 +484,20 @@ def run_experiment(
             )
             (resumed if is_resume else ran).append(label)
 
+            # Post-run receipt = drift detection: catches a checkout mutated
+            # mid-run (e.g. an answer-key dir created during the session). Record
+            # first, then abort the batch if the air-gap was breached.
             receipt = audit_checkout(checkout_root / f"einstein-{arm.value}")
-            receipt.update({"arm": arm.value, "seed": seed})
+            receipt.update({"arm": arm.value, "seed": seed, "phase": "postrun"})
             audits.append(receipt)
             with audit_path.open("a") as fh:
                 fh.write(json.dumps(receipt) + "\n")
+            if not receipt["passed"]:
+                raise AirGapViolation(
+                    f"air-gap breached during run (arm={arm.value}, seed={seed}): "
+                    f"leaked_answer_key_files={receipt['leaked_answer_key_files']} "
+                    f"web_tools_in_allowlist={receipt['web_tools_in_allowlist']}"
+                )
 
     return {
         "ran": ran,
