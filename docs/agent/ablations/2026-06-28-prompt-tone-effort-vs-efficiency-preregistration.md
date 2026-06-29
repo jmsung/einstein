@@ -6,7 +6,7 @@ status: draft            # NOT yet frozen — sketch for review; freeze §3–§
 hypothesis: "An encouraging prompt preamble does not improve the agent's score-per-unit-compute on the solve loop. H1 (effort): any score gain is mediated by increased compute (more cycles/tokens/iterations) and vanishes at a fixed budget. H2 (efficiency): the encouraging arm's score-vs-compute frontier sits strictly above neutral at equal budget. Default expectation on a frontier model: NULL (no separation at fixed budget)."
 factor: prompt_tone   # {neutral (control), encouraging, optional: stakes/harsh}
 model: claude-haiku-4-5   # tier-1 cheap; add claude-opus-4-8 only if Haiku shows a signal worth pricing
-harness: src/einstein/meta_loop/compounding_ablation.py + ablation_runner.py   # + a prompt_tone factor + a fixed-budget cap (NOT YET BUILT)
+harness: src/einstein/meta_loop/compounding_ablation.py + ablation_runner.py + prompt_tone.py   # prompt_tone factor + fixed-budget cap (max_budget_usd) — BUILT on this branch
 relates:
   - 2026-06-26-heilbronn-haiku-compounding-preregistration.md   # v2 — the within-family design this borrows
   - 2026-06-26-cross-family-generalization-preregistration.md   # v3 — the capability/effort/efficiency split, reused here
@@ -61,13 +61,15 @@ seed-clustered CI. Secondary: area-under-the-score-vs-budget-curve per arm.
 
 A 2×2 (tone × regime) crossing isolates the mechanism:
 
-| | Fixed budget (cap tokens **and** cycles equal across arms) | Unconstrained (natural stopping) |
+| | Fixed budget (`max_budget_usd` cost/token ceiling equal across arms) | Unconstrained (natural stopping) |
 |---|---|---|
 | **neutral** | control | control |
 | **encouraging** | **H2 test** (efficiency) | **H1 test** (effort) — also record extra spend |
 
-- **Fixed-budget regime** — every arm gets the same hard cap (token ceiling AND max cycles;
-  whichever binds first). If `encouraging` still beats `neutral` here → **H2 supported**.
+- **Fixed-budget regime** — every arm gets the same hard `max_budget_usd` cap (the
+  cost/token-spend ceiling; the single-session `claude -p` runner exposes no per-session
+  cycle cap, so the budget is the cost ceiling, not a max-cycles count). If `encouraging`
+  still beats `neutral` here → **H2 supported**.
 - **Unconstrained regime** — each arm stops on its own gate. If `encouraging` only wins here,
   ties under fixed budget, and spent more → **H1 supported** (effort, not quality).
 - If neither regime separates the arms across seeds → **NULL**.
@@ -78,7 +80,7 @@ A 2×2 (tone × regime) crossing isolates the mechanism:
 - **Seeds**: N per cell — start exploratory small-S, then freeze S after the variance check
   (same S-freeze rule as v3 §6); same paired cold-init per seed across arms (ONE variable = the
   preamble string).
-- **Budget checkpoints** `B` and the fixed-budget caps (token ceiling + max cycles).
+- **Budget checkpoints** `B` and the fixed-budget cap (the `max_budget_usd` cost/token ceiling).
 - **One-variable invariant**: arms differ ONLY in the preamble prepended to the session system
   prompt. Identical problems, seeds, cold-init, model, temperature, tools, solve budget otherwise.
 
@@ -112,8 +114,9 @@ regime measures the effort channel explicitly. Report both — do not collapse t
 
 1. **Gate:** do NOT start until `feat/ablation-v3-llm-runs` is idle — both drive headless
    sessions on the same Claude subscription; concurrent runs contend for the rate limit.
-2. **Harness work first (no LLM):** add a `prompt_tone` factor + a fixed-budget cap
-   (token ceiling + max-cycles) to `ablation_runner.py` / `compounding_ablation.py`, behind
+2. **Harness work first (no LLM):** add a `prompt_tone` factor (`prompt_tone.py`) + a
+   fixed-budget cap (`max_budget_usd`, the cost/token ceiling — `claude -p` exposes no
+   per-session max-cycles knob) to `ablation_runner.py` / `compounding_ablation.py`, behind
    mock tests. This is the only code this branch ships pre-run.
 3. **Exploratory small-S** (Haiku, fixed + unconstrained, 2 arms) → variance check → freeze S.
 4. **Confirmatory** at frozen S; add Opus + the optional 3rd arm only if Haiku separates.
@@ -139,7 +142,7 @@ regime measures the effort channel explicitly. Report both — do not collapse t
   commit the checkout is built from** — the build deletes `docs/source/` wholesale — so it
   cannot contaminate any arm. **Residual hole:** the cwd lives inside the arm checkout (so
   `uv run` resolves the venv) and is explicitly *"not a hard sandbox — absolute-path access
-  remains"* (`ablation_runner.py:198-199`); `Bash`/`qmd` could in principle reach the *real*
+  remains"* (`ablation_runner.py:226`); `Bash`/`qmd` could in principle reach the *real*
   repo by absolute path. A solving prompt never points there, but it is not impossible.
   **Mitigation (now implemented on this branch):** `audit_checkout` was a post-hoc receipt
   that did not abort on a leak — it is now a **hard gate** (`assert_clean_checkout` +
