@@ -1,0 +1,96 @@
+# ablation_problems.yaml — FROZEN problem set for the blank-slate Cold-vs-Warm
+# knowledge-compounding ablation (pre-reg 2026-06-26, §6).
+#
+# DO NOT EDIT after the first run. Changing any value voids the pre-registration
+# (pre-reg discipline at the top of the pre-reg doc). Results go in a separate
+# results file.
+#
+# Family: packing n EQUAL circles in the unit square — the classic, richly
+# tabulated "circles in a square" / point-spreading problem (Packomania `csq`).
+# This is deliberately NOT the in-repo Problem-14 evaluator (that is the
+# variable-radius "maximize Σ r_i" AlphaEvolve variant — a different problem with
+# no per-n optimum table). Using the equal-circle variant:
+#   (a) honors §6's named reference source (Packomania), which tabulates this
+#       variant to 30 digits with proven-optimality flags;
+#   (b) honors §4's generic-solvers-only rule — there is no problem-specific
+#       plugin for these held-out n, so neither arm can smuggle baked-in wisdom;
+#       the agent must choose & configure generic solvers (L-BFGS / NM / CMA-ES /
+#       basin-hopping). Remembering how is exactly what Warm gets to do.
+#
+# OBJECTIVE (identical for every problem; this IS the shared evaluator spec):
+#   variables : n circle centers (cx_i, cy_i), each in [0,1]^2
+#   feasibility: every circle of radius r fully inside the unit square AND
+#                pairwise non-overlapping
+#   score r(config) = min(
+#       0.5 * min_{i<j} || c_i - c_j ||,            # half the closest center gap
+#       min_i min(cx_i, 1-cx_i, cy_i, 1-cy_i)       # nearest wall distance
+#   )
+#   GOAL: maximize r  (larger = better). minimize: false.
+#   The reference optimum below is the best-known/proven max common radius r(n).
+#
+# DEPENDENT VARIABLE (pre-reg §8):
+#   gap_closed = (r_final - r_coldinit) / (r_optimum - r_coldinit), clamped [0,1].
+#
+# COLD-INIT (pre-reg §5 — no warm-start, every problem from scratch):
+#   n centers drawn i.i.d. uniform in [0,1]^2 using rng_seed = base_seed (per
+#   arm/seed cell). No leaderboard / known-config seeding, ever.
+
+family: equal_circles_in_unit_square
+objective: maximize_common_radius
+minimize: false
+reference_source: "http://www.packomania.com/csq/csq.html"   # Packomania, csq table (updated 2022-08-22)
+reference_note: >
+  Radii are the best-known max common radius r(n) for n equal circles packed
+  fully inside the unit square. n=11..15 are proven optimal (bold in Packomania);
+  n=10 is best-known to the precision shown (strong reference per §6 req.2).
+cold_init:
+  distribution: uniform
+  domain: "[0,1]^2"
+  rng: numpy_default_rng     # np.random.default_rng(base_seed)
+canonical_order: by_n_ascending
+
+problems:
+  - id: csq-n10
+    n: 10
+    sequence_index: 0
+    reference_optimum: 0.148204322565228798668007362743
+    proven_optimal: false        # best-known (Packomania, not bold)
+    statement_file: config/ablation_statements/circle-packing-square-n10.md
+  - id: csq-n11
+    n: 11
+    sequence_index: 1
+    reference_optimum: 0.142399237695800384587114500527
+    proven_optimal: true         # Peikert 1991
+    statement_file: config/ablation_statements/circle-packing-square-n11.md
+  - id: csq-n12
+    n: 12
+    sequence_index: 2
+    reference_optimum: 0.139958844038428028961026945453
+    proven_optimal: true         # Peikert 1991 (closed form s = 2 + 15*sqrt(2/17))
+    statement_file: config/ablation_statements/circle-packing-square-n12.md
+  - id: csq-n13
+    n: 13
+    sequence_index: 3
+    reference_optimum: 0.133993513499008491414263236065
+    proven_optimal: true         # Peikert 1991
+    statement_file: config/ablation_statements/circle-packing-square-n13.md
+  - id: csq-n14
+    n: 14
+    sequence_index: 4
+    reference_optimum: 0.129331793710034021408259201773
+    proven_optimal: true         # Wengerodt 1987 (closed form s = 6 + sqrt(3))
+    statement_file: config/ablation_statements/circle-packing-square-n14.md
+  - id: csq-n15
+    n: 15
+    sequence_index: 5
+    reference_optimum: 0.127166547515124908877372380214
+    proven_optimal: true         # Peikert 1991 (closed form s = 4 + sqrt(2) + sqrt(6))
+    statement_file: config/ablation_statements/circle-packing-square-n15.md
+
+# Held-out justification (pre-reg §6 req.1,4):
+#   - None of n=10..15 is an arena problem (P14 is the n=26 variable-radius Σr
+#     variant; P11 is Tammes-on-sphere n=50; P5 is min-distance-ratio).
+#   - All six are non-grid (grid-perfect n=4,9,16,25 excluded) so a generic
+#     solver from a random cold init does NOT trivially hit the optimum on
+#     attempt 1 — genuine headroom to show learning.
+#   - Consecutive n in one family → a lesson on problem k can transfer to k+1.
