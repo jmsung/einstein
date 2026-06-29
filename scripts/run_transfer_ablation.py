@@ -98,6 +98,28 @@ def main(argv: list[str]) -> int:
     if args.probe:
         probe_problems = _load(args.config, None)
         out = ca.headroom_probe(probe_problems, solve_fn, seeds, results_dir=results_dir / "probe")
+        # Persist per-instance gaps (not just the family verdict) — the screen needs the
+        # per-instance difficulty curve to pick model-matched n (too-easy vs too-hard).
+        results_dir.mkdir(parents=True, exist_ok=True)
+        per_instance = [
+            {
+                "family": r.family,
+                "problem_id": r.problem_id,
+                "seed": r.seed,
+                "gap_closed": r.gap_closed,
+                "in_band": r.in_band,
+            }
+            for r in out["results"]
+        ]
+        (results_dir / "headroom-results.json").write_text(
+            json.dumps(
+                {"per_instance": per_instance, "eligible": out["eligible"], "band": out["band"]},
+                indent=2,
+            )
+        )
+        for r in sorted(per_instance, key=lambda x: (x["family"], x["problem_id"])):
+            mark = "in-band" if r["in_band"] else "OUT"
+            print(f"  {r['family']:22s} {r['problem_id']:14s} gap={r['gap_closed']:.3f} [{mark}]")
         print(json.dumps({"eligible": out["eligible"], "band": out["band"]}, indent=2))
         return 0
 
