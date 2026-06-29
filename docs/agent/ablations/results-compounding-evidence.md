@@ -217,4 +217,43 @@ by arm; later time-to-target survival curve)** promoted to the headline.
 
 ---
 
+## v3 — cross-family transfer (does wisdom generalize across problem TYPES?) — 2026-06-29
+
+Pre-reg: `2026-06-26-cross-family-generalization-preregistration.md` (§0b transfer, §0c model factor,
+§3 headroom). Harness: the generalized `Family` abstraction + frozen-KB inject + `run_transfer_experiment`
++ `solve_rate_screen` (PR #132 + branch `feat/ablation-v3-llm-runs`).
+
+**Headline: the near-vs-far gradient is NOT cleanly measurable with the wired families — model
+capability dominates these small problems — and the one transfer cell we could measure (far) is NULL.**
+
+1. **Model capability dominates difficulty (3-model screen on fixed instances).** Haiku / Sonnet / Opus
+   on the same candidates: **Opus saturates everything** (solves all geometric + 1D candidates to the
+   reference → no headroom; "the strong model you'd ship doesn't need the notes"). **Sonnet** solves the
+   geometric families (Tammes n=12–18, Heilbronn) reliably; only the FAR family `autocorrelation n=32`
+   lands in a measurable band. **Haiku** can't do the geometric families. → The **near (geometric packing)
+   family is BINARY across models** — solve-or-don't, threshold *between* Haiku and Sonnet; no
+   intermediate-difficulty near cell exists at any model. The intended near-vs-far *gradient* is therefore
+   unachievable with these 4 families.
+
+2. **The §3 gap-band screen is the wrong instrument here; reframed to SOLVE-RATE.** At a fixed budget the
+   outcomes are bimodal (gap ≈ 0 or ≈ 1), so the gap∈[0.2,0.8] band barely exists. Switched the DV to the
+   **cold solve-rate across seeds** (matches the post-#4 efficiency pivot): keep instances cold solves
+   *some-but-not-all* of the time. Only `autocorr-32` @ Sonnet qualified (screen solve-rate 0.50).
+
+3. **Far transfer = NULL (the one clean measurement).** Heilbronn (source) → `autocorr-32` (far) @ Sonnet,
+   8 seeds, paired cold-init, KB_A = 2 Heilbronn lessons (manipulation confirmed — warm read 2 lessons):
+   **cold solve-rate 0.125 (1/8) vs warm-transfer 0.125 (1/8) → delta 0.00.** Geometric lessons did not
+   help the 1D autoconvolution problem — generic meta-strategy does not cross to a structurally unrelated
+   family, exactly the pre-registered prior. *Caveat:* the baseline is noisy (cold 0.125 here vs 0.50 in
+   the screen — bimodality × n=8), so this is "no detectable lift on a noisy baseline," not a tight zero.
+
+**Methodological takeaway (the real v3 contribution):** with a small set of self-contained optimization
+families, *cross-family transfer at a measurable difficulty is elusive* — model capability swamps the
+per-family difficulty knob (binary outcomes; Opus ceilings), leaving only a narrow far@Sonnet cell, which
+shows null transfer. To measure a near-vs-far gradient one needs families that are **graded-difficulty for
+a fixed model** (the 4 current families aren't) — a wiring/design prerequisite, not just more compute. The
+efficiency-DV generalization question (v3's original aim) is answered negatively *for these families*.
+
+---
+
 *Maintenance: append after every run/analysis. Cross-ref the roadmap (`mb/active/compounding-ablation-roadmap.md`) for branch state + next actions.*
