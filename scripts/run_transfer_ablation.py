@@ -62,7 +62,14 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--max-lesson-chars", type=int, default=None)
     ap.add_argument("--replicates", type=int, default=1)
     ap.add_argument("--use-api-key", action="store_true")
-    ap.add_argument("--probe", action="store_true", help="run the §3 headroom screen only")
+    ap.add_argument("--probe", action="store_true", help="run the §3 gap-band headroom screen only")
+    ap.add_argument(
+        "--solve-rate",
+        action="store_true",
+        help="run the solve-rate screen (efficiency reframe): keep instances whose cold "
+        "solve-rate across seeds is intermediate. Use >= ~5 seeds.",
+    )
+    ap.add_argument("--solve-threshold", type=float, default=0.5)
     ap.add_argument("--dry-run", action="store_true", help="print planned cells; no solves")
     args = ap.parse_args(argv)
 
@@ -94,6 +101,47 @@ def main(argv: list[str]) -> int:
         drop_api_key=not args.use_api_key,
         transcripts_dir=str(results_dir / "transcripts"),
     )
+
+    if args.solve_rate:
+        probe_problems = _load(args.config, None)
+        out = ca.solve_rate_screen(
+            probe_problems,
+            solve_fn,
+            seeds,
+            results_dir=results_dir / "solverate",
+            solve_threshold=args.solve_threshold,
+        )
+        results_dir.mkdir(parents=True, exist_ok=True)
+        rows = [
+            {
+                "family": r.family,
+                "problem_id": r.problem_id,
+                "n_seeds": r.n_seeds,
+                "solve_rate": r.solve_rate,
+                "mean_wall_s": r.mean_wall_s,
+                "in_band": r.in_band,
+            }
+            for r in out["results"]
+        ]
+        (results_dir / "solve-rate-results.json").write_text(
+            json.dumps(
+                {
+                    "per_instance": rows,
+                    "eligible": out["eligible"],
+                    "band": out["band"],
+                    "threshold": out["threshold"],
+                },
+                indent=2,
+            )
+        )
+        for r in sorted(rows, key=lambda x: (x["family"], x["problem_id"])):
+            mark = "in-band" if r["in_band"] else "OUT"
+            print(
+                f"  {r['family']:22s} {r['problem_id']:14s} solve_rate={r['solve_rate']:.2f} "
+                f"({r['n_seeds']} seeds) wall={r['mean_wall_s']:.0f}s [{mark}]"
+            )
+        print(json.dumps({"eligible": out["eligible"], "band": out["band"]}, indent=2))
+        return 0
 
     if args.probe:
         probe_problems = _load(args.config, None)

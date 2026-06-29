@@ -717,7 +717,9 @@ def headroom_probe(
                 res = solve_fn(problem, ARM_CONFIGS[Arm.COLD], seed, spec)
                 gaps.append(
                     gap_closed(
-                        res.score_coldinit, res.score_final, problem.reference_optimum,
+                        res.score_coldinit,
+                        res.score_final,
+                        problem.reference_optimum,
                         minimize=problem.minimize,
                     )
                 )
@@ -728,6 +730,112 @@ def headroom_probe(
         by_family.setdefault(r.family, []).append(r.gap_closed)
     eligible = {f: (lo <= statistics.median(g) <= hi) for f, g in by_family.items()}
     return {"results": out, "eligible": eligible, "band": band}
+
+
+# --- Solve-rate screen (the efficiency-DV reframe) --------------------------------------
+# The §3 gap-band screen assumes a smooth difficulty knob (gap ∈ [0.2,0.8]). For
+# solve-or-don't problems at a fixed budget, cold outcomes are bimodal (gap ≈ 0 or ≈ 1),
+# so the band barely exists. The right instrument is then the SOLVE RATE across seeds:
+# keep instances cold solves SOME-but-not-all of the time (room for warm to lift it), and
+# measure whether warm-transfer raises the solve-rate / lowers time-to-solve. This matches
+# the pre-reg's post-#4 pivot of the DV to efficiency (timeout-rate / wall / time-to-target).
+
+
+def is_solved(gap: float, threshold: float = 0.5) -> bool:
+    """A cell 'solved' the instance if it closed >= `threshold` of the gap. With bimodal
+    (≈0/≈1) outcomes, 0.5 cleanly separates a real solve from no-progress/failed."""
+    return gap >= threshold
+
+
+@dataclass(frozen=True)
+class SolveRateResult:
+    """Per-instance cold solve-rate across seeds (the efficiency-screen unit)."""
+
+    family: str
+    problem_id: str
+    n_seeds: int
+    solve_rate: float  # fraction of seeds whose cold cell solved (gap >= threshold)
+    mean_wall_s: float
+    in_band: bool  # solve_rate sits in the intermediate band → room for warm to lift it
+
+
+def solve_rate_screen(
+    problems: Sequence[Problem],
+    solve_fn: SolveFn,
+    seeds: Sequence[int],
+    *,
+    results_dir: str | Path,
+    solve_threshold: float = 0.5,
+    band: tuple[float, float] = (0.2, 0.8),
+    replicates: int = 1,
+) -> dict:
+    """Screen by COLD solve-rate across seeds (the efficiency reframe — see note above).
+
+    Keep instances whose cold solve-rate sits in `band` (default [0.2, 0.8]): the agent
+    sometimes solves and sometimes doesn't, so there is genuine room for warm-transfer to
+    raise the rate. solve_rate ≈ 1 (always solves cold) or ≈ 0 (never) have no headroom.
+    Needs >= ~5 seeds to estimate a rate. solve_fn injected → testable."""
+    lo, hi = band
+    results_dir = Path(results_dir)
+    per_seed: dict[str, list[tuple[float, float]]] = {}  # problem_id -> [(gap, wall)]
+    fam_of: dict[str, str] = {}
+    for seed in seeds:
+        for problem in problems:
+            fam_of[problem.problem_id] = problem.family
+            kb = RunKB(results_dir / f"solverate-{problem.problem_id}-seed{seed}")
+            kb.wipe()
+            gaps: list[float] = []
+            walls: list[float] = []
+            for r in range(max(1, replicates)):
+                spec = build_session_spec(problem, Arm.COLD, seed, run_kb=kb, replicate=r)
+                res = solve_fn(problem, ARM_CONFIGS[Arm.COLD], seed, spec)
+                gaps.append(
+                    gap_closed(
+                        res.score_coldinit,
+                        res.score_final,
+                        problem.reference_optimum,
+                        minimize=problem.minimize,
+                    )
+                )
+                walls.append(res.wall_clock_s)
+            per_seed.setdefault(problem.problem_id, []).append(
+                (sum(gaps) / len(gaps), sum(walls) / len(walls))
+            )
+    results: list[SolveRateResult] = []
+    for pid, gw in per_seed.items():
+        rate = sum(1 for g, _ in gw if is_solved(g, solve_threshold)) / len(gw)
+        mean_wall = sum(w for _, w in gw) / len(gw)
+        results.append(
+            SolveRateResult(fam_of[pid], pid, len(gw), rate, mean_wall, lo <= rate <= hi)
+        )
+    eligible = {
+        r.problem_id: r.in_band for r in sorted(results, key=lambda x: (x.family, x.problem_id))
+    }
+    return {"results": results, "eligible": eligible, "band": band, "threshold": solve_threshold}
+
+
+def transfer_solve_rates(records: Sequence[TransferRecord], *, threshold: float = 0.5) -> dict:
+    """Cold vs warm-transfer solve-rate per family-B target (the efficiency DV under reframe
+    A). For each (family_b, arm), the fraction of cells that solved. A positive
+    warm−cold delta is the transfer effect; report it per family (near vs far)."""
+    by: dict[tuple[str, str], list[bool]] = {}
+    for rec in records:
+        by.setdefault((rec.family_b, rec.arm), []).append(is_solved(rec.gap_closed, threshold))
+    fams = sorted({fb for fb, _ in by})
+    out = {}
+    for fb in fams:
+        cold = by.get((fb, "cold"), [])
+        warm = by.get((fb, "warm_transfer"), [])
+        cr = sum(cold) / len(cold) if cold else 0.0
+        wr = sum(warm) / len(warm) if warm else 0.0
+        out[fb] = {
+            "cold_solve_rate": cr,
+            "warm_solve_rate": wr,
+            "delta": wr - cr,
+            "n_cold": len(cold),
+            "n_warm": len(warm),
+        }
+    return out
 
 
 def run_matrix(
