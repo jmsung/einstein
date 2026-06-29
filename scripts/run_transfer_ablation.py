@@ -200,6 +200,14 @@ def main(argv: list[str]) -> int:
     n_cold = sum(1 for r in out["records"] if r.arm == "cold")
     n_warm = len(out["records"]) - n_cold
     print(f"transfer done: {args.family_a} -> {args.family_b}; {n_cold} cold, {n_warm} warm cells")
+    # DV (reframe A): cold vs warm-transfer SOLVE-RATE per family-B; warm−cold = the effect.
+    rates = ca.transfer_solve_rates(out["records"], threshold=args.solve_threshold)
+    (results_dir / "solve-rate-delta.json").write_text(json.dumps(rates, indent=2))
+    for fb, d in rates.items():
+        print(
+            f"  {fb}: cold={d['cold_solve_rate']:.2f} (n={d['n_cold']}) "
+            f"warm_transfer={d['warm_solve_rate']:.2f} (n={d['n_warm']})  delta={d['delta']:+.2f}"
+        )
     return 0
 
 

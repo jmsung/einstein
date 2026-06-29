@@ -1,0 +1,43 @@
+# ablation_transfer_far.yaml — FROZEN far-transfer experiment (Heilbronn -> autocorrelation).
+#
+# The one clean transfer cell from the solve-rate screen: autocorr-32 is in-band for Sonnet
+# (cold solve-rate 0.50). Source family A = Heilbronn (Sonnet solves reliably -> good KB_A).
+# Target family B = autocorr-32. DV = warm-transfer minus cold SOLVE-RATE across seeds
+# (transfer_solve_rates). Honest prior: NULL (geometric lessons unlikely to help a 1D
+# autoconvolution problem); a clean null is a valid pre-registered result.
+#
+# FROZEN (frozen: true) — instances + reference_optima fixed from the §3 solve-rate screen.
+# The autocorr reference is a screen estimate, but BOTH arms use it, so the warm-cold delta
+# is reference-robust. DO NOT EDIT after the first confirmatory cell.
+
+minimize: false
+frozen: true
+
+problems:
+  # --- Family A: Heilbronn (source) — KB_A is built here (Warm) ---
+  - id: heilbronn-07
+    family: heilbronn_triangle
+    n: 7
+    sequence_index: 0
+    reference_optimum: 0.0833333333
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle
+      formed by any three of them (the Heilbronn triangle problem).
+  - id: heilbronn-08
+    family: heilbronn_triangle
+    n: 8
+    sequence_index: 1
+    reference_optimum: 0.0727083333
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle.
+
+  # --- Family B: autocorrelation (far target) — cold vs warm-transfer ---
+  - id: autocorr-32
+    family: autocorrelation_seq
+    n: 32
+    sequence_index: 2
+    reference_optimum: -1.6534740000   # screen estimate (local NM); delta is ref-robust
+    statement: |
+      Choose a length-n non-negative sequence f to MINIMIZE the peak autoconvolution
+      ratio max(f*f) / (sum f)^2 on [0, 0.5]. (Scored internally as the negated ratio,
+      so higher is better — maximize it.)
