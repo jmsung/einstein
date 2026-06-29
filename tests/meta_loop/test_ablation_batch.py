@@ -238,3 +238,37 @@ def test_resume_falls_back_when_kb_inconsistent(tmp_path):
     ar.run_experiment(probs, [1], _fake_solver, results_dir=res, checkout_root=co)
     warm1 = [r for r in ca.load_records(log) if r["arm"] == "warm" and r["seed"] == 1]
     assert len(warm1) == 6 and len({r["problem_id"] for r in warm1}) == 6
+
+
+# ---------------- air-gap HARD GATE (audit is a gate, not a receipt) ----------------
+
+
+def test_assert_clean_checkout_passes_on_clean_room(tmp_path):
+    co = tmp_path / "einstein-cold"
+    (co / "src").mkdir(parents=True)
+    receipt = ar.assert_clean_checkout(co)
+    assert receipt["passed"] is True
+
+
+def test_assert_clean_checkout_raises_on_leaked_wiki(tmp_path):
+    co = tmp_path / "einstein-cold"
+    (co / "docs" / "wiki").mkdir(parents=True)
+    with pytest.raises(ar.AirGapViolation):
+        ar.assert_clean_checkout(co)
+
+
+def test_assert_clean_checkout_raises_on_missing_checkout(tmp_path):
+    with pytest.raises(ar.AirGapViolation):
+        ar.assert_clean_checkout(tmp_path / "does-not-exist")
+
+
+def test_run_experiment_aborts_before_running_on_dirty_checkout(tmp_path):
+    # A leaked wiki in either arm checkout must abort the batch BEFORE any compute
+    # (pre-flight hard gate) — no records written.
+    co = _checkout(tmp_path)
+    (co / "einstein-warm" / "docs" / "source").mkdir(parents=True)
+    res = tmp_path / "results"
+    with pytest.raises(ar.AirGapViolation):
+        ar.run_experiment(_problems(), [1], _fake_solver, results_dir=res, checkout_root=co)
+    # gate fired before the run: no run records
+    assert not (res / "runs.jsonl").exists() or ca.load_records(res / "runs.jsonl") == []
