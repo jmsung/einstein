@@ -41,6 +41,7 @@ import numpy as np
 
 from einstein.ablation_packing.families import Family, get_family
 from einstein.meta_loop.compounding_ablation import ArmConfig, Problem, SessionSpec, SolveResult
+from einstein.meta_loop.prompt_tone import PREAMBLES, PromptTone
 from einstein.meta_loop.trajectory import TrajectoryPoint
 
 RESULT_FILENAME = "ablation_result.json"
@@ -81,11 +82,24 @@ def _init_seed(n: int, seed: int, replicate: int = 0) -> int:
     return replicate * 1_000_000 + seed * 1000 + n
 
 
-def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray, family: Family) -> str:
+def build_prompt(
+    problem: Problem,
+    spec: SessionSpec,
+    init: np.ndarray,
+    family: Family,
+    tone: PromptTone = PromptTone.NEUTRAL,
+) -> str:
     """Build the session prompt. Identical skeleton for both arms; the Warm prompt
     additionally carries the accumulated lessons block. The config-space description,
     the start config, and the answer key come from the family adapter, so the prompt
-    is correct for any domain (2D points, sphere vectors, 1D sequences)."""
+    is correct for any domain (2D points, sphere vectors, 1D sequences).
+
+    `tone` (prereg §4) prepends a verbatim preamble — the ONE variable of the
+    prompt-tone ablation. NEUTRAL (default) prepends "" so the prompt is
+    byte-identical to the pre-tone prompt; ENCOURAGING prepends the frozen
+    motivational string."""
+    preamble = PREAMBLES[tone]
+    prefix = f"{preamble}\n\n" if preamble else ""
     lessons_block = ""
     if spec.accumulated_lessons:
         joined = "\n\n".join(
@@ -97,7 +111,9 @@ def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray, family: 
             f"{joined}\n"
         )
     key = family.answer_key
-    return f"""You are solving an optimization problem from a random cold start.
+    return (
+        prefix
+        + f"""You are solving an optimization problem from a random cold start.
 
 {problem.statement}
 
@@ -124,6 +140,7 @@ Write this file as soon as you have ANY improved configuration, and OVERWRITE it
 every time you find a better one — so your current best is always saved even if
 you run out of budget. The `lesson` field is required even if progress was small.
 """
+    )
 
 
 def parse_result(
@@ -166,6 +183,7 @@ def make_solve_fn(
     telemetry: list | None = None,
     drop_api_key: bool = True,
     transcripts_dir: str | Path | None = None,
+    prompt_tone: PromptTone = PromptTone.NEUTRAL,
 ) -> Callable[[Problem, ArmConfig, int, SessionSpec], SolveResult]:
     """Build the production `solve_fn` the harness drives.
 
@@ -181,6 +199,16 @@ def make_solve_fn(
     must rediscover the method closes less of the gap than a Warm session that
     reuses it, so `gap_closed` becomes discriminating again and cost/wall measure
     efficiency. None = uncapped (the saturated regime).
+
+    `prompt_tone` (prereg §4) selects the verbatim preamble prepended to every
+    session this solve_fn launches — the ONE variable of the prompt-tone ablation.
+    Bound here (not on `Arm`/`SessionSpec`) so it stays orthogonal to the Cold/Warm
+    memory axis and never touches the cold-init seed; run two tone-bound solve_fns
+    at equal seeds to get a paired tone comparison. NOTE on the §3 fixed-budget cap:
+    the binding lever is `max_budget_usd` (the token/cost ceiling) — the headless
+    `claude -p` CLI exposes no per-session turn/cycle cap, so "max cycles" has no
+    referent in this single-session runner; hold `max_budget_usd` equal across arms
+    for the fixed-budget regime.
     """
     checkout_root = Path(checkout_root)
     run = headless_run or _default_headless_run()
@@ -206,7 +234,7 @@ def make_solve_fn(
         cell_parent.mkdir(parents=True, exist_ok=True)
         cwd = Path(tempfile.mkdtemp(prefix=f"{cell}-", dir=str(cell_parent)))
         try:
-            prompt = build_prompt(problem, spec, init, family)
+            prompt = build_prompt(problem, spec, init, family, tone=prompt_tone)
             t0 = time.monotonic()
             kw = {
                 "allowed_tools": ALLOWED_TOOLS,
@@ -257,6 +285,7 @@ def make_solve_fn(
                 {
                     "cell": spec.problem_id,
                     "arm": cfg.arm.value,
+                    "prompt_tone": prompt_tone.value,
                     "seed": seed,
                     "replicate": spec.replicate,
                     "ok": ok,
