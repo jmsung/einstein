@@ -193,9 +193,9 @@ class TestMobiusTruncation:
             val = check_constraint_at_x(pf, float(x))
             # For x < N, sum mu(k)*floor(x/k) should be exactly 1
             if x < N:
-                assert val == pytest.approx(
-                    1.0, abs=1e-10
-                ), f"Möbius identity failed at x={x}: got {val}"
+                assert val == pytest.approx(1.0, abs=1e-10), (
+                    f"Möbius identity failed at x={x}: got {val}"
+                )
 
 
 # ---------------------------------------------------------------------------
@@ -234,6 +234,66 @@ class TestConstraintChecking:
         pf = {1: 0.0, 2: 5.0}
         violations = find_constraint_violations(pf, n_samples=10_000, seed=42)
         assert len(violations) > 0, "Should find constraint violations"
+
+
+# ---------------------------------------------------------------------------
+# Constraint tolerance — arena band ~1e-4, not strict 1e-12
+# ---------------------------------------------------------------------------
+class TestConstraintTolerance:
+    """The gate must match the arena verifier's ~1e-4 tolerance.
+
+    The arena tolerance is ~1e-4, not 1e-12: every leaderboard solution sits at
+    exact maxC ≈ 1+1e-4, so the strict `>1.0+1e-12` local gate zeroes real
+    tolerance-band solutions and produces a triple-verify mismatch. See
+    docs/wiki/concepts/arena-tolerance-drift.md and
+    docs/wiki/findings/arena-proximity-guard.md.
+    """
+
+    # Minimal tolerance-band fixture. For f = {2: c} (c < 0), evaluate normalizes
+    # f(1) = -c/2, and the exact constraint max is |c|/2, attained on odd-x
+    # intervals. c = -2.0001 → exact maxC = 1.00005, i.e. inside (1+1e-12, 1+1e-4].
+    # A CI-safe toy that exercises the gate boundary an edge leaderboard solution
+    # hits (maxC ≈ 1+1e-4), without depending on the private mb/ solution files.
+    def _band_solution(self):
+        return {"partial_function": {"2": -2.0001}}
+
+    def test_band_solution_zeroed_under_strict_gate(self):
+        """Strict 1e-12 gate zeroes a solution inside the arena band."""
+        score = evaluate(self._band_solution(), n_samples=200_000, seed=42, constraint_tol=1e-12)
+        assert score == 0.0
+
+    def test_band_solution_scores_under_arena_tolerance(self):
+        """Default ~1e-4 gate scores the true objective, not 0."""
+        sol = self._band_solution()
+        score = evaluate(sol, n_samples=200_000, seed=42)  # default 1e-4
+        assert score > 0.0, "band solution should score its objective under the 1e-4 gate"
+        expected = compute_score_only({int(k): v for k, v in sol["partial_function"].items()})
+        assert score == pytest.approx(expected, rel=1e-9)
+
+    def test_out_of_band_solution_still_zeroed(self):
+        """A solution past the 1e-4 band is still rejected under the default gate."""
+        sol = {"partial_function": {"2": -2.04}}  # exact maxC = 1.02, well past band
+        score = evaluate(sol, n_samples=200_000, seed=42)  # default 1e-4
+        assert score == 0.0
+
+    def test_default_tolerance_is_arena_band(self):
+        """Default constraint_tol equals the arena ~1e-4 band."""
+        sol = self._band_solution()
+        default = evaluate(sol, n_samples=200_000, seed=42)
+        explicit = evaluate(sol, n_samples=200_000, seed=42, constraint_tol=1e-4)
+        assert default == explicit
+
+    def test_find_violations_honors_constraint_tol(self):
+        """find_constraint_violations gates on constraint_tol like evaluate.
+
+        Normalized band solution (f(1)=1.00005, f(2)=-2.0001) has exact maxC =
+        1.00005: a violation under the strict 1e-12 gate, none under 1e-4.
+        """
+        pf = {1: 1.00005, 2: -2.0001}  # already-normalized form of {2: -2.0001}
+        strict = find_constraint_violations(pf, n_samples=200_000, seed=42, constraint_tol=1e-12)
+        band = find_constraint_violations(pf, n_samples=200_000, seed=42, constraint_tol=1e-4)
+        assert len(strict) > 0, "strict gate should flag the 1.00005 maxC as a violation"
+        assert band == [], "arena-band gate should accept the same solution"
 
 
 # ---------------------------------------------------------------------------
