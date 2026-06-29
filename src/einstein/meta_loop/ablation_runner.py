@@ -13,11 +13,15 @@ Design invariants:
   and the driver persists the returned lesson). So Cold and Warm get an identical
   tool set and prompt skeleton; Warm's prompt merely *contains* prior lessons.
 - **The harness scores, not the agent**: `score_final` is recomputed by the
-  generic evaluator from the centers the agent emits and triple-verified (A1). A
-  self-reported score is ignored — an agent cannot inflate the DV.
+  family's generic evaluator from the configuration the agent emits and
+  triple-verified (A1). A self-reported score is ignored — an agent cannot inflate
+  the DV.
 
-The agent result contract: the session writes `ablation_result.json` into its cwd:
-    {"centers": [[x, y], ...], "lesson": "<<=1-page lesson>>",
+The agent result contract: the session writes `ablation_result.json` into its cwd
+under the family's answer key (`centers` / `vectors` / `values`, from the Family
+adapter), so the runner is correct for any domain (2D points, sphere vectors, 1D
+sequences):
+    {"<answer_key>": <best configuration>, "lesson": "<<=1-page lesson>>",
      "techniques": ["slsqp", ...]}   # techniques optional
 """
 
@@ -219,7 +223,7 @@ def make_solve_fn(
                 res = run(prompt, **kw)
             wall = time.monotonic() - t0
 
-            centers, lesson, techniques = parse_result(cwd, family, problem.n)
+            config, lesson, techniques = parse_result(cwd, family, problem.n)
 
             # Transcript log (auditability — was a channel used?): save prompt + the
             # session's stdout per cell before the cwd is removed.
@@ -234,8 +238,8 @@ def make_solve_fn(
 
         # HARNESS-SIDE scoring — never the agent's self-report. Infeasible/missing
         # output scores at the cold baseline (gap_closed → 0), recorded honestly.
-        if centers is not None:
-            tv = family.triple_verify(centers)
+        if config is not None:
+            tv = family.triple_verify(config)
             score_final = tv.fast if tv.passed else min(score_coldinit, tv.fast)
             verify_note = tv.reason
         else:

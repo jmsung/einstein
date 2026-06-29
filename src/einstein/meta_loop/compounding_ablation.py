@@ -159,7 +159,8 @@ EMPTY_KB_HASH = hashlib.sha256().hexdigest()[:16]
 
 @dataclass(frozen=True)
 class Problem:
-    """One frozen problem from config/ablation_problems.yaml (pre-reg §6)."""
+    """One problem from an ablation config (e.g. config/ablation_problems.yaml, or a
+    transfer config that mixes families — pre-reg §6, §0b)."""
 
     problem_id: str
     n: int
