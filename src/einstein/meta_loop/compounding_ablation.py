@@ -166,7 +166,8 @@ class Problem:
     sequence_index: int
     reference_optimum: float
     statement: str
-    minimize: bool = False  # circle packing maximizes the common radius
+    minimize: bool = False  # all current families maximize
+    family: str = "equal_circles_in_unit_square"  # scorer key (ablation_packing.families)
 
 
 @dataclass(frozen=True)
@@ -216,6 +217,10 @@ class SessionSpec:
     run_kb_readable: bool
     run_kb_path: str | None
     accumulated_lessons: tuple[str, ...]
+    replicate: int = 0  # within-cell repeat index for variance reduction; 0 = first/only.
+    #                     The production solve_fn folds this into the cold-init seed, so
+    #                     replicates draw independent starts that are SHARED across arms —
+    #                     each replicate stays a paired Cold/Warm comparison.
 
 
 def build_session_spec(
@@ -225,10 +230,13 @@ def build_session_spec(
     *,
     run_kb: RunKB | None,
     max_lesson_chars: int | None = None,
+    replicate: int = 0,
 ) -> SessionSpec:
     """Build the launch spec for one cell. Warm gets read access to its run KB and
     the accumulated lessons (capped); Cold gets neither. Web/personas come from
-    the (constant-in-v1) arm config."""
+    the (constant-in-v1) arm config. `replicate` indexes the within-cell repeat used
+    for variance reduction; it changes only the cold-init draw, identically for both
+    arms, so each replicate is still a paired Cold/Warm comparison."""
     cfg = ARM_CONFIGS[arm]
     lessons: tuple[str, ...] = ()
     kb_path: str | None = None
@@ -245,6 +253,7 @@ def build_session_spec(
         run_kb_readable=cfg.read_kb,
         run_kb_path=kb_path,
         accumulated_lessons=lessons,
+        replicate=replicate,
     )
 
 
@@ -313,6 +322,9 @@ class RunRecord:
     dead_ends_avoided: int
     kb_state_hash_before: str
     kb_state_hash_after: str
+    replicates: int = 1  # within-cell repeats averaged into gap_closed (1 = legacy behavior).
+    gap_closed_std: float = 0.0  # stdev of per-replicate gap_closed (0 when replicates==1).
+    gap_closed_reps: tuple[float, ...] = ()  # per-replicate gaps, for transparency/re-analysis.
 
     def to_dict(self) -> dict:
         return {
@@ -332,6 +344,9 @@ class RunRecord:
             "dead_ends_avoided": self.dead_ends_avoided,
             "kb_state_hash_before": self.kb_state_hash_before,
             "kb_state_hash_after": self.kb_state_hash_after,
+            "replicates": self.replicates,
+            "gap_closed_std": self.gap_closed_std,
+            "gap_closed_reps": list(self.gap_closed_reps),
         }
 
 
@@ -340,6 +355,16 @@ class SanityViolation(RuntimeError):
 
 
 # ---------------- driver (§10.4) ----------------
+
+
+def cyclic_order(problems: Sequence[Problem], seed: int) -> list[str]:
+    """Counterbalanced run order (pre-reg v2 §5): cyclic rotation k = seed mod L of
+    the sequence_index-ascending order. Over any L consecutive seeds each problem
+    visits each position 0…L-1 exactly once (a Latin square), so "lessons banked
+    before a problem" is decoupled from the problem's difficulty."""
+    ids = [p.problem_id for p in sorted(problems, key=lambda p: p.sequence_index)]
+    k = seed % len(ids)
+    return ids[k:] + ids[:k]
 
 
 def run_arm_sequence(
@@ -351,22 +376,48 @@ def run_arm_sequence(
     *,
     known_dead_ends: set[str] | None = None,
     max_lesson_chars: int | None = None,
+    order: list[str] | None = None,
+    skip_done: set[str] | None = None,
+    on_record: Callable[[RunRecord], None] | None = None,
+    replicates: int = 1,
 ) -> list[RunRecord]:
-    """Run one arm's full problem sequence for one seed, threading the run KB.
+    """Run one arm's problem sequence for one seed, threading the run KB.
 
-    Warm: KB starts empty (start of run), grows by one lesson per problem, is read
-    before each later problem. Cold: KB wiped before every problem, so it is
-    provably empty at each problem start. Enforces the pre-reg §9 sanity checks
-    per cell and raises `SanityViolation` on any breach.
+    `order` (list of problem_ids) sets the run order; None → sequence_index order.
+    Warm: KB grows one lesson per problem, read before each later problem. Cold:
+    KB wiped before every problem (provably empty at each start). Enforces the §9
+    sanity checks; raises `SanityViolation` on a breach.
+
+    Resume (crash-resilience, pre-reg v2 §9): `skip_done` is the set of problem_ids
+    already completed in a prior (interrupted) run — they are NOT re-solved and the
+    KB is NOT wiped at start (Warm reuses the lessons already persisted on disk).
+    `on_record` is called after each problem so records are durable per-cell.
+
+    `replicates` (variance reduction): solve each cell this many times with
+    independent cold-inits and record the MEAN of the per-replicate gap_closed,
+    cutting per-cell DV noise ~1/√replicates. Exactly one lesson (the first
+    replicate's) is persisted, so Warm's one-lesson-per-problem KB invariant and the
+    banked-count semantics are unchanged. replicates=1 reproduces legacy behavior.
     """
     cfg = ARM_CONFIGS[arm]
     known_dead_ends = known_dead_ends or set()
-    ordered = sorted(problems, key=lambda p: p.sequence_index)
+    skip_done = skip_done or set()
+    by_id = {p.problem_id: p for p in problems}
+    ordered = (
+        [by_id[pid] for pid in order]
+        if order is not None
+        else sorted(problems, key=lambda p: p.sequence_index)
+    )
+    resuming = bool(skip_done)
 
-    run_kb.wipe()  # empty at start of run (pre-reg §3: both arms start blank)
+    if not resuming:
+        run_kb.wipe()  # fresh start: empty at start of run (pre-reg §3)
     records: list[RunRecord] = []
 
     for problem in ordered:
+        if problem.problem_id in skip_done:
+            continue  # completed in a prior run; (Warm) its lesson is already on disk
+
         # Cold: memory wiped between problems -> empty KB at each problem start.
         if not cfg.read_kb:
             run_kb.wipe()
@@ -374,53 +425,74 @@ def run_arm_sequence(
                 raise SanityViolation(f"Cold KB not empty at start of {problem.problem_id}")
 
         hash_before = run_kb.state_hash()
-        spec = build_session_spec(
-            problem, arm, seed, run_kb=run_kb, max_lesson_chars=max_lesson_chars
-        )
-        lessons_read = len(spec.accumulated_lessons)
+        # Variance reduction: run `replicates` independent solves of this cell, each
+        # with its own cold-init (shared across arms via spec.replicate), and average
+        # the per-replicate gap_closed. The DV is mean-OF-gaps — each gap uses its own
+        # cold-init, which is NOT the same as the gap of the mean scores.
+        rep_results: list[SolveResult] = []
+        rep_gaps: list[float] = []
+        spec = None
+        for r in range(max(1, replicates)):
+            spec = build_session_spec(
+                problem, arm, seed, run_kb=run_kb,
+                max_lesson_chars=max_lesson_chars, replicate=r,
+            )
+            res_r = solve_fn(problem, cfg, seed, spec)
+            rep_results.append(res_r)
+            rep_gaps.append(
+                gap_closed(
+                    res_r.score_coldinit, res_r.score_final,
+                    problem.reference_optimum, minimize=problem.minimize,
+                )
+            )
+        lessons_read = len(spec.accumulated_lessons)  # identical across replicates
 
-        result = solve_fn(problem, cfg, seed, spec)
-
-        # Warm persists a lesson; Cold's reflection is discarded (effort equalized).
+        # Persist exactly ONE lesson (first replicate's) so Warm keeps one lesson per
+        # problem — banked-count semantics and the §9 manipulation check are unchanged.
+        primary = rep_results[0]
         lessons_written = 0
-        if cfg.write_kb and result.lesson_text:
-            run_kb.write_lesson(problem.problem_id, result.lesson_text)
+        if cfg.write_kb and primary.lesson_text:
+            run_kb.write_lesson(problem.problem_id, primary.lesson_text)
             lessons_written = 1
         hash_after = run_kb.state_hash()
 
-        gc = gap_closed(
-            result.score_coldinit,
-            result.score_final,
-            problem.reference_optimum,
-            minimize=problem.minimize,
+        k = len(rep_gaps)
+        gc = sum(rep_gaps) / k
+        gc_std = (sum((g - gc) ** 2 for g in rep_gaps) / (k - 1)) ** 0.5 if k > 1 else 0.0
+        techniques: set[str] = set()
+        for rr in rep_results:
+            techniques |= rr.attempted_techniques
+        rec = RunRecord(
+            problem_id=problem.problem_id,
+            arm=arm.value,
+            seed=seed,
+            sequence_index=problem.sequence_index,
+            score_coldinit=sum(rr.score_coldinit for rr in rep_results) / k,
+            score_final=sum(rr.score_final for rr in rep_results) / k,
+            score_optimum_ref=problem.reference_optimum,
+            gap_closed=gc,
+            cycles=len(primary.trajectory),
+            wall_clock_s=sum(rr.wall_clock_s for rr in rep_results),
+            trajectory=[(p.cycle_id, p.best_score) for p in primary.trajectory],
+            lessons_written=lessons_written,
+            lessons_read=lessons_read,
+            dead_ends_avoided=dead_ends_avoided(techniques, known_dead_ends),
+            kb_state_hash_before=hash_before,
+            kb_state_hash_after=hash_after,
+            replicates=k,
+            gap_closed_std=gc_std,
+            gap_closed_reps=tuple(rep_gaps),
         )
-        records.append(
-            RunRecord(
-                problem_id=problem.problem_id,
-                arm=arm.value,
-                seed=seed,
-                sequence_index=problem.sequence_index,
-                score_coldinit=result.score_coldinit,
-                score_final=result.score_final,
-                score_optimum_ref=problem.reference_optimum,
-                gap_closed=gc,
-                cycles=len(result.trajectory),
-                wall_clock_s=result.wall_clock_s,
-                trajectory=[(p.cycle_id, p.best_score) for p in result.trajectory],
-                lessons_written=lessons_written,
-                lessons_read=lessons_read,
-                dead_ends_avoided=dead_ends_avoided(result.attempted_techniques, known_dead_ends),
-                kb_state_hash_before=hash_before,
-                kb_state_hash_after=hash_after,
-            )
-        )
+        records.append(rec)
+        if on_record is not None:
+            on_record(rec)  # durable now, so a later crash keeps this cell
 
-    # Warm manipulation check (pre-reg §9): KB grew >=1 lesson per problem and was
-    # read on later problems (lessons_read increases along the sequence).
+    # Warm manipulation check (pre-reg §9): after the sequence the KB holds one
+    # lesson per problem (skipped ones already on disk), and lessons were reused.
     if cfg.write_kb:
         if run_kb.lesson_count() < len(ordered):
             raise SanityViolation(
-                f"Warm KB grew {run_kb.lesson_count()} lessons for {len(ordered)} problems"
+                f"Warm KB has {run_kb.lesson_count()} lessons for {len(ordered)} problems"
             )
         reads = [r.lessons_read for r in records]
         if len(reads) > 1 and max(reads) == 0:
@@ -437,9 +509,12 @@ def run_matrix(
     *,
     known_dead_ends: set[str] | None = None,
     max_lesson_chars: int | None = None,
+    replicates: int = 1,
 ) -> list[RunRecord]:
     """Run the full (seed x arm x problem-sequence) matrix. `kb_root_for(arm, seed)`
-    returns a distinct KB directory per (arm, seed) cell so runs never share a KB."""
+    returns a distinct KB directory per (arm, seed) cell so runs never share a KB.
+    `replicates` averages each cell over that many independent solves (variance
+    reduction; see run_arm_sequence)."""
     out: list[RunRecord] = []
     for seed in seeds:
         for arm in Arm:
@@ -453,6 +528,7 @@ def run_matrix(
                     kb,
                     known_dead_ends=known_dead_ends,
                     max_lesson_chars=max_lesson_chars,
+                    replicates=replicates,
                 )
             )
     return out
@@ -470,6 +546,7 @@ def load_problems(config_path: str | Path) -> list[Problem]:
     config_path = Path(config_path)
     data = yaml.safe_load(config_path.read_text())
     minimize = bool(data.get("minimize", False))
+    family = str(data.get("family", "equal_circles_in_unit_square"))
     repo_root = config_path.resolve().parent.parent  # config/ -> repo root
     problems: list[Problem] = []
     for p in data["problems"]:
@@ -483,6 +560,7 @@ def load_problems(config_path: str | Path) -> list[Problem]:
                 reference_optimum=float(p["reference_optimum"]),
                 statement=statement,
                 minimize=minimize,
+                family=family,
             )
         )
     return problems
@@ -572,6 +650,56 @@ def _slope(xs: list[float], ys: list[float]) -> float:
     return sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True)) / denom
 
 
+def paired_deltas(records: list[dict]) -> list[tuple[str, int, float, int]]:
+    """Pair Warm/Cold by (problem_id, seed): returns (problem_id, seed, Δ, banked)
+    where Δ = gap_closed(Warm) − gap_closed(Cold) (paired by the shared cold-init)
+    and `banked` = lessons in the Warm KB when the problem was reached
+    (= its position in that seed's counterbalanced order)."""
+    warm = {(r["problem_id"], r["seed"]): r for r in records if r["arm"] == "warm"}
+    cold = {(r["problem_id"], r["seed"]): r for r in records if r["arm"] == "cold"}
+    out: list[tuple[str, int, float, int]] = []
+    for key, w in warm.items():
+        c = cold.get(key)
+        if c is not None:
+            out.append((key[0], key[1], w["gap_closed"] - c["gap_closed"], int(w["lessons_read"])))
+    return out
+
+
+def _within_problem_slope(pairs: list[tuple[str, int, float, int]]) -> float:
+    """Fixed-effect slope of Δ on `banked`, controlling for the problem: center Δ
+    and banked within each problem (removes the difficulty effect), pool, OLS slope.
+    This is the pre-reg v2 §7 H2 statistic — accumulation isolated from difficulty.
+    Needs banked to vary within a problem (guaranteed by counterbalanced order)."""
+    by_p: dict[str, list[tuple[float, int]]] = {}
+    for pid, _seed, d, b in pairs:
+        by_p.setdefault(pid, []).append((d, b))
+    xs: list[float] = []
+    ys: list[float] = []
+    for vals in by_p.values():
+        if len(vals) < 2:
+            continue
+        mb = statistics.fmean(b for _d, b in vals)
+        md = statistics.fmean(d for d, _b in vals)
+        for d, b in vals:
+            xs.append(b - mb)
+            ys.append(d - md)
+    return _slope(xs, ys)
+
+
+def _bootstrap_ci(items, stat, *, n_boot: int = 2000, seed: int = 12345):
+    """Point estimate + percentile 95% bootstrap CI of `stat(items)` (seeded →
+    reproducible). Resamples `items` with replacement."""
+    import random
+
+    point = stat(items)
+    n = len(items)
+    if n == 0:
+        return point, 0.0, 0.0
+    rng = random.Random(seed)
+    boots = sorted(stat([items[rng.randrange(n)] for _ in range(n)]) for _ in range(n_boot))
+    return point, boots[int(0.025 * n_boot)], boots[int(0.975 * n_boot)]
+
+
 @dataclass(frozen=True)
 class Decision:
     supported: bool
@@ -585,53 +713,64 @@ class AnalysisReport:
     cold_mean: float
     pooled_stdev: float
     delta_k: list[DeltaK]
-    delta_slope: float
+    delta_slope: float  # descriptive Δ-vs-sequence-position (confounded by difficulty)
+    mean_delta: float
+    mean_delta_ci: tuple[float, float]
+    banked_slope: float  # within-problem Δ-vs-banked (the §7 compounding statistic)
+    banked_slope_ci: tuple[float, float]
     h1: Decision  # level effect — knowledge helps
-    h2: Decision  # slope effect — it compounds
+    h2: Decision  # compounding — within-problem Δ rises with lessons banked
 
 
 def analyze(records: list[dict]) -> AnalysisReport:
-    """Compute the pre-reg §9 H1/H2 decisions from the run log.
+    """Compute the pre-reg v2 §7 H1/H2 decisions from the run log.
 
-    H1 (level): supported iff mean gap_closed(Warm) exceeds Cold by MORE than the
-    pooled per-cell stdev (clear separation, not overlap).
-    H2 (slope/compounding): supported iff Δ_k trends upward — positive least-squares
-    slope of Δ_k vs k AND later-third mean Δ exceeds first-third mean Δ by more than
-    the pooled stdev. H2 is the headline ("compounds").
+    Both use the PAIRED Δ = gap_closed(Warm) − gap_closed(Cold) (same cold-init):
+    - **H1 (level):** mean Δ > 0 with a 95% bootstrap CI excluding 0.
+    - **H2 (compounding):** the within-problem slope of Δ on lessons-banked is
+      positive with a 95% bootstrap CI excluding 0. Counterbalanced order makes
+      banked vary within each problem, so this isolates accumulation from
+      difficulty. (`delta_slope`, the Δ-vs-sequence-position trend, is reported
+      descriptively but is confounded by difficulty — not the decision.)
     """
     warm_mean = mean_gap_closed(records, "warm")
     cold_mean = mean_gap_closed(records, "cold")
     pooled = _pooled_stdev(records)
     dks = delta_k_trend(records)
+    pairs = paired_deltas(records)
+    deltas = [d for _pid, _s, d, _b in pairs]
 
-    h1_gap = warm_mean - cold_mean
+    # H1 — paired mean Δ, bootstrap CI excludes 0
+    mean_delta, d_lo, d_hi = _bootstrap_ci(deltas, lambda v: statistics.fmean(v) if v else 0.0)
     h1 = Decision(
-        supported=h1_gap > pooled and pooled >= 0,
-        detail=f"warm−cold={h1_gap:+.4f} vs pooled_stdev={pooled:.4f} "
-        f"→ {'separation' if h1_gap > pooled else 'overlap'}",
+        supported=mean_delta > 0 and d_lo > 0,
+        detail=f"mean Δ={mean_delta:+.4f}, 95% CI [{d_lo:+.4f}, {d_hi:+.4f}] "
+        f"→ {'knowledge helps' if (mean_delta > 0 and d_lo > 0) else 'inconclusive'}",
     )
 
-    seqs = [d.sequence_index for d in dks]
-    deltas = [d.delta for d in dks]
-    slope = _slope([float(s) for s in seqs], deltas)
-    # first-third vs later-third (L=6 → {0,1} vs {4,5}); generalizes by thirds.
-    third = max(1, len(dks) // 3)
-    first_mean = statistics.fmean(deltas[:third]) if deltas else 0.0
-    later_mean = statistics.fmean(deltas[-third:]) if deltas else 0.0
-    trend_up = later_mean - first_mean > pooled
+    # H2 — within-problem Δ-vs-banked slope, bootstrap CI excludes 0 and positive
+    banked_slope, s_lo, s_hi = _bootstrap_ci(pairs, _within_problem_slope)
     h2 = Decision(
-        supported=slope > 0 and trend_up,
-        detail=f"Δ_k slope={slope:+.4f}; later-third Δ̄={later_mean:+.4f} vs "
-        f"first-third Δ̄={first_mean:+.4f} (need Δ>{pooled:.4f}) "
-        f"→ {'compounding' if (slope > 0 and trend_up) else 'no compounding'}",
+        supported=banked_slope > 0 and s_lo > 0,
+        detail=f"within-problem Δ-vs-banked slope={banked_slope:+.4f}, "
+        f"95% CI [{s_lo:+.4f}, {s_hi:+.4f}] "
+        f"→ {'compounding' if (banked_slope > 0 and s_lo > 0) else 'no compounding'}",
     )
+
+    # descriptive (confounded) Δ-vs-sequence-position trend, for context only
+    delta_slope = _slope([float(d.sequence_index) for d in dks], [d.delta for d in dks])
+
     return AnalysisReport(
         n_records=len(records),
         warm_mean=warm_mean,
         cold_mean=cold_mean,
         pooled_stdev=pooled,
         delta_k=dks,
-        delta_slope=slope,
+        delta_slope=delta_slope,
+        mean_delta=mean_delta,
+        mean_delta_ci=(d_lo, d_hi),
+        banked_slope=banked_slope,
+        banked_slope_ci=(s_lo, s_hi),
         h1=h1,
         h2=h2,
     )
