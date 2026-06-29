@@ -60,7 +60,7 @@ Every score must be verified three ways before trusting: fast local evaluator, e
 
 ## Workflow
 
-`/where` → `/goal` → `/act` → `/commit` per the global skill set. Worktree state in `mb/active/<branch>.md`. Branch naming: `js/<type>/<description>`.
+`/where` → `/goal` → `/act` → `/commit` per the global skill set. Worktree state in `mb/active/<branch>.md`. Branch naming: `<type>/<description>` (kebab-case, per harness global — no author/initials prefix; single developer).
 
 For math problems: every hard problem follows the **math-solving protocol** in `.claude/rules/math-solving-protocol.md` — understand → wiki-first → council dispatch → gap detect → research → distill → specialize → execute → look back → failure log.
 

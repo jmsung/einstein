@@ -165,23 +165,95 @@ def _records_from(tmp_path, solver, seeds=(1, 2, 3)):
     )
 
 
-def test_analyze_supports_h1_and_h2_on_compounding_fixture(tmp_path):
-    recs = [r.to_dict() for r in _records_from(tmp_path, _compounding_solver(0.08))]
+def _counterbalanced_records(*, banked_gain, difficulty_gain=0.1, n_seeds=6):
+    """Synthetic counterbalanced records (pre-reg v2 §5). Cold gap_closed falls with
+    difficulty (sequence_index); Warm = Cold + banked_gain * (lessons banked at this
+    position). So Δ depends only on banked, with difficulty present but orthogonal."""
+    probs = _problems(6)
+    recs = []
+    for s in range(n_seeds):
+        order = ca.cyclic_order(probs, s)
+        for pos, pid in enumerate(order):
+            seq = next(p.sequence_index for p in probs if p.problem_id == pid)
+            cold_gc = max(0.0, 0.7 - difficulty_gain * seq)
+            warm_gc = min(1.0, cold_gc + banked_gain * pos)
+            for arm, gc, read, wrote in (("cold", cold_gc, 0, 0), ("warm", warm_gc, pos, 1)):
+                recs.append(
+                    ca.RunRecord(
+                        pid,
+                        arm,
+                        s,
+                        seq,
+                        0.05,
+                        0.0,
+                        1.0,
+                        gc,
+                        1,
+                        0.0,
+                        [(0, 0.05)],
+                        wrote,
+                        read,
+                        0,
+                        ca.EMPTY_KB_HASH,
+                        "x",
+                    ).to_dict()
+                )
+    return recs
+
+
+def test_analyze_supports_h1_and_h2_on_counterbalanced_compounding():
+    recs = _counterbalanced_records(banked_gain=0.08)
     rep = ca.analyze(recs)
-    assert rep.n_records == 36
+    assert rep.n_records == 72
     assert rep.warm_mean > rep.cold_mean
-    assert rep.h1.supported is True
-    assert rep.delta_slope > 0
-    assert rep.h2.supported is True  # advantage grows with sequence position
+    assert rep.h1.supported is True  # mean Δ CI excludes 0
+    assert rep.banked_slope > 0 and rep.banked_slope_ci[0] > 0
+    assert rep.h2.supported is True  # within-problem Δ rises with banked
 
 
-def test_analyze_null_when_warm_equals_cold(tmp_path):
-    # per_lesson_gain = 0 → Warm reads but gains nothing → Warm ≈ Cold
-    recs = [r.to_dict() for r in _records_from(tmp_path, _compounding_solver(0.0))]
+def test_analyze_null_when_no_banked_gain():
+    recs = _counterbalanced_records(banked_gain=0.0)
     rep = ca.analyze(recs)
-    assert rep.warm_mean == pytest.approx(rep.cold_mean)
-    assert rep.h1.supported is False
+    assert rep.h1.supported is False  # Δ ≈ 0
     assert rep.h2.supported is False  # the pre-committed honest negative
+
+
+def test_h2_isolates_accumulation_from_difficulty():
+    # Warm advantage depends ONLY on difficulty (sequence_index), NOT on banked:
+    # within a problem Δ is constant across seeds → no banked slope → H2 not supported,
+    # even though Warm helps on average (H1) and Δ correlates with difficulty.
+    probs = _problems(6)
+    recs = []
+    for s in range(6):
+        order = ca.cyclic_order(probs, s)
+        for pos, pid in enumerate(order):
+            seq = next(p.sequence_index for p in probs if p.problem_id == pid)
+            cold_gc, warm_gc = 0.5, 0.5 + 0.08 * seq  # advantage from difficulty, not pos
+            for arm, gc, read, wrote in (("cold", cold_gc, 0, 0), ("warm", warm_gc, pos, 1)):
+                recs.append(
+                    ca.RunRecord(
+                        pid,
+                        arm,
+                        s,
+                        seq,
+                        0.05,
+                        0.0,
+                        1.0,
+                        gc,
+                        1,
+                        0.0,
+                        [(0, 0.05)],
+                        wrote,
+                        read,
+                        0,
+                        ca.EMPTY_KB_HASH,
+                        "x",
+                    ).to_dict()
+                )
+    rep = ca.analyze(recs)
+    assert rep.h1.supported is True  # Warm helps on average
+    assert rep.h2.supported is False  # but NOT via accumulation — the rigor guarantee
+    assert abs(rep.banked_slope) < 1e-9
 
 
 def test_delta_k_trend_ordered_by_sequence(tmp_path):
@@ -335,3 +407,40 @@ def test_build_script_strips_exactly_the_frozen_paths(fixture_repo):
     # cleanup worktrees registered against the fixture repo
     _git(["worktree", "remove", "--force", str(out / "einstein-cold")], fixture_repo)
     _git(["worktree", "remove", "--force", str(out / "einstein-warm")], fixture_repo)
+
+
+# ---------------- counterbalanced order (pre-reg v2 §5) ----------------
+
+
+def test_cyclic_order_is_a_latin_square():
+    probs = _problems(6)  # sequence_index 0..5
+    ids = [p.problem_id for p in sorted(probs, key=lambda p: p.sequence_index)]
+    orders = [ca.cyclic_order(probs, s) for s in range(6)]
+    for s, o in enumerate(orders):
+        assert o == ids[s:] + ids[:s]  # rotation k=s
+    for pos in range(6):  # each problem visits each position once over 6 seeds
+        assert sorted(o[pos] for o in orders) == sorted(ids)
+
+
+# ---------------- per-cell resume (crash-resilience, §9) ----------------
+
+
+def test_run_arm_sequence_resume_skips_done_and_reuses_kb(tmp_path):
+    probs = _problems(4)
+    order = ca.cyclic_order(probs, 0)  # [p0,p1,p2,p3]
+    kb = ca.RunKB(tmp_path / "w")
+    # simulate a crash after the first 2 problems: KB already holds their lessons
+    kb.write_lesson(order[0], "lesson 0")
+    kb.write_lesson(order[1], "lesson 1")
+    recs = ca.run_arm_sequence(
+        ca.Arm.WARM,
+        0,
+        probs,
+        _compounding_solver(0.1),
+        kb,
+        order=order,
+        skip_done={order[0], order[1]},
+    )
+    assert {r.problem_id for r in recs} == {order[2], order[3]}  # only remaining solved
+    assert kb.lesson_count() == 4  # KB not wiped; completed + new
+    assert recs[0].lessons_read == 2  # the two already banked were read

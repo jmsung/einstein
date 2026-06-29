@@ -247,3 +247,17 @@ def test_build_classifications_skips_unknown_direction():
     rows = [_row(1, "P99-fake", "1.0 → 1.0")]
     specs = [tj.ProblemSpec(99, "P99", {})]
     assert tj.build_classifications(rows, specs, {99: 0.1}) == []
+
+
+# ---------------- certificate_of: reject placeholders (red-team 2026-06-27) ----------------
+
+
+@pytest.mark.parametrize("placeholder", ["tbd", "TBD", "???", "todo", "pending", "wip", "-", "n/a"])
+def test_certificate_of_rejects_placeholders(placeholder):
+    # a frozen-but-unproven cert must NOT read as a real certificate, else the problem
+    # is falsely classified solved-at-floor and dropped from the work queue.
+    assert tj.certificate_of({"certificate": placeholder}) is None
+
+
+def test_certificate_of_accepts_real_cert():
+    assert tj.certificate_of({"certificate": "lp-dual-bound"}) == "lp-dual-bound"
