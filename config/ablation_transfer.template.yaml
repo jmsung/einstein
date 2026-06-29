@@ -1,0 +1,54 @@
+# ablation_transfer.template.yaml — cross-family transfer experiment (pre-reg §0b).
+#
+# TEMPLATE, NOT FROZEN. The instance set (which n) and each `reference_optimum` are
+# PLACEHOLDERS. They get chosen + frozen only AFTER the §3 per-model headroom screen
+# (`run_transfer_ablation.py --probe`) picks model-matched difficulty. Copy this to a
+# frozen `ablation_transfer.yaml` at that point; do not run confirmatory cells against
+# the template.
+#
+# Per-problem `family` overrides the top-level (load_problems supports mixed families),
+# so family A (transfer source) and family B (target) live in one file. `minimize` is
+# also per-problem; the autocorrelation_seq family's score is already negated to
+# maximize, so minimize stays false everywhere.
+
+family: heilbronn_triangle   # default for problems that omit `family`
+minimize: false
+
+problems:
+  # --- Family A: Heilbronn (2D) — the transfer SOURCE; KB_A is built here (Warm) ---
+  - id: heilbronn-a-07
+    family: heilbronn_triangle
+    n: 7
+    sequence_index: 0
+    reference_optimum: 0.0833333333   # PLACEHOLDER — set from the frozen reference table
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle
+      formed by any three of them (the Heilbronn triangle problem).
+  - id: heilbronn-a-08
+    family: heilbronn_triangle
+    n: 8
+    sequence_index: 1
+    reference_optimum: 0.0727083333   # PLACEHOLDER
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle.
+
+  # --- Family B (NEAR): Tammes (sphere) — transfer TARGET ---
+  - id: tammes-near-12
+    family: tammes_sphere
+    n: 12
+    sequence_index: 0
+    reference_optimum: 1.0514622242   # PLACEHOLDER — min pairwise distance, n=12 icosahedron
+    statement: |
+      Place n points on the unit sphere S^2 in R^3 (each a 3D unit vector) to MAXIMIZE
+      the minimum pairwise Euclidean distance (the Tammes problem).
+
+  # --- Family B (FAR): autocorrelation (1D sequence) — transfer TARGET ---
+  - id: autocorr-far-32
+    family: autocorrelation_seq
+    n: 32
+    sequence_index: 1
+    reference_optimum: -1.5000000000   # PLACEHOLDER — negated peak autoconv ratio (maximize)
+    statement: |
+      Choose a length-n non-negative sequence f to MINIMIZE the peak autoconvolution
+      ratio max(f*f) / (sum f)^2 on [0, 0.5]. (Scored internally as the negated ratio,
+      so higher is better — maximize it.)

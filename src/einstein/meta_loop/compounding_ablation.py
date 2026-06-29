@@ -159,7 +159,8 @@ EMPTY_KB_HASH = hashlib.sha256().hexdigest()[:16]
 
 @dataclass(frozen=True)
 class Problem:
-    """One frozen problem from config/ablation_problems.yaml (pre-reg §6)."""
+    """One problem from an ablation config (e.g. config/ablation_problems.yaml, or a
+    transfer config that mixes families — pre-reg §6, §0b)."""
 
     problem_id: str
     n: int
@@ -223,6 +224,28 @@ class SessionSpec:
     #                     each replicate stays a paired Cold/Warm comparison.
 
 
+def _cap_lessons(lessons: tuple[str, ...], max_chars: int | None) -> tuple[str, ...]:
+    """Cap a lesson list to `max_chars` total by dropping whole lessons from the end
+    (never truncating one), matching RunKB.read_lessons' equal-max-context policy."""
+    if max_chars is None:
+        return tuple(lessons)
+    out: list[str] = []
+    total = 0
+    for t in lessons:
+        if total + len(t) > max_chars:
+            break
+        out.append(t)
+        total += len(t)
+    return tuple(out)
+
+
+def load_frozen_kb(kb_root: str | Path, *, max_chars: int | None = None) -> tuple[str, ...]:
+    """Load a frozen KB_A (a prior family-A Warm run's lesson directory) as a fixed
+    lesson tuple for a cross-family warm-transfer arm. The directory is read-only here
+    — the transfer arm never writes back into it, keeping A's lessons the ONE variable."""
+    return tuple(RunKB(Path(kb_root)).read_lessons(max_chars=max_chars))
+
+
 def build_session_spec(
     problem: Problem,
     arm: Arm,
@@ -231,18 +254,27 @@ def build_session_spec(
     run_kb: RunKB | None,
     max_lesson_chars: int | None = None,
     replicate: int = 0,
+    frozen_kb_lessons: tuple[str, ...] | None = None,
 ) -> SessionSpec:
     """Build the launch spec for one cell. Warm gets read access to its run KB and
     the accumulated lessons (capped); Cold gets neither. Web/personas come from
     the (constant-in-v1) arm config. `replicate` indexes the within-cell repeat used
     for variance reduction; it changes only the cold-init draw, identically for both
-    arms, so each replicate is still a paired Cold/Warm comparison."""
+    arms, so each replicate is still a paired Cold/Warm comparison.
+
+    `frozen_kb_lessons` (cross-family transfer design, pre-reg §0b): a FROZEN KB_A from
+    a different family, prepended ahead of any within-run lessons for KB-reading arms.
+    For a pure transfer cell (run_kb empty) the warm arm's knowledge IS exactly KB_A —
+    the one manipulated variable. None → unchanged within-family behavior."""
     cfg = ARM_CONFIGS[arm]
     lessons: tuple[str, ...] = ()
     kb_path: str | None = None
-    if cfg.read_kb and run_kb is not None:
-        lessons = tuple(run_kb.read_lessons(max_chars=max_lesson_chars))
-        kb_path = str(run_kb.root)
+    if cfg.read_kb:
+        within = tuple(run_kb.read_lessons(max_chars=None)) if run_kb is not None else ()
+        if run_kb is not None:
+            kb_path = str(run_kb.root)
+        frozen = tuple(frozen_kb_lessons) if frozen_kb_lessons else ()
+        lessons = _cap_lessons(frozen + within, max_lesson_chars)
     return SessionSpec(
         problem_id=problem.problem_id,
         arm=arm,
@@ -434,15 +466,21 @@ def run_arm_sequence(
         spec = None
         for r in range(max(1, replicates)):
             spec = build_session_spec(
-                problem, arm, seed, run_kb=run_kb,
-                max_lesson_chars=max_lesson_chars, replicate=r,
+                problem,
+                arm,
+                seed,
+                run_kb=run_kb,
+                max_lesson_chars=max_lesson_chars,
+                replicate=r,
             )
             res_r = solve_fn(problem, cfg, seed, spec)
             rep_results.append(res_r)
             rep_gaps.append(
                 gap_closed(
-                    res_r.score_coldinit, res_r.score_final,
-                    problem.reference_optimum, minimize=problem.minimize,
+                    res_r.score_coldinit,
+                    res_r.score_final,
+                    problem.reference_optimum,
+                    minimize=problem.minimize,
                 )
             )
         lessons_read = len(spec.accumulated_lessons)  # identical across replicates
@@ -501,6 +539,197 @@ def run_arm_sequence(
     return records
 
 
+@dataclass(frozen=True)
+class TransferRecord:
+    """One cross-family transfer cell result (pre-reg §0b). The warm-transfer arm
+    carries a FROZEN KB_A from family A; the cold arm carries nothing. The ONE
+    variable is KB_A's presence — `kb_a_hash` pins which frozen KB was injected."""
+
+    family_a: str
+    family_b: str
+    problem_id: str
+    arm: str  # "cold" | "warm_transfer"
+    seed: int
+    score_coldinit: float
+    score_final: float
+    gap_closed: float
+    gap_closed_reps: tuple[float, ...]
+    lessons_read: int
+    kb_a_hash: str
+    wall_clock_s: float
+
+
+def _transfer_cell(
+    problem: Problem,
+    arm: Arm,
+    seed: int,
+    solve_fn: SolveFn,
+    run_kb: RunKB,
+    *,
+    frozen: tuple[str, ...] | None,
+    max_lesson_chars: int | None,
+    replicates: int,
+    family_a: str,
+    family_b: str,
+    kb_a_hash: str,
+) -> TransferRecord:
+    """Replicate-averaged solve of one family-B cell. Cold and warm-transfer share the
+    (seed, replicate) cold-init draw, so the comparison is paired on identical starts."""
+    cfg = ARM_CONFIGS[arm]
+    run_kb.wipe()
+    rep_results: list[SolveResult] = []
+    rep_gaps: list[float] = []
+    spec = None
+    for r in range(max(1, replicates)):
+        spec = build_session_spec(
+            problem,
+            arm,
+            seed,
+            run_kb=run_kb,
+            max_lesson_chars=max_lesson_chars,
+            replicate=r,
+            frozen_kb_lessons=frozen,
+        )
+        res = solve_fn(problem, cfg, seed, spec)
+        rep_results.append(res)
+        rep_gaps.append(
+            gap_closed(
+                res.score_coldinit,
+                res.score_final,
+                problem.reference_optimum,
+                minimize=problem.minimize,
+            )
+        )
+    k = len(rep_gaps)
+    return TransferRecord(
+        family_a=family_a,
+        family_b=family_b,
+        problem_id=problem.problem_id,
+        arm="warm_transfer" if arm is Arm.WARM else "cold",
+        seed=seed,
+        score_coldinit=sum(r.score_coldinit for r in rep_results) / k,
+        score_final=sum(r.score_final for r in rep_results) / k,
+        gap_closed=sum(rep_gaps) / k,
+        gap_closed_reps=tuple(rep_gaps),
+        lessons_read=len(spec.accumulated_lessons),
+        kb_a_hash=kb_a_hash,
+        wall_clock_s=sum(r.wall_clock_s for r in rep_results),
+    )
+
+
+def run_transfer_experiment(
+    family_a_problems: Sequence[Problem],
+    family_b_problems: Sequence[Problem],
+    seeds: Sequence[int],
+    solve_fn: SolveFn,
+    *,
+    results_dir: str | Path,
+    max_lesson_chars: int | None = None,
+    replicates: int = 1,
+    on_record: Callable[[TransferRecord], None] | None = None,
+) -> dict:
+    """Cross-family transfer experiment (pre-reg §0b PRIMARY design).
+
+    Phase 1: build+freeze KB_A by running family A WARM (per seed) — `run_arm_sequence`
+    threads the within-A KB. Phase 2: for each family-B problem, run COLD (control, no
+    KB) vs WARM-TRANSFER (frozen KB_A), paired on the shared cold-init. Distance is the
+    finding: near (Heilbronn→Tammes) vs far (Heilbronn→autocorrelation). Returns the
+    records + the per-seed KB_A hashes for audit. solve_fn is injected, so the whole
+    orchestration is testable with a mock (no LLM)."""
+    results_dir = Path(results_dir)
+    fam_a = family_a_problems[0].family if family_a_problems else "?"
+    fam_b = family_b_problems[0].family if family_b_problems else "?"
+    records: list[TransferRecord] = []
+    kb_a_hashes: dict[int, str] = {}
+    for seed in seeds:
+        kb_a = RunKB(results_dir / f"kb-a-seed{seed}")
+        run_arm_sequence(
+            Arm.WARM,
+            seed,
+            family_a_problems,
+            solve_fn,
+            kb_a,
+            max_lesson_chars=max_lesson_chars,
+            replicates=replicates,
+        )
+        frozen = tuple(kb_a.read_lessons(max_chars=max_lesson_chars))
+        kb_a_hash = kb_a.state_hash()
+        kb_a_hashes[seed] = kb_a_hash
+        for problem in sorted(family_b_problems, key=lambda p: p.sequence_index):
+            for arm, frozen_for_arm in ((Arm.COLD, None), (Arm.WARM, frozen)):
+                kb_dir = results_dir / f"kb-b-{arm.value}-{problem.problem_id}-seed{seed}"
+                rec = _transfer_cell(
+                    problem,
+                    arm,
+                    seed,
+                    solve_fn,
+                    RunKB(kb_dir),
+                    frozen=frozen_for_arm,
+                    max_lesson_chars=max_lesson_chars,
+                    replicates=replicates,
+                    family_a=fam_a,
+                    family_b=fam_b,
+                    kb_a_hash=kb_a_hash,
+                )
+                records.append(rec)
+                if on_record is not None:
+                    on_record(rec)
+    return {"records": records, "family_a": fam_a, "family_b": fam_b, "kb_a_hashes": kb_a_hashes}
+
+
+@dataclass(frozen=True)
+class HeadroomResult:
+    """One cold-solve probe of a family instance (pre-reg §3 headroom screen)."""
+
+    family: str
+    problem_id: str
+    seed: int
+    gap_closed: float
+    in_band: bool
+
+
+def headroom_probe(
+    problems: Sequence[Problem],
+    solve_fn: SolveFn,
+    seeds: Sequence[int],
+    *,
+    results_dir: str | Path,
+    band: tuple[float, float] = (0.2, 0.8),
+    replicates: int = 1,
+) -> dict:
+    """Cold-solve each instance and screen for genuine headroom (pre-reg §3).
+
+    A family is eligible for the transfer experiment only if a from-scratch (cold) solve
+    closes a MIDDLING fraction of the gap — too easy (gap→1: cold already nails it, no
+    room to show transfer) or too hard (gap→0: nothing learns) both kill the signal. We
+    keep families whose median cold gap_closed sits in `band` (default [0.2, 0.8]). Used
+    per-model to pick model-matched difficulty (§0c). solve_fn injected → testable."""
+    lo, hi = band
+    results_dir = Path(results_dir)
+    out: list[HeadroomResult] = []
+    for seed in seeds:
+        for problem in problems:
+            kb = RunKB(results_dir / f"probe-{problem.problem_id}-seed{seed}")
+            kb.wipe()
+            gaps: list[float] = []
+            for r in range(max(1, replicates)):
+                spec = build_session_spec(problem, Arm.COLD, seed, run_kb=kb, replicate=r)
+                res = solve_fn(problem, ARM_CONFIGS[Arm.COLD], seed, spec)
+                gaps.append(
+                    gap_closed(
+                        res.score_coldinit, res.score_final, problem.reference_optimum,
+                        minimize=problem.minimize,
+                    )
+                )
+            gc = sum(gaps) / len(gaps)
+            out.append(HeadroomResult(problem.family, problem.problem_id, seed, gc, lo <= gc <= hi))
+    by_family: dict[str, list[float]] = {}
+    for r in out:
+        by_family.setdefault(r.family, []).append(r.gap_closed)
+    eligible = {f: (lo <= statistics.median(g) <= hi) for f, g in by_family.items()}
+    return {"results": out, "eligible": eligible, "band": band}
+
+
 def run_matrix(
     problems: Sequence[Problem],
     seeds: Sequence[int],
@@ -538,20 +767,24 @@ def run_matrix(
 
 
 def load_problems(config_path: str | Path) -> list[Problem]:
-    """Load the frozen problem set (config/ablation_problems.yaml) into `Problem`s,
-    reading each problem's statement file. `minimize` is derived from the config's
-    top-level `minimize` flag (False for circle packing)."""
+    """Load a problem set into `Problem`s. `minimize` and `family` come from the
+    top-level config but may be overridden PER PROBLEM (so one transfer config can list
+    both family-A and family-B problems — pre-reg §0b). The statement comes from
+    `statement_file` (relative to the repo root) or an inline `statement` key."""
     import yaml
 
     config_path = Path(config_path)
     data = yaml.safe_load(config_path.read_text())
-    minimize = bool(data.get("minimize", False))
-    family = str(data.get("family", "equal_circles_in_unit_square"))
+    top_minimize = bool(data.get("minimize", False))
+    top_family = str(data.get("family", "equal_circles_in_unit_square"))
     repo_root = config_path.resolve().parent.parent  # config/ -> repo root
     problems: list[Problem] = []
     for p in data["problems"]:
-        stmt_path = repo_root / p["statement_file"]
-        statement = stmt_path.read_text() if stmt_path.exists() else ""
+        if p.get("statement_file"):
+            stmt_path = repo_root / p["statement_file"]
+            statement = stmt_path.read_text() if stmt_path.exists() else ""
+        else:
+            statement = str(p.get("statement", ""))
         problems.append(
             Problem(
                 problem_id=p["id"],
@@ -559,8 +792,8 @@ def load_problems(config_path: str | Path) -> list[Problem]:
                 sequence_index=int(p["sequence_index"]),
                 reference_optimum=float(p["reference_optimum"]),
                 statement=statement,
-                minimize=minimize,
-                family=family,
+                minimize=bool(p.get("minimize", top_minimize)),
+                family=str(p.get("family", top_family)),
             )
         )
     return problems
