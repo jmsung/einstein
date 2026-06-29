@@ -13,11 +13,15 @@ Design invariants:
   and the driver persists the returned lesson). So Cold and Warm get an identical
   tool set and prompt skeleton; Warm's prompt merely *contains* prior lessons.
 - **The harness scores, not the agent**: `score_final` is recomputed by the
-  generic evaluator from the centers the agent emits and triple-verified (A1). A
-  self-reported score is ignored — an agent cannot inflate the DV.
+  family's generic evaluator from the configuration the agent emits and
+  triple-verified (A1). A self-reported score is ignored — an agent cannot inflate
+  the DV.
 
-The agent result contract: the session writes `ablation_result.json` into its cwd:
-    {"centers": [[x, y], ...], "lesson": "<<=1-page lesson>>",
+The agent result contract: the session writes `ablation_result.json` into its cwd
+under the family's answer key (`centers` / `vectors` / `values`, from the Family
+adapter), so the runner is correct for any domain (2D points, sphere vectors, 1D
+sequences):
+    {"<answer_key>": <best configuration>, "lesson": "<<=1-page lesson>>",
      "techniques": ["slsqp", ...]}   # techniques optional
 """
 
@@ -35,8 +39,7 @@ from pathlib import Path
 
 import numpy as np
 
-from einstein.ablation_packing import evaluator as ev
-from einstein.ablation_packing.families import get_family
+from einstein.ablation_packing.families import Family, get_family
 from einstein.meta_loop.compounding_ablation import ArmConfig, Problem, SessionSpec, SolveResult
 from einstein.meta_loop.trajectory import TrajectoryPoint
 
@@ -78,10 +81,11 @@ def _init_seed(n: int, seed: int, replicate: int = 0) -> int:
     return replicate * 1_000_000 + seed * 1000 + n
 
 
-def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray) -> str:
+def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray, family: Family) -> str:
     """Build the session prompt. Identical skeleton for both arms; the Warm prompt
-    additionally carries the accumulated lessons block."""
-    centers = [[float(x), float(y)] for x, y in init]
+    additionally carries the accumulated lessons block. The config-space description,
+    the start config, and the answer key come from the family adapter, so the prompt
+    is correct for any domain (2D points, sphere vectors, 1D sequences)."""
     lessons_block = ""
     if spec.accumulated_lessons:
         joined = "\n\n".join(
@@ -92,13 +96,14 @@ def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray) -> str:
             "Reuse what transfers (operators, parameterizations, dead-ends to skip):\n\n"
             f"{joined}\n"
         )
+    key = family.answer_key
     return f"""You are solving an optimization problem from a random cold start.
 
 {problem.statement}
 
-## Your starting configuration ({problem.n} points in [0,1]^2)
-Begin from exactly these points and improve the objective described above:
-{json.dumps(centers)}
+## Your starting configuration ({family.config_space(problem.n)})
+Begin from exactly this configuration and improve the objective described above:
+{json.dumps(family.format_init(init))}
 {lessons_block}
 ## Rules
 - Use ONLY general-purpose optimizers you write yourself with numpy/scipy
@@ -111,7 +116,7 @@ Begin from exactly these points and improve the objective described above:
 
 ## Deliverable (required) — write it INCREMENTALLY
 Write a file named `{RESULT_FILENAME}` in the current directory with JSON:
-  {{"centers": [[x, y], ...],   // your best {problem.n} centers so far
+  {{"{key}": <your best configuration, same shape as the starting configuration above>,
     "lesson": "<= one page: which operator/parameterization worked, dead-ends to
                skip, any transferable structural observation>",
     "techniques": ["slsqp", "multistart", ...]}}
@@ -121,10 +126,13 @@ you run out of budget. The `lesson` field is required even if progress was small
 """
 
 
-def parse_result(cwd: Path, n: int) -> tuple[np.ndarray | None, str | None, set[str]]:
-    """Read the agent's `ablation_result.json`. Returns (centers, lesson,
-    techniques). centers is None if the file is missing/unparseable or has the
-    wrong shape (the run is then scored at the cold baseline)."""
+def parse_result(
+    cwd: Path, family: Family, n: int
+) -> tuple[np.ndarray | None, str | None, set[str]]:
+    """Read the agent's `ablation_result.json`. Returns (config, lesson, techniques).
+    `config` is parsed via the family adapter from `family.answer_key`, and is None if
+    the file is missing/unparseable or has the wrong shape (the run is then scored at
+    the cold baseline)."""
     path = cwd / RESULT_FILENAME
     if not path.exists():
         return None, None, set()
@@ -132,18 +140,10 @@ def parse_result(cwd: Path, n: int) -> tuple[np.ndarray | None, str | None, set[
         obj = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError):
         return None, None, set()
-    centers = None
-    raw = obj.get("centers")
-    if isinstance(raw, list) and len(raw) == n:
-        try:
-            arr = np.asarray(raw, dtype=np.float64)
-            if arr.shape == (n, 2):
-                centers = arr
-        except (ValueError, TypeError):
-            centers = None
+    config = family.parse(obj.get(family.answer_key), n)
     lesson = obj.get("lesson") if isinstance(obj.get("lesson"), str) else None
     techniques = {str(t) for t in obj.get("techniques", []) if isinstance(t, str)}
-    return centers, lesson, techniques
+    return config, lesson, techniques
 
 
 def _default_headless_run() -> Callable:
@@ -187,7 +187,7 @@ def make_solve_fn(
 
     def solve_fn(problem: Problem, cfg: ArmConfig, seed: int, spec: SessionSpec) -> SolveResult:
         family = get_family(problem.family)
-        init = ev.cold_init(problem.n, _init_seed(problem.n, seed, spec.replicate))
+        init = family.cold_init(problem.n, _init_seed(problem.n, seed, spec.replicate))
         score_coldinit = family.score(init)
 
         # PER-CELL ISOLATED CWD (fixes cross-cell filesystem contamination): each cell
@@ -206,7 +206,7 @@ def make_solve_fn(
         cell_parent.mkdir(parents=True, exist_ok=True)
         cwd = Path(tempfile.mkdtemp(prefix=f"{cell}-", dir=str(cell_parent)))
         try:
-            prompt = build_prompt(problem, spec, init)
+            prompt = build_prompt(problem, spec, init, family)
             t0 = time.monotonic()
             kw = {
                 "allowed_tools": ALLOWED_TOOLS,
@@ -223,7 +223,7 @@ def make_solve_fn(
                 res = run(prompt, **kw)
             wall = time.monotonic() - t0
 
-            centers, lesson, techniques = parse_result(cwd, problem.n)
+            config, lesson, techniques = parse_result(cwd, family, problem.n)
 
             # Transcript log (auditability — was a channel used?): save prompt + the
             # session's stdout per cell before the cwd is removed.
@@ -238,8 +238,8 @@ def make_solve_fn(
 
         # HARNESS-SIDE scoring — never the agent's self-report. Infeasible/missing
         # output scores at the cold baseline (gap_closed → 0), recorded honestly.
-        if centers is not None:
-            tv = family.triple_verify(centers)
+        if config is not None:
+            tv = family.triple_verify(config)
             score_final = tv.fast if tv.passed else min(score_coldinit, tv.fast)
             verify_note = tv.reason
         else:
