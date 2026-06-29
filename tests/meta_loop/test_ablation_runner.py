@@ -271,9 +271,12 @@ def test_no_budget_cap_when_unset(tmp_path):
 
 
 def test_prompt_requires_incremental_write_under_budget(tmp_path):
+    from einstein.ablation_packing.families import get_family
+
     p = _problem(4)
-    init = ev.cold_init(4, ar._init_seed(4, 1))
-    prompt = ar.build_prompt(p, _spec(p, ca.Arm.COLD), init)
+    fam = get_family(p.family)
+    init = fam.cold_init(4, ar._init_seed(4, 1))
+    prompt = ar.build_prompt(p, _spec(p, ca.Arm.COLD), init, fam)
     assert "OVERWRITE" in prompt and "budget" in prompt.lower()
 
 
