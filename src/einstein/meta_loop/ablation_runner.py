@@ -41,6 +41,7 @@ import numpy as np
 
 from einstein.ablation_packing.families import Family, get_family
 from einstein.meta_loop.compounding_ablation import ArmConfig, Problem, SessionSpec, SolveResult
+from einstein.meta_loop.prompt_tone import PREAMBLES, PromptTone
 from einstein.meta_loop.trajectory import TrajectoryPoint
 
 RESULT_FILENAME = "ablation_result.json"
@@ -81,11 +82,24 @@ def _init_seed(n: int, seed: int, replicate: int = 0) -> int:
     return replicate * 1_000_000 + seed * 1000 + n
 
 
-def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray, family: Family) -> str:
+def build_prompt(
+    problem: Problem,
+    spec: SessionSpec,
+    init: np.ndarray,
+    family: Family,
+    tone: PromptTone = PromptTone.NEUTRAL,
+) -> str:
     """Build the session prompt. Identical skeleton for both arms; the Warm prompt
     additionally carries the accumulated lessons block. The config-space description,
     the start config, and the answer key come from the family adapter, so the prompt
-    is correct for any domain (2D points, sphere vectors, 1D sequences)."""
+    is correct for any domain (2D points, sphere vectors, 1D sequences).
+
+    `tone` (prereg §4) prepends a verbatim preamble — the ONE variable of the
+    prompt-tone ablation. NEUTRAL (default) prepends "" so the prompt is
+    byte-identical to the pre-tone prompt; ENCOURAGING prepends the frozen
+    motivational string."""
+    preamble = PREAMBLES[tone]
+    prefix = f"{preamble}\n\n" if preamble else ""
     lessons_block = ""
     if spec.accumulated_lessons:
         joined = "\n\n".join(
@@ -97,7 +111,9 @@ def build_prompt(problem: Problem, spec: SessionSpec, init: np.ndarray, family: 
             f"{joined}\n"
         )
     key = family.answer_key
-    return f"""You are solving an optimization problem from a random cold start.
+    return (
+        prefix
+        + f"""You are solving an optimization problem from a random cold start.
 
 {problem.statement}
 
@@ -124,6 +140,7 @@ Write this file as soon as you have ANY improved configuration, and OVERWRITE it
 every time you find a better one — so your current best is always saved even if
 you run out of budget. The `lesson` field is required even if progress was small.
 """
+    )
 
 
 def parse_result(
@@ -166,6 +183,7 @@ def make_solve_fn(
     telemetry: list | None = None,
     drop_api_key: bool = True,
     transcripts_dir: str | Path | None = None,
+    prompt_tone: PromptTone = PromptTone.NEUTRAL,
 ) -> Callable[[Problem, ArmConfig, int, SessionSpec], SolveResult]:
     """Build the production `solve_fn` the harness drives.
 
@@ -181,6 +199,16 @@ def make_solve_fn(
     must rediscover the method closes less of the gap than a Warm session that
     reuses it, so `gap_closed` becomes discriminating again and cost/wall measure
     efficiency. None = uncapped (the saturated regime).
+
+    `prompt_tone` (prereg §4) selects the verbatim preamble prepended to every
+    session this solve_fn launches — the ONE variable of the prompt-tone ablation.
+    Bound here (not on `Arm`/`SessionSpec`) so it stays orthogonal to the Cold/Warm
+    memory axis and never touches the cold-init seed; run two tone-bound solve_fns
+    at equal seeds to get a paired tone comparison. NOTE on the §3 fixed-budget cap:
+    the binding lever is `max_budget_usd` (the token/cost ceiling) — the headless
+    `claude -p` CLI exposes no per-session turn/cycle cap, so "max cycles" has no
+    referent in this single-session runner; hold `max_budget_usd` equal across arms
+    for the fixed-budget regime.
     """
     checkout_root = Path(checkout_root)
     run = headless_run or _default_headless_run()
@@ -206,7 +234,7 @@ def make_solve_fn(
         cell_parent.mkdir(parents=True, exist_ok=True)
         cwd = Path(tempfile.mkdtemp(prefix=f"{cell}-", dir=str(cell_parent)))
         try:
-            prompt = build_prompt(problem, spec, init, family)
+            prompt = build_prompt(problem, spec, init, family, tone=prompt_tone)
             t0 = time.monotonic()
             kw = {
                 "allowed_tools": ALLOWED_TOOLS,
@@ -257,6 +285,7 @@ def make_solve_fn(
                 {
                     "cell": spec.problem_id,
                     "arm": cfg.arm.value,
+                    "prompt_tone": prompt_tone.value,
                     "seed": seed,
                     "replicate": spec.replicate,
                     "ok": ok,
@@ -335,6 +364,37 @@ def audit_checkout(checkout: str | Path) -> dict:
     }
 
 
+class AirGapViolation(RuntimeError):
+    """A clean-room checkout failed the air-gap audit (pre-reg §7).
+
+    Raised by `assert_clean_checkout` so the batch driver REFUSES to run on a
+    contaminated checkout — the audit is a hard gate, not just a post-hoc
+    receipt (air-gap fidelity audit, 2026-06-28). A leaked answer-key/wiki dir
+    or a web tool in the allow-list aborts before any compute is spent.
+    """
+
+
+def assert_clean_checkout(checkout: str | Path) -> dict:
+    """Pre-flight HARD GATE: audit the checkout and raise on any breach.
+
+    Returns the passing receipt; raises `AirGapViolation` if the checkout is
+    missing or `audit_checkout` reports a leak / a web tool. Use this (not the
+    bare `audit_checkout` receipt) wherever a contaminated checkout must STOP
+    the run rather than merely be recorded.
+    """
+    checkout = Path(checkout)
+    if not checkout.exists():
+        raise AirGapViolation(f"clean-room checkout missing: {checkout}")
+    receipt = audit_checkout(checkout)
+    if not receipt["passed"]:
+        raise AirGapViolation(
+            f"air-gap breached in {checkout}: "
+            f"leaked_answer_key_files={receipt['leaked_answer_key_files']} "
+            f"web_tools_in_allowlist={receipt['web_tools_in_allowlist']}"
+        )
+    return receipt
+
+
 def _done_pids(records: list[dict]) -> dict[tuple[str, int], set[str]]:
     """Map (arm, seed) → set of problem_ids already logged."""
     d: dict[tuple[str, int], set[str]] = {}
@@ -399,6 +459,25 @@ def run_experiment(
     skipped: list[str] = []
     audits: list[dict] = []
 
+    # PRE-FLIGHT HARD GATE (pre-reg §7): audit BOTH arm checkouts before any
+    # compute. A leaked wiki/answer-key dir or a web tool aborts the batch here —
+    # the audit is a gate, not just the post-hoc receipt below. Receipts are
+    # recorded first so the audit log shows what was checked even on abort.
+    for arm in Arm:
+        checkout = checkout_root / f"einstein-{arm.value}"
+        try:
+            receipt = assert_clean_checkout(checkout)
+        except AirGapViolation:
+            fail = {**audit_checkout(checkout), "arm": arm.value, "phase": "preflight"}
+            audits.append(fail)
+            with audit_path.open("a") as fh:
+                fh.write(json.dumps(fail) + "\n")
+            raise
+        receipt.update({"arm": arm.value, "phase": "preflight"})
+        audits.append(receipt)
+        with audit_path.open("a") as fh:
+            fh.write(json.dumps(receipt) + "\n")
+
     for seed in seeds:
         for arm in Arm:
             label = f"{arm.value}-seed{seed}"
@@ -434,11 +513,20 @@ def run_experiment(
             )
             (resumed if is_resume else ran).append(label)
 
+            # Post-run receipt = drift detection: catches a checkout mutated
+            # mid-run (e.g. an answer-key dir created during the session). Record
+            # first, then abort the batch if the air-gap was breached.
             receipt = audit_checkout(checkout_root / f"einstein-{arm.value}")
-            receipt.update({"arm": arm.value, "seed": seed})
+            receipt.update({"arm": arm.value, "seed": seed, "phase": "postrun"})
             audits.append(receipt)
             with audit_path.open("a") as fh:
                 fh.write(json.dumps(receipt) + "\n")
+            if not receipt["passed"]:
+                raise AirGapViolation(
+                    f"air-gap breached during run (arm={arm.value}, seed={seed}): "
+                    f"leaked_answer_key_files={receipt['leaked_answer_key_files']} "
+                    f"web_tools_in_allowlist={receipt['web_tools_in_allowlist']}"
+                )
 
     return {
         "ran": ran,

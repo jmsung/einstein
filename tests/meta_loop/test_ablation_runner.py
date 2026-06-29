@@ -95,9 +95,9 @@ def test_prompt_embeds_cold_init_and_tools_have_no_web(tmp_path):
     # fix for cross-cell filesystem contamination: each cell starts in an empty dir
     # so a later cell can't read an earlier cell's scratch.
     cwd = Path(fake.last_kw["cwd"])
-    assert cwd != root / "einstein-cold"            # not the shared checkout root
-    assert "_cells" in cwd.parts                     # isolated per-cell subdir
-    assert (root / "einstein-cold") in cwd.parents   # but inside the checkout (env resolves)
+    assert cwd != root / "einstein-cold"  # not the shared checkout root
+    assert "_cells" in cwd.parts  # isolated per-cell subdir
+    assert (root / "einstein-cold") in cwd.parents  # but inside the checkout (env resolves)
     assert "starting configuration" in fake.last_prompt
 
 
@@ -278,6 +278,81 @@ def test_prompt_requires_incremental_write_under_budget(tmp_path):
     init = fam.cold_init(4, ar._init_seed(4, 1))
     prompt = ar.build_prompt(p, _spec(p, ca.Arm.COLD), init, fam)
     assert "OVERWRITE" in prompt and "budget" in prompt.lower()
+
+
+# ---------------- prompt_tone factor (prereg §4) ----------------
+
+
+def test_neutral_tone_prompt_is_byte_identical_to_default(tmp_path):
+    from einstein.ablation_packing.families import get_family
+    from einstein.meta_loop import prompt_tone as pt
+
+    p = _problem(4)
+    fam = get_family(p.family)
+    init = fam.cold_init(4, ar._init_seed(4, 1))
+    spec = _spec(p, ca.Arm.COLD)
+    # NEUTRAL (the default) must not change the prompt at all — regression guard.
+    assert ar.build_prompt(p, spec, init, fam) == ar.build_prompt(
+        p, spec, init, fam, tone=pt.PromptTone.NEUTRAL
+    )
+
+
+def test_encouraging_tone_prepends_the_preamble(tmp_path):
+    from einstein.ablation_packing.families import get_family
+    from einstein.meta_loop import prompt_tone as pt
+
+    p = _problem(4)
+    fam = get_family(p.family)
+    init = fam.cold_init(4, ar._init_seed(4, 1))
+    spec = _spec(p, ca.Arm.COLD)
+    enc = ar.build_prompt(p, spec, init, fam, tone=pt.PromptTone.ENCOURAGING)
+    assert pt.ENCOURAGING_PREAMBLE in enc
+    assert enc.startswith(pt.ENCOURAGING_PREAMBLE)
+    # the body (the solving instructions) is still present and unchanged
+    assert "You are solving an optimization problem" in enc
+
+
+def test_solve_fn_binds_tone_into_session_prompt(tmp_path):
+    from einstein.meta_loop import prompt_tone as pt
+
+    root = _checkout(tmp_path)
+    p = _problem(4)
+    grid = ev.cold_init(4, ar._init_seed(4, 1))
+
+    neutral_fake = _fake_run_writing(grid)
+    ar.make_solve_fn(root, headless_run=neutral_fake)(
+        p, ca.ARM_CONFIGS[ca.Arm.COLD], 1, _spec(p, ca.Arm.COLD)
+    )
+    assert pt.ENCOURAGING_PREAMBLE not in neutral_fake.last_prompt
+
+    enc_fake = _fake_run_writing(grid)
+    ar.make_solve_fn(root, headless_run=enc_fake, prompt_tone=pt.PromptTone.ENCOURAGING)(
+        p, ca.ARM_CONFIGS[ca.Arm.COLD], 1, _spec(p, ca.Arm.COLD)
+    )
+    assert pt.ENCOURAGING_PREAMBLE in enc_fake.last_prompt
+
+
+def test_telemetry_records_prompt_tone(tmp_path):
+    from einstein.meta_loop import prompt_tone as pt
+
+    root = _checkout(tmp_path)
+    p = _problem(4)
+    grid = ev.cold_init(4, ar._init_seed(4, 1))
+    tel: list = []
+    fake = _fake_run_writing(grid)
+    ar.make_solve_fn(root, headless_run=fake, prompt_tone=pt.PromptTone.ENCOURAGING, telemetry=tel)(
+        p, ca.ARM_CONFIGS[ca.Arm.COLD], 1, _spec(p, ca.Arm.COLD)
+    )
+    assert tel[0]["prompt_tone"] == "encouraging"
+
+
+def test_tone_does_not_change_cold_init_pairing(tmp_path):
+    # one-variable invariant: tone must not touch the cold-init draw, so neutral and
+    # encouraging arms remain paired at equal seed.
+    p = _problem(10)
+    a = ev.cold_init(p.n, ar._init_seed(p.n, 3))
+    b = ev.cold_init(p.n, ar._init_seed(p.n, 3))
+    assert np.array_equal(a, b)
 
 
 def test_solve_fn_uses_the_family_scorer_for_heilbronn(tmp_path):
