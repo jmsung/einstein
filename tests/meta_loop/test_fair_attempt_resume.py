@@ -109,6 +109,34 @@ class _Counter:
         return _res(ok=True, error_kind="", wall=120.0)
 
 
+def test_warm_a_phase_transient_not_persisted(tmp_path):
+    """A transient WARM failure must NOT freeze a junk lesson into the KB and must not be
+    recorded — else a frozen KB_A (or the compounding warm arm) is permanently poisoned,
+    and A-resume skips the junk cell forever. The A-phase analogue of the B-cell guard.
+    On resume the cell retries and persists the real lesson."""
+    probs = _fam("heilbronn_triangle", ["heil-0", "heil-1"])
+    kb = ca.RunKB(tmp_path / "kb-a")
+
+    # First pass: heil-1 fast-fails (offline-like); heil-0 solves cleanly.
+    def flaky(problem, cfg, seed, spec):
+        if problem.problem_id == "heil-1":
+            return _res(ok=False, error_kind="non-zero", wall=2.0, lesson="JUNK")
+        return _res(ok=True, error_kind="", wall=120.0, lesson="real-0")
+
+    recs = ca.run_arm_sequence(ca.Arm.WARM, 1, probs, flaky, kb)
+    ids = {r.problem_id for r in recs}
+    assert "heil-1" not in ids  # transient cell not recorded
+    assert set(kb.lesson_problem_ids()) == {"heil-0"}  # NO junk lesson frozen for heil-1
+
+    # Resume: skip the recorded (good) problem; heil-1 retries and now succeeds.
+    def healthy(problem, cfg, seed, spec):
+        return _res(ok=True, error_kind="", wall=120.0, lesson=f"real-{problem.problem_id}")
+
+    recs2 = ca.run_arm_sequence(ca.Arm.WARM, 1, probs, healthy, kb, skip_done=ids)
+    assert {r.problem_id for r in recs2} == {"heil-1"}
+    assert set(kb.lesson_problem_ids()) == {"heil-0", "heil-1"}
+
+
 def test_transfer_resume_skips_done_cells(tmp_path):
     a = _fam("heilbronn_triangle", ["heil-0", "heil-1"])
     b = _fam("tammes_sphere", ["tam-0"])

@@ -33,6 +33,7 @@ from __future__ import annotations
 import enum
 import hashlib
 import json
+import logging
 import statistics
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
@@ -40,6 +41,8 @@ from pathlib import Path
 
 from einstein.meta_loop.ablation import dead_ends_avoided, is_firewalled
 from einstein.meta_loop.trajectory import TrajectoryPoint
+
+log = logging.getLogger(__name__)
 
 # ---------------- arms (the one independent variable: the memory loop) ----------------
 
@@ -470,6 +473,7 @@ def run_arm_sequence(
     if not resuming:
         run_kb.wipe()  # fresh start: empty at start of run (pre-reg §3)
     records: list[RunRecord] = []
+    skipped_transient = 0  # cells dropped this run as infra/offline fast-fails (retry on resume)
 
     for problem in ordered:
         if problem.problem_id in skip_done:
@@ -509,6 +513,25 @@ def run_arm_sequence(
                 )
             )
         lessons_read = len(spec.accumulated_lessons)  # identical across replicates
+
+        # Disconnect-safety (fair-attempt guard): if ANY replicate was an infra/offline/
+        # rate-limit failure rather than a genuine budgeted attempt, do NOT persist a
+        # lesson or record this cell — leave it unrecorded so resume retries it. Without
+        # this, a transient WARM failure freezes a junk fallback lesson (ablation_runner
+        # writes "[no lesson emitted…]" on a failed solve) permanently into the KB —
+        # poisoning a frozen KB_A / the compounding warm arm — and A-resume then skips it
+        # forever. This is the A-phase analogue of the B-cell / driver guards.
+        if not all(fair_attempt(r) for r in rep_results):
+            log.warning(
+                "run_arm_sequence: transient failure on %s seed=%d arm=%s (kinds=%s) — "
+                "not recorded, no lesson persisted; retry on resume",
+                problem.problem_id,
+                seed,
+                arm.value,
+                [r.error_kind for r in rep_results],
+            )
+            skipped_transient += 1
+            continue
 
         # Persist exactly ONE lesson (first replicate's) so Warm keeps one lesson per
         # problem — banked-count semantics and the §9 manipulation check are unchanged.
@@ -550,12 +573,16 @@ def run_arm_sequence(
         if on_record is not None:
             on_record(rec)  # durable now, so a later crash keeps this cell
 
-    # Warm manipulation check (pre-reg §9): after the sequence the KB holds one
-    # lesson per problem (skipped ones already on disk), and lessons were reused.
+    # Warm manipulation check (pre-reg §9): after the sequence the KB holds one lesson
+    # per problem that was actually solved — resume-skipped ones are already on disk;
+    # transient-skipped ones (infra/offline fast-fails this run) legitimately have none
+    # yet and are excluded from the expected count (they retry on resume).
     if cfg.write_kb:
-        if run_kb.lesson_count() < len(ordered):
+        expected = len(ordered) - skipped_transient
+        if run_kb.lesson_count() < expected:
             raise SanityViolation(
-                f"Warm KB has {run_kb.lesson_count()} lessons for {len(ordered)} problems"
+                f"Warm KB has {run_kb.lesson_count()} lessons for {expected} solved "
+                f"problems ({len(ordered)} total, {skipped_transient} transient-skipped)"
             )
         reads = [r.lessons_read for r in records]
         if len(reads) > 1 and max(reads) == 0:
