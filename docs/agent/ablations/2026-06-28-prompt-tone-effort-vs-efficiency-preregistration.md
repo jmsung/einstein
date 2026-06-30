@@ -14,11 +14,14 @@ paper_hook: "main.tex §6 — does prompt framing affect the agent, and is it ef
 question: ../../wiki/questions/2026-06-28-does-prompt-tone-change-agent-performance.md
 ---
 
-# Pre-registration (DRAFT) — Encouraging prompt: effort, efficiency, or null?
+# Pre-registration — Encouraging prompt: effort, efficiency, or null?
 
-> **Status: DRAFT.** Sketch for review. The §3 problem/seed/budget freeze and the §4
-> arm strings must be locked **before run 1**. Gated behind `feat/ablation-v3-llm-runs`
-> for the shared Claude rate limit (§6).
+> **Status: FROZEN (2026-06-29), run as a directional pilot — see §9.** The §3
+> problem/seed/budget and the §4 arm strings were locked before run 1; results landed
+> in `results-compounding-evidence.md` (NULL pilot, Δ=+0.035, 95% CI [−0.10, +0.18]).
+> §0–§8 below preserve the original exploratory design rationale; §9 holds the frozen
+> directional choices actually run. Gated behind `feat/ablation-v3-llm-runs` for the
+> shared Claude rate limit (§6).
 
 ---
 
@@ -153,6 +156,15 @@ regime measures the effort channel explicitly. Report both — do not collapse t
   (saved at `ablation_runner.py:230-235`) for `qmd`/`docs/`/absolute repo paths to rule out
   an absolute-path escape. Question: `../../wiki/questions/2026-06-28-does-prompt-tone-change-agent-performance.md`.
 
+## 8. Implications
+
+- **H2 (efficiency):** cheap, real lever — bake the preamble into the autonomous loop's system
+  prompt; document in `.claude/`.
+- **H1 (effort):** not a free lunch — equivalent to raising the budget; prefer an explicit
+  budget knob over a motivational string.
+- **NULL:** retire the practice as folklore; record the dead-end finding (failure-is-a-finding).
+  Either way the README/paper gains a measured statement about prompt framing.
+
 ## 9. FROZEN directional design (2026-06-29)
 
 Run as a **directional pilot** alongside the council ablation (single-credential serial
@@ -173,12 +185,3 @@ budget; the §3 S-freeze power target is deferred — same rationale as the coun
   CI straddling 0 is the honest expected NULL on a frontier model (§0), not proof of none.
 
 *Frozen 2026-06-29 (was draft 2026-06-28). Results → `results-compounding-evidence.md`.*
-
-## 8. Implications
-
-- **H2 (efficiency):** cheap, real lever — bake the preamble into the autonomous loop's system
-  prompt; document in `.claude/`.
-- **H1 (effort):** not a free lunch — equivalent to raising the budget; prefer an explicit
-  budget knob over a motivational string.
-- **NULL:** retire the practice as folklore; record the dead-end finding (failure-is-a-finding).
-  Either way the README/paper gains a measured statement about prompt framing.
