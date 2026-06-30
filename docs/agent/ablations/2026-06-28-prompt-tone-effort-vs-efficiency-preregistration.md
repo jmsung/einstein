@@ -2,7 +2,7 @@
 type: ablation-protocol
 author: hybrid
 drafted: 2026-06-28
-status: draft            # NOT yet frozen — sketch for review; freeze §3–§6 before run 1
+status: frozen           # §3/§4 frozen 2026-06-29 (directional pilot — see §9)
 hypothesis: "An encouraging prompt preamble does not improve the agent's score-per-unit-compute on the solve loop. H1 (effort): any score gain is mediated by increased compute (more cycles/tokens/iterations) and vanishes at a fixed budget. H2 (efficiency): the encouraging arm's score-vs-compute frontier sits strictly above neutral at equal budget. Default expectation on a frontier model: NULL (no separation at fixed budget)."
 factor: prompt_tone   # {neutral (control), encouraging, optional: stakes/harsh}
 model: claude-haiku-4-5   # tier-1 cheap; add claude-opus-4-8 only if Haiku shows a signal worth pricing
@@ -152,6 +152,27 @@ regime measures the effort channel explicitly. Report both — do not collapse t
   confirm every `audit.jsonl` receipt is `passed:true`, and `grep` the per-cell transcripts
   (saved at `ablation_runner.py:230-235`) for `qmd`/`docs/`/absolute repo paths to rule out
   an absolute-path escape. Question: `../../wiki/questions/2026-06-28-does-prompt-tone-change-agent-performance.md`.
+
+## 9. FROZEN directional design (2026-06-29)
+
+Run as a **directional pilot** alongside the council ablation (single-credential serial
+budget; the §3 S-freeze power target is deferred — same rationale as the council prereg §9).
+
+- **§4 neutral control FROZEN = length-matched** (`PREAMBLES[NEUTRAL] = NEUTRAL_LENGTH_MATCHED`,
+  123 chars vs ENCOURAGING 103, rel 0.16 ≤ 0.20 — passes `assert_length_matched`). This is
+  the stronger control: any tone effect cannot be raw-token count. Encouraging string frozen
+  verbatim (§4).
+- **Regime:** fixed-budget only (the **H2 efficiency** test — the interesting one). 600 s
+  equal-budget cap both arms. The unconstrained H1 (effort) regime is deferred — the
+  single-session `claude -p` runner has no per-session cycle cap, and $ billing is $0
+  (login), so wall-clock is the only budget; fixed-budget is the clean efficiency read.
+- **Instances:** `heil-n13`, `heil-n14`; **Seeds:** S=4; paired cold-init. **Model:** haiku.
+- **DV:** `gap_closed` paired delta (encouraging − neutral), mean + 95% bootstrap CI.
+- **Driver:** `scripts/run_tone_ablation.py` (resumable). 8 cells.
+- **Reporting caveat:** 8 cells underpowered — report directional Δ + CI as a pilot; a
+  CI straddling 0 is the honest expected NULL on a frontier model (§0), not proof of none.
+
+*Frozen 2026-06-29 (was draft 2026-06-28). Results → `results-compounding-evidence.md`.*
 
 ## 8. Implications
 
