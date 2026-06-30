@@ -119,6 +119,12 @@ class RunKB:
     def lesson_count(self) -> int:
         return len(self._lessons())
 
+    def lesson_problem_ids(self) -> set[str]:
+        """The problem_ids whose lessons are persisted (parsed from lesson-NNN-<id>.md).
+        Used by the transfer resume path to skip already-built A-problems."""
+        suffix = ".md"
+        return {p.name.split("-", 2)[2][: -len(suffix)] for p in self._lessons()}
+
     def write_lesson(self, problem_id: str, text: str) -> Path:
         idx = self.lesson_count()
         path = self.root / f"lesson-{idx:03d}-{problem_id}.md"
@@ -305,10 +311,29 @@ class SolveResult:
     #                          Cold's is discarded — reflection effort equalized)
     attempted_techniques: set[str] = field(default_factory=set)
     wall_clock_s: float = 0.0
+    ok: bool = True  # the session returned a clean, budgeted result (HeadlessResult.ok)
+    error_kind: str = ""  # claude_headless taxonomy: "" | "unavailable" | "timeout" | "non-zero"
 
 
 # (problem, arm_config, seed, session_spec) -> SolveResult
 SolveFn = Callable[[Problem, ArmConfig, int, SessionSpec], SolveResult]
+
+
+def fair_attempt(res: SolveResult, *, fast_fail_s: float = 60.0) -> bool:
+    """True => a genuine budgeted attempt worth RECORDING; False => looks like an
+    infra/connectivity/rate-limit failure that should be RETRIED on resume, not
+    recorded as a (bogus, gap=0) cell. Rationale: when offline, `claude -p` fails in
+    seconds; a real timeout runs the full budget. So: 'unavailable' (auth/quota/429/
+    overload) is always transient; a real 'timeout' is fair (valid budgeted result);
+    a clean run is fair; any other non-ok result that returned in < fast_fail_s is
+    treated as a fast-fail infra error."""
+    if res.error_kind == "unavailable":
+        return False
+    if res.error_kind == "timeout":
+        return True
+    if res.ok:
+        return True
+    return res.wall_clock_s >= fast_fail_s
 
 
 # ---------------- dependent variable (§8) ----------------
@@ -557,6 +582,8 @@ class TransferRecord:
     lessons_read: int
     kb_a_hash: str
     wall_clock_s: float
+    fair: bool = True  # all replicates were genuine budgeted attempts (not infra/offline
+    #                    fast-fails); False => don't record, retry on resume (see fair_attempt).
 
 
 def _transfer_cell(
@@ -601,6 +628,7 @@ def _transfer_cell(
             )
         )
     k = len(rep_gaps)
+    fair = all(fair_attempt(r) for r in rep_results)
     return TransferRecord(
         family_a=family_a,
         family_b=family_b,
@@ -614,6 +642,7 @@ def _transfer_cell(
         lessons_read=len(spec.accumulated_lessons),
         kb_a_hash=kb_a_hash,
         wall_clock_s=sum(r.wall_clock_s for r in rep_results),
+        fair=fair,
     )
 
 
@@ -627,6 +656,7 @@ def run_transfer_experiment(
     max_lesson_chars: int | None = None,
     replicates: int = 1,
     on_record: Callable[[TransferRecord], None] | None = None,
+    skip_done: set[tuple[str, str, int]] | None = None,
 ) -> dict:
     """Cross-family transfer experiment (pre-reg §0b PRIMARY design).
 
@@ -635,14 +665,30 @@ def run_transfer_experiment(
     KB) vs WARM-TRANSFER (frozen KB_A), paired on the shared cold-init. Distance is the
     finding: near (Heilbronn→Tammes) vs far (Heilbronn→autocorrelation). Returns the
     records + the per-seed KB_A hashes for audit. solve_fn is injected, so the whole
-    orchestration is testable with a mock (no LLM)."""
+    orchestration is testable with a mock (no LLM).
+
+    Resume (crash/offline resilience): `skip_done` is the set of already-recorded B-cell
+    keys `(problem_id, arm_value, seed)` (arm_value is "cold"/"warm_transfer"). Such cells
+    are NOT re-solved and NOT re-emitted. Phase 1 also resumes per-seed: A-problems whose
+    lesson is already persisted on disk in `kb-a-seed{seed}` are skipped — their lessons
+    still reconstruct KB_A from disk, so `frozen` is correct without re-running them.
+
+    Fair-attempt guard: a B-cell whose record is `fair == False` (an infra/offline
+    fast-fail, see `fair_attempt`) is NOT recorded — it is skipped so it retries on the
+    next resume rather than poisoning the data with a bogus gap=0 cell."""
     results_dir = Path(results_dir)
+    skip_done = skip_done or set()
     fam_a = family_a_problems[0].family if family_a_problems else "?"
     fam_b = family_b_problems[0].family if family_b_problems else "?"
     records: list[TransferRecord] = []
     kb_a_hashes: dict[int, str] = {}
+    n_skipped = 0
     for seed in seeds:
         kb_a = RunKB(results_dir / f"kb-a-seed{seed}")
+        # A-resume: lessons already on disk reconstruct KB_A; skip those A-problems so we
+        # don't re-run them (frozen still reads them back). A lesson file is named
+        # lesson-NNN-<problem_id>.md, so the persisted problem_ids are the A-done set.
+        done_a = kb_a.lesson_problem_ids()
         run_arm_sequence(
             Arm.WARM,
             seed,
@@ -651,12 +697,16 @@ def run_transfer_experiment(
             kb_a,
             max_lesson_chars=max_lesson_chars,
             replicates=replicates,
+            skip_done=done_a or None,
         )
         frozen = tuple(kb_a.read_lessons(max_chars=max_lesson_chars))
         kb_a_hash = kb_a.state_hash()
         kb_a_hashes[seed] = kb_a_hash
         for problem in sorted(family_b_problems, key=lambda p: p.sequence_index):
             for arm, frozen_for_arm in ((Arm.COLD, None), (Arm.WARM, frozen)):
+                arm_value = "warm_transfer" if arm is Arm.WARM else "cold"
+                if (problem.problem_id, arm_value, seed) in skip_done:
+                    continue  # already recorded in a prior run
                 kb_dir = results_dir / f"kb-b-{arm.value}-{problem.problem_id}-seed{seed}"
                 rec = _transfer_cell(
                     problem,
@@ -671,10 +721,24 @@ def run_transfer_experiment(
                     family_b=fam_b,
                     kb_a_hash=kb_a_hash,
                 )
+                if not rec.fair:
+                    n_skipped += 1
+                    print(
+                        f"[SKIP] {problem.problem_id} arm={arm_value} seed={seed} — "
+                        "transient/offline failure, will retry on resume",
+                        flush=True,
+                    )
+                    continue  # don't record; retries on resume
                 records.append(rec)
                 if on_record is not None:
                     on_record(rec)
-    return {"records": records, "family_a": fam_a, "family_b": fam_b, "kb_a_hashes": kb_a_hashes}
+    return {
+        "records": records,
+        "family_a": fam_a,
+        "family_b": fam_b,
+        "kb_a_hashes": kb_a_hashes,
+        "n_skipped_transient": n_skipped,
+    }
 
 
 @dataclass(frozen=True)

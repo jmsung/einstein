@@ -49,6 +49,7 @@ from einstein.meta_loop.compounding_ablation import (  # noqa: E402
     ARM_CONFIGS,
     Arm,
     build_session_spec,
+    fair_attempt,
     gap_closed,
     load_problems,
 )
@@ -291,6 +292,19 @@ def main() -> int:
         print("[3] COUNCIL-ON solve…", flush=True)
         res_on = solve_fn(problem_on, cfg, seed, spec_on)
 
+        # Fair-attempt guard: if either arm looks like an infra/offline/rate-limit
+        # fast-fail, do NOT record this cell — leave it unlogged so it RETRIES on the
+        # next resume (instead of poisoning the data with a bogus gap=0 cell).
+        fair = fair_attempt(res_off) and fair_attempt(res_on)
+        if not fair:
+            print(
+                f"[SKIP] {pid} seed={seed} — transient/offline failure "
+                f"(off_kind={res_off.error_kind!r} on_kind={res_on.error_kind!r}), "
+                "will retry on resume",
+                flush=True,
+            )
+            continue
+
         gap_off = gap_closed(
             res_off.score_coldinit, res_off.score_final,
             problem.reference_optimum, minimize=problem.minimize,
@@ -301,7 +315,8 @@ def main() -> int:
         )
         paired = abs(res_off.score_coldinit - res_on.score_coldinit) < 1e-12
 
-        # The last 2 telemetry entries are THIS cell's off then on (solve order above).
+        # The last 2 telemetry entries are THIS cell's off then on (solve order above);
+        # used only for the verify note. ok/error_kind now come from the SolveResult.
         off_t = solve_telem[-2]
         on_t = solve_telem[-1]
 
@@ -319,11 +334,11 @@ def main() -> int:
             "wall_on": res_on.wall_clock_s,
             "council_cost": council_cost,
             "council_wall": council_wall,
-            "off_ok": off_t.get("ok"),
-            "off_kind": off_t.get("error_kind"),
+            "off_ok": res_off.ok,
+            "off_kind": res_off.error_kind,
             "off_verify": off_t.get("verify"),
-            "on_ok": on_t.get("ok"),
-            "on_kind": on_t.get("error_kind"),
+            "on_ok": res_on.ok,
+            "on_kind": res_on.error_kind,
             "on_verify": on_t.get("verify"),
         }
 

@@ -182,7 +182,32 @@ def main(argv: list[str]) -> int:
         )
         return 2
 
-    records: list[ca.TransferRecord] = []
+    results_dir.mkdir(parents=True, exist_ok=True)
+    jsonl_path = results_dir / "transfer-records.jsonl"
+
+    # Resume: read prior incremental records → skip_done keys (problem_id, arm, seed).
+    prior_records: list[dict] = []
+    skip_done: set[tuple[str, str, int]] = set()
+    if jsonl_path.exists():
+        for line in jsonl_path.read_text().splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            o = json.loads(line)
+            prior_records.append(o)
+            skip_done.add((o["problem_id"], o["arm"], int(o["seed"])))
+    print(
+        f"resume: {len(skip_done)} B-cell(s) already recorded in {jsonl_path.name}; "
+        "those (and already-built KB_A problems on disk) are skipped.",
+        flush=True,
+    )
+
+    # Incremental, flushed on_record so an overnight crash/offline keeps completed cells.
+    def _append(rec: ca.TransferRecord) -> None:
+        with jsonl_path.open("a") as fh:
+            fh.write(json.dumps(rec.__dict__, default=list) + "\n")
+            fh.flush()
+
     out = ca.run_transfer_experiment(
         a,
         b,
@@ -191,17 +216,28 @@ def main(argv: list[str]) -> int:
         results_dir=results_dir,
         max_lesson_chars=args.max_lesson_chars,
         replicates=args.replicates,
-        on_record=records.append,
+        on_record=_append,
+        skip_done=skip_done,
     )
-    results_dir.mkdir(parents=True, exist_ok=True)
+    # Final summary = prior (resumed) records + new ones from this run.
+    all_records = prior_records + [r.__dict__ for r in out["records"]]
     (results_dir / "transfer-records.json").write_text(
-        json.dumps([r.__dict__ for r in out["records"]], indent=2, default=list)
+        json.dumps(all_records, indent=2, default=list)
     )
-    n_cold = sum(1 for r in out["records"] if r.arm == "cold")
-    n_warm = len(out["records"]) - n_cold
-    print(f"transfer done: {args.family_a} -> {args.family_b}; {n_cold} cold, {n_warm} warm cells")
+    n_cold = sum(1 for r in all_records if r["arm"] == "cold")
+    n_warm = len(all_records) - n_cold
+    print(
+        f"transfer done: {args.family_a} -> {args.family_b}; "
+        f"{n_cold} cold, {n_warm} warm cells "
+        f"({len(out['records'])} new this run, {len(prior_records)} resumed, "
+        f"{out['n_skipped_transient']} transient-skipped)"
+    )
     # DV (reframe A): cold vs warm-transfer SOLVE-RATE per family-B; warm−cold = the effect.
-    rates = ca.transfer_solve_rates(out["records"], threshold=args.solve_threshold)
+    # Computed over ALL records (resumed + new) so a multi-night run aggregates correctly.
+    all_recs = [ca.TransferRecord(**{k: r[k] for k in r if k != "gap_closed_reps"},
+                                  gap_closed_reps=tuple(r.get("gap_closed_reps", ())))
+                for r in all_records]
+    rates = ca.transfer_solve_rates(all_recs, threshold=args.solve_threshold)
     (results_dir / "solve-rate-delta.json").write_text(json.dumps(rates, indent=2))
     for fb, d in rates.items():
         print(

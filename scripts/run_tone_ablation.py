@@ -44,6 +44,7 @@ from einstein.meta_loop.compounding_ablation import (
     ARM_CONFIGS,
     Arm,
     build_session_spec,
+    fair_attempt,
     gap_closed,
     load_problems,
 )
@@ -267,6 +268,19 @@ def main() -> int:
         res_e = solve_enc(problem, cfg, seed, spec)
         wall_e = time.monotonic() - t0
 
+        # Fair-attempt guard: if either arm looks like an infra/offline/rate-limit
+        # fast-fail, do NOT record this cell — leave it unlogged so it RETRIES on the
+        # next resume (instead of poisoning the data with a bogus gap=0 cell).
+        fair = fair_attempt(res_n) and fair_attempt(res_e)
+        if not fair:
+            print(
+                f"[SKIP] {pid} seed={seed} — transient/offline failure "
+                f"(neutral_kind={res_n.error_kind!r} enc_kind={res_e.error_kind!r}), "
+                "will retry on resume",
+                flush=True,
+            )
+            continue
+
         gap_n = gap_closed(
             res_n.score_coldinit, res_n.score_final, problem.reference_optimum,
             minimize=problem.minimize,
@@ -289,11 +303,11 @@ def main() -> int:
             "delta": gap_e - gap_n,
             "wall_neutral": wall_n,
             "wall_encouraging": wall_e,
-            "neutral_ok": tn.get("ok"),
-            "neutral_kind": tn.get("error_kind", ""),
+            "neutral_ok": res_n.ok,
+            "neutral_kind": res_n.error_kind,
             "neutral_verify": tn.get("verify", ""),
-            "enc_ok": te.get("ok"),
-            "enc_kind": te.get("error_kind", ""),
+            "enc_ok": res_e.ok,
+            "enc_kind": res_e.error_kind,
             "enc_verify": te.get("verify", ""),
         }
         with records_path.open("a") as fh:
