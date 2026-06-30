@@ -33,6 +33,7 @@ from __future__ import annotations
 import enum
 import hashlib
 import json
+import logging
 import statistics
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
@@ -40,6 +41,8 @@ from pathlib import Path
 
 from einstein.meta_loop.ablation import dead_ends_avoided, is_firewalled
 from einstein.meta_loop.trajectory import TrajectoryPoint
+
+log = logging.getLogger(__name__)
 
 # ---------------- arms (the one independent variable: the memory loop) ----------------
 
@@ -118,6 +121,12 @@ class RunKB:
 
     def lesson_count(self) -> int:
         return len(self._lessons())
+
+    def lesson_problem_ids(self) -> set[str]:
+        """The problem_ids whose lessons are persisted (parsed from lesson-NNN-<id>.md).
+        Used by the transfer resume path to skip already-built A-problems."""
+        suffix = ".md"
+        return {p.name.split("-", 2)[2][: -len(suffix)] for p in self._lessons()}
 
     def write_lesson(self, problem_id: str, text: str) -> Path:
         idx = self.lesson_count()
@@ -305,10 +314,29 @@ class SolveResult:
     #                          Cold's is discarded — reflection effort equalized)
     attempted_techniques: set[str] = field(default_factory=set)
     wall_clock_s: float = 0.0
+    ok: bool = True  # the session returned a clean, budgeted result (HeadlessResult.ok)
+    error_kind: str = ""  # claude_headless taxonomy: "" | "unavailable" | "timeout" | "non-zero"
 
 
 # (problem, arm_config, seed, session_spec) -> SolveResult
 SolveFn = Callable[[Problem, ArmConfig, int, SessionSpec], SolveResult]
+
+
+def fair_attempt(res: SolveResult, *, fast_fail_s: float = 60.0) -> bool:
+    """True => a genuine budgeted attempt worth RECORDING; False => looks like an
+    infra/connectivity/rate-limit failure that should be RETRIED on resume, not
+    recorded as a (bogus, gap=0) cell. Rationale: when offline, `claude -p` fails in
+    seconds; a real timeout runs the full budget. So: 'unavailable' (auth/quota/429/
+    overload) is always transient; a real 'timeout' is fair (valid budgeted result);
+    a clean run is fair; any other non-ok result that returned in < fast_fail_s is
+    treated as a fast-fail infra error."""
+    if res.error_kind == "unavailable":
+        return False
+    if res.error_kind == "timeout":
+        return True
+    if res.ok:
+        return True
+    return res.wall_clock_s >= fast_fail_s
 
 
 # ---------------- dependent variable (§8) ----------------
@@ -445,6 +473,7 @@ def run_arm_sequence(
     if not resuming:
         run_kb.wipe()  # fresh start: empty at start of run (pre-reg §3)
     records: list[RunRecord] = []
+    skipped_transient = 0  # cells dropped this run as infra/offline fast-fails (retry on resume)
 
     for problem in ordered:
         if problem.problem_id in skip_done:
@@ -484,6 +513,25 @@ def run_arm_sequence(
                 )
             )
         lessons_read = len(spec.accumulated_lessons)  # identical across replicates
+
+        # Disconnect-safety (fair-attempt guard): if ANY replicate was an infra/offline/
+        # rate-limit failure rather than a genuine budgeted attempt, do NOT persist a
+        # lesson or record this cell — leave it unrecorded so resume retries it. Without
+        # this, a transient WARM failure freezes a junk fallback lesson (ablation_runner
+        # writes "[no lesson emitted…]" on a failed solve) permanently into the KB —
+        # poisoning a frozen KB_A / the compounding warm arm — and A-resume then skips it
+        # forever. This is the A-phase analogue of the B-cell / driver guards.
+        if not all(fair_attempt(r) for r in rep_results):
+            log.warning(
+                "run_arm_sequence: transient failure on %s seed=%d arm=%s (kinds=%s) — "
+                "not recorded, no lesson persisted; retry on resume",
+                problem.problem_id,
+                seed,
+                arm.value,
+                [r.error_kind for r in rep_results],
+            )
+            skipped_transient += 1
+            continue
 
         # Persist exactly ONE lesson (first replicate's) so Warm keeps one lesson per
         # problem — banked-count semantics and the §9 manipulation check are unchanged.
@@ -525,12 +573,16 @@ def run_arm_sequence(
         if on_record is not None:
             on_record(rec)  # durable now, so a later crash keeps this cell
 
-    # Warm manipulation check (pre-reg §9): after the sequence the KB holds one
-    # lesson per problem (skipped ones already on disk), and lessons were reused.
+    # Warm manipulation check (pre-reg §9): after the sequence the KB holds one lesson
+    # per problem that was actually solved — resume-skipped ones are already on disk;
+    # transient-skipped ones (infra/offline fast-fails this run) legitimately have none
+    # yet and are excluded from the expected count (they retry on resume).
     if cfg.write_kb:
-        if run_kb.lesson_count() < len(ordered):
+        expected = len(ordered) - skipped_transient
+        if run_kb.lesson_count() < expected:
             raise SanityViolation(
-                f"Warm KB has {run_kb.lesson_count()} lessons for {len(ordered)} problems"
+                f"Warm KB has {run_kb.lesson_count()} lessons for {expected} solved "
+                f"problems ({len(ordered)} total, {skipped_transient} transient-skipped)"
             )
         reads = [r.lessons_read for r in records]
         if len(reads) > 1 and max(reads) == 0:
@@ -557,6 +609,8 @@ class TransferRecord:
     lessons_read: int
     kb_a_hash: str
     wall_clock_s: float
+    fair: bool = True  # all replicates were genuine budgeted attempts (not infra/offline
+    #                    fast-fails); False => don't record, retry on resume (see fair_attempt).
 
 
 def _transfer_cell(
@@ -601,6 +655,7 @@ def _transfer_cell(
             )
         )
     k = len(rep_gaps)
+    fair = all(fair_attempt(r) for r in rep_results)
     return TransferRecord(
         family_a=family_a,
         family_b=family_b,
@@ -614,6 +669,7 @@ def _transfer_cell(
         lessons_read=len(spec.accumulated_lessons),
         kb_a_hash=kb_a_hash,
         wall_clock_s=sum(r.wall_clock_s for r in rep_results),
+        fair=fair,
     )
 
 
@@ -627,6 +683,7 @@ def run_transfer_experiment(
     max_lesson_chars: int | None = None,
     replicates: int = 1,
     on_record: Callable[[TransferRecord], None] | None = None,
+    skip_done: set[tuple[str, str, int]] | None = None,
 ) -> dict:
     """Cross-family transfer experiment (pre-reg §0b PRIMARY design).
 
@@ -635,14 +692,30 @@ def run_transfer_experiment(
     KB) vs WARM-TRANSFER (frozen KB_A), paired on the shared cold-init. Distance is the
     finding: near (Heilbronn→Tammes) vs far (Heilbronn→autocorrelation). Returns the
     records + the per-seed KB_A hashes for audit. solve_fn is injected, so the whole
-    orchestration is testable with a mock (no LLM)."""
+    orchestration is testable with a mock (no LLM).
+
+    Resume (crash/offline resilience): `skip_done` is the set of already-recorded B-cell
+    keys `(problem_id, arm_value, seed)` (arm_value is "cold"/"warm_transfer"). Such cells
+    are NOT re-solved and NOT re-emitted. Phase 1 also resumes per-seed: A-problems whose
+    lesson is already persisted on disk in `kb-a-seed{seed}` are skipped — their lessons
+    still reconstruct KB_A from disk, so `frozen` is correct without re-running them.
+
+    Fair-attempt guard: a B-cell whose record is `fair == False` (an infra/offline
+    fast-fail, see `fair_attempt`) is NOT recorded — it is skipped so it retries on the
+    next resume rather than poisoning the data with a bogus gap=0 cell."""
     results_dir = Path(results_dir)
+    skip_done = skip_done or set()
     fam_a = family_a_problems[0].family if family_a_problems else "?"
     fam_b = family_b_problems[0].family if family_b_problems else "?"
     records: list[TransferRecord] = []
     kb_a_hashes: dict[int, str] = {}
+    n_skipped = 0
     for seed in seeds:
         kb_a = RunKB(results_dir / f"kb-a-seed{seed}")
+        # A-resume: lessons already on disk reconstruct KB_A; skip those A-problems so we
+        # don't re-run them (frozen still reads them back). A lesson file is named
+        # lesson-NNN-<problem_id>.md, so the persisted problem_ids are the A-done set.
+        done_a = kb_a.lesson_problem_ids()
         run_arm_sequence(
             Arm.WARM,
             seed,
@@ -651,12 +724,16 @@ def run_transfer_experiment(
             kb_a,
             max_lesson_chars=max_lesson_chars,
             replicates=replicates,
+            skip_done=done_a or None,
         )
         frozen = tuple(kb_a.read_lessons(max_chars=max_lesson_chars))
         kb_a_hash = kb_a.state_hash()
         kb_a_hashes[seed] = kb_a_hash
         for problem in sorted(family_b_problems, key=lambda p: p.sequence_index):
             for arm, frozen_for_arm in ((Arm.COLD, None), (Arm.WARM, frozen)):
+                arm_value = "warm_transfer" if arm is Arm.WARM else "cold"
+                if (problem.problem_id, arm_value, seed) in skip_done:
+                    continue  # already recorded in a prior run
                 kb_dir = results_dir / f"kb-b-{arm.value}-{problem.problem_id}-seed{seed}"
                 rec = _transfer_cell(
                     problem,
@@ -671,10 +748,24 @@ def run_transfer_experiment(
                     family_b=fam_b,
                     kb_a_hash=kb_a_hash,
                 )
+                if not rec.fair:
+                    n_skipped += 1
+                    print(
+                        f"[SKIP] {problem.problem_id} arm={arm_value} seed={seed} — "
+                        "transient/offline failure, will retry on resume",
+                        flush=True,
+                    )
+                    continue  # don't record; retries on resume
                 records.append(rec)
                 if on_record is not None:
                     on_record(rec)
-    return {"records": records, "family_a": fam_a, "family_b": fam_b, "kb_a_hashes": kb_a_hashes}
+    return {
+        "records": records,
+        "family_a": fam_a,
+        "family_b": fam_b,
+        "kb_a_hashes": kb_a_hashes,
+        "n_skipped_transient": n_skipped,
+    }
 
 
 @dataclass(frozen=True)
@@ -717,7 +808,9 @@ def headroom_probe(
                 res = solve_fn(problem, ARM_CONFIGS[Arm.COLD], seed, spec)
                 gaps.append(
                     gap_closed(
-                        res.score_coldinit, res.score_final, problem.reference_optimum,
+                        res.score_coldinit,
+                        res.score_final,
+                        problem.reference_optimum,
                         minimize=problem.minimize,
                     )
                 )
@@ -728,6 +821,112 @@ def headroom_probe(
         by_family.setdefault(r.family, []).append(r.gap_closed)
     eligible = {f: (lo <= statistics.median(g) <= hi) for f, g in by_family.items()}
     return {"results": out, "eligible": eligible, "band": band}
+
+
+# --- Solve-rate screen (the efficiency-DV reframe) --------------------------------------
+# The §3 gap-band screen assumes a smooth difficulty knob (gap ∈ [0.2,0.8]). For
+# solve-or-don't problems at a fixed budget, cold outcomes are bimodal (gap ≈ 0 or ≈ 1),
+# so the band barely exists. The right instrument is then the SOLVE RATE across seeds:
+# keep instances cold solves SOME-but-not-all of the time (room for warm to lift it), and
+# measure whether warm-transfer raises the solve-rate / lowers time-to-solve. This matches
+# the pre-reg's post-#4 pivot of the DV to efficiency (timeout-rate / wall / time-to-target).
+
+
+def is_solved(gap: float, threshold: float = 0.5) -> bool:
+    """A cell 'solved' the instance if it closed >= `threshold` of the gap. With bimodal
+    (≈0/≈1) outcomes, 0.5 cleanly separates a real solve from no-progress/failed."""
+    return gap >= threshold
+
+
+@dataclass(frozen=True)
+class SolveRateResult:
+    """Per-instance cold solve-rate across seeds (the efficiency-screen unit)."""
+
+    family: str
+    problem_id: str
+    n_seeds: int
+    solve_rate: float  # fraction of seeds whose cold cell solved (gap >= threshold)
+    mean_wall_s: float
+    in_band: bool  # solve_rate sits in the intermediate band → room for warm to lift it
+
+
+def solve_rate_screen(
+    problems: Sequence[Problem],
+    solve_fn: SolveFn,
+    seeds: Sequence[int],
+    *,
+    results_dir: str | Path,
+    solve_threshold: float = 0.5,
+    band: tuple[float, float] = (0.2, 0.8),
+    replicates: int = 1,
+) -> dict:
+    """Screen by COLD solve-rate across seeds (the efficiency reframe — see note above).
+
+    Keep instances whose cold solve-rate sits in `band` (default [0.2, 0.8]): the agent
+    sometimes solves and sometimes doesn't, so there is genuine room for warm-transfer to
+    raise the rate. solve_rate ≈ 1 (always solves cold) or ≈ 0 (never) have no headroom.
+    Needs >= ~5 seeds to estimate a rate. solve_fn injected → testable."""
+    lo, hi = band
+    results_dir = Path(results_dir)
+    per_seed: dict[str, list[tuple[float, float]]] = {}  # problem_id -> [(gap, wall)]
+    fam_of: dict[str, str] = {}
+    for seed in seeds:
+        for problem in problems:
+            fam_of[problem.problem_id] = problem.family
+            kb = RunKB(results_dir / f"solverate-{problem.problem_id}-seed{seed}")
+            kb.wipe()
+            gaps: list[float] = []
+            walls: list[float] = []
+            for r in range(max(1, replicates)):
+                spec = build_session_spec(problem, Arm.COLD, seed, run_kb=kb, replicate=r)
+                res = solve_fn(problem, ARM_CONFIGS[Arm.COLD], seed, spec)
+                gaps.append(
+                    gap_closed(
+                        res.score_coldinit,
+                        res.score_final,
+                        problem.reference_optimum,
+                        minimize=problem.minimize,
+                    )
+                )
+                walls.append(res.wall_clock_s)
+            per_seed.setdefault(problem.problem_id, []).append(
+                (sum(gaps) / len(gaps), sum(walls) / len(walls))
+            )
+    results: list[SolveRateResult] = []
+    for pid, gw in per_seed.items():
+        rate = sum(1 for g, _ in gw if is_solved(g, solve_threshold)) / len(gw)
+        mean_wall = sum(w for _, w in gw) / len(gw)
+        results.append(
+            SolveRateResult(fam_of[pid], pid, len(gw), rate, mean_wall, lo <= rate <= hi)
+        )
+    eligible = {
+        r.problem_id: r.in_band for r in sorted(results, key=lambda x: (x.family, x.problem_id))
+    }
+    return {"results": results, "eligible": eligible, "band": band, "threshold": solve_threshold}
+
+
+def transfer_solve_rates(records: Sequence[TransferRecord], *, threshold: float = 0.5) -> dict:
+    """Cold vs warm-transfer solve-rate per family-B target (the efficiency DV under reframe
+    A). For each (family_b, arm), the fraction of cells that solved. A positive
+    warm−cold delta is the transfer effect; report it per family (near vs far)."""
+    by: dict[tuple[str, str], list[bool]] = {}
+    for rec in records:
+        by.setdefault((rec.family_b, rec.arm), []).append(is_solved(rec.gap_closed, threshold))
+    fams = sorted({fb for fb, _ in by})
+    out = {}
+    for fb in fams:
+        cold = by.get((fb, "cold"), [])
+        warm = by.get((fb, "warm_transfer"), [])
+        cr = sum(cold) / len(cold) if cold else 0.0
+        wr = sum(warm) / len(warm) if warm else 0.0
+        out[fb] = {
+            "cold_solve_rate": cr,
+            "warm_solve_rate": wr,
+            "delta": wr - cr,
+            "n_cold": len(cold),
+            "n_warm": len(warm),
+        }
+    return out
 
 
 def run_matrix(

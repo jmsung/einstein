@@ -66,6 +66,65 @@ def test_run_transfer_experiment_pairs_cold_and_warm_transfer(tmp_path):
     assert all(r.kb_a_hash == out["kb_a_hashes"][r.seed] for r in recs)
 
 
+def test_is_solved_separates_bimodal_outcomes():
+    assert ca.is_solved(1.0) and ca.is_solved(0.97)
+    assert not ca.is_solved(0.0) and not ca.is_solved(0.49)
+
+
+def test_solve_rate_screen_keeps_intermediate_rate(tmp_path):
+    # Mock: "mid" solves on even seeds only (rate 0.5); "easy" always; "hard" never.
+    def solve_fn(problem, cfg, seed, spec):
+        solved = {"mid": seed % 2 == 0, "easy": True, "hard": False}[problem.family]
+        final = problem.reference_optimum if solved else 0.0
+        return ca.SolveResult(
+            trajectory=[TrajectoryPoint(0, final)],
+            score_coldinit=0.0,
+            score_final=final,
+            lesson_text=None,
+            wall_clock_s=10.0,
+        )
+
+    problems = _fam("mid", ["m0"]) + _fam("easy", ["e0"]) + _fam("hard", ["h0"])
+    out = ca.solve_rate_screen(
+        problems, solve_fn, seeds=[1, 2, 3, 4], results_dir=tmp_path, band=(0.2, 0.8)
+    )
+    rate = {r.problem_id: r.solve_rate for r in out["results"]}
+    assert rate["m0"] == 0.5 and rate["e0"] == 1.0 and rate["h0"] == 0.0
+    assert out["eligible"] == {"m0": True, "e0": False, "h0": False}  # only mid has headroom
+
+
+def test_transfer_solve_rates_computes_warm_minus_cold_delta():
+    def rec(fb, arm, gap):
+        return ca.TransferRecord(
+            family_a="heilbronn_triangle",
+            family_b=fb,
+            problem_id="p",
+            arm=arm,
+            seed=1,
+            score_coldinit=0.0,
+            score_final=gap,
+            gap_closed=gap,
+            gap_closed_reps=(gap,),
+            lessons_read=0,
+            kb_a_hash="h",
+            wall_clock_s=1.0,
+        )
+
+    records = [
+        rec("tammes_sphere", "cold", 1.0),
+        rec("tammes_sphere", "cold", 0.0),
+        rec("tammes_sphere", "warm_transfer", 1.0),
+        rec("tammes_sphere", "warm_transfer", 1.0),
+        rec("autocorrelation_seq", "cold", 0.0),
+        rec("autocorrelation_seq", "warm_transfer", 0.0),
+    ]
+    out = ca.transfer_solve_rates(records)
+    assert out["tammes_sphere"]["cold_solve_rate"] == 0.5
+    assert out["tammes_sphere"]["warm_solve_rate"] == 1.0
+    assert out["tammes_sphere"]["delta"] == 0.5
+    assert out["autocorrelation_seq"]["delta"] == 0.0
+
+
 def test_headroom_probe_flags_in_band_families(tmp_path):
     def solve_fn(problem, cfg, seed, spec):
         # easy family closes ~0.95 of the gap; medium ~0.5; hard ~0.05
