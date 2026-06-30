@@ -254,6 +254,40 @@ shows null transfer. To measure a near-vs-far gradient one needs families that a
 a fixed model** (the 4 current families aren't) — a wiring/design prerequisite, not just more compute. The
 efficiency-DV generalization question (v3's original aim) is answered negatively *for these families*.
 
+4. **Near transfer = NULL by saturation (the accurate-reference shot) — 2026-06-30.** Heilbronn
+   (source) → `equal_circles_in_unit_square` n=28/34 (near) @ Sonnet, S4, paired, KB_A = 2 Heilbronn
+   lessons. References = **true Packomania optima** (n=28 r=0.0936728, n=34 r=0.0852703; n=16 excluded
+   as saturated), cross-checked against the n=16 closed form r=1/8 — so "solved" is defined against the
+   global optimum, ruling out the reference-artifact explanation for the earlier probe. **Result: cold
+   solve-rate 1.00 vs warm 1.00 → Δ=0.00.** Raw gap-closed (vs true optima): cold 1.00 (n28) / 0.98 (n34),
+   warm 0.98 / 0.95 — warm ≈ cold (marginally lower, within noise). Sonnet reaches the true optimum *cold*
+   even at n=34, so **there is no headroom for memory to transfer into.** This is the cleaner, definitive
+   form of the earlier near result: the "near is binary across models" wall holds against accurate optima,
+   not just weak references — i.e. *the value of external memory shrinks toward zero as the base model's
+   solo competence rises*. Config `config/ablation_transfer_near.yaml` (frozen).
+
+## Tier-1+2 closure (council #1, prompt-tone #8, near-transfer) — 2026-06-30 — DIRECTIONAL
+
+Three pre-registered experiments run serially overnight (single credential, ~$0 token cost,
+~8h wall-clock) to close the remaining mechanism claims at a **directional/pilot** scale (not
+the S≈18 power target — deferred). All three are **NULL**; reported, not hidden.
+
+| Exp | Design | Result | Read |
+|---|---|---|---|
+| **#1 council** | n13/n14 × S4, haiku, equal 600s budget, on vs off | mean Δ=+0.004, 95% CI [−0.11, +0.13]; both arms valid | NULL pilot — no detected typical-case lift; smoke's +0.38 was an invalid-off artifact |
+| **#8 prompt-tone** | n13/n14 × S4, haiku, fixed 600s, encouraging vs length-matched neutral | mean Δ=+0.035, 95% CI [−0.10, +0.18] | NULL pilot — expected frontier-model null; effort channel held constant |
+| **near-transfer** | Heilbronn→equal-circles 28/34 × S4, Sonnet, true optima | cold 1.00 vs warm 1.00, Δ=0.00 | NULL by saturation — no headroom on a capable model |
+
+**Synthesis for the paper (see `paper-ablation-section-draft.md`):** combined with #4 (efficiency, not
+quality) and #3 (plugins, on a headroom family), the closure yields one coherent thesis — *the add-ons do
+not move a capable model on problems it already handles; value concentrates in the rare-event tail (P2/P4
+records) and where the model genuinely struggles*. The controlled DV (mean gap on routine cells) samples
+the body of a heavy-tailed payoff distribution and is blind to the tail by construction; the nulls are
+**explained** by that estimand mismatch, not **excused** by it. What it licenses: "no detected typical-case
+effect," NOT "it works." Named follow-up: tail-sensitive DV (max not mean / P(new-best)), pilots powered to
+S≈18, a headroom regime for transfer. Pilots are underpowered (n=8) — a CI straddling 0 is a null-pilot,
+not proof of no effect.
+
 ---
 
 *Maintenance: append after every run/analysis. Cross-ref the roadmap (`mb/active/compounding-ablation-roadmap.md`) for branch state + next actions.*
