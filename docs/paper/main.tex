@@ -62,9 +62,14 @@ As an auditable case study, JSAgent produced verified, re-runnable constructions
 state-of-the-art when submitted on several EinsteinArena problems --- including clean
 circle-packing results and a former first-autocorrelation record (since surpassed) --- and
 entered documented collective lineages. Logs show repeated reuse of stored failures and
-techniques, including a record-producing move retrieved from an earlier dead-end note; the
-evidence is observational, however, and a cold-versus-warm memory ablation remains future
-work. We report dated leaderboard snapshots only as historical context --- the board is a
+techniques, including a record-producing move retrieved from an earlier dead-end note. We
+complement this observational trail with pre-registered controlled ablations: a
+cold-versus-warm test shows persistent memory improves \emph{efficiency} --- reaching
+comparable solutions with several-fold fewer budget-exhausting runs --- rather than raising
+solution quality, while controlled tests of the council, prompt framing, and cross-family
+transfer show no detected typical-case effect at pilot scale. We read this honestly: the
+payoff in this setting is heavy-tailed, so a mechanism's value concentrates in rare events
+that a mean-over-routine-runs estimand cannot capture. We report dated leaderboard snapshots only as historical context --- the board is a
 live ecosystem in which records are continually set and surpassed, so rank is transient by
 design. The broader, deliberately scoped claim is that \emph{in domains with cheap objective
 verifiers}, agentic discovery can be made auditable through a verification-and-memory loop,
@@ -83,13 +88,15 @@ an author.
 
 \paragraph{What this paper claims --- and does not.}
 \emph{We do not claim:} a proof of global optimality for any submitted construction; that
-persistent memory \emph{causally} improves performance (no ablation yet); that JSAgent is
-autonomous; that JSAgent currently leads EinsteinArena; or that the agent trajectory is exactly
-replayable. \emph{We do claim:} JSAgent produced externally verified constructions that were
-state-of-the-art when submitted; the system maintained a persistent, human-readable memory and
-rule harness; logs show repeated retrieval and reuse of prior findings; the released artifacts
-make the constructions and their verification auditable; and the case study motivates --- but
-does not establish --- a controlled memory ablation as the clear next step.
+persistent memory raises solution \emph{quality} (our controlled ablation finds the quality
+effect null); that JSAgent is autonomous; that JSAgent currently leads EinsteinArena; or that
+the agent trajectory is exactly replayable. \emph{We do claim:} JSAgent produced externally
+verified constructions that were state-of-the-art when submitted; the system maintained a
+persistent, human-readable memory and rule harness; logs show repeated retrieval and reuse of
+prior findings; the released artifacts make the constructions and their verification auditable;
+and pre-registered controlled ablations show persistent memory improves \emph{efficiency} (not
+quality), with the other studied mechanisms null or underpowered at pilot scale and reported
+honestly (\S\ref{sec:ablations}).
 
 % ======================================================================
 \section{Introduction}
@@ -153,7 +160,9 @@ agents are for real scientific contribution, and what gates full autonomy.
   \item A self-improving knowledge-base--agent \emph{methodology} (\S\ref{sec:harness}).
   \item An open, auditable \emph{harness} of behavioral rules co-evolved with the agent.
   \item Transferable \emph{techniques} produced in the course of solving (\S\ref{sec:techniques}).
-  \item \emph{Evidence}: verified standings and an honest self-improvement trail (\S\ref{sec:math}).
+  \item \emph{Evidence}: verified standings, an honest self-improvement trail (\S\ref{sec:math}),
+        and pre-registered \emph{controlled ablations} of the harness mechanisms ---
+        memory buys efficiency, not quality; the rest null at pilot scale (\S\ref{sec:ablations}).
   \item A field account of the \emph{human--agent division of labor} --- execution
         automates first, problem selection and comprehension do not (\S\ref{sec:discussion}).
 \end{itemize}
@@ -432,7 +441,11 @@ The council runs once per problem during reconnaissance --- and is re-triggered 
 near $1.5028609$, the prompt that mattered was not ``optimize harder'' but a support-changing
 question --- \emph{what operator changes which cells are nonzero, rather than retuning
 continuous weights on a fixed support?} That reframing pointed at warm self-pruning, the move
-that set the record. \src{.claude/rules/council-dispatch.md}
+that set the record. A controlled ablation of the council on a held-out problem family at fixed
+budget found no \emph{average} effect (\S\ref{sec:ablations}); we read this not as a
+contradiction but as the same rare-event structure --- the council earned its keep at a wall
+like this one, an event a mean-over-routine-runs test is underpowered to detect.
+\src{.claude/rules/council-dispatch.md}
 
 \paragraph{Wiki-first lookup and cycle discipline.}
 Before answering any in-scope question the agent must query the knowledge base first and cite
@@ -706,8 +719,9 @@ Period & Shell & Model / context \\
 \paragraph{Claims and evidence.}
 \begin{table}[htbp]
 \centering
-\caption{Each headline claim and the evidence it rests on. We mark causal claims
-\emph{observational} where no controlled ablation has yet been run.}
+\caption{Each headline claim and the evidence it rests on. A claim is marked
+\emph{observational} where it rests on traces; the memory claim now rests on a controlled
+ablation (\S\ref{sec:ablations}).}
 \label{tab:claims}
 \begin{tabular}{p{0.40\columnwidth}p{0.34\columnwidth}p{0.18\columnwidth}}
 \toprule
@@ -715,8 +729,8 @@ Claim & Evidence & Status \\
 \midrule
 Verified, re-runnable constructions that were SOTA-when-submitted (e.g.\ P2, P14, P18) &
   Dated sweeps, script @ \texttt{e38a793} (Table~\ref{tab:standings}); constructions re-runnable any time & Verified; rank is dynamic \\
-Persistent knowledge base aided outcomes &
-  P2/P3/P1 traces; hit-rate 26\%, cite-reuse 84\% & Observational; ablation is future work \\
+Persistent memory improves \emph{efficiency} (not quality) &
+  Cold-vs-warm ablation (\S\ref{sec:ablations}); P2/P3 traces; hit-rate 26\%, cite-reuse 84\% & Controlled: efficiency supported, quality null \\
 Triple-verify caught evaluator drift &
   P9/P14/P17 incidents (findings) & Qualitative \\
 Techniques transfer across problems &
@@ -790,6 +804,93 @@ Submitted constructions & per-problem tracking (e.g.\ P2/P14/P18), with verifier
 \bottomrule
 \end{tabularx}
 \end{table}
+
+% ======================================================================
+\section{Controlled Ablations}
+\label{sec:ablations}
+% PENDING before submission: (1) #4 efficiency multiplier --- reconcile the contaminated
+% Stage-C batch (6x timeouts / ~35% slower) vs the clean re-run (~3x); kept qualitative
+% ("several-fold") here until resolved (see mb/progress.md reconcile-claim4-numbers).
+% (2) Test-3 (headroom transfer) + Test-1 (tail-DV) results land in "what would settle it".
+
+The case studies above motivate the harness; this section \emph{tests} it. We subjected each
+studied mechanism to a pre-registered, air-gapped, paired ablation, scored by the harness
+rather than the agent's self-report, and report every result --- including the nulls --- as the
+pre-registrations committed us to. The honest one-line summary: one mechanism shows a clean,
+well-powered effect (memory~$\to$~efficiency); one is supported on a family with headroom
+(problem-specific plugins); the rest are null or underpowered at the scales we could afford. We
+argue this is a finding about \emph{where} the value lives, not a negative verdict --- while
+stating precisely what the data does and does not license.
+
+\paragraph{Setup.}
+Each ablation toggles exactly one variable between two otherwise-identical arms: the same
+air-gapped clean-room checkout with the knowledge layer physically stripped, the same paired
+cold start per seed, the same model, and the same fixed budget. The dependent variable is
+\emph{gap-closed} --- the fraction of the start-to-reference-optimum gap a run closes ---
+computed by the harness; submission self-reports are ignored. ``Pilot'' rows are eight paired
+cells and underpowered by design (the single-credential serial budget); we report the
+directional estimate with a $95\%$ bootstrap confidence interval and label it as such.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.25}
+\caption{Controlled-ablation scoreboard. A CI straddling $0$ means \emph{no detected effect},
+  not a proof of no effect. Pilot rows ($n{=}8$) are underpowered and labelled.}
+\label{tab:ablations}
+\begin{tabularx}{\textwidth}{@{}%
+  >{\raggedright\arraybackslash}p{3.0cm}%
+  >{\raggedright\arraybackslash}p{3.5cm}%
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Mechanism} & \textbf{Verdict} & \textbf{Key numbers} \\
+\midrule
+Knowledge base (cold vs.\ warm) & quality null; \textbf{efficiency supported} & quality $\Delta$ CI includes $0$ at $S{=}18$; warm exhausts its budget several-fold less often and finishes faster \\
+Problem-specific plugins & \textbf{supported} (family with headroom) & $\Delta{=}{+}0.214$, CI $[{+}0.185,{+}0.242]$; ${\sim}30\times$ faster \\
+Persona council & null (pilot) & $\Delta{=}{+}0.004$, CI $[{-}0.11,{+}0.13]$ \\
+System-prompt framing & null (pilot) & $\Delta{=}{+}0.035$, CI $[{-}0.10,{+}0.18]$ \\
+Adaptive scheduling & null & $\Delta{=}{-}0.001$, CI $[{-}0.010,{+}0.009]$ \\
+Cross-family transfer & null (saturation) & capable model reaches the true optimum cold; no headroom to transfer into \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{The one clean positive, and what it is not.}
+The cold-versus-warm memory test is the best-powered result. Its verdict is specific:
+persistent memory did \emph{not} raise solution quality --- the quality interval includes
+zero --- but it made the agent markedly more \emph{efficient}, reaching comparable solutions
+with several-fold fewer budget-exhausting runs. Memory's value here is skipping rediscovery, a
+time-to-solution effect, not a higher ceiling. We flag what this is \emph{not}: a gain that
+comes only from spending more compute is the effort channel --- equivalent to raising the
+budget --- and the fixed-budget design holds it constant by construction, so the efficiency
+result cannot be effort in disguise. The prompt-framing ablation was built to probe exactly
+that channel and returned the expected frontier-model null.
+
+\paragraph{Why so many nulls --- one principled limitation.}
+We resist explaining each null away separately; one structural point applies across them,
+stated falsifiably. \emph{The estimand we measured is the body of a heavy-tailed distribution;
+the value of these mechanisms, if any, lives in the tail.} Progress on hard optimization is
+rare and spontaneous --- most runs move the score a little, and a few lucky operator events
+produce a jump (the council reframing that set the P2 record, \S\ref{sec:harness}, and the
+warm-memory move it retrieved, are exactly such events). A mechanism can leave the \emph{mean}
+unchanged while fattening the \emph{tail}; an eight-cell mean-over-routine-runs test is, by
+construction, nearly blind to that. A capable model compounds this: on small problems it solves
+the instance cold, so there is no gap for memory to close --- the transfer null is
+\emph{saturation}, not absence. What this licenses is ``no detected typical-case effect,'' and
+emphatically \emph{not} ``the mechanism does not work.'' Three independent nulls do move our
+prior downward on \emph{reliable typical-case} help; the rare-event question stays open.
+
+\paragraph{What would settle it (pre-committed).}
+The honest resolution is a better experiment, pre-specified rather than chosen post hoc: measure
+the \emph{tail}, not the body --- the probability of a new personal best, or the \emph{maximum}
+(not mean) improvement over many seeds on a fixed hard instance run to a long budget --- and
+power the pilots to the level ($S{\approx}18$) at which the memory effect's interval tightened.
+These runs are planned; their results will update this section. Until then the claim is bounded
+and stated plainly: on the controlled, typical-case evidence we have, only memory-efficiency and
+plugins clear the bar; the council, prompt framing, adaptive scheduling, and cross-family
+transfer show no detected effect at the scales tested --- while the rare-event value visible in
+the case studies (the P2/P4 records) remains a named, open question, not a settled claim. That
+is the most we can honestly say, and we prefer it to a stronger claim the data would not carry.
 
 % ======================================================================
 \section{Collaboration \emph{and} Competition}
@@ -885,15 +986,25 @@ agent's durable \emph{artifact} is (Table~\ref{tab:related}).
   eval'' means a reported ablation isolating the studied mechanism. Entries are characterizations
   for positioning, not scores.}
 \label{tab:related}
-\begin{tabularx}{\textwidth}{Xcccc}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.25}
+% System: fixed readable width, left-aligned. Memory: wide, ragged. The three
+% verdict columns: narrow, centered, wrapping (so their headers wrap instead of
+% overflowing and squeezing the System column). hsize weights sum to 4 (= #X cols).
+\begin{tabularx}{\textwidth}{@{}%
+  >{\raggedright\arraybackslash}p{2.7cm}%
+  >{\hsize=1.5\hsize\raggedright\arraybackslash}X%
+  >{\hsize=0.8333\hsize\centering\arraybackslash}X%
+  >{\hsize=0.8333\hsize\centering\arraybackslash}X%
+  >{\hsize=0.8333\hsize\centering\arraybackslash}X@{}}
 \toprule
-System & human-readable memory & external verifier & cross-cycle reuse & controlled eval \\
+\textbf{System} & \textbf{human-readable memory} & \textbf{external verifier} & \textbf{cross-cycle reuse} & \textbf{controlled eval} \\
 \midrule
-FunSearch / AlphaEvolve & program/evolutionary state & yes & limited & yes \\
+FunSearch / AlphaEvolve & program / evolutionary state & yes & limited & yes \\
 TTT-Discover & model (test-time) & yes & within run & yes \\
 Voyager / ExpeL / ACE & skills / lessons / context & task-dependent & yes & partial \\
 EinsteinArena (platform) & shared public board & yes & across agents & platform-level \\
-\textbf{JSAgent} & \textbf{yes (private KB + rules)} & yes & within agent & no (ablation future work) \\
+\textbf{JSAgent} & \textbf{yes (private KB + rules)} & yes & within agent & yes (\S\ref{sec:ablations}) \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -1048,12 +1159,12 @@ Dynamic leaderboard & rankings change after submission & timestamped snapshot, s
 Ties / verifier-contested scores & rank can overstate distinctness or validity & raw vs.\ clean rank reported separately; P9 excluded from clean \#1; P1 tiebreak disclosed \\
 No optimality proof & empirical records are not theorems & framed as construction/evaluation results, not proofs \\
 Human in the loop & autonomy could be overstated & role taxonomy (Table~\ref{tab:roles}) \\
-Causal evidence is observational & KB-causes-improvement is not controlled & traces only; ablation is future work (below) \\
+Causal evidence (memory) & KB-causes-improvement needs a control & controlled ablation run (\S\ref{sec:ablations}): efficiency supported, quality null; other mechanisms null/underpowered \\
 Model/version drift & exact per-cycle LLM IDs were not pinned, so the agent trajectory is not exactly replayable & submitted constructions + verifier scripts \emph{are} reproducible; trajectory is auditable, not replayable \\
 Retrospective KB curation & the public snapshot may not exactly match what was available each cycle & commit history, file timestamps, and cycle logs are released for cross-checking \\
 Private knowledge base & harder for reviewers to audit & repository and knowledge base released publicly (frozen snapshot) \\
 Agent-authored prose & persuasive but possibly under-supported & claims/evidence table (Table~\ref{tab:claims}); human verified results and takes responsibility \\
-Single domain & only objective-verifier math tested & headline claim scoped accordingly; transfer untested \\
+Single domain & only objective-verifier math tested & headline claim scoped accordingly; cross-problem transfer tested (null under saturation, \S\ref{sec:ablations}) \\
 \bottomrule
 \end{tabular}
 \end{table}
