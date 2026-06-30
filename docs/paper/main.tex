@@ -215,7 +215,7 @@ P14 & circle-packing          & $2.6359830849$ & \#1 & \#1 \\
 P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & \#1 \\
 P2  & first-autocorrelation   & $1.5028506$    & \#1 & \#2$^\ddagger$ \\
 P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & \#1$^\dagger$ \\
-P1  & Erd\H{o}s                & $0.3808703$    & \#2 & \#3$^\ddagger$ \\
+P1  & Erd\H{o}s min-overlap    & $0.3808703$    & \#2 & \#3$^\ddagger$ \\
 P3  & second-autocorrelation  & $0.962214$     & \#3 & \#4$^\ddagger$ \\
 P4  & third-autocorrelation   & $1.452521$     & \#3 & \#3 \\
 P7  & prime-number-theorem    & $0.994847$     & \#3 & \#3 \\
@@ -1372,7 +1372,7 @@ could not clear the gate. \emph{Breakthrough:} when the operators lowered
 \texttt{minImprovement} to $10^{-9}$, an arena-tolerance SLSQP polish \emph{within} the verifier's
 tolerance band became admissible --- triple-verified against strict tolerance, with a
 uniform-radius-shrink fallback guaranteeing strict feasibility. \emph{Result:} $\sum r =
-2.3658324$, sole rank \#1 (2026-04-12). \src{problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
+2.3658323852$, sole rank \#1 (2026-04-12). \src{problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
 
 \paragraph{P14 --- circle packing in a square (rank \#1).}
 The most instructive episode for verification discipline. Ten parallel approaches all converged
