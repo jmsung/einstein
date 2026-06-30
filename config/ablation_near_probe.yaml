@@ -1,0 +1,28 @@
+# ablation_near_probe.yaml — find a Sonnet in-band NEAR (Tammes) instance.
+#
+# Tammes was too easy for Sonnet at n=12 (solve_rate 1.0) and n=14 (0.83, just above
+# the band). Harder n should drop into the intermediate solve-rate band [0.2,0.8].
+# Run with --solve-rate over >= ~5 seeds. frozen:false → screen only.
+# reference_optimum = best-known Tammes max-min-distance (screen estimates, refine at freeze).
+
+family: tammes_sphere
+minimize: false
+frozen: false
+
+problems:
+  - id: tammes-16
+    family: tammes_sphere
+    n: 16
+    sequence_index: 0
+    reference_optimum: 0.8661664000
+    statement: |
+      Place n points on the unit sphere S^2 in R^3 (each a 3D unit vector) to MAXIMIZE
+      the minimum pairwise Euclidean distance (the Tammes problem).
+  - id: tammes-18
+    family: tammes_sphere
+    n: 18
+    sequence_index: 1
+    reference_optimum: 0.8348800000
+    statement: |
+      Place n points on the unit sphere S^2 in R^3 to MAXIMIZE the minimum pairwise
+      Euclidean distance (the Tammes problem).

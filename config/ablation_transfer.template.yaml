@@ -14,6 +14,12 @@
 family: heilbronn_triangle   # default for problems that omit `family`
 minimize: false
 
+# Freeze gate (pre-reg §3 discipline): confirmatory transfer runs REFUSE to launch
+# unless `frozen: true`. This template stays `false` so it can only drive --probe /
+# --dry-run. To run real cells: copy to a frozen config, set the screened instances +
+# real reference_optima, set `frozen: true`, and commit it BEFORE the first cell.
+frozen: false
+
 problems:
   # --- Family A: Heilbronn (2D) — the transfer SOURCE; KB_A is built here (Warm) ---
   - id: heilbronn-a-07

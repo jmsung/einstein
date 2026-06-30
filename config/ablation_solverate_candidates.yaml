@@ -1,0 +1,56 @@
+# ablation_solverate_candidates.yaml — solve-rate screen candidate set (NOT frozen).
+#
+# The 5 instances that were BIMODAL in the single-seed gap probes (Sonnet sometimes
+# solved, sometimes not) — the ones with a chance of an INTERMEDIATE cold solve-rate.
+# Dropped: tammes-24 + heilbronn-07 (saturated/solved at gap≈1 → solve-rate≈1, no headroom).
+# Run with --solve-rate over >= ~5 seeds on the middle tier (Sonnet). frozen:false → screen
+# only (the freeze gate blocks real transfer cells).
+#
+# reference_optimum = screen estimates (Tammes/Heilbronn tabulated; autocorr local-NM proxy).
+
+family: heilbronn_triangle
+minimize: false
+frozen: false
+
+problems:
+  - id: heilbronn-08
+    family: heilbronn_triangle
+    n: 8
+    sequence_index: 0
+    reference_optimum: 0.0727083333
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle
+      formed by any three of them (the Heilbronn triangle problem).
+  - id: tammes-12
+    family: tammes_sphere
+    n: 12
+    sequence_index: 1
+    reference_optimum: 1.0514622242
+    statement: |
+      Place n points on the unit sphere S^2 in R^3 (each a 3D unit vector) to MAXIMIZE
+      the minimum pairwise Euclidean distance (the Tammes problem).
+  - id: tammes-14
+    family: tammes_sphere
+    n: 14
+    sequence_index: 2
+    reference_optimum: 0.9531552210
+    statement: |
+      Place n points on the unit sphere S^2 in R^3 to MAXIMIZE the minimum pairwise
+      Euclidean distance (the Tammes problem).
+  - id: autocorr-32
+    family: autocorrelation_seq
+    n: 32
+    sequence_index: 3
+    reference_optimum: -1.6534740000
+    statement: |
+      Choose a length-n non-negative sequence f to MINIMIZE the peak autoconvolution
+      ratio max(f*f) / (sum f)^2 on [0, 0.5]. (Scored internally as the negated ratio,
+      so higher is better — maximize it.)
+  - id: autocorr-64
+    family: autocorrelation_seq
+    n: 64
+    sequence_index: 4
+    reference_optimum: -1.7013090000
+    statement: |
+      Choose a length-n non-negative sequence f to MINIMIZE the peak autoconvolution
+      ratio max(f*f) / (sum f)^2 on [0, 0.5]. (Scored internally as the negated ratio.)

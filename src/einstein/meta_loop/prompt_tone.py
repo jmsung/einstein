@@ -42,7 +42,8 @@ NEUTRAL_LENGTH_MATCHED = (
 )
 
 PREAMBLES: dict[PromptTone, str] = {
-    PromptTone.NEUTRAL: "",  # §4 default: no preamble (regression-safe)
+    # FROZEN §4 decision (2026-06-29): length-matched control (token-count confound).
+    PromptTone.NEUTRAL: NEUTRAL_LENGTH_MATCHED,
     PromptTone.ENCOURAGING: ENCOURAGING_PREAMBLE,
 }
 

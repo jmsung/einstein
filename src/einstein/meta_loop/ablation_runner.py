@@ -275,6 +275,7 @@ def make_solve_fn(
             verify_note = "no parseable result"
 
         ok = getattr(res, "ok", False)
+        error_kind = getattr(res, "error_kind", "")
         # Warm needs a lesson every problem (sanity check); supply a fallback so a
         # failed cell is recorded, not aborted.
         if cfg.write_kb and not lesson:
@@ -289,7 +290,7 @@ def make_solve_fn(
                     "seed": seed,
                     "replicate": spec.replicate,
                     "ok": ok,
-                    "error_kind": getattr(res, "error_kind", ""),
+                    "error_kind": error_kind,
                     "cost_usd": getattr(res, "cost_usd", None),
                     "input_tokens": getattr(res, "input_tokens", None),
                     "output_tokens": getattr(res, "output_tokens", None),
@@ -311,6 +312,8 @@ def make_solve_fn(
             lesson_text=lesson,
             attempted_techniques=techniques,
             wall_clock_s=wall,
+            ok=ok,
+            error_kind=error_kind,
         )
 
     return solve_fn
