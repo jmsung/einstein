@@ -66,8 +66,9 @@ techniques, including a record-producing move retrieved from an earlier dead-end
 complement this observational trail with pre-registered controlled ablations: a
 cold-versus-warm test shows persistent memory improves \emph{efficiency} --- reaching
 comparable solutions with several-fold fewer budget-exhausting runs --- rather than raising
-solution quality, while controlled tests of the council, prompt framing, and cross-family
-transfer show no detected typical-case effect at pilot scale. We read this honestly: the
+solution quality, while controlled tests of the council and prompt framing show no detected
+effect at pilot scale, and cross-family transfer is null under model saturation (a capable
+model solves the small instances from scratch, leaving no gap for memory to close). We read this honestly: the
 payoff in this setting is heavy-tailed, so a mechanism's value concentrates in rare events
 that a mean-over-routine-runs estimand cannot capture. We report dated leaderboard snapshots only as historical context --- the board is a
 live ecosystem in which records are continually set and surpassed, so rank is transient by
@@ -542,8 +543,8 @@ evidence is therefore \emph{observational}, resting on the traces in Table~\ref{
 \caption{Knowledge-base growth (findings, concepts, techniques), counted from each page's
   \texttt{drafted} date on disk --- not from the cycle-log counter. This is an
   \emph{accumulation} curve, not a score curve: it shows that distilled knowledge persisted
-  rather than evaporating, not that it caused wins (the causal test is the ablation of
-  \S\ref{sec:limits}). The step at May 2 is the one-time consolidation of pre-existing notes
+  rather than evaporating, not that it caused wins (the controlled test is the ablation of
+  \S\ref{sec:ablations}). The step at May 2 is the one-time consolidation of pre-existing notes
   into the public wiki; the load-bearing evidence is the $+71$ pages added organically by
   problem-cycles afterward. Of the 190 pages, 185 are agent-authored, 3 hybrid, 2 human ---
   the attribution mix the honesty layer (\S\ref{sec:harness}) records.}
@@ -552,8 +553,8 @@ evidence is therefore \emph{observational}, resting on the traces in Table~\ref{
 
 \begin{table}[htbp]
 \centering\small
-\caption{Observational traces of knowledge-base compounding. None is a controlled result;
-the clean test is the ablation of \S\ref{sec:limits}.}
+\caption{Observational traces of knowledge-base compounding. None is itself a controlled
+result; the controlled cold-vs-warm test is reported in \S\ref{sec:ablations}.}
 \label{tab:traces}
 \begin{tabularx}{\textwidth}{lXXl}
 \toprule
@@ -574,7 +575,8 @@ P1 & --- (a fresh SDP-relaxation attempt) &
 
 These are illustrative, not controlled: the development was progressive and exploratory, not a
 designed experiment. The clean causal test --- a cold-knowledge-base vs.\ warm ablation --- is
-left to future work (\S\ref{sec:limits}). \src{docs/agent/cycle-log.md, docs/agent/metrics.md, findings/sdp-relaxation-uselessness.md}
+reported in \S\ref{sec:ablations} (at fixed budget, memory improved efficiency but not
+quality). \src{docs/agent/cycle-log.md, docs/agent/metrics.md, findings/sdp-relaxation-uselessness.md}
 
 \paragraph{From manual discipline to a meta-learning loop.}
 The rules above began as \emph{discretionary} --- written advice the human enforced by
@@ -734,7 +736,7 @@ Persistent memory improves \emph{efficiency} (not quality) &
 Triple-verify caught evaluator drift &
   P9/P14/P17 incidents (findings) & Qualitative \\
 Techniques transfer across problems &
-  Reuse across the autocorrelation family and packing problems & Case-study reuse; broad generalization untested \\
+  Reuse across the autocorrelation family and packing problems & Case-study method reuse; cross-family capability transfer null under saturation (\S\ref{sec:ablations}) \\
 Human role is selection + comprehension &
   Workflow (Table~\ref{tab:roles}) & Qualitative \\
 \bottomrule
@@ -877,8 +879,9 @@ unchanged while fattening the \emph{tail}; an eight-cell mean-over-routine-runs 
 construction, nearly blind to that. A capable model compounds this: on small problems it solves
 the instance cold, so there is no gap for memory to close --- the transfer null is
 \emph{saturation}, not absence. What this licenses is ``no detected typical-case effect,'' and
-emphatically \emph{not} ``the mechanism does not work.'' Three independent nulls do move our
-prior downward on \emph{reliable typical-case} help; the rare-event question stays open.
+emphatically \emph{not} ``the mechanism does not work.'' The three typical-case nulls (council, prompt
+framing, adaptive scheduling) do move our prior downward on \emph{reliable typical-case} help;
+the transfer null is saturation, and the rare-event question stays open.
 
 \paragraph{What would settle it (pre-committed).}
 The honest resolution is a better experiment, pre-specified rather than chosen post hoc: measure
@@ -1176,9 +1179,12 @@ many cycles --- not a controlled experiment. Its evidence that a compounding kno
 explicit A/B ablation: hold a model and compute budget fixed, and on held-out problems compare
 condition~A, the agent solving from its own reasoning with an empty knowledge base, against
 condition~B, the same agent with the full compounding knowledge base, measuring the gap in best
-verified score at fixed budget (and time-to-result). We have designed this test but not run it;
-it is the most important next step, and until it is run the causal reading of our traces should
-be treated as a hypothesis the observational evidence supports but does not establish.
+verified score at fixed budget (and time-to-result). We ran this test (\S\ref{sec:ablations}):
+at fixed budget the warm condition reached comparable solutions with far fewer
+budget-exhausting runs (an \emph{efficiency} gain) but did not raise the best verified score
+(a \emph{quality} null). The remaining caveat is therefore not the absence of a control but
+statistical power on the rare-event tail --- where any further value would show up, which the
+case-study traces above exemplify and a mean-over-runs test is underpowered to capture.
 
 % ======================================================================
 \section{Conclusion}
@@ -1201,8 +1207,10 @@ of collaborative-competitive discovery extends well beyond this arena --- into o
 mathematics, and, as objective and affordable verification reaches them, into the broader
 sciences. The open frontier is autonomy --- closing the loop so the agent proposes and judges
 its own questions --- gated by verification, which math offers cheaply and the natural sciences
-do not yet. Whether the persistent memory \emph{causes} the compounding, rather than merely
-accompanying it, is the controlled experiment we leave to future work. We expect much more to
+do not yet. Our controlled ablation (\S\ref{sec:ablations}) shows persistent memory causally improves
+\emph{efficiency} --- comparable solutions reached with far fewer budget-exhausting runs ---
+though not solution quality; where the council, prompt framing, and cross-family transfer add
+value beyond this is an open, rare-event question. We expect much more to
 come, and we are glad to be one contributor among many.
 
 % ======================================================================
