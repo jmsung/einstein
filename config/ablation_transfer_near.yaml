@@ -1,0 +1,69 @@
+# ablation_transfer_near.yaml — FROZEN near-transfer experiment (Heilbronn -> equal_circles).
+#
+# The NEAR analog of the frozen far config (ablation_transfer_far.yaml). Same KB_A
+# (Heilbronn) is built here; near vs far differ ONLY in the target family B.
+# equal_circles_in_unit_square is NEAR to Heilbronn (both: spread n points in the unit
+# square to optimize a geometric min-objective) but DISTINCT (max-min-distance vs
+# max-min-triangle-area) — so Heilbronn KB_A lessons (SLSQP on active pairs, avoid
+# clustering) plausibly transfer. DV = warm-transfer minus cold SOLVE-RATE across seeds.
+#
+# REFERENCES ARE TRUE OPTIMA from Packomania (the best-known maximum radius r_n for n
+# equal circles packed in the unit square), NOT a weak strong-local baseline — so
+# "solved" is defined against the global optimum. Source + convention:
+#   https://www.packomania.com/csq/csq.html  (Eckard Specht; "circles in a square",
+#   unit square of side 1, column = maximum radius r). Cross-checked against the
+#   closed form n=16 -> r = 1/8 = 0.125 EXACTLY (4x4 grid), which the table reproduces,
+#   confirming the convention matches our score r = min(0.5*min-pairwise-distance,
+#   wall-distance). Each chosen r_n was ALSO cross-checked against Packomania's
+#   independent min-center-distance column d_n via the exact conversion r = d/(2(1+d)):
+#     n=28: d=0.230535493642667 -> r=0.093672833... (matches)
+#     n=34: d=0.205604646759568 -> r=0.085270344... (matches)
+#
+# Instances chosen for HEADROOM under a ~300-600s Sonnet budget: n=16 EXCLUDED (the
+# earlier probe found it SATURATED — Sonnet reaches the true optimum 0.125 from scratch).
+# n=28 and n=34 are larger, have a harder landscape, and have reliably tabulated true
+# optima — so a from-scratch optimizer does NOT trivially reach r_n.
+#
+# FROZEN (frozen: true) — instances + reference_optima fixed. DO NOT EDIT after the
+# first confirmatory cell.
+
+minimize: false
+frozen: true
+
+problems:
+  # --- Family A: Heilbronn (source) — KB_A is built here (Warm). IDENTICAL to far. ---
+  - id: heilbronn-07
+    family: heilbronn_triangle
+    n: 7
+    sequence_index: 0
+    reference_optimum: 0.0833333333
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle
+      formed by any three of them (the Heilbronn triangle problem).
+  - id: heilbronn-08
+    family: heilbronn_triangle
+    n: 8
+    sequence_index: 1
+    reference_optimum: 0.0727083333
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle.
+
+  # --- Family B: equal_circles (near target) — cold vs warm-transfer ---
+  # reference_optimum = TRUE best-known optimum r_n from Packomania (csq), NOT a local.
+  - id: circles-28
+    family: equal_circles_in_unit_square
+    n: 28
+    sequence_index: 2
+    reference_optimum: 0.0936728338   # Packomania csq true optimum (r_28); d_28=0.2305355
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the common radius r =
+      min( 0.5 * min pairwise distance, min distance to a wall ) — i.e. pack n equal
+      non-overlapping circles of maximal radius inside the unit square.
+  - id: circles-34
+    family: equal_circles_in_unit_square
+    n: 34
+    sequence_index: 3
+    reference_optimum: 0.0852703444   # Packomania csq true optimum (r_34); d_34=0.2056046
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the common radius r =
+      min( 0.5 * min pairwise distance, min distance to a wall ).

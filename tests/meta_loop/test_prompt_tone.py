@@ -14,11 +14,10 @@ sys.path.insert(0, str(_REPO / "src"))
 from einstein.meta_loop import prompt_tone as pt  # noqa: E402
 
 
-def test_neutral_default_preamble_is_empty():
-    # NEUTRAL maps to "" so build_prompt(neutral) stays byte-identical to the
-    # pre-tone prompt (regression-safe default; the §4 freeze may swap in the
-    # length-matched filler).
-    assert pt.PREAMBLES[pt.PromptTone.NEUTRAL] == ""
+def test_neutral_is_frozen_length_matched_control():
+    # FROZEN §4 decision (2026-06-29): NEUTRAL is the length-matched filler, not "",
+    # so "encouraging" cannot also buy raw tokens (token-count confound, §7).
+    assert pt.PREAMBLES[pt.PromptTone.NEUTRAL] == pt.NEUTRAL_LENGTH_MATCHED
 
 
 def test_encouraging_preamble_is_the_frozen_human_phrasing():

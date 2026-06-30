@@ -1,0 +1,51 @@
+# ablation_near_circles_probe.yaml — graded-near candidate: equal-circle packing.
+#
+# equal_circles_in_unit_square is NEAR to Heilbronn (both: spread n points in the unit
+# square to optimize a geometric min-objective) but DISTINCT (max-min-distance vs
+# max-min-triangle-area) — so Heilbronn KB_A lessons (SLSQP on active pairs, avoid
+# clustering) plausibly transfer. Probe a difficulty ladder (n=16/22/28/34) for Sonnet
+# solve-rate to find an in-band (intermediate) instance. frozen:false → screen only.
+#
+# reference_optimum = STRONG-LOCAL baseline (120 Nelder-Mead starts + basin-hopping), NOT
+# the true optimum (true n=16 = 0.125 grid; the local reaches 0.105 — this packing has a
+# hard landscape). "solve" therefore means "match/beat a strong from-scratch optimizer";
+# the warm−cold transfer delta is reference-robust regardless.
+
+family: equal_circles_in_unit_square
+minimize: false
+frozen: false
+
+problems:
+  - id: circles-16
+    family: equal_circles_in_unit_square
+    n: 16
+    sequence_index: 0
+    reference_optimum: 0.10473
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the common radius r =
+      min( 0.5 * min pairwise distance, min distance to a wall ) — i.e. pack n equal
+      non-overlapping circles of maximal radius inside the unit square.
+  - id: circles-22
+    family: equal_circles_in_unit_square
+    n: 22
+    sequence_index: 1
+    reference_optimum: 0.07641
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the common radius r =
+      min( 0.5 * min pairwise distance, min distance to a wall ).
+  - id: circles-28
+    family: equal_circles_in_unit_square
+    n: 28
+    sequence_index: 2
+    reference_optimum: 0.06119
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the common radius r =
+      min( 0.5 * min pairwise distance, min distance to a wall ).
+  - id: circles-34
+    family: equal_circles_in_unit_square
+    n: 34
+    sequence_index: 3
+    reference_optimum: 0.06042
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the common radius r =
+      min( 0.5 * min pairwise distance, min distance to a wall ).

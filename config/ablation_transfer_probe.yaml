@@ -1,0 +1,77 @@
+# ablation_transfer_probe.yaml — §3 headroom-screen CANDIDATE set (NOT frozen).
+#
+# Wider instance set than the template so the screen can pick model-matched difficulty
+# (keep families whose median cold gap_closed ∈ [0.2, 0.8] per model). `frozen: false`
+# → only --probe / --dry-run run against it (the freeze gate blocks real cells).
+#
+# reference_optimum values are SCREEN ESTIMATES, refined at the Goal-2 freeze:
+#   - Tammes / Heilbronn: best-known tabulated optima (max-min distance / max-min-area).
+#   - autocorrelation_seq: local Nelder-Mead proxy (no clean tabulated value); slightly
+#     conservative, so its gap_closed may read a touch high.
+
+family: heilbronn_triangle
+minimize: false
+frozen: false
+
+problems:
+  # Source family A (Heilbronn) — must be solvable enough to generate lessons
+  - id: heilbronn-07
+    family: heilbronn_triangle
+    n: 7
+    sequence_index: 0
+    reference_optimum: 0.0833333333   # 1/12, known optimum
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle
+      formed by any three of them (the Heilbronn triangle problem).
+  - id: heilbronn-08
+    family: heilbronn_triangle
+    n: 8
+    sequence_index: 1
+    reference_optimum: 0.0727083333   # known optimum
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle.
+
+  # Target NEAR (Tammes sphere) — moderate -> harder (n=24 for Opus headroom)
+  - id: tammes-12
+    family: tammes_sphere
+    n: 12
+    sequence_index: 2
+    reference_optimum: 1.0514622242   # icosahedron, known optimum
+    statement: |
+      Place n points on the unit sphere S^2 in R^3 (each a 3D unit vector) to MAXIMIZE
+      the minimum pairwise Euclidean distance (the Tammes problem).
+  - id: tammes-14
+    family: tammes_sphere
+    n: 14
+    sequence_index: 3
+    reference_optimum: 0.9531552210   # known Tammes optimum (screen estimate)
+    statement: |
+      Place n points on the unit sphere S^2 in R^3 to MAXIMIZE the minimum pairwise
+      Euclidean distance (the Tammes problem).
+  - id: tammes-24
+    family: tammes_sphere
+    n: 24
+    sequence_index: 4
+    reference_optimum: 0.7430607000   # known Tammes optimum (screen estimate)
+    statement: |
+      Place n points on the unit sphere S^2 in R^3 to MAXIMIZE the minimum pairwise
+      Euclidean distance (the Tammes problem).
+
+  # Target FAR (autocorrelation 1D) — local-NM proxy references
+  - id: autocorr-32
+    family: autocorrelation_seq
+    n: 32
+    sequence_index: 5
+    reference_optimum: -1.6534740000   # local Nelder-Mead proxy (screen estimate)
+    statement: |
+      Choose a length-n non-negative sequence f to MINIMIZE the peak autoconvolution
+      ratio max(f*f) / (sum f)^2 on [0, 0.5]. (Scored internally as the negated ratio,
+      so higher is better — maximize it.)
+  - id: autocorr-64
+    family: autocorrelation_seq
+    n: 64
+    sequence_index: 6
+    reference_optimum: -1.7013090000   # local Nelder-Mead proxy (screen estimate)
+    statement: |
+      Choose a length-n non-negative sequence f to MINIMIZE the peak autoconvolution
+      ratio max(f*f) / (sum f)^2 on [0, 0.5]. (Scored internally as the negated ratio.)

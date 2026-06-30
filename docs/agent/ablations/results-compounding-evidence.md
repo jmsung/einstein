@@ -217,4 +217,77 @@ by arm; later time-to-target survival curve)** promoted to the headline.
 
 ---
 
+## v3 — cross-family transfer (does wisdom generalize across problem TYPES?) — 2026-06-29
+
+Pre-reg: `2026-06-26-cross-family-generalization-preregistration.md` (§0b transfer, §0c model factor,
+§3 headroom). Harness: the generalized `Family` abstraction + frozen-KB inject + `run_transfer_experiment`
++ `solve_rate_screen` (PR #132 + branch `feat/ablation-v3-llm-runs`).
+
+**Headline: the near-vs-far gradient is NOT cleanly measurable with the wired families — model
+capability dominates these small problems — and the one transfer cell we could measure (far) is NULL.**
+
+1. **Model capability dominates difficulty (3-model screen on fixed instances).** Haiku / Sonnet / Opus
+   on the same candidates: **Opus saturates everything** (solves all geometric + 1D candidates to the
+   reference → no headroom; "the strong model you'd ship doesn't need the notes"). **Sonnet** solves the
+   geometric families (Tammes n=12–18, Heilbronn) reliably; only the FAR family `autocorrelation n=32`
+   lands in a measurable band. **Haiku** can't do the geometric families. → The **near (geometric packing)
+   family is BINARY across models** — solve-or-don't, threshold *between* Haiku and Sonnet; no
+   intermediate-difficulty near cell exists at any model. The intended near-vs-far *gradient* is therefore
+   unachievable with these 4 families.
+
+2. **The §3 gap-band screen is the wrong instrument here; reframed to SOLVE-RATE.** At a fixed budget the
+   outcomes are bimodal (gap ≈ 0 or ≈ 1), so the gap∈[0.2,0.8] band barely exists. Switched the DV to the
+   **cold solve-rate across seeds** (matches the post-#4 efficiency pivot): keep instances cold solves
+   *some-but-not-all* of the time. Only `autocorr-32` @ Sonnet qualified (screen solve-rate 0.50).
+
+3. **Far transfer = NULL (the one clean measurement).** Heilbronn (source) → `autocorr-32` (far) @ Sonnet,
+   8 seeds, paired cold-init, KB_A = 2 Heilbronn lessons (manipulation confirmed — warm read 2 lessons):
+   **cold solve-rate 0.125 (1/8) vs warm-transfer 0.125 (1/8) → delta 0.00.** Geometric lessons did not
+   help the 1D autoconvolution problem — generic meta-strategy does not cross to a structurally unrelated
+   family, exactly the pre-registered prior. *Caveat:* the baseline is noisy (cold 0.125 here vs 0.50 in
+   the screen — bimodality × n=8), so this is "no detectable lift on a noisy baseline," not a tight zero.
+
+**Methodological takeaway (the real v3 contribution):** with a small set of self-contained optimization
+families, *cross-family transfer at a measurable difficulty is elusive* — model capability swamps the
+per-family difficulty knob (binary outcomes; Opus ceilings), leaving only a narrow far@Sonnet cell, which
+shows null transfer. To measure a near-vs-far gradient one needs families that are **graded-difficulty for
+a fixed model** (the 4 current families aren't) — a wiring/design prerequisite, not just more compute. The
+efficiency-DV generalization question (v3's original aim) is answered negatively *for these families*.
+
+4. **Near transfer = NULL by saturation (the accurate-reference shot) — 2026-06-30.** Heilbronn
+   (source) → `equal_circles_in_unit_square` n=28/34 (near) @ Sonnet, S4, paired, KB_A = 2 Heilbronn
+   lessons. References = **true Packomania optima** (n=28 r=0.0936728, n=34 r=0.0852703; n=16 excluded
+   as saturated), cross-checked against the n=16 closed form r=1/8 — so "solved" is defined against the
+   global optimum, ruling out the reference-artifact explanation for the earlier probe. **Result: cold
+   solve-rate 1.00 vs warm 1.00 → Δ=0.00.** Raw gap-closed (vs true optima): cold 1.00 (n28) / 0.98 (n34),
+   warm 0.98 / 0.95 — warm ≈ cold (marginally lower, within noise). Sonnet reaches the true optimum *cold*
+   even at n=34, so **there is no headroom for memory to transfer into.** This is the cleaner, definitive
+   form of the earlier near result: the "near is binary across models" wall holds against accurate optima,
+   not just weak references — i.e. *the value of external memory shrinks toward zero as the base model's
+   solo competence rises*. Config `config/ablation_transfer_near.yaml` (frozen).
+
+## Tier-1+2 closure (council #1, prompt-tone #8, near-transfer) — 2026-06-30 — DIRECTIONAL
+
+Three pre-registered experiments run serially overnight (single credential, ~$0 token cost,
+~8h wall-clock) to close the remaining mechanism claims at a **directional/pilot** scale (not
+the S≈18 power target — deferred). All three are **NULL**; reported, not hidden.
+
+| Exp | Design | Result | Read |
+|---|---|---|---|
+| **#1 council** | n13/n14 × S4, haiku, equal 600s budget, on vs off | mean Δ=+0.004, 95% CI [−0.11, +0.13]; both arms valid | NULL pilot — no detected typical-case lift; smoke's +0.38 was an invalid-off artifact |
+| **#8 prompt-tone** | n13/n14 × S4, haiku, fixed 600s, encouraging vs length-matched neutral | mean Δ=+0.035, 95% CI [−0.10, +0.18] | NULL pilot — expected frontier-model null; effort channel held constant |
+| **near-transfer** | Heilbronn→equal-circles 28/34 × S4, Sonnet, true optima | cold 1.00 vs warm 1.00, Δ=0.00 | NULL by saturation — no headroom on a capable model |
+
+**Synthesis for the paper (see `paper-ablation-section-draft.md`):** combined with #4 (efficiency, not
+quality) and #3 (plugins, on a headroom family), the closure yields one coherent thesis — *the add-ons do
+not move a capable model on problems it already handles; value concentrates in the rare-event tail (P2/P4
+records) and where the model genuinely struggles*. The controlled DV (mean gap on routine cells) samples
+the body of a heavy-tailed payoff distribution and is blind to the tail by construction; the nulls are
+**explained** by that estimand mismatch, not **excused** by it. What it licenses: "no detected typical-case
+effect," NOT "it works." Named follow-up: tail-sensitive DV (max not mean / P(new-best)), pilots powered to
+S≈18, a headroom regime for transfer. Pilots are underpowered (n=8) — a CI straddling 0 is a null-pilot,
+not proof of no effect.
+
+---
+
 *Maintenance: append after every run/analysis. Cross-ref the roadmap (`mb/active/compounding-ablation-roadmap.md`) for branch state + next actions.*
