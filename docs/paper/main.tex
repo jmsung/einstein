@@ -192,7 +192,7 @@ in collective lineages; the live ranking is transient by design and we do not tr
 \toprule
 Problem & Topic & Score & Rank 06-22 & Rank 06-23 & Status \\
 \midrule
-P14 & circle-packing          & $2.6359830849$ & \#1 & \#1 & clean \\
+P14 & circle-packing          & $2.6359830849$$^\S$ & \#1 & \#1 & clean \\
 P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & \#1 & clean \\
 P2  & first-autocorrelation   & $1.5028506$    & \#1 & \#2$^\ddagger$ & clean \\
 P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & \#1$^\dagger$ & contested$^\dagger$ \\
@@ -208,6 +208,10 @@ P22 & kissing-d12             & $2.001403$     & \#3 & \#3 & clean \\
 \multicolumn{6}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
 \multicolumn{6}{l}{normalization (\S\ref{sec:math}); we do not treat it as a clean rank-\#1 win.}\\
 \multicolumn{6}{l}{$^\ddagger$ surpassed between snapshots by a strong newcomer (\texttt{Hyra}) --- the dynamics in action.}\\
+\multicolumn{6}{l}{$^\S$ The operators' companion snapshot~\cite{bianchi2026einstein} lists a higher circles-in-square figure}\\
+\multicolumn{6}{l}{($2.635983095$); that construction overlaps within the arena's ${\sim}10^{-9}$ pair-tolerance band and \emph{fails}}\\
+\multicolumn{6}{l}{strict $\mathrm{tol}{=}0$ (our ``false-breakthrough'' candidate, rejected pre-submission --- cross-problem lesson \#54).}\\
+\multicolumn{6}{l}{We report the strictly-feasible score; our June snapshot ranks it clean \#1 (strictly-best \emph{valid} score).}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -340,7 +344,7 @@ unrelated observation turns out to be the important one --- the bacterial defens
 became CRISPR is the canonical example. The author, a scientist by training (physics and
 biology), built the harness so the agent traverses this loop rather than merely ``optimizing
 harder,'' and so that each pass leaves a durable trace. (That last point --- that value can hide
-in a rare, off-axis observation --- foreshadows the heavy-tailed structure we return to in
+in a rare, off-axis observation --- connects to the question of rare, accumulation-gated breakthroughs we return to in
 \S\ref{sec:ablations}.)
 
 Two artifacts carry the method, and it is worth stating their scope precisely because the paper
@@ -841,8 +845,10 @@ Submitted constructions & per-problem tracking (e.g.\ P2/P14/P18), with verifier
 % (1) RESOLVED: #4 efficiency figures now use the clean re-run (warm 9% vs cold 26% timeouts,
 % ~3x fewer; mean wall 255s vs 344s). The superseded contaminated Stage-C batch (6x / ~35% /
 % 242-370) is NOT used anywhere.
-% (2) PENDING before submission: Test-3 (headroom transfer) + Test-1 (tail-DV) results land in
-% "what would settle it".
+% (2) RESOLVED 2026-07-01: Test-1 (tail) = floor-raising not tail-fattening (mean Δ+0.075
+% CI[-0.002,+0.152]; p90<mean; max/near-solve flat); Test-3 (headroom transfer, n=60/80) =
+% saturation again (Sonnet ~99% cold). Folded into the three interpretation paragraphs below;
+% heavy-tail framing replaced by tested-result + phase-transition open question.
 
 The case studies above motivate the harness; this section \emph{tests} it. We subjected each
 studied mechanism to a pre-registered, air-gapped, paired ablation, scored by the harness
@@ -914,32 +920,49 @@ budget --- and the fixed-budget design holds it constant by construction, so the
 result cannot be effort in disguise. The prompt-framing ablation was built to probe exactly
 that channel and returned the expected frontier-model null.
 
-\paragraph{Why so many nulls --- one principled limitation.}
-We resist explaining each null away separately; one structural point applies across them,
-stated falsifiably. \emph{The estimand we measured is the body of a heavy-tailed distribution;
-the value of these mechanisms, if any, lives in the tail.} Progress on hard optimization is
-rare and spontaneous --- most runs move the score a little, and a few lucky operator events
-produce a jump (the council reframing that set the P2 record, \S\ref{sec:harness}, and the
-warm-memory move it retrieved, are exactly such events). A mechanism can leave the \emph{mean}
-unchanged while fattening the \emph{tail}; an eight-cell mean-over-routine-runs test is, by
-construction, nearly blind to that. A capable model compounds this: on small problems it solves
-the instance cold, so there is no gap for memory to close --- the transfer null is
-\emph{saturation}, not absence. What this licenses is ``no detected typical-case effect,'' and
-emphatically \emph{not} ``the mechanism does not work.'' The three typical-case nulls (council, prompt
-framing, adaptive scheduling) do move our prior downward on \emph{reliable typical-case} help;
-the transfer null is saturation, and the rare-event question stays open.
+\paragraph{Testing the tail hypothesis directly.}
+A natural way to reconcile the nulls is that the value lives not in the mean but in the
+\emph{tail}: a mechanism could leave the average unchanged while occasionally producing a jump
+--- the council reframing that set the P2 record (\S\ref{sec:harness}) is exactly such an event.
+We pre-committed two follow-up tests of this idea and ran them. First, a cold-versus-warm
+comparison with a tail-sensitive estimand ($60$ paired cells per arm): memory raised the
+\emph{floor} of the outcome distribution --- warm's mean gap-closed exceeded cold's by $+0.075$
+($95\%$ CI $[-0.002,+0.152]$, just including zero) --- but left the \emph{ceiling} untouched: the
+$90$th percentile rose \emph{less} than the mean and the maximum not at all, the opposite of
+tail-fattening. Second, a harder-instance cross-family transfer (circle packing at $n=60,80$
+against tabulated optima): the capable model reached ${\sim}99\%$ of the true optimum unaided, so
+warm and cold were indistinguishable --- saturation, not absence. Measured, then, memory raises
+the floor (consistent with its efficiency effect) but does \emph{not} fatten the tail.
 
-\paragraph{What would settle it (pre-committed).}
-The resolution is a better experiment, pre-specified rather than chosen post hoc: measure
-the \emph{tail}, not the body --- the probability of a new personal best, or the \emph{maximum}
-(not mean) improvement over many seeds on a fixed hard instance run to a long budget --- and
-power the pilots to the level ($S{\approx}18$) at which the memory effect's interval tightened.
-These runs are planned; their results will update this section. Until then the claim is bounded
-and stated plainly: on the controlled, typical-case evidence we have, only memory-efficiency and
-plugins clear the bar; the council, prompt framing, adaptive scheduling, and cross-family
-transfer show no detected effect at the scales tested --- while the rare-event value visible in
-the case studies (the P2/P4 records) remains a named, open question, not a settled claim. That
-is the most we can honestly say, and we prefer it to a stronger claim the data would not carry.
+\paragraph{Two hypotheses, one testable.}
+These nulls do not close the rare-event question, because the design is the wrong instrument for
+it: a controlled, short-horizon, bounded-budget ablation \emph{cannot produce a breakthrough at
+all} --- no run in either arm comes near optimal --- so ``we did not find a rare effect'' is
+uninformative about whether one exists (one cannot boil water at fifty degrees, however long one
+waits). It is worth separating two conflated hypotheses. A \emph{stochastic heavy tail} ---
+memory occasionally buys a jackpot --- is nearly unfalsifiable, since any null is ``consistent
+with a rare event we did not sample.'' A \emph{phase transition at a knowledge threshold} ---
+accumulated findings do nothing until a critical mass tips the search into a qualitatively new
+basin --- is \emph{more} testable, because, like boiling, it predicts a \emph{nonlinear
+dose--response} (breakthrough rate flat, then a knee as banked knowledge grows) and
+\emph{reproducibility above threshold} (re-seeding from the critical state re-triggers the jump;
+the effect is gated, not merely rare). Our tests probed neither: they measured a smooth shift at
+a single, low knowledge level --- the sub-threshold regime, where floor-raising is exactly what a
+threshold model also predicts.
+
+\paragraph{The bounded claim, and the test that would settle it.}
+An uncontrolled but consistent field observation motivates taking the threshold hypothesis
+seriously: this agent's records were rare and arrived only after long accumulation of compute and
+knowledge. We therefore state a bounded result and name a falsifiable test rather than over- or
+under-claim. Measured, memory's value is efficiency and floor-raising --- not a higher ceiling, a
+fatter tail, or cross-family transfer; the council, prompt framing, and scheduling show no
+detected typical-case effect. The threshold hypothesis remains distinct and unfalsified, and the
+right test is not a larger version of ours but a different one: a long-horizon
+\emph{dose--response} that varies accumulated knowledge across a wide range in a regime capable of
+producing breakthroughs, asking not ``is warm's tail fatter?'' but ``\emph{does memory lower the
+boiling point --- reach the breakthrough at less compute, or lower accumulation, than cold?}''
+The verified records this agent produced (P2, P4) are existence proofs consistent with such a
+mechanism but uncontrolled; the controlled version is future work.
 
 % ======================================================================
 \section{Collaboration \emph{and} Competition}
@@ -1224,10 +1247,11 @@ I thank the platform builders --- Together AI and James Zou's group (Bianchi, Kw
 Zou) --- for EinsteinArena: the open problems, hardened verifiers, leaderboard, and discussion
 board that made this work possible, and for documenting the collective effort
 in~\cite{bianchi2026einstein}. None of JSAgent's results exist without the arena. I also thank
-the other agents on the board --- especially \texttt{alpha\_omega\_agents}, whose strong
-$n=594$ kissing construction JSAgent built on, and \texttt{KawaiiCorgi},
-\texttt{ClaudeExplorer}, \texttt{CHRONOS}, \texttt{Together-AI}, \texttt{OrganonAgent}, and
-\texttt{Gradient}, among others. Progress here was genuinely collective: JSAgent's
+the other agents on the board --- especially \texttt{alpha\_omega\_agents}, whose
+2026-04-08 leap opened the $n=594$ kissing basin that JSAgent built on hours later, and
+\texttt{CHRONOS}, the first agent to a valid score-$0$ arrangement there; and
+\texttt{KawaiiCorgi}, \texttt{ClaudeExplorer}, \texttt{Together-AI}, \texttt{OrganonAgent},
+and \texttt{Gradient}, among others. Progress here was genuinely collective: JSAgent's
 contributions are links in shared lineages, and several of its own advances stand on
 solutions and discussion others posted publicly. Competition and collaboration were the same
 engine.
