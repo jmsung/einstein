@@ -52,29 +52,21 @@
 
 \begin{abstract}
 Recent language-model agents can produce mathematical constructions that pass objective
-verifiers, but the reusable reasoning behind them usually disappears when a run ends. We
-report \textbf{JSAgent}, a mathematical-optimization agent built around persistent,
-human-readable memory: a knowledge base of concepts, failed attempts, techniques, and
-behavioral rules, reused across problem-solving cycles, with arena submission serving as
-external verification rather than the goal. The harness combines wiki-first retrieval, triple
+verifiers, but the reusable reasoning behind them is usually lost after each run. We present
+\textbf{JSAgent}, a mathematical-optimization agent built around persistent, human-readable
+memory: a knowledge base of concepts, failed attempts, techniques, and behavioral rules reused
+across problem-solving cycles. On EinsteinArena, JSAgent produced externally verified
+constructions that were state-of-the-art when submitted, including clean circle-packing results
+and a former first-autocorrelation record. The system combines wiki-first retrieval, triple
 verification, wall-hit escalation, obstruction-indexed technique reuse, and compute routing.
-As an auditable case study, JSAgent produced verified, re-runnable constructions that were
-state-of-the-art when submitted on several EinsteinArena problems --- including clean
-circle-packing results and a former first-autocorrelation record (since surpassed) --- and
-entered documented collective lineages. Logs show repeated reuse of stored failures and
-techniques, including a record-producing move retrieved from an earlier dead-end note. We
-complement this observational trail with pre-registered controlled ablations: a
-cold-versus-warm test shows persistent memory improves \emph{efficiency} --- reaching
-comparable solutions with several-fold fewer budget-exhausting runs --- rather than raising
-solution quality, while controlled tests of the council and prompt framing show no detected
-effect at pilot scale, and cross-family transfer is null under model saturation (a capable
-model solves the small instances from scratch, leaving no gap for memory to close). We read this honestly: the
-payoff in this setting is heavy-tailed, so a mechanism's value concentrates in rare events
-that a mean-over-routine-runs estimand cannot capture. We report dated leaderboard snapshots only as historical context --- the board is a
-live ecosystem in which records are continually set and surpassed, so rank is transient by
-design. The broader, deliberately scoped claim is that \emph{in domains with cheap objective
-verifiers}, agentic discovery can be made auditable through a verification-and-memory loop,
-with human judgment remaining central for problem selection, promotion, and submission.
+Logs show repeated reuse of prior failures and techniques, including a record-producing move
+recovered from an earlier dead-end note. Controlled ablations show that persistent memory
+improves efficiency --- reaching comparable solutions with fewer budget-exhausting runs ---
+but does not improve final solution quality at fixed budget; other mechanisms, including
+council prompting and prompt framing, show no detected effect at pilot scale. These results
+support a bounded claim: in domains with cheap objective verifiers, agentic discovery can be
+made auditable through a verification-and-memory loop, while human judgment remains central for
+problem selection, promotion, and submission.
 \end{abstract}
 
 \paragraph{AI contribution statement.}
@@ -82,10 +74,10 @@ This work used an agent-primary workflow. \textbf{JSAgent}, an AI agent implemen
 Claude Code on a frontier Claude model, generated the optimizer code, per-problem scripts,
 knowledge-base pages, verification workflows, and drafts of this manuscript. The human author
 selected which problems to pursue, approved promotion of findings to rules and concepts, judged
-submission risk, verified the submitted results, and edited and accepts full responsibility for
-the final manuscript (the division of labor is detailed in Table~\ref{tab:roles}). Per arXiv
-policy, the AI agent is named as the system under study and credited here, but is not listed as
-an author.
+submission risk, verified every submitted construction, checked the citations, and edited and
+accepts full responsibility for the final manuscript (the division of labor is detailed in
+Table~\ref{tab:roles}). Per arXiv policy, the AI agent is named as the system under study and
+credited here, but is not listed as an author.
 
 \paragraph{What this paper claims --- and does not.}
 \emph{We do not claim:} a proof of global optimality for any submitted construction; that
@@ -97,7 +89,7 @@ persistent, human-readable memory and rule harness; logs show repeated retrieval
 prior findings; the released artifacts make the constructions and their verification auditable;
 and pre-registered controlled ablations show persistent memory improves \emph{efficiency} (not
 quality), with the other studied mechanisms null or underpowered at pilot scale and reported
-honestly (\S\ref{sec:ablations}).
+in full, nulls included (\S\ref{sec:ablations}).
 
 % ======================================================================
 \section{Introduction}
@@ -133,19 +125,17 @@ knowledge against the world.\footnote{The personal account of how this began ---
 non-mathematician, a free weekend, and the first problem that worked --- is deferred to
 Appendix~\ref{app:personal} so the contribution can lead.}
 
-\paragraph{How this work was produced (and why it matters to the thesis).}
-Every artifact described here --- the optimizer code and per-problem scripts, the knowledge
-base of concepts and findings, the behavioral rules, and the prose of this paper --- was
-\emph{implemented by the agent}, not typed by the author. The mode of work was uniformly
-agentic: the human stated a request, the agent did it and reported back. This is not an
-aside; it is part of the result. The central lesson is a clean division of labor that
-emerged in practice: the agent is extraordinarily capable at \emph{execution}, but it does
-not reliably know \emph{which question is worth asking} or which problem is worth solving
-next --- problem selection and taste remained the human's job. And steering that selection
-requires the human to genuinely \emph{comprehend} what the agent is doing; without
-comprehension there is no guidance, only rubber-stamping. The knowledge base and the harness
-are, in part, the instruments that make such comprehension --- and therefore such guidance
---- possible at all (\S\ref{sec:harness}).
+\paragraph{The division of labor (and why it matters to the thesis).}
+The mode of work was agent-primary --- the human stated a request, the agent implemented it
+and reported back (the full division of labor, including the agent's role in drafting this
+manuscript, is detailed in the AI contribution statement and Table~\ref{tab:roles}). What
+matters to the thesis is the division of labor that emerged in practice: the agent is
+extraordinarily capable at \emph{execution}, but it does not reliably know \emph{which question
+is worth asking} or which problem is worth solving next --- problem selection and taste remained
+the human's job. And steering that selection requires the human to genuinely \emph{comprehend}
+what the agent is doing; without comprehension there is no guidance, only rubber-stamping. The
+knowledge base and the harness are, in part, the instruments that make such comprehension ---
+and therefore such guidance --- possible at all (\S\ref{sec:harness}).
 
 \paragraph{Roadmap.}
 Section~\ref{sec:arena} situates EinsteinArena and JSAgent's stance. Section~\ref{sec:math}
@@ -161,7 +151,7 @@ agents are for real scientific contribution, and what gates full autonomy.
   \item A self-improving knowledge-base--agent \emph{methodology} (\S\ref{sec:harness}).
   \item An open, auditable \emph{harness} of behavioral rules co-evolved with the agent.
   \item Transferable \emph{techniques} produced in the course of solving (\S\ref{sec:techniques}).
-  \item \emph{Evidence}: verified standings, an honest self-improvement trail (\S\ref{sec:math}),
+  \item \emph{Evidence}: verified standings, a documented self-improvement trail (\S\ref{sec:math}),
         and pre-registered \emph{controlled ablations} of the harness mechanisms ---
         memory buys efficiency, not quality; the rest null at pilot scale (\S\ref{sec:ablations}).
   \item A field account of the \emph{human--agent division of labor} --- execution
@@ -207,24 +197,26 @@ in collective lineages; the live ranking is transient by design and we do not tr
   rank is a historical reading, not a stable property. ``SOTA-when-submitted'' is the durable
   fact; rank is shown only to illustrate the dynamics.}
 \label{tab:standings}
-\begin{tabular}{lllll}
+\begin{tabular}{llllll}
 \toprule
-Problem & Topic & Score & Rank 06-22 & Rank 06-23 \\
+Problem & Topic & Score & Rank 06-22 & Rank 06-23 & Status \\
 \midrule
-P14 & circle-packing          & $2.6359830849$ & \#1 & \#1 \\
-P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & \#1 \\
-P2  & first-autocorrelation   & $1.5028506$    & \#1 & \#2$^\ddagger$ \\
-P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & \#1$^\dagger$ \\
-P1  & Erd\H{o}s min-overlap    & $0.3808703$    & \#2 & \#3$^\ddagger$ \\
-P3  & second-autocorrelation  & $0.962214$     & \#3 & \#4$^\ddagger$ \\
-P4  & third-autocorrelation   & $1.452521$     & \#3 & \#3 \\
-P7  & prime-number-theorem    & $0.994847$     & \#3 & \#3 \\
-P11 & tammes                  & $0.513472$     & \#3 & \#3 \\
-P22 & kissing-d12             & $2.001403$     & \#3 & \#3 \\
+P14 & circle-packing          & $2.6359830849$ & \#1 & \#1 & clean \\
+P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & \#1 & clean \\
+P2  & first-autocorrelation   & $1.5028506$    & \#1 & \#2$^\ddagger$ & clean \\
+P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & \#1$^\dagger$ & contested$^\dagger$ \\
+P1  & Erd\H{o}s min-overlap    & $0.3808703$    & \#2 & \#3$^\ddagger$ & clean \\
+P3  & second-autocorrelation  & $0.962214$     & \#3 & \#4$^\ddagger$ & clean \\
+P4  & third-autocorrelation   & $1.452521$     & \#3 & \#3 & clean \\
+P7  & prime-number-theorem    & $0.994847$     & \#3 & \#3 & clean \\
+P11 & tammes                  & $0.513472$     & \#3 & \#3 & clean \\
+P22 & kissing-d12             & $2.001403$     & \#3 & \#3 & clean \\
 \midrule
-\multicolumn{5}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
-\multicolumn{5}{l}{normalization (\S\ref{sec:math}); we do not treat it as a clean record.}\\
-\multicolumn{5}{l}{$^\ddagger$ surpassed between snapshots by a strong newcomer (\texttt{Hyra}) --- the dynamics in action.}\\
+\multicolumn{6}{l}{\emph{Status:} ``clean'' = strictly-feasible, triple-verified construction (e.g.\ P14, P18, P2);}\\
+\multicolumn{6}{l}{``contested'' = verifier-contested, not counted as a clean record.}\\
+\multicolumn{6}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
+\multicolumn{6}{l}{normalization (\S\ref{sec:math}); we do not treat it as a clean rank-\#1 win.}\\
+\multicolumn{6}{l}{$^\ddagger$ surpassed between snapshots by a strong newcomer (\texttt{Hyra}) --- the dynamics in action.}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -296,7 +288,7 @@ this standard (the uniform-radius-shrink fallback guarantees it); the gain over 
 is real, not tolerance-borrowed. \src{problems/14-circle-packing-square.md, problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
 
 \paragraph{P9 uncertainty principle (a verification-scar case, not a clean record).}
-We single this one out for honesty rather than as a win. The arena scores it as
+We single this one out as a scoped caveat rather than a win. The arena scores it as
 $S = x_\star/2\pi$, and the proven bounds for the constant are
 $0.2025 \le S \le 0.3102$~\cite{cohn2019uncertaintyd12,goncalves2020signuncertainty}. The live
 snapshot lists JSAgent at the top with $S\approx 0.318$ --- but that value lies \emph{above} the
@@ -307,7 +299,7 @@ constraints ($f(0)<0$, $\hat f(0)<0$) and is admitting invalid configurations. E
 \emph{not} treat this as a clean rank-\#1; the strongest cleanly-valid submission we can stand
 behind was $S=0.275$ ($k{=}16$), and the problem was at one point hidden by the operators
 pending a verifier fix. This is precisely the local$\leftrightarrow$arena drift that makes
-triple-verify the spine of the method --- and an honest illustration of why a leaderboard
+triple-verify the spine of the method --- and a clear illustration of why a leaderboard
 position is weaker evidence than a locally re-verified construction.
 \src{problems/9-uncertainty-principle.md, findings/verification-patterns.md, findings/p9-uncertainty-push-trajectory.md}
 
@@ -333,15 +325,12 @@ have since moved as other agents built further. (In the arena numbering, P22 is 
 in dimension 12; the dimension-11 problem discussed in \S\ref{sec:collab} and the appendix is P6.)
 
 \paragraph{What we claim, and what we do not.}
-We do \emph{not} rest the contribution on a leaderboard position, and we make no claim to
-``lead'' the board --- it is a live, multi-agent ecosystem in which strong agents arrive and
-records change weekly (a newcomer, \texttt{Hyra}, set several new \#1s the day after this
-draft; see \S\ref{sec:collab}). What we claim is durable and dated: JSAgent produced verified,
-re-runnable constructions that were state-of-the-art \emph{when submitted} --- including clean
-circle-packing results (P14, P18) and a first-autocorrelation record (P2, since surpassed) ---
-and is a named participant in documented collective lineages~\cite{bianchi2026einstein}. The
-verified constructions and the methodology persist regardless of where the board stands when
-this is read; the rankings do not, and that is the point.
+We make no claim to ``lead'' the board (a newcomer, \texttt{Hyra}, set several new \#1s the day
+after this draft; see \S\ref{sec:collab}). What we claim is durable and dated: JSAgent produced
+verified, re-runnable constructions that were state-of-the-art \emph{when submitted} ---
+including clean circle-packing results (P14, P18) and a first-autocorrelation record (P2, since
+surpassed) --- and is a named participant in documented collective
+lineages~\cite{bianchi2026einstein}.
 
 % ======================================================================
 \section{Agentic Harness Contribution}
@@ -538,7 +527,7 @@ measured on its own terms. Two measures are available now: a technique hit-rate 
 the fraction of technique applications (counted once per technique--problem pairing) that
 reached top-3 --- and a cite-reuse rate of $84\%$ ($51/61$ recent findings cite a prior page).
 The latter is a \emph{process} metric: the wiki-first rule \emph{requires} a citation, so it
-measures compliance more than causal gain. We are deliberately honest about what is \emph{not}
+measures compliance more than causal gain. We are explicit about what is \emph{not}
 yet instrumented --- a per-problem best-score-vs-cycle curve and a ``recall-preceded-win''
 rate need cycle-level tracing we have not retrofitted, and we do not fake them. The causal
 evidence is therefore \emph{observational}, resting on the traces in Table~\ref{tab:traces}.
@@ -746,6 +735,10 @@ Period & Shell & Model / context \\
 \end{tabularx}
 \end{table}
 
+Exact per-cycle model IDs were not pinned, and under a Claude Code Max plan the model can
+switch automatically near usage limits; this switching was not disabled or logged, so the
+trajectory is auditable but not exactly replayable.
+
 \paragraph{Claims and evidence.}
 \begin{table}[htbp]
 \centering
@@ -773,10 +766,10 @@ Human role is selection + comprehension &
 
 EinsteinArena is a crowded, capable field --- AlphaEvolve, Together-AI, KawaiiCorgi,
 alpha\_omega\_agents, CHRONOS, OrganonAgent, and newcomers such as Hyra, each independently
-designed by different teams with distinct architectures. We deliberately give no all-agent
-``who leads'' tally: it would be stale within days and is not the contribution. The relevant
-fact is that JSAgent's verified constructions were competitive enough to be SOTA-when-submitted
-on several problems and to enter documented lineages --- alongside, not above, a strong cohort.
+designed by different teams with distinct architectures. We give no all-agent ``who leads''
+tally; the relevant fact is that JSAgent's verified constructions were competitive enough to be
+SOTA-when-submitted on several problems and to enter documented lineages --- alongside, not
+above, a strong cohort.
 
 The technique hit-rate is $26\%$ ($55/213$ logged technique--problem applications reached
 top-3; \path{docs/agent/skill-library.md}); it is a process/outcome metric, not causal
@@ -816,6 +809,22 @@ Human interventions are characterized in Table~\ref{tab:roles}. Because the lead
 dynamic, every numeric standing is reported as of its timestamp and should be re-verified by
 re-running the script.
 
+\begin{center}
+\fbox{\parbox{0.95\columnwidth}{%
+\textbf{Artifact availability.}\\[2pt]
+\begin{itemize}[nosep,leftmargin=1.4em]
+  \item \textbf{Repository:} \texttt{github.com/jmsung/einstein}, frozen at tag
+        \texttt{paper-v1} (rules, knowledge base, submitted constructions, verification scripts).
+  \item \textbf{Headline constructions (P2/P14/P18):} verified one-line reproduction commands
+        with recorded outputs in the top-level \path{ARTIFACTS.md}.
+  \item \textbf{Standings sweep:} \path{scripts/leaderboard_standings.py} @ \texttt{e38a793};
+        run \texttt{leaderboard\_standings.py --agent JSAgent}.
+  \item \textbf{Not reproducible:} the agent trajectory (exact per-cycle model IDs not pinned;
+        see \S\ref{sec:eval}), and the exact causal-memory effect beyond the reported ablation
+        (\S\ref{sec:ablations}).
+\end{itemize}}}
+\end{center}
+
 \begin{table}[htbp]
 \centering\small
 \caption{Artifact pointers (public repository \texttt{github.com/jmsung/einstein}). Load-bearing
@@ -838,15 +847,16 @@ Submitted constructions & per-problem tracking (e.g.\ P2/P14/P18), with verifier
 % ======================================================================
 \section{Controlled Ablations}
 \label{sec:ablations}
-% PENDING before submission: (1) #4 efficiency multiplier --- reconcile the contaminated
-% Stage-C batch (6x timeouts / ~35% slower) vs the clean re-run (~3x); kept qualitative
-% ("several-fold") here until resolved (see mb/progress.md reconcile-claim4-numbers).
-% (2) Test-3 (headroom transfer) + Test-1 (tail-DV) results land in "what would settle it".
+% (1) RESOLVED: #4 efficiency figures now use the clean re-run (warm 9% vs cold 26% timeouts,
+% ~3x fewer; mean wall 255s vs 344s). The superseded contaminated Stage-C batch (6x / ~35% /
+% 242-370) is NOT used anywhere.
+% (2) PENDING before submission: Test-3 (headroom transfer) + Test-1 (tail-DV) results land in
+% "what would settle it".
 
 The case studies above motivate the harness; this section \emph{tests} it. We subjected each
 studied mechanism to a pre-registered, air-gapped, paired ablation, scored by the harness
 rather than the agent's self-report, and report every result --- including the nulls --- as the
-pre-registrations committed us to. The honest one-line summary: one mechanism shows a clean,
+pre-registrations committed us to. The one-line summary: one mechanism shows a clean,
 well-powered effect (memory~$\to$~efficiency); one is supported on a family with headroom
 (problem-specific plugins); the rest are null or underpowered at the scales we could afford. We
 argue this is a finding about \emph{where} the value lives, not a negative verdict --- while
@@ -860,6 +870,22 @@ cold start per seed, the same model, and the same fixed budget. The dependent va
 computed by the harness; submission self-reports are ignored. ``Pilot'' rows are eight paired
 cells and underpowered by design (the single-credential serial budget); we report the
 directional estimate with a $95\%$ bootstrap confidence interval and label it as such.
+
+\paragraph{Protocol.}
+The LLM-arm ablations (knowledge base, council, prompt framing) run on the Heilbronn-triangle
+and equal-circles families; the deterministic plugin and scheduling arms run on Tammes $n{=}50$.
+Each cell is a fixed number of seeds run under a fixed per-run budget --- a $600$-second solve
+timeout, equal across arms --- and pairing is by identical cold start per seed, so the two arms
+face the same starting configuration. The dependent variable \texttt{gap\_closed} (the fraction
+of the start-to-reference-optimum gap closed) is computed by the harness from the run artifacts;
+the agent's self-report is ignored, so scoring is blind to arm. Confidence intervals are $95\%$
+percentile bootstrap over $10{,}000$ resamples with a fixed seed. Each experiment was
+pre-registered in a frozen file under \path{docs/agent/ablations/*-preregistration.md} ---
+the council, prompt-tone/effort-vs-efficiency, and knowledge-compounding
+pre-registrations were committed \emph{before} the confirmatory runs (see the public repo's
+commit history: \path{docs/agent/ablations/2026-06-27-council-preregistration.md},
+\path{2026-06-28-prompt-tone-effort-vs-efficiency-preregistration.md}, and
+\path{2026-06-26-knowledge-compounding-preregistration.md}).
 
 \begin{table}[htbp]
 \centering\small
@@ -875,7 +901,7 @@ directional estimate with a $95\%$ bootstrap confidence interval and label it as
 \toprule
 \textbf{Mechanism} & \textbf{Verdict} & \textbf{Key numbers} \\
 \midrule
-Knowledge base (cold vs.\ warm) & quality null; \textbf{efficiency supported} & quality $\Delta$ CI includes $0$ at $S{=}18$; warm exhausts its budget several-fold less often and finishes faster \\
+Knowledge base (cold vs.\ warm) & quality null; \textbf{efficiency supported} & quality $\Delta$ not significant (95\% CI includes $0$ at $S{=}18$, 216 paired cells); efficiency: warm exhausts its budget in $9\%$ of runs vs.\ cold $26\%$ ($\sim3\times$ fewer), mean wall $255$s vs.\ $344$s \\
 Problem-specific plugins & \textbf{supported} (family with headroom) & $\Delta{=}{+}0.214$, CI $[{+}0.185,{+}0.242]$; ${\sim}30\times$ faster \\
 Persona council & null (pilot) & $\Delta{=}{+}0.004$, CI $[{-}0.11,{+}0.13]$ \\
 System-prompt framing & null (pilot) & $\Delta{=}{+}0.035$, CI $[{-}0.10,{+}0.18]$ \\
@@ -889,7 +915,8 @@ Cross-family transfer & null (saturation) & capable model reaches the true optim
 The cold-versus-warm memory test is the best-powered result. Its verdict is specific:
 persistent memory did \emph{not} raise solution quality --- the quality interval includes
 zero --- but it made the agent markedly more \emph{efficient}, reaching comparable solutions
-with several-fold fewer budget-exhausting runs. Memory's value here is skipping rediscovery, a
+with $\sim3\times$ fewer budget-exhausting runs (warm timed out on $9\%$ of runs, cold on
+$26\%$). Memory's value here is skipping rediscovery, a
 time-to-solution effect, not a higher ceiling. We flag what this is \emph{not}: a gain that
 comes only from spending more compute is the effort channel --- equivalent to raising the
 budget --- and the fixed-budget design holds it constant by construction, so the efficiency
@@ -912,7 +939,7 @@ framing, adaptive scheduling) do move our prior downward on \emph{reliable typic
 the transfer null is saturation, and the rare-event question stays open.
 
 \paragraph{What would settle it (pre-committed).}
-The honest resolution is a better experiment, pre-specified rather than chosen post hoc: measure
+The resolution is a better experiment, pre-specified rather than chosen post hoc: measure
 the \emph{tail}, not the body --- the probability of a new personal best, or the \emph{maximum}
 (not mean) improvement over many seeds on a fixed hard instance run to a long budget --- and
 power the pilots to the level ($S{\approx}18$) at which the memory effect's interval tightened.
@@ -1110,7 +1137,7 @@ able to push the frontier considerably faster and further. We offer JSAgent not 
 of what is possible but as an early, modest data point: the expert-plus-agent pairing is, we
 believe, where the rapid progress will come from.
 
-\paragraph{The honest case against, and the limits.}
+\paragraph{The case against, and the limits.}
 Several of the results are empirical ties or near-ties rather than proofs: no dual
 certificate yet matches a value to confirm global optimality, so an $N$-agent tie should be
 read as a sharp shared basin, not a theorem --- the gold standard remains an exact proof, as
@@ -1175,7 +1202,7 @@ later --- unless fast surrogate verifiers become available there.
 \section{Limitations and Threats to Validity}
 \label{sec:limits}
 
-The honest framing distributed through the paper is collected here as a single account
+The scoped framing distributed through the paper is collected here as a single account
 (Table~\ref{tab:threats}).
 
 \begin{table}[h]
