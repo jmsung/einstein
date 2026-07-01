@@ -260,7 +260,7 @@ bounds~\cite{matolcsi2010autoconvolution,cloninger2017autoconvolution,white2022a
 \label{fig:p2}
 \end{figure}
 
-\paragraph{P14 circle-packing and P18 circles-in-rectangle (rank \#1, clean).}
+\paragraph{P14, circle-packing and P18, circles-in-rectangle (rank \#1, clean).}
 Both are dense-packing problems at a basin-locked float64 ceiling, and both illustrate
 verification discipline more than raw search. On \textbf{P18} (21 circles in a perimeter-bounded
 rectangle, maximize $\sum r$) the optimum is a zero-degree-of-freedom KKT point (64 active
@@ -284,7 +284,7 @@ happened to the three P14 candidates above. P18's submitted result is strictly f
 this standard (the uniform-radius-shrink fallback guarantees it); the gain over the prior record
 is real, not tolerance-borrowed. \src{problems/14-circle-packing-square.md, problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
 
-\paragraph{P9 uncertainty principle (a verification-scar case, not a clean record).}
+\paragraph{P9, uncertainty principle (a verification-scar case, not a clean record).}
 We single this one out as a scoped caveat rather than a win. The arena scores it as
 $S = x_\star/2\pi$, and the proven bounds for the constant are
 $0.2025 \le S \le 0.3102$~\cite{cohn2019uncertaintyd12,goncalves2020signuncertainty}. The live
