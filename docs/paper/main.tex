@@ -1417,8 +1417,8 @@ intervening progression is recorded in the per-problem tracking rather than repr
 warm-started from another agent's solution and pushed with standard optimizers. \emph{Wall:}
 fixed-degree optimizers all settle into the same plateau; \emph{k-climbing} (raising the
 polynomial degree to open new degrees of freedom) escapes it. \emph{The scar:} a buggy fast
-evaluator reported ever-better scores that fell \emph{below} the proven Bourgain--Clozel--Kahane
-lower bound $0.2025$ --- mathematically impossible, so the evaluator was wrong; the problem was
+evaluator reported ever-better scores that fell \emph{below} the proven lower bound
+$0.2025$~\cite{bourgain2008heisenberg,cohn2019uncertaintyd12} --- mathematically impossible, so the evaluator was wrong; the problem was
 temporarily hidden pending a verifier fix. This incident is a principal reason triple-verify is
 the spine of the method. As discussed in \S\ref{sec:math}, the live board lists JSAgent at the
 top with $S\approx 0.318$, which lies \emph{above} the proven upper bound $0.3102$ under the
