@@ -347,6 +347,34 @@ this is read; the rankings do not, and that is the point.
 \section{Agentic Harness Contribution}
 \label{sec:harness}
 
+\paragraph{Why a harness --- encoding how science is actually done.}
+The harness is a deliberate attempt to make the agent work the way a research scientist works.
+In practice, discovery is a loop: find a problem worth attacking; read the literature to learn
+the background --- what is known, what is open, and what is both open \emph{and} important; from
+that, sharpen a precise question and a \emph{hypothesis}; plan an approach; run the experiment;
+collect data and observations; analyze them and compare against the hypothesis, which the data
+may support or contradict; iterate the experiment; then step back --- return to the literature,
+think, or discuss with colleagues --- and, if the results demand it, revise the hypothesis and
+run the loop again. This is how scientific knowledge accumulates, and occasionally a seemingly
+unrelated observation turns out to be the important one --- the bacterial defense system that
+became CRISPR is the canonical example. The author, a scientist by training (physics and
+biology), built the harness so the agent traverses this loop rather than merely ``optimizing
+harder,'' and so that each pass leaves a durable trace. (That last point --- that value can hide
+in a rare, off-axis observation --- foreshadows the heavy-tailed structure we return to in
+\S\ref{sec:ablations}.)
+
+Two artifacts carry the method, and it is worth stating their scope precisely because the paper
+leans on the distinction. The \emph{harness} is the set of plain-language \emph{behavioral rules}
+--- how the agent should act at each step of the loop --- version-controlled with the code (in
+\path{CLAUDE.md} and \path{.claude/rules/}) and read into the agent's context every session; it
+is the agent's operating manual. The \emph{knowledge base} is what the loop consumes and
+produces: distilled background from the literature, new \emph{findings} (from successes and,
+crucially, failures), reusable \emph{concepts} and \emph{techniques}, and the running
+\emph{log} of what was tried and what happened (the cycle log). Put simply, the harness is
+\emph{how to work}; the knowledge base is \emph{what has been learned}. The two co-evolve --- a
+failure becomes a finding, a recurring finding is promoted to a rule --- so the next problem
+inherits both.
+
 \begin{table}[htbp]
 \centering\small
 \caption{Terms used throughout this section.}
