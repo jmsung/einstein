@@ -359,7 +359,10 @@ crucially, failures), reusable \emph{concepts} and \emph{techniques}, and the ru
 \emph{log} of what was tried and what happened (the cycle log). Put simply, the harness is
 \emph{how to work}; the knowledge base is \emph{what has been learned}. The two co-evolve --- a
 failure becomes a finding, a recurring finding is promoted to a rule --- so the next problem
-inherits both.
+inherits both. This persistent knowledge-base design follows Karpathy's \emph{LLM Wiki}
+pattern~\cite{karpathy2026llmwiki}: a knowledge store \emph{compiled as content arrives} ---
+each new source is read, distilled into pages, and cross-linked, rather than re-read at query
+time --- and built for agent retrieval rather than human browsing.
 
 \begin{table}[htbp]
 \centering\small
@@ -465,7 +468,12 @@ like this one, an event a mean-over-routine-runs test is underpowered to detect.
 \paragraph{Wiki-first lookup and cycle discipline.}
 Before answering any in-scope question the agent must query the knowledge base first and cite
 what it finds; the first tool call of every problem cycle is such a query, treated as a
-\emph{correctness check on memory} rather than a search-because-stuck. Every cycle ---
+\emph{correctness check on memory} rather than a search-because-stuck. Retrieval is delegated
+to \texttt{qmd}, the hybrid search tool Karpathy recommends for this pattern~\cite{karpathy2026llmwiki}:
+it merges lexical BM25 matching with dense vector-embedding similarity and an LLM reranking pass,
+so a single query surfaces both exact-term hits (acronyms, problem IDs, technique names) and
+semantically related pages that keyword search alone would miss --- which is also what lets the
+loop find the right existing page to extend instead of drafting a duplicate. Every cycle ---
 success or failure --- produces exactly one row in a cycle log. The discipline is
 anti-cherry-picking: without a strict one-to-one cycle-to-log rule, the self-improvement
 metric degrades into a best-of-$N$ highlight reel that looks like progress without being it.
@@ -1075,10 +1083,16 @@ EinsteinArena (platform) & shared public board & yes & across agents & platform-
 Program-search and evolutionary systems --- FunSearch~\cite{romeraparedes2023funsearch},
 AlphaEvolve~\cite{novikov2025alphaevolve}, ShinkaEvolve~\cite{lange2025shinkaevolve}, and
 evolution-meets-RL search~\cite{surina2025algorithmdiscovery} --- and test-time-training
-discovery~\cite{yuksekgonul2026tttdiscover} each run as a single orchestrated pipeline. In
-these systems the durable artifact is usually the discovered program, construction, or
-policy; the reasoning is not exposed as a human-readable, versioned knowledge base. JSAgent
-instead treats the reusable, human-readable memory itself as a first-class artifact.
+discovery~\cite{yuksekgonul2026tttdiscover} each run as a single orchestrated pipeline. A
+closely related lineage learns to \emph{construct} record-setting mathematical objects
+directly: reinforcement learning for extremal combinatorial
+constructions~\cite{wagner2021constructions}, the local-search$\leftrightarrow$transformer loop
+of PatternBoost~\cite{charton2024patternboost}, and AlphaTensor's discovery of matrix-multiplication
+algorithms that beat a decades-old human record~\cite{fawzi2022discovering}. Like JSAgent, these
+optimize against a cheap objective check; but in all of them the durable artifact is usually the
+discovered program, construction, or policy, and the reasoning is not exposed as a human-readable,
+versioned knowledge base. JSAgent instead treats the reusable, human-readable memory itself as a
+first-class artifact.
 
 \paragraph{Autonomous research and AI-for-science systems.}
 A second line builds end-to-end ``scientist'' agents: The AI
@@ -1087,7 +1101,9 @@ co-scientist~\cite{gottweis2025coscientist}, Kosmos~\cite{mitchener2025kosmos}, 
 co-mathematician~\cite{zheng2026comathematician}, and the Virtual
 Lab~\cite{swanson2025virtuallab}, with AgentRxiv~\cite{schmidgall2025agentrxiv} adding a shared
 preprint substrate. In mathematics specifically, formal-reasoning agents have reached olympiad
-level and accelerated Lean proving~\cite{hubert2025olympiad,kung2026leap,yang2024formalmath}.
+level --- solving olympiad geometry without human demonstrations (AlphaGeometry)~\cite{trinh2024solving}
+and medal-level formal reasoning (AlphaProof)~\cite{hubert2025olympiad} --- alongside accelerated
+Lean proving~\cite{kung2026leap,yang2024formalmath}.
 JSAgent is narrower (one competitor on optimization problems) but keeps a sharper invariant:
 every claim passes an objective external verifier, and the reasoning trail is retained.
 
@@ -1118,7 +1134,12 @@ reference work~\cite{georgiev2025exploration}, which the knowledge base cites th
 SOTA values and the analytical bounds that triple-verify checks against. The ceiling of
 autonomous mathematics was raised dramatically when an LLM produced a research-level disproof
 of Erd{\H o}s's 1946 unit-distance conjecture~\cite{openai2026unitdistance}; our contribution is
-not a single dramatic result but a \emph{method} for accumulating many checkable ones.
+not a single dramatic result but a \emph{method} for accumulating many checkable ones. This
+discover-hard/verify-cheap structure is now being distilled into benchmarks:
+HorizonMath~\cite{wang2026horizonmath} assembles unsolved computational-mathematics problems
+with automatic verification and reports a frontier model improving on best-known published
+results --- the same paradigm EinsteinArena exploits, and the setting in which JSAgent's
+verification-and-memory loop is designed to compound.
 
 % ======================================================================
 \section{Are Agents Ready for Real Scientific Contribution?}
@@ -1245,15 +1266,17 @@ natural sciences do not yet. We are glad to be one contributor among many.
 
 % ======================================================================
 \section*{Acknowledgments}
-I thank the platform builders --- Together AI and James Zou's group (Bianchi, Kwon, Pappu,
-Zou) --- for EinsteinArena: the open problems, hardened verifiers, leaderboard, and discussion
-board that made this work possible, and for documenting the collective effort
-in~\cite{bianchi2026einstein}. None of JSAgent's results exist without the arena. I also thank
+I thank the EinsteinArena team at Together AI and Stanford University --- Federico Bianchi,
+Yongchan Kwon, Aneesh Pappu, and James Zou --- for the platform: the open problems, hardened
+verifiers, leaderboard, and discussion board that made this work possible, and for documenting
+the collective effort in~\cite{bianchi2026einstein}. None of JSAgent's results exist without the arena. I also thank
 the other agents on the board --- especially \texttt{alpha\_omega\_agents}, whose
-2026-04-08 leap opened the $n=594$ kissing basin that JSAgent built on hours later, and
-\texttt{CHRONOS}, the first agent to a valid score-$0$ arrangement there; and
-\texttt{KawaiiCorgi}, \texttt{ClaudeExplorer}, \texttt{Together-AI}, \texttt{OrganonAgent},
-and \texttt{Gradient}, among others. Progress here was genuinely collective: JSAgent's
+2026-04-08 leap opened the $n=594$ kissing basin that JSAgent built on hours later;
+\texttt{CHRONOS}, the first agent to a valid \emph{float64} score-$0$ arrangement there; and
+\texttt{KawaiiCorgi}, who reached the exact mpmath-verified $0.0$ that survived the arena's
+high-precision re-score and stands as the final answer. I also thank \texttt{ClaudeExplorer},
+\texttt{Together-AI}, \texttt{OrganonAgent}, \texttt{DarwinAgent}, and \texttt{Gradient},
+among others. Progress here was genuinely collective: JSAgent's
 contributions are links in shared lineages, and several of its own advances stand on
 solutions and discussion others posted publicly. Competition and collaboration were the same
 engine.
@@ -1326,6 +1349,21 @@ design decision: build a shared knowledge base so that what was learned on one p
 be transferred \emph{horizontally} to others, instead of being rediscovered each time. And
 because failure is as informative as success --- a dead-end, recorded with its reason, is a
 durable way of knowing what does \emph{not} work --- I kept those too, not only the wins.
+
+\paragraph{Seeding the memory from the literature.}
+The knowledge base did not start empty. I was inspired by Karpathy's \emph{LLM
+Wiki}~\cite{karpathy2026llmwiki} --- a knowledge store compiled as sources arrive and built for
+agent retrieval rather than human reading --- and before working a problem in earnest I seeded
+the wiki from the literature: for each of the arena's problems I had the agent search arXiv and
+distill roughly fifty recent, relevant papers into one-page source notes, about $1{,}250$
+distillations in all (98\% arXiv-sourced, and recency-weighted --- half from 2020 or later).
+Each note was written \emph{for retrieval} --- the claim, the method, and the exact bound or
+construction it establishes --- and indexed by the hybrid lexical/embedding search of
+\S\ref{sec:harness}. My belief, consistent with the memory ablation (\S\ref{sec:ablations}), is
+that this pre-seeded corpus is what let wiki-first lookup surface the \emph{right} prior result
+quickly rather than re-derive it each time; I note it as a design choice and a conviction, not a
+separately isolated effect --- the corpus's contribution apart from the findings and rules was
+not given its own controlled test.
 
 \paragraph{The needle moves.}
 The needle moved gradually and then suddenly. Early submissions were unremarkable; the
