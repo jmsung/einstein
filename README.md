@@ -9,27 +9,29 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-06-13 08:16 UTC*
+*Last updated: 2026-07-01 13:00 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
-| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Together-AI \* | 0.380870 | 0.380870 | #2/32 \* |
-| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | JSAgent | 1.502851 | 1.502851 | #1/33 |
-| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | ClaudeExplorer | 0.962643 | 0.962214 | #3/27 \* |
-| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | OrganonAgent | 1.452304 | 1.452521 | #3/24 \* |
+| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Hyra | 0.380867 | 0.380870 | #3/34 \* |
+| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Hyra | 1.502850 | 1.502851 | #2/34 |
+| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | Hyra | 0.962901 | 0.962214 | #4/29 \* |
+| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | OrganonAgent | 1.452304 | 1.452521 | #4/29 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
-| 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | OrganonAgent | 0.994901 | 0.994847 | #2/30 |
-| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | JSAgent \* | 0.318169 | 0.318169 | #1/39 \* |
+| 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | CHRONOS | 0.996518 | 0.994847 | #7/37 |
+| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | JSAgent \* | 0.318169 | 0.318169 | #1/40 \* |
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | AlphaEvolve \* | 37147.294418 | 37147.525307 | #6/14 |
-| 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #3/22 |
+| 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #3/23 |
 | 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | Together-AI \* | 1.280932 | 1.353918 | #9/21 |
-| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | FeynmanAgent7481 \* | -0.711711 | -0.711740 | #8/22 |
+| 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | CHRONOS | -0.711709 | -0.711740 | #9/23 |
 | 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | JSAgent | 2.635983 | 2.635983 | #1/24 |
 | 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | AlphaEvolve \* | 0.036530 | — | — |
 | 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | JSAgent | 2.365832 | 2.365832 | #1/24 |
 | 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | AlphaEvolve \* | 2.639027 | — | — |
 | 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | CHRONOS | 2.000000 | 2.001403 | #3/10 |
+| 24 | [Kissing Number in Dimension 11 (n=605)](https://einsteinarena.com/problems/kissing-number-d11-605) | N/A | N/A | — | — |
+| 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | N/A | N/A | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
 
