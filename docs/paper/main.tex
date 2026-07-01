@@ -175,7 +175,7 @@ disposable and the accumulated knowledge base as the deliverable
 
 Consistent with the thesis that rank is a byproduct, we treat the leaderboard not as the
 contribution but as a \emph{dated historical record} that the method produced real, externally
-checkable results. We report two snapshots to make the point concretely: each value below was
+checkable results. We report three snapshots to make the point concretely: each value below was
 state-of-the-art \emph{when submitted}, and the board has since moved as other agents built
 further --- which is the ecosystem working as intended, not a retraction. The durable claims
 are the verified constructions (re-runnable at any time) and JSAgent's documented participation
@@ -183,35 +183,37 @@ in collective lineages; the live ranking is transient by design and we do not tr
 
 \begin{table}[htbp]
 \centering
-\caption{JSAgent on EinsteinArena --- two dated snapshots (\texttt{leaderboard\_standings.py}).
+\caption{JSAgent on EinsteinArena --- three dated snapshots (\texttt{leaderboard\_standings.py}), the last re-verified on posting day (2026-07-01).
   Each score was state-of-the-art when submitted; the board is a live multi-agent ecosystem, so
   rank is a historical reading, not a stable property. ``SOTA-when-submitted'' is the durable
   fact; rank is shown only to illustrate the dynamics.}
 \label{tab:standings}
-\begin{tabular}{llllll}
+\small
+\begin{tabular}{lllcccl}
 \toprule
-Problem & Topic & Score & Rank 06-22 & Rank 06-23 & Status \\
+Problem & Topic & Score & 06-22 & 06-23 & 07-01 & Status \\
 \midrule
-P14 & circle-packing          & $2.6359830849$$^\S$ & \#1 & \#1 & clean \\
-P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & \#1 & clean \\
-P2  & first-autocorrelation   & $1.5028506$    & \#1 & \#2$^\ddagger$ & clean \\
-P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & \#1$^\dagger$ & contested$^\dagger$ \\
-P1  & Erd\H{o}s min-overlap    & $0.3808703$    & \#2 & \#3$^\ddagger$ & clean \\
-P3  & second-autocorrelation  & $0.962214$     & \#3 & \#4$^\ddagger$ & clean \\
-P4  & third-autocorrelation   & $1.452521$     & \#3 & \#3 & clean \\
-P7  & prime-number-theorem    & $0.994847$     & \#3 & \#3 & clean \\
-P11 & tammes                  & $0.513472$     & \#3 & \#3 & clean \\
-P22 & kissing-d12             & $2.001403$     & \#3 & \#3 & clean \\
+P14 & circle-packing          & $2.6359830849$$^\S$ & \#1 & \#1 & \#1 & clean \\
+P18 & circles-in-rectangle    & $2.3658323852$ & \#1 & \#1 & \#1 & clean \\
+P2  & first-autocorrelation   & $1.5028506$    & \#1 & \#2$^\ddagger$ & \#2 & clean \\
+P9  & uncertainty             & $\approx 0.318$ & \#1$^\dagger$ & \#1$^\dagger$ & \#1$^\dagger$ & contested$^\dagger$ \\
+P1  & Erd\H{o}s min-overlap    & $0.3808703$    & \#2 & \#3$^\ddagger$ & \#3 & clean \\
+P3  & second-autocorrelation  & $0.962214$     & \#3 & \#4$^\ddagger$ & \#4 & clean \\
+P4  & third-autocorrelation   & $1.452521$     & \#3 & \#3 & \#4 & clean \\
+P7  & prime-number-theorem    & $0.994847$     & \#3 & \#3 & \#6 & clean \\
+P11 & tammes                  & $0.513472$     & \#3 & \#3 & \#3 & clean \\
+P22 & kissing-d12             & $2.001403$     & \#3 & \#3 & \#3 & clean \\
 \midrule
-\multicolumn{6}{l}{\emph{Status:} ``clean'' = strictly-feasible, triple-verified construction (e.g.\ P14, P18, P2);}\\
-\multicolumn{6}{l}{``contested'' = verifier-contested, not counted as a clean record.}\\
-\multicolumn{6}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
-\multicolumn{6}{l}{normalization (\S\ref{sec:math}); we do not treat it as a clean rank-\#1 win.}\\
-\multicolumn{6}{l}{$^\ddagger$ surpassed between snapshots by a strong newcomer (\texttt{Hyra}) --- the dynamics in action.}\\
-\multicolumn{6}{l}{$^\S$ The operators' companion snapshot~\cite{bianchi2026einstein} lists a higher circles-in-square figure}\\
-\multicolumn{6}{l}{($2.635983095$); that construction overlaps within the arena's ${\sim}10^{-9}$ pair-tolerance band and \emph{fails}}\\
-\multicolumn{6}{l}{strict $\mathrm{tol}{=}0$ (our ``false-breakthrough'' candidate, rejected pre-submission --- cross-problem lesson \#54).}\\
-\multicolumn{6}{l}{We report the strictly-feasible score; our June snapshot ranks it clean \#1 (strictly-best \emph{valid} score).}\\
+\multicolumn{7}{l}{Rank columns are dated snapshots; scores are unchanged --- only \emph{ranks} drift.}\\
+\multicolumn{7}{l}{\emph{Status:} ``clean'' = strictly-feasible, triple-verified construction (e.g.\ P14, P18, P2);}\\
+\multicolumn{7}{l}{``contested'' = verifier-contested, not counted as a clean record.}\\
+\multicolumn{7}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
+\multicolumn{7}{l}{normalization (\S\ref{sec:math}); we do not treat it as a clean rank-\#1 win.}\\
+\multicolumn{7}{l}{$^\ddagger$ surpassed between snapshots by \texttt{Hyra}; P4/P7 drifted further by 07-01.}\\
+\multicolumn{7}{l}{$^\S$ The operators' companion snapshot~\cite{bianchi2026einstein} lists a higher circles-in-square figure}\\
+\multicolumn{7}{l}{($2.635983095$); that construction overlaps within the arena's ${\sim}10^{-9}$ pair-tolerance band and \emph{fails}}\\
+\multicolumn{7}{l}{strict $\mathrm{tol}{=}0$ (our ``false-breakthrough'' candidate, rejected pre-submission --- cross-problem lesson \#54).}\\
+\multicolumn{7}{l}{We report the strictly-feasible score; our June snapshot ranks it clean \#1 (strictly-best \emph{valid} score).}\\
 \bottomrule
 \end{tabular}
 \end{table}
