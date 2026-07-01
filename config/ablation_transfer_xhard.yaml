@@ -1,0 +1,82 @@
+# ablation_transfer_xhard.yaml — FROZEN "headroom regime" transfer experiment
+# (Heilbronn -> equal_circles), the §6.5 Test 3 version of ablation_transfer_near.yaml.
+#
+# Same design as the frozen near config (ablation_transfer_near.yaml): identical KB_A
+# (Heilbronn) is built here; near vs xhard differ ONLY in the n of the target family B.
+# equal_circles_in_unit_square is NEAR to Heilbronn (both: spread n points in the unit
+# square to optimize a geometric min-objective) but DISTINCT (max-min-distance vs
+# max-min-triangle-area) — so Heilbronn KB_A lessons (SLSQP on active pairs, avoid
+# clustering) plausibly transfer. DV = warm-transfer minus cold SOLVE-RATE across seeds.
+#
+# WHY THIS CONFIG EXISTS (headroom regime, §6.5 Test 3): the near config used n=28/34,
+# which an earlier probe found a CAPABLE model (Sonnet) can essentially solve COLD from
+# scratch — the warm−cold transfer signal SATURATES (both arms ~1.0, no room to measure).
+# n=16/28/34 all saturate for a strong model. This config pushes to LARGER n (denser,
+# harder packing landscapes) where even Sonnet has GENUINE headroom in a ~600s budget, so
+# warm−cold becomes measurable instead of pinned at the ceiling. The harder/denser the
+# packing, the less likely a from-scratch optimizer reaches the true optimum in budget.
+#
+# REFERENCES ARE TRUE OPTIMA from Packomania (the best-known maximum radius r_n for n
+# equal circles packed in the unit square), NOT a weak strong-local baseline — so
+# "solved" is defined against the global optimum. Source + convention:
+#   https://www.packomania.com/csq/csq60.html  (coordinates: csq/txt/csq60.txt)
+#   https://www.packomania.com/csq/csq80.html  (coordinates: csq/txt/csq80.txt)
+#   (Eckard Specht; "circles in a square", unit square of side 1, 30-digit coordinate
+#   dumps). The score convention matches our evaluator r = min(0.5*min-pairwise-distance,
+#   min wall-distance): in Specht's normalization the centers sit in [-0.5,0.5]^2, inset
+#   from each wall by exactly r, and touch at distance 2r — so r = 0.5 - max|coord| AND
+#   r = 0.5*min-pairwise-distance, which we verified AGREE to 4e-17 for both n (the centers
+#   genuinely touch both the walls and each other). r_60 = 0.065030412648... and
+#   r_80 = 0.057370684147... were taken directly from those coordinate files.
+#
+# Each r_n was ALSO cross-checked against Packomania's independent min-center-distance
+# column d_n via the exact conversion r = d/(2(1+d))  (inverse: d = 2r/(1-2r)):
+#   n=60: d=0.1495056540 -> r = d/(2(1+d)) = 0.0650304126... (matches the coord-file r)
+#   n=80: d=0.1296133855 -> r = d/(2(1+d)) = 0.0573706841... (matches the coord-file r)
+# Magnitude sanity (r DECREASES as n grows, the harder-packing direction):
+#   r_34 ≈ 0.0852703  >  r_60 ≈ 0.0650304  >  r_80 ≈ 0.0573707   (both < 0.085, decreasing).
+#
+# FROZEN (frozen: true) — instances + reference_optima fixed. DO NOT EDIT after the
+# first confirmatory cell.
+
+minimize: false
+frozen: true
+
+problems:
+  # --- Family A: Heilbronn (source) — KB_A is built here (Warm). IDENTICAL to near. ---
+  - id: heilbronn-07
+    family: heilbronn_triangle
+    n: 7
+    sequence_index: 0
+    reference_optimum: 0.0833333333
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle
+      formed by any three of them (the Heilbronn triangle problem).
+  - id: heilbronn-08
+    family: heilbronn_triangle
+    n: 8
+    sequence_index: 1
+    reference_optimum: 0.0727083333
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the minimum-area triangle.
+
+  # --- Family B: equal_circles (near target, HEADROOM regime) — cold vs warm-transfer ---
+  # reference_optimum = TRUE best-known optimum r_n from Packomania (csq), NOT a local.
+  # Larger n than the near config (28/34) so a strong model has genuine cold headroom.
+  - id: circles-60
+    family: equal_circles_in_unit_square
+    n: 60
+    sequence_index: 2
+    reference_optimum: 0.0650304126   # Packomania csq true optimum (r_60); d_60=0.1495056540
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the common radius r =
+      min( 0.5 * min pairwise distance, min distance to a wall ) — i.e. pack n equal
+      non-overlapping circles of maximal radius inside the unit square.
+  - id: circles-80
+    family: equal_circles_in_unit_square
+    n: 80
+    sequence_index: 3
+    reference_optimum: 0.0573706841   # Packomania csq true optimum (r_80); d_80=0.1296133855
+    statement: |
+      Place n points in the unit square [0,1]^2 to MAXIMIZE the common radius r =
+      min( 0.5 * min pairwise distance, min distance to a wall ).
