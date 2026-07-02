@@ -1,0 +1,13 @@
+# GitHub Pages (Jekyll) config for the docs/ site.
+#
+# The published site is the curated wiki/ synthesis and the narrative pages.
+# We exclude machine-generated / non-website directories from the Jekyll build:
+#   - source/ : raw 1:1 literature distillations (1000+), full of LaTeX braces
+#               (e.g. \widehat{{...}}) and colons in titles that break Liquid/YAML
+#   - paper/  : LaTeX manuscript sources (.tex/.bib) + build artifacts
+#   - raw/    : gitignored native originals
+# Excluding them keeps the Pages build green; the content still lives in the repo.
+exclude:
+  - source
+  - paper
+  - raw
