@@ -872,7 +872,15 @@ stating precisely what the data does and does not license.
 \paragraph{Setup.}
 Each ablation toggles exactly one variable between two otherwise-identical arms: the same
 air-gapped clean-room checkout with the knowledge layer physically stripped, the same paired
-cold start per seed, the same model, and the same fixed budget. The dependent variable is
+cold start per seed, the same model, and the same fixed budget. ``Stripped'' is literal and
+applies to \emph{both} arms: the pre-built wiki (\path{docs/wiki/}), the ${\sim}1{,}250$-paper
+literature corpus (\path{docs/source/}), the agent logs (\path{docs/agent/}), and the
+knowledge-harness rules are all removed from disk; only four generic rules remain (agent
+stance, triple-verify, compute routing, and the axioms). For the memory ablation the single
+toggled variable is therefore an initially-\emph{empty} within-run store that the warm arm
+writes its own lessons into and rereads across the problem sequence, while cold has none --- so
+the measured effect isolates \emph{experiential} memory earned during the run, not retrieval
+over the pre-seeded literature, which is absent from both arms. The dependent variable is
 \emph{gap-closed} --- the fraction of the start-to-reference-optimum gap a run closes ---
 computed by the harness; submission self-reports are ignored. ``Pilot'' rows are eight paired
 cells and underpowered by design (the single-credential serial budget); we report the
@@ -1350,20 +1358,22 @@ be transferred \emph{horizontally} to others, instead of being rediscovered each
 because failure is as informative as success --- a dead-end, recorded with its reason, is a
 durable way of knowing what does \emph{not} work --- I kept those too, not only the wins.
 
-\paragraph{Seeding the memory from the literature.}
-The knowledge base did not start empty. I was inspired by Karpathy's \emph{LLM
-Wiki}~\cite{karpathy2026llmwiki} --- a knowledge store compiled as sources arrive and built for
-agent retrieval rather than human reading --- and before working a problem in earnest I seeded
-the wiki from the literature: for each of the arena's problems I had the agent search arXiv and
-distill roughly fifty recent, relevant papers into one-page source notes, about $1{,}250$
-distillations in all (98\% arXiv-sourced, and recency-weighted --- half from 2020 or later).
-Each note was written \emph{for retrieval} --- the claim, the method, and the exact bound or
-construction it establishes --- and indexed by the hybrid lexical/embedding search of
-\S\ref{sec:harness}. My belief, consistent with the memory ablation (\S\ref{sec:ablations}), is
-that this pre-seeded corpus is what let wiki-first lookup surface the \emph{right} prior result
-quickly rather than re-derive it each time; I note it as a design choice and a conviction, not a
-separately isolated effect --- the corpus's contribution apart from the findings and rules was
-not given its own controlled test.
+\paragraph{A late experiment: seeding from the literature.}
+The knowledge base did not begin with the literature. Its early and strongest progress came
+from \emph{experiential} memory alone --- the findings, dead-ends, and techniques the agent
+earned as it worked and transferred horizontally across related problems. Only later, once the
+board had plateaued (several problems frozen at what looked like a shared limit, local or
+global), did I try the literature as a deliberate experiment: inspired by Karpathy's \emph{LLM
+Wiki}~\cite{karpathy2026llmwiki} --- a store compiled as sources arrive and built for agent
+retrieval rather than human reading --- I had the agent search arXiv and distill roughly fifty
+recent, relevant papers per problem into one-page notes written \emph{for retrieval}, about
+$1{,}250$ distillations in all (98\% arXiv-sourced, half from 2020 or later), hoping published
+results would open a door the agent's own search had not. Because this corpus was added
+\emph{late} and was never isolated in a controlled arm --- indeed, the controlled ablations of
+\S\ref{sec:ablations} strip it from \emph{both} arms, so what they measure is experiential
+memory, not literature retrieval --- its own contribution is genuinely unclear; I report it as
+an experimental addition, not a demonstrated cause of any result. The early gains this paper
+documents predate the corpus and rest on experiential memory.
 
 \paragraph{The needle moves.}
 The needle moved gradually and then suddenly. Early submissions were unremarkable; the
