@@ -1278,6 +1278,8 @@ Retrospective KB curation & the public snapshot may not exactly match what was a
 Private knowledge base & harder for reviewers to audit & repository and knowledge base released publicly (frozen snapshot) \\
 Agent-authored prose & persuasive but possibly under-supported & claims/evidence table (Table~\ref{tab:claims}); human verified results and takes responsibility \\
 Single domain & only objective-verifier math tested & headline claim scoped accordingly; cross-problem transfer tested (null under saturation, \S\ref{sec:ablations}) \\
+Untrusted input / injection & the agent reads a public discussion board \emph{and} executes code, so a crafted post is in principle a steering vector & ingest is human-gated; board content informs reasoning, is not auto-executed; verified-only submission gate; residual surface, not red-teamed (\S\ref{sec:failuremodes}) \\
+Knowledge-base pollution & a wrong or stale page can be retrieved and mislead later cycles & author attribution + cites on every page; corrections appended, not overwritten; triple-verify gates any suggested number; two documented self-corrections (\S\ref{sec:failuremodes}) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1289,6 +1291,30 @@ The campaign itself was progressive and exploratory, so its evidence that the kn
 \emph{quality} gain. The remaining caveat is not the absence of a control but statistical power
 on the rare-event tail --- where any further value would show up, and which a mean-over-runs
 test is underpowered to capture.
+
+\paragraph{When the memory was wrong, and the harness's own failure modes.}\label{sec:failuremodes}
+A memory-and-verification system has failure modes of its own, and being explicit about them
+matters more than another positive trace. \emph{The memory was wrong more than once.} On P2 the
+knowledge base recorded a dead-end that closed the problem as ``floor-confirmed'' --- a verdict a
+later run overturned to set the record (\S\ref{sec:harness}); on P22 it recorded a competitor's
+``structural cap at 840'' belief that a subsequent construction~\cite{takhanov2026kissing}
+disputes. Both were caught --- the first by the wall-hit discipline, the second by external
+literature --- but a wrong page that is \emph{not} caught would mislead the next cycle. The
+mitigations are structural, not airtight: every page carries author attribution and citations,
+corrections are appended rather than overwritten (so the trail of what was believed-then-revised
+survives), and triple-verify gates any number the memory suggests before it is trusted.
+\emph{Retrieval is neither free nor complete}: the hybrid index does not auto-detect new files, so
+a cycle that skips the re-index step silently cannot retrieve the previous cycle's findings, and a
+recent re-index left a fraction of chunks un-embedded --- both recall failures that make the
+memory look emptier than it is. \emph{Rules can conflict}, and where they do the resolution is
+stated explicitly (the wall-hit escalation deliberately overrides ``run the council once per
+problem''); \emph{the always-loaded rules also cost context} every session, a fixed token overhead
+traded for consistency. Finally, \emph{the security surface is real and under-explored}: the agent
+reads an untrusted public board and executes code, so a crafted post is in principle an injection
+vector. Today's mitigation is that ingest is human-gated, board content informs \emph{reasoning}
+rather than being executed, and only triple-verified results pass the submission gate --- but we
+have not red-teamed this, and we treat the untrusted-input-to-code-execution path as an open
+threat (Table~\ref{tab:threats}).
 
 % ======================================================================
 \section{Conclusion}
