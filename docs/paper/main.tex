@@ -59,8 +59,8 @@ across problem-solving cycles. On EinsteinArena, JSAgent produced externally ver
 constructions that were state-of-the-art when submitted, including clean circle-packing results
 and a former first-autocorrelation record. The system combines wiki-first retrieval, triple
 verification, wall-hit escalation, obstruction-indexed technique reuse, and compute routing.
-Logs show repeated reuse of prior failures and techniques, including a record-producing move
-recovered from an earlier dead-end note. Controlled ablations show that persistent memory
+Logs show repeated reuse of prior failures and techniques, including a record-producing direction
+recovered and refined from an earlier dead-end note. Controlled ablations show that persistent memory
 improves efficiency --- reaching comparable solutions with fewer budget-exhausting runs ---
 but does not improve final solution quality at fixed budget; other mechanisms, including
 council prompting and prompt framing, show no detected effect at pilot scale. These results
@@ -179,9 +179,10 @@ disposable and the accumulated knowledge base as the deliverable
 
 Consistent with the thesis that rank is a byproduct, we treat the leaderboard not as the
 contribution but as a \emph{dated historical record} that the method produced real, externally
-checkable results. We report three snapshots to make the point concretely: each value below was
-state-of-the-art \emph{when submitted}, and the board has since moved as other agents built
-further --- which is the ecosystem working as intended, not a retraction. The durable claims
+checkable results. We report three snapshots to make the point concretely: each value below was at or tied with
+the arena frontier \emph{when submitted} --- several were global state-of-the-art (P2, P14,
+P18), which the table's Status column and footnotes flag --- and the board has since moved as
+other agents built further, which is the ecosystem working as intended, not a retraction. The durable claims
 are the verified constructions (re-runnable at any time) and JSAgent's documented participation
 in collective lineages; the live ranking is transient by design and we do not track it here.
 
@@ -217,12 +218,12 @@ P22 & kissing-d12             & $2.001403$     & \#3 & \#3 & \#3 & clean \\
 \multicolumn{7}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
 \multicolumn{7}{l}{normalization (\S\ref{sec:math}); we do not treat it as a clean rank-\#1 win.}\\
 \multicolumn{7}{l}{$^\ddagger$ surpassed between snapshots by \texttt{Hyra}; P4/P7 drifted further by 07-01.}\\
-\multicolumn{7}{l}{$^\S$ The operators' companion snapshot~\cite{bianchi2026einstein} lists a higher circles-in-square figure}\\
-\multicolumn{7}{l}{($2.635983095$); that construction overlaps within the arena's ${\sim}10^{-9}$ pair-tolerance band and \emph{fails}}\\
-\multicolumn{7}{l}{strict $\mathrm{tol}{=}0$ (our ``false-breakthrough'' candidate, rejected pre-submission --- cross-problem lesson \#54).}\\
-\multicolumn{7}{l}{We report the strictly-feasible score; our June snapshot ranks it clean \#1 (strictly-best \emph{valid} score). Under this}\\
-\multicolumn{7}{l}{strict standard, the only figure exceeding AlphaEvolve's prior $2.635983085$ is that tolerance-band construction; we take no}\\
-\multicolumn{7}{l}{position on the operators' scoring (designed to tolerate ${\sim}10^{-9}$ discrepancies) and note only which values are strictly feasible.}\\
+\multicolumn{7}{l}{$^\S$ The operators' snapshot~\cite{bianchi2026einstein} lists a higher P14 figure ($2.635983095$) that overlaps}\\
+\multicolumn{7}{l}{within the arena's ${\sim}10^{-9}$ pair-tolerance band and fails strict $\mathrm{tol}{=}0$ (our ``false-breakthrough''}\\
+\multicolumn{7}{l}{candidate, rejected pre-submission --- cross-problem lesson \#54). We report the strictly-feasible $2.6359830849$,}\\
+\multicolumn{7}{l}{ranked clean \#1 (strictly-best \emph{valid} score). Under strict $\mathrm{tol}{=}0$, the only figure above}\\
+\multicolumn{7}{l}{AlphaEvolve's prior $2.635983085$ is that tolerance-band construction; we take no position on the}\\
+\multicolumn{7}{l}{operators' scoring, and note only which values are strictly feasible.}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -473,8 +474,9 @@ The council runs once per problem during reconnaissance --- and is re-triggered 
 (below). A concrete instance, from the P2 wall: with the iterate stuck at the two-agent tie
 near $1.5028609$, the prompt that mattered was not ``optimize harder'' but a support-changing
 question --- \emph{what operator changes which cells are nonzero, rather than retuning
-continuous weights on a fixed support?} That reframing pointed at warm self-pruning, the move
-that set the record. A controlled ablation of the council on a held-out problem family at fixed
+continuous weights on a fixed support?} That reframing sharpened a support-shrinking direction
+the failure log had already recorded (the full dated sequence is below) into warm, data-driven
+self-pruning --- the operator that set the record. A controlled ablation of the council on a held-out problem family at fixed
 budget found no \emph{average} effect (\S\ref{sec:ablations}); we read this not as a
 contradiction but as the same rare-event structure --- the council earned its keep at a wall
 like this one, an event a mean-over-routine-runs test is underpowered to detect.
@@ -527,9 +529,10 @@ still work. The ``what might still work'' section is load-bearing rather than ga
 the P2 record shows the mechanism is subtler than verbatim reuse, so we state the sequence once,
 with dates. Four days before the record (Jun 4) a dead-end finding logged \emph{support-shrinking}
 as the direction that might still work, but rated it low-value and closed P2 as
-``floor-confirmed,'' since two agents were tied to $10^{-13}$. At the wall on Jun 8 the agent
-revisited that logged direction and \emph{refined} it --- warm rather than cold, and data-driven
-pruning (the optimizer choosing which cells to zero) rather than a fixed window --- setting the
+``floor-confirmed,'' since two agents were tied to $10^{-13}$. At the wall on Jun 8 the escalation
+resurfaced that logged direction, and a council reframing --- \emph{what operator changes which
+cells are nonzero?} --- sharpened it into a concrete, untried operator: warm rather than cold, and
+data-driven pruning (the optimizer choosing which cells to zero) rather than a fixed window --- setting the
 verified record ($1.5028609\!\to\!1.5028506$) and overturning the note's own floor-confirmed
 verdict. So the failure log did not hand over a finished move; it surfaced the right direction
 early --- one the same log had underrated --- and the session supplied the refinement. (This is
@@ -608,7 +611,7 @@ Trace & Prior KB item retrieved & Later action and effect & Supports \\
 \midrule
 P2 & a dead-end finding logged support-shrinking as ``what might still work'' 4 days earlier (rated low-value) &
   a warm, data-driven refinement of that direction set a verified record
-  ($1.5028609\to 1.5028506$; since surpassed), overturning the note's own floor-confirmed verdict & persistence $>$ in-context reasoning \\
+  ($1.5028609\to 1.5028506$; since surpassed), overturning the note's own floor-confirmed verdict & persistence surfaced the direction; in-session judgment refined it \\
 P3 & cross-resolution basin transfer, distilled from earlier autocorrelation work &
   retrieved and reapplied; frontier value at posting ($0.96199\to 0.96221$; rank since
   moved) & cross-problem method transfer \\
@@ -974,7 +977,7 @@ We pre-committed two follow-up tests of this idea and ran them. The floor-versus
 is clearest \emph{within the main $108$-pair experiment}, by quantile: the warm advantage in
 gap-closed is concentrated at the bottom of the distribution and fades at the top --- at the
 $10$th percentile warm exceeds cold by $+0.113$, at the $25$th by $+0.021$, at the median by
-$+0.039$, but by the $90$th only $+0.014$. Memory raises the floor; it does not lift the ceiling.
+$+0.039$, but by the $90$th only $+0.014$ (differences of per-arm quantiles). Memory raises the floor; it does not lift the ceiling.
 A separate tail-sensitive follow-up ($60$ paired cells) pointed the same way but was \emph{not}
 significant: warm's mean gap-closed exceeded cold's by $+0.075$ ($95\%$ CI $[-0.002,+0.152]$,
 including zero), with the $90$th percentile rising less than the mean and the maximum not at all
@@ -988,8 +991,8 @@ the floor (consistent with its efficiency effect) but does \emph{not} fatten the
 These nulls do not close the rare-event question, because the design is the wrong instrument for
 it: a controlled, short-horizon, bounded-budget ablation \emph{cannot produce a breakthrough at
 all} --- no run in either arm comes near optimal --- so ``we did not find a rare effect'' is
-uninformative about whether one exists (below a percolation threshold no spanning cluster forms,
-however many local links are present). It is worth separating two conflated hypotheses. A
+uninformative about whether one exists (below the percolation threshold no amount of further
+sampling yields a spanning cluster --- it is the density that is lacking, not the search effort). It is worth separating two conflated hypotheses. A
 \emph{stochastic heavy tail} --- memory occasionally buys a jackpot --- is nearly unfalsifiable,
 since any null is ``consistent with a rare event we did not sample.'' A \emph{percolation-style
 transition at a knowledge threshold} --- individual findings are local links between ideas that
@@ -1299,7 +1302,7 @@ Retrospective KB curation & the public snapshot may not exactly match what was a
 Private knowledge base & harder for reviewers to audit & repository and knowledge base released publicly (frozen snapshot) \\
 Agent-authored prose & persuasive but possibly under-supported & claims/evidence table (Table~\ref{tab:claims}); human verified results and takes responsibility \\
 Single domain & only objective-verifier math tested & headline claim scoped accordingly; cross-problem transfer tested (null under saturation, \S\ref{sec:ablations}) \\
-Untrusted input / injection & the agent reads a public discussion board \emph{and} executes code, so a crafted post is in principle a steering vector & ingest is human-gated; board content informs reasoning, is not auto-executed; verified-only submission gate; residual surface, not red-teamed (\S\ref{sec:failuremodes}) \\
+Untrusted input / injection & the agent reads a public discussion board \emph{and} executes code, so a crafted post is in principle an injection vector & ingest is human-gated; board content informs reasoning, is not auto-executed; verified-only submission gate; residual surface, not red-teamed (\S\ref{sec:failuremodes}) \\
 Knowledge-base pollution & a wrong or stale page can be retrieved and mislead later cycles & author attribution + cites on every page; corrections appended, not overwritten; triple-verify gates any suggested number; two documented self-corrections (\S\ref{sec:failuremodes}) \\
 \bottomrule
 \end{tabular}
@@ -1444,22 +1447,25 @@ be transferred \emph{horizontally} to others, instead of being rediscovered each
 because failure is as informative as success --- a dead-end, recorded with its reason, is a
 durable way of knowing what does \emph{not} work --- I kept those too, not only the wins.
 
-\paragraph{A late experiment: seeding from the literature.}
-The knowledge base did not begin with the literature. Its early and strongest progress came
-from \emph{experiential} memory alone --- the findings, dead-ends, and techniques the agent
-earned as it worked and transferred horizontally across related problems. Only later, once the
-board had plateaued (several problems frozen at what looked like a shared limit, local or
-global), did I try the literature as a deliberate experiment: inspired by Karpathy's \emph{LLM
-Wiki}~\cite{karpathy2026llmwiki} --- a store compiled as sources arrive and built for agent
-retrieval rather than human reading --- I had the agent search arXiv and distill roughly fifty
-recent, relevant papers per problem into one-page notes written \emph{for retrieval}, about
-$1{,}250$ distillations in all (98\% arXiv-sourced, half from 2020 or later), hoping published
-results would open a door the agent's own search had not. Because this corpus was added
-\emph{late} and was never isolated in a controlled arm --- indeed, the controlled ablations of
-\S\ref{sec:ablations} strip it from \emph{both} arms, so what they measure is experiential
-memory, not literature retrieval --- its own contribution is genuinely unclear; I report it as
-an experimental addition, not a demonstrated cause of any result. The early gains this paper
-documents predate the corpus and rest on experiential memory.
+\paragraph{A May experiment: the literature corpus and the meta-loop.}
+The knowledge base did not begin with the literature, and the timeline matters (it is checkable
+from the public repo's file timestamps). Through April the agent reached its strongest standings
+--- roughly six rank-1 results and many rank-2/3 --- built from \emph{experiential} memory alone:
+the findings, dead-ends, and techniques it earned as it worked and transferred horizontally across
+related problems, with no literature corpus in place. Then the board plateaued and I paused. In
+\textbf{May}, hoping published ``wisdom'' might reopen progress, I ran a deliberate experiment:
+inspired by Karpathy's \emph{LLM Wiki}~\cite{karpathy2026llmwiki} --- a store compiled as sources
+arrive and built for agent retrieval rather than human reading --- I had the agent search arXiv
+and distill roughly fifty recent, relevant papers per problem into one-page notes written
+\emph{for retrieval}, about $1{,}250$ distillations in all (98\% arXiv-sourced, half from 2020 or
+later), and in the same stretch built out the meta-learning and harness layer. The honest outcome
+is modest: this phase broke a few new ranks but did \emph{not} produce a step change. Its
+contribution is also not isolable --- the controlled ablations of \S\ref{sec:ablations} strip the
+corpus from \emph{both} arms, so what they measure is experiential memory, not literature
+retrieval --- so I report the corpus as an experimental addition of unclear effect, not a
+demonstrated cause. The April rank-1 results predate it outright; the later P2 record (June)
+postdates the corpus but was driven by an experiential dead-end note (\S\ref{sec:harness}), not a
+literature page.
 
 \paragraph{The needle moves.}
 The needle moved gradually and then suddenly. Early submissions were unremarkable; the
