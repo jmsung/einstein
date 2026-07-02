@@ -930,7 +930,7 @@ commit history: \path{docs/agent/ablations/2026-06-27-council-preregistration.md
 \toprule
 \textbf{Mechanism} & \textbf{Verdict} & \textbf{Key numbers} \\
 \midrule
-Knowledge base (cold vs.\ warm) & quality null; \textbf{efficiency supported} & quality $\Delta$ not significant (95\% CI includes $0$ at $S{=}18$, 216 paired cells); efficiency: warm exhausts its budget in $9\%$ of runs vs.\ cold $26\%$ ($\sim3\times$ fewer), mean wall $255$s vs.\ $344$s \\
+Knowledge base (cold vs.\ warm) & quality null; \textbf{efficiency supported} & quality $\Delta{=}{+}0.036$ gap-closed, 95\% CI $[{-}0.006,{+}0.080]$ (includes $0$); efficiency: budget exhausted in $10/108$ warm vs.\ $28/108$ cold runs (paired $\Delta{=}{-}16.7$pp, CI $[{-}26.9,{-}6.5]$; ${\sim}3\times$), mean wall $255$s vs.\ $344$s ($\Delta$ CI $[{-}142,{-}34]$s) \\
 Problem-specific plugins & \textbf{supported} (family with headroom) & $\Delta{=}{+}0.214$, CI $[{+}0.185,{+}0.242]$; ${\sim}30\times$ faster \\
 Persona council & null (pilot) & $\Delta{=}{+}0.004$, CI $[{-}0.11,{+}0.13]$ \\
 System-prompt framing & null (pilot) & $\Delta{=}{+}0.035$, CI $[{-}0.10,{+}0.18]$ \\
@@ -941,11 +941,15 @@ Cross-family transfer & null (saturation) & capable model reaches the true optim
 \end{table}
 
 \paragraph{The one clean positive, and what it is not.}
-The cold-versus-warm memory test is the best-powered result. Its verdict is specific:
-persistent memory did \emph{not} raise solution quality --- the quality interval includes
-zero --- but it made the agent markedly more \emph{efficient}, reaching comparable solutions
-with $\sim3\times$ fewer budget-exhausting runs (warm timed out on $9\%$ of runs, cold on
-$26\%$). Memory's value here is skipping rediscovery, a
+The cold-versus-warm memory test is the best-powered result ($S{=}18$ seeds on each of $6$
+problems --- $108$ paired cold/warm comparisons, $216$ runs). Its verdict is specific:
+persistent memory did \emph{not} raise solution quality --- the paired quality difference was
+$+0.036$ gap-closed, $95\%$ CI $[-0.006,+0.080]$, including zero --- but it made the agent
+markedly more \emph{efficient}, reaching comparable solutions with ${\sim}3\times$ fewer
+budget-exhausting runs (warm timed out on $10/108$ runs, cold on $28/108$; paired
+$\Delta{=}{-}16.7$pp, $95\%$ CI $[-26.9,-6.5]$), and $89$s less wall-clock on average (CI
+$[-142,-34]$s). Both efficiency intervals exclude zero; the quality interval does not. Memory's
+value here is skipping rediscovery, a
 time-to-solution effect, not a higher ceiling. We flag what this is \emph{not}: a gain that
 comes only from spending more compute is the effort channel --- equivalent to raising the
 budget --- and the fixed-budget design holds it constant by construction, so the efficiency
@@ -956,12 +960,16 @@ that channel and returned the expected frontier-model null.
 A natural way to reconcile the nulls is that the value lives not in the mean but in the
 \emph{tail}: a mechanism could leave the average unchanged while occasionally producing a jump
 --- the council reframing that set the P2 record (\S\ref{sec:harness}) is exactly such an event.
-We pre-committed two follow-up tests of this idea and ran them. First, a cold-versus-warm
-comparison with a tail-sensitive estimand ($60$ paired cells per arm): memory raised the
-\emph{floor} of the outcome distribution --- warm's mean gap-closed exceeded cold's by $+0.075$
-($95\%$ CI $[-0.002,+0.152]$, just including zero) --- but left the \emph{ceiling} untouched: the
-$90$th percentile rose \emph{less} than the mean and the maximum not at all, the opposite of
-tail-fattening. Second, a harder-instance cross-family transfer (circle packing at $n=60,80$
+We pre-committed two follow-up tests of this idea and ran them. The floor-versus-ceiling reading
+is clearest \emph{within the main $108$-pair experiment}, by quantile: the warm advantage in
+gap-closed is concentrated at the bottom of the distribution and fades at the top --- at the
+$10$th percentile warm exceeds cold by $+0.113$, at the $25$th by $+0.021$, at the median by
+$+0.039$, but by the $90$th only $+0.014$. Memory raises the floor; it does not lift the ceiling.
+A separate tail-sensitive follow-up ($60$ paired cells) pointed the same way but was \emph{not}
+significant: warm's mean gap-closed exceeded cold's by $+0.075$ ($95\%$ CI $[-0.002,+0.152]$,
+including zero), with the $90$th percentile rising less than the mean and the maximum not at all
+--- the opposite of tail-fattening. We read it as suggestive, not as evidence of a fat tail;
+being one of several exploratory follow-ups, its interval is uncorrected for multiplicity. Second, a harder-instance cross-family transfer (circle packing at $n=60,80$
 against tabulated optima): the capable model reached ${\sim}99\%$ of the true optimum unaided, so
 warm and cold were indistinguishable --- saturation, not absence. Measured, then, memory raises
 the floor (consistent with its efficiency effect) but does \emph{not} fatten the tail.
