@@ -44,7 +44,7 @@
   \texttt{jongmin.sung@gmail.com}}
 
 \date{\today\\[2pt]
-  \small Companion to Bianchi et al., \emph{Harnessing the Collective Intelligence of
+  \small A participant's account complementing Bianchi et al., \emph{Harnessing the Collective Intelligence of
   AI Agents in the Wild for New Discoveries} (arXiv:2606.10402).}
 
 \begin{document}
@@ -102,7 +102,7 @@ which to test this objectively: an explicit verifier either accepts a constructi
 it, so progress is measured without appeal to opinion. Public competitions of open math
 problems turn that objectivity into a live testbed; the platform we compete on,
 EinsteinArena~\cite{bianchi2026einstein,togetherai2026arena}, is one such instance, and this
-paper is a companion to its operators' account~\cite{bianchi2026einstein}. Recent work has
+paper is a participant's account complementing its operators' account~\cite{bianchi2026einstein}. Recent work has
 made the capability concrete --- program-search and evolutionary agents, autonomous
 ``scientist'' systems, and a research-level disproof of an Erd{\H o}s
 conjecture~\cite{romeraparedes2023funsearch,novikov2025alphaevolve,openai2026unitdistance}
@@ -112,7 +112,11 @@ This paper is a systems and methodology contribution: our thesis is that persist
 human-readable memory paired with verification makes agentic mathematical discovery both
 \emph{auditable} and \emph{more efficient}. The bet is that the lasting artifact of an agent's
 work is not the answer it submits but the reusable wisdom that produced it --- the kind that
-compounds across problems rather than evaporating when a run ends. That artifact is a knowledge
+compounds across problems rather than evaporating when a run ends. By \emph{compounding} we
+mean, precisely, that reusable knowledge and time-to-solution accumulate across problems, so
+later runs reach comparable results with less search; we do \emph{not} mean that final solution
+quality rises at a fixed budget --- a distinction our controlled ablations (\S\ref{sec:ablations})
+draw sharply, and one to carry through every later use of the word. That artifact is a knowledge
 base (a wiki of concepts, techniques, and findings) together with a set of plain-language
 behavioral rules; arena submission is only a way to verify that knowledge against the world.
 EinsteinArena is our evidence base, not our subject: we do not claim autonomous science or a
@@ -184,9 +188,12 @@ in collective lineages; the live ranking is transient by design and we do not tr
 \begin{table}[htbp]
 \centering
 \caption{JSAgent on EinsteinArena --- three dated snapshots (\texttt{leaderboard\_standings.py}), the last re-verified on posting day (2026-07-01).
-  Each score was state-of-the-art when submitted; the board is a live multi-agent ecosystem, so
-  rank is a historical reading, not a stable property. ``SOTA-when-submitted'' is the durable
-  fact; rank is shown only to illustrate the dynamics.}
+  Each score was at or tied with the arena frontier when submitted --- several were global
+  state-of-the-art (e.g.\ P2, P14, P18), while others (e.g.\ P1) matched the arena best but not
+  a stronger contemporaneous result elsewhere; the body flags which. The board is a live
+  multi-agent ecosystem, so rank is a historical reading, not a stable property, and the problem
+  set itself grew over the campaign (15 problems at the operators' May snapshot to 17 here);
+  rank is shown only to illustrate the dynamics.}
 \label{tab:standings}
 \small
 \begin{tabular}{lllcccl}
@@ -213,7 +220,9 @@ P22 & kissing-d12             & $2.001403$     & \#3 & \#3 & \#3 & clean \\
 \multicolumn{7}{l}{$^\S$ The operators' companion snapshot~\cite{bianchi2026einstein} lists a higher circles-in-square figure}\\
 \multicolumn{7}{l}{($2.635983095$); that construction overlaps within the arena's ${\sim}10^{-9}$ pair-tolerance band and \emph{fails}}\\
 \multicolumn{7}{l}{strict $\mathrm{tol}{=}0$ (our ``false-breakthrough'' candidate, rejected pre-submission --- cross-problem lesson \#54).}\\
-\multicolumn{7}{l}{We report the strictly-feasible score; our June snapshot ranks it clean \#1 (strictly-best \emph{valid} score).}\\
+\multicolumn{7}{l}{We report the strictly-feasible score; our June snapshot ranks it clean \#1 (strictly-best \emph{valid} score). Under this}\\
+\multicolumn{7}{l}{strict standard, the only figure exceeding AlphaEvolve's prior $2.635983085$ is that tolerance-band construction; we take no}\\
+\multicolumn{7}{l}{position on the operators' scoring (designed to tolerate ${\sim}10^{-9}$ discrepancies) and note only which values are strictly feasible.}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -303,8 +312,8 @@ position is weaker evidence than a locally re-verified construction.
 \paragraph{P3, second autocorrelation inequality (frontier value at posting).}
 JSAgent achieved the strongest $10^5$-interval solution at the time, $C=0.962214$, via
 cross-resolution basin transfer and Dinkelbach refinement --- the result the platform
-paper~\cite{bianchi2026einstein} attributes to JSAgent by name (its Fig.~6) and depicts within
-a basin-transfer lineage alongside another agent's parallel work (Fig.~3b). The final record
+paper~\cite{bianchi2026einstein} attributes to JSAgent by name and places within
+a basin-transfer lineage alongside another agent's parallel work (its Fig.~6). The final record
 ($0.962643$, at $4\times 10^5$ resolution) went to a different agent; JSAgent's contribution
 is an intermediate link in the documented collective lineage --- which is precisely the
 arena's thesis~\cite{jaech2025autoconvolution,rechnitzer2026autoconvolution}.
@@ -1006,7 +1015,7 @@ point. Several of JSAgent's strongest results are intermediate, not terminal. On
 $d=11$ it iterated on another agent's strong $n=594$ construction within a lineage that other
 agents later carried to $604$. On the second autocorrelation inequality its $0.962214$ was the
 frontier when posted and was later surpassed ($0.962643$) by another agent working the same
-basin-transfer approach, which the platform paper places in one lineage (Fig.~3b). JSAgent both
+basin-transfer approach, which the platform paper places in one lineage (Fig.~6). JSAgent both
 built on others' public work and had its own built upon.
 \src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md}
 
@@ -1078,7 +1087,7 @@ agent's durable \emph{artifact} is (Table~\ref{tab:related}).
 \toprule
 \textbf{System} & \textbf{human-readable memory} & \textbf{external verifier} & \textbf{cross-cycle reuse} & \textbf{controlled eval} \\
 \midrule
-FunSearch / AlphaEvolve & program / evolutionary state & yes & limited & yes \\
+FunSearch / AlphaEvolve & program / evolutionary state (persists, not human-readable) & yes & yes (program DB) & yes \\
 TTT-Discover & model (test-time) & yes & within run & yes \\
 Voyager / ExpeL / ACE & skills / lessons / context & task-dependent & yes & partial \\
 EinsteinArena (platform) & shared public board & yes & across agents & platform-level \\
@@ -1121,6 +1130,7 @@ The EinsteinArena platform~\cite{bianchi2026einstein,togetherai2026arena} makes 
 systems~\cite{zou2026recursivemas} pursue multi-agent evolution; and a broad literature
 designs, composes, or self-improves agent collectives
 (MetaGPT~\cite{hong2023metagpt}, Voyager~\cite{wang2023voyager}, ExpeL~\cite{zhao2023expel},
+learning from failure via verbal reflection (Reflexion~\cite{shinn2023reflexion}),
 automated design of agentic systems~\cite{hu2024ads}, agentic context
 engineering~\cite{zhang2025ace}), evaluated on benchmarks such as
 SWE-bench~\cite{jimenez2023swebench}. These socialize or optimize state \emph{across} agents
@@ -1128,9 +1138,10 @@ or runs. JSAgent's persistence is orthogonal: a single agent's private, compound
 contributed to the shared board only when verified.
 
 \paragraph{Harness-as-artifact.}
-Closest in spirit is observability-driven harness evolution~\cite{lin2026ahe} and treating
-code as the agent harness~\cite{ning2026codeharness}, which evolve a coding agent's harness
-from run telemetry. JSAgent's third axis is distinct: a \emph{persistent, human-readable
+Closest in spirit is observability-driven harness evolution~\cite{lin2026ahe}, treating
+code as the agent harness~\cite{ning2026codeharness}, and the self-modifying Darwin-G\"odel
+Machine~\cite{zhang2025dgm} --- which evolve or rewrite a coding agent's harness from run
+telemetry or by empirically-validated self-edits. JSAgent's third axis is distinct: a \emph{persistent, human-readable
 personal memory} --- a knowledge base of concepts, findings, and plain-language behavioral
 rules --- that the agent both writes and is governed by, and that a human reads to steer. The
 artifact is legible by design, because legibility is what makes the human's problem-selection
@@ -1235,7 +1246,7 @@ Ties / verifier-contested scores & rank can overstate distinctness or validity &
 No optimality proof & empirical records are not theorems & framed as construction/evaluation results, not proofs \\
 Human in the loop & autonomy could be overstated & role taxonomy (Table~\ref{tab:roles}) \\
 Causal evidence (memory) & KB-causes-improvement needs a control & controlled ablation run (\S\ref{sec:ablations}): efficiency supported, quality null; other mechanisms null/underpowered \\
-Model/version drift & exact per-cycle LLM IDs were not pinned, so the agent trajectory is not exactly replayable & submitted constructions + verifier scripts \emph{are} reproducible; trajectory is auditable, not replayable \\
+Model/version drift & unpinned per-cycle LLM IDs make the trajectory non-replayable \emph{and} are an alternative explanation: capability upgrades over the March--June campaign could contribute to the ``gradually then suddenly'' curve independent of knowledge accumulation & submitted constructions + verifier scripts \emph{are} reproducible; the controlled ablations (\S\ref{sec:ablations}) hold the model \emph{fixed} across arms, isolating memory from capability; per-cycle model IDs pinned going forward \\
 Retrospective KB curation & the public snapshot may not exactly match what was available each cycle & commit history, file timestamps, and cycle logs are released for cross-checking \\
 Private knowledge base & harder for reviewers to audit & repository and knowledge base released publicly (frozen snapshot) \\
 Agent-authored prose & persuasive but possibly under-supported & claims/evidence table (Table~\ref{tab:claims}); human verified results and takes responsibility \\
@@ -1255,7 +1266,8 @@ test is underpowered to capture.
 % ======================================================================
 \section{Conclusion}
 \label{sec:conclusion}
-Wisdom compounds; rank is a byproduct. JSAgent's verified contributions on EinsteinArena ---
+Reusable wisdom compounds --- in knowledge and time-to-solution, if not in final-answer quality
+at a fixed budget (\S\ref{sec:ablations}) --- and rank is a byproduct. JSAgent's verified contributions on EinsteinArena ---
 constructions that were state-of-the-art when submitted on several problems, including a
 first-autocorrelation-inequality record (since surpassed) and clean packing results --- are
 real and independently re-runnable, but they are downstream of the thing this paper is actually
