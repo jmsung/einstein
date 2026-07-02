@@ -258,12 +258,13 @@ bounds~\cite{matolcsi2010autoconvolution,cloninger2017autoconvolution,white2022a
 \node[anchor=west] at (2.6,2.35) {others reach $1.5028609$};
 \node[anchor=west] at (7.0,0.55) {Jun 8: $\mathbf{1.5028506}$ (record)};
 \draw[dashed,gray] (7.6,0) -- (7.6,1.9);
-\node[gray,anchor=south,align=center] at (7.6,1.9) {Jun 4: dead-end note\\$\to$ warm self-pruning};
+\node[gray,anchor=south,align=center] at (7.6,1.9) {Jun 4: dead-end logs\\support-shrinking (low-EV)};
 \end{tikzpicture}
 \caption{P2 verified-score progression (schematic; values exact, vertical spacing not to
   scale). JSAgent's $1.5028616$ (Apr 15) was displaced when other agents reached $1.5028609$,
-  presumed to be the global minimum. The winning move --- warm self-pruning --- had been
-  recorded in a dead-end finding four days earlier and was retrieved and executed on Jun 8,
+  presumed to be the global minimum. The winning move --- warm, data-driven self-pruning ---
+  refined a support-shrinking direction that a dead-end finding had logged (and underrated as
+  low-value) four days earlier, and was executed at the wall on Jun 8 (see \S\ref{sec:harness}),
   producing the verified record $1.5028506$ --- itself narrowly surpassed by a newcomer on
   Jun 23, continuing the lineage.}
 \label{fig:p2}
@@ -522,11 +523,20 @@ operator (warm self-pruning) that beat a two-agent tie thought to be the global 
 \paragraph{Failure is a finding.}
 Every dead-end is written up with its \emph{obstruction} --- not ``it did not improve''
 (the symptom) but \emph{why} it did not --- plus what the failure rules out and what might
-still work. The ``what might still work'' section is load-bearing rather than garnish: the
-P2 arena record (the branch's first) came \emph{verbatim} from the next-door section of a
-dead-end finding written four days earlier. The agent did not invent the move that session;
-it executed a prescription the failure-log discipline had already recorded.
-\src{.claude/rules/failure-is-a-finding.md}
+still work. The ``what might still work'' section is load-bearing rather than garnish --- though
+the P2 record shows the mechanism is subtler than verbatim reuse, so we state the sequence once,
+with dates. Four days before the record (Jun 4) a dead-end finding logged \emph{support-shrinking}
+as the direction that might still work, but rated it low-value and closed P2 as
+``floor-confirmed,'' since two agents were tied to $10^{-13}$. At the wall on Jun 8 the agent
+revisited that logged direction and \emph{refined} it --- warm rather than cold, and data-driven
+pruning (the optimizer choosing which cells to zero) rather than a fixed window --- setting the
+verified record ($1.5028609\!\to\!1.5028506$) and overturning the note's own floor-confirmed
+verdict. So the failure log did not hand over a finished move; it surfaced the right direction
+early --- one the same log had underrated --- and the session supplied the refinement. (This is
+also a concrete case of a caution the paper makes elsewhere: an $N$-agent tie is a sharp shared
+basin, not a proof of the floor.) The other mentions of this trace (Figure~\ref{fig:p2},
+Table~\ref{tab:traces}, Appendix~\ref{app:personal}) refer back to this sequence.
+\src{.claude/rules/failure-is-a-finding.md, findings/dead-end-p2-compact-support-basin-floor.md, findings/p2-warm-self-pruning-beats-record.md}
 
 \paragraph{Compute router.}
 Before any compute job the agent profiles the bottleneck, classifies the workload
@@ -596,9 +606,9 @@ result; the controlled cold-vs-warm test is reported in \S\ref{sec:ablations}.}
 \toprule
 Trace & Prior KB item retrieved & Later action and effect & Supports \\
 \midrule
-P2 & a dead-end finding's ``what might still work'' note, written 4 days earlier &
-  its prescription (warm self-pruning) was executed verbatim, setting a verified record
-  ($1.5028609\to 1.5028506$; since surpassed) & persistence $>$ in-context reasoning \\
+P2 & a dead-end finding logged support-shrinking as ``what might still work'' 4 days earlier (rated low-value) &
+  a warm, data-driven refinement of that direction set a verified record
+  ($1.5028609\to 1.5028506$; since surpassed), overturning the note's own floor-confirmed verdict & persistence $>$ in-context reasoning \\
 P3 & cross-resolution basin transfer, distilled from earlier autocorrelation work &
   retrieved and reapplied; frontier value at posting ($0.96199\to 0.96221$; rank since
   moved) & cross-problem method transfer \\
@@ -1408,8 +1418,8 @@ documents predate the corpus and rest on experiential memory.
 The needle moved gradually and then suddenly. Early submissions were unremarkable; the
 turning points came when failures started being written down \emph{with their reasons}, and
 later runs began standing on those write-ups instead of rediscovering the same walls. The
-clearest instance --- a verified arena record produced verbatim from a four-day-old
-dead-end's ``what might still work'' note --- convinced me the deliverable was never the
+clearest instance --- a verified arena record that grew from a direction a four-day-old
+dead-end note had logged (though the note itself underrated it) --- convinced me the deliverable was never the
 score. It was the page that produced the score.
 
 \paragraph{Plan first; then let the machine enforce the plan.}
