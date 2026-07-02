@@ -8,9 +8,9 @@
   <string>com.einstein.autonomous-loop</string>
 
   <!-- Phase 3 entry point: scheduled_cycle.py wraps
-       `autonomous_loop.py --one-problem --by-priority` and adds the runs/day
+       autonomous_loop.py (the one-problem, by-priority flags) and adds the runs/day
        cap + 7200s hard timeout + run ledger. Do NOT call autonomous_loop.py
-       directly here — the pre-Phase-3 command lacked --by-priority and ground P1. -->
+       directly here; the pre-Phase-3 command lacked the by-priority flag and ground P1. -->
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>

@@ -32,21 +32,25 @@ def test_plist_required_keys_present():
     data = plistlib.loads(raw.encode("utf-8"))
     assert data["Label"] == "com.einstein.autonomous-loop"
     assert isinstance(data["ProgramArguments"], list)
-    # The launch command must invoke autonomous_loop.py with the production flags
+    # The launch command must invoke the Phase-3 wrapper (scheduled_cycle.py) with
+    # the production flags, and must NOT call autonomous_loop.py directly (the
+    # pre-Phase-3 entry point lacked --by-priority; see the plist comment).
     cmd = " ".join(data["ProgramArguments"])
-    assert "autonomous_loop.py" in cmd
-    assert "--max-problems 1" in cmd
-    assert "--skip-if-recent 60" in cmd
+    assert "scheduled_cycle.py" in cmd
+    assert "autonomous_loop.py" not in cmd
+    assert "--skip-if-recent 20" in cmd
+    assert "--max-runs-per-day 48" in cmd
     # 30-minute cadence (the cycle's own --skip-if-recent prevents overlap)
     assert data["StartInterval"] == 1800
-    assert data["RunAtLoad"] is False
+    assert data["RunAtLoad"] is True
     # PATH includes Homebrew + system bins so uv resolves
     env = data.get("EnvironmentVariables", {})
     assert "PATH" in env
     assert "/opt/homebrew/bin" in env["PATH"] or "/usr/local/bin" in env["PATH"]
-    # Log paths land under mb/
-    assert data["StandardOutPath"].endswith("autonomous-loop.out.log")
-    assert data["StandardErrorPath"].endswith("autonomous-loop.err.log")
+    # Log paths land under mb/ (Phase-3 scheduler logs)
+    assert "/mb/logs/" in data["StandardOutPath"]
+    assert data["StandardOutPath"].endswith("scheduler.log")
+    assert data["StandardErrorPath"].endswith("scheduler.err.log")
 
 
 def test_install_instructions_in_readme_use_consistent_label():
