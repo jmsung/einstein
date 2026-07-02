@@ -965,17 +965,21 @@ the floor (consistent with its efficiency effect) but does \emph{not} fatten the
 These nulls do not close the rare-event question, because the design is the wrong instrument for
 it: a controlled, short-horizon, bounded-budget ablation \emph{cannot produce a breakthrough at
 all} --- no run in either arm comes near optimal --- so ``we did not find a rare effect'' is
-uninformative about whether one exists (one cannot boil water at fifty degrees, however long one
-waits). It is worth separating two conflated hypotheses. A \emph{stochastic heavy tail} ---
-memory occasionally buys a jackpot --- is nearly unfalsifiable, since any null is ``consistent
-with a rare event we did not sample.'' A \emph{phase transition at a knowledge threshold} ---
-accumulated findings do nothing until a critical mass tips the search into a qualitatively new
-basin --- is \emph{more} testable, because, like boiling, it predicts a \emph{nonlinear
-dose--response} (breakthrough rate flat, then a knee as banked knowledge grows) and
+uninformative about whether one exists (below a percolation threshold no spanning cluster forms,
+however many local links are present). It is worth separating two conflated hypotheses. A
+\emph{stochastic heavy tail} --- memory occasionally buys a jackpot --- is nearly unfalsifiable,
+since any null is ``consistent with a rare event we did not sample.'' A \emph{percolation-style
+transition at a knowledge threshold} --- individual findings are local links between ideas that
+do little in isolation until enough accumulate that they suddenly connect into a spanning path
+from problem to solution (a ``giant component'' of usable knowledge) --- is \emph{more} testable,
+because percolation predicts three specific signatures: a \emph{nonlinear dose--response}
+(breakthrough rate flat, then a sharp knee as banked knowledge crosses the threshold),
 \emph{reproducibility above threshold} (re-seeding from the critical state re-triggers the jump;
-the effect is gated, not merely rare). Our tests probed neither: they measured a smooth shift at
-a single, low knowledge level --- the sub-threshold regime, where floor-raising is exactly what a
-threshold model also predicts.
+the effect is gated, not merely rare), and \emph{finite-size smearing} --- in a small system the
+onset is blurred over a window that sharpens only as the number of problems and cycles grows. Our
+tests probed none of these: they measured a smooth shift at a single, low knowledge level ---
+deep in the sub-threshold regime, where floor-raising is exactly what a percolation model also
+predicts, and where finite-size smearing would blur any threshold we could hope to detect.
 
 \paragraph{The bounded claim, and the test that would settle it.}
 An uncontrolled but consistent field observation motivates taking the threshold hypothesis
@@ -987,7 +991,7 @@ detected typical-case effect. The threshold hypothesis remains distinct and unfa
 right test is not a larger version of ours but a different one: a long-horizon
 \emph{dose--response} that varies accumulated knowledge across a wide range in a regime capable of
 producing breakthroughs, asking not ``is warm's tail fatter?'' but ``\emph{does memory lower the
-boiling point --- reach the breakthrough at less compute, or lower accumulation, than cold?}''
+percolation threshold --- reach the breakthrough at less accumulated knowledge, or less compute, than cold?}''
 The verified records this agent produced (P2, P4) are existence proofs consistent with such a
 mechanism but uncontrolled; the controlled version is future work.
 
