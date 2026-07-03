@@ -108,20 +108,16 @@ made the capability concrete --- program-search and evolutionary agents, autonom
 conjecture~\cite{romeraparedes2023funsearch,novikov2025alphaevolve,openai2026unitdistance}
 (\S\ref{sec:related} surveys them).
 
-This paper is a systems and methodology contribution: our thesis is that persistent,
-human-readable memory paired with verification makes agentic mathematical discovery both
-\emph{auditable} and \emph{more efficient}. The bet is that the lasting artifact of an agent's
-work is not the answer it submits but the reusable wisdom that produced it --- the kind that
-compounds across problems rather than evaporating when a run ends. By \emph{compounding} we
-mean, precisely, that reusable knowledge and time-to-solution accumulate across problems, so
-later runs reach comparable results with less search; we do \emph{not} mean that final solution
-quality rises at a fixed budget --- a distinction our controlled ablations (\S\ref{sec:ablations})
-draw sharply, and one to carry through every later use of the word. That artifact is a knowledge
-base (a wiki of concepts, techniques, and findings) together with a set of plain-language
-behavioral rules; arena submission is only a way to verify that knowledge against the world.
-EinsteinArena is our evidence base, not our subject: we do not claim autonomous science or a
-new mathematical theorem.\footnote{The personal account of how this began is deferred to
-Appendix~\ref{app:personal} so the contribution can lead.}
+This paper is a systems and methodology contribution. Our thesis: persistent, human-readable
+memory paired with verification makes agentic mathematical discovery both \emph{auditable} and
+\emph{more efficient}. The lasting artifact of an agent's work is not the answer it submits but
+the reusable wisdom that produced it --- a knowledge base of concepts, techniques, and findings,
+plus a set of plain-language behavioral rules; arena submission only verifies that knowledge
+against the world. Throughout, \emph{compounding} means that reusable knowledge and
+time-to-solution accumulate across problems (later runs reach comparable results with less
+search) --- \emph{not} that final solution quality rises at a fixed budget, a distinction our
+ablations (\S\ref{sec:ablations}) draw sharply.\footnote{The personal account of how this began
+is deferred to Appendix~\ref{app:personal} so the contribution can lead.}
 
 One field observation shapes the thesis and recurs in the evaluation: the agent is
 extraordinarily capable at \emph{execution} but does not reliably know which problem is worth
