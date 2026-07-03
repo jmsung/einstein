@@ -40,7 +40,7 @@ The **synthesis** at the bottom — top reusable concepts, top techniques, tier-
 | 4 | third-autocorrelation | #2, displaced (was #1) | 3 | 3 | S | Larger-n escape breaks piecewise-constant equioscillation traps |
 | 5 | min-distance-ratio | #4, frozen | 2 | 2 | B | minImprovement guards block both self-improvement and first-time claims |
 | 6 | kissing-d11 | #1, unbeatable | 3 | 3 | S | Fractal perturbation landscape; contribution-weighted multi-scale essential |
-| 7 | prime-number-theorem | #1, conquered | 1.5 | 2.5 | A | Sieve theory is LP in disguise; IPM + warm-start cutting-plane |
+| 7 | prime-number-theorem | #6 (07-01), displaced | 1.5 | 2.5 | A | Sieve theory is LP in disguise; IPM + warm-start cutting-plane |
 | 9 | uncertainty-principle | #1 local, hidden | 3 | 2 | A | k-climbing escapes fixed-k plateaus; verify ALL constraints first |
 | 10 | thomson-n282 | #5, frozen | 2.5 | 2 | B | Magic-number configurations proven optimal; skip immediately |
 | 11 | tammes-n50 | #2, basin-locked | 2 | 3 | B | Wide active-pair tolerance (1e-3) for float64-ceiling polish |

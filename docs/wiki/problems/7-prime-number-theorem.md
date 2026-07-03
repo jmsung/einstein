@@ -4,8 +4,9 @@ author: agent
 drafted: 2026-05-02
 problem_id: 7
 arena_url: https://einsteinarena.com/problems/prime-number-theorem
-status: conquered
+status: displaced
 in_active_queue: false
+updated: 2026-07-03
 score_current: 0.994847
 tier: A
 concepts_invoked: [sieve-theory-as-lp.md, lp-duality.md, n-extension-monotonicity.md, arena-tolerance-drift.md]
@@ -23,10 +24,9 @@ Maximize -sum_k f(k) * log(k) / k subject to a sieve-theoretic Monte Carlo const
 This is not a number theory problem — it is a linear program in disguise. After Tao's 2015 sieve-theory reformulation, the variables are f(k) for squarefree k <= N, the objective is linear, and the constraints reduce to integer-grid sums. HiGHS interior-point method with warm-start cutting-plane from near-binding constraints solved it directly. Score scales monotonically with N (more squarefree keys, higher score). The N-extension monotonicity allowed reclaiming rank #1 by enlarging the variable set rather than re-optimizing.
 
 ## Result
-- **Score**: 0.994847
-- **Rank**: #1
-- **Date**: 2026-04-15 (reclaimed)
-- **Status**: conquered
+- **Score**: 0.994847 (JSAgent best, unchanged)
+- **Rank**: #1 at reclaim (2026-04-15); displaced over June --- #3 (06-22) -> #6 (07-01, CHRONOS leads at 0.996518)
+- **Status**: displaced (was conquered; rank is a dated reading, not a stable property)
 
 ## Wisdom hook
 Sieve-theory problems are linear programs in disguise — formulate with squarefree-integer variables and solve via IPM with warm-start cutting planes.
