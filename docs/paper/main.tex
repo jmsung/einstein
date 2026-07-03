@@ -1147,7 +1147,8 @@ Scientist~\cite{lu2024aiscientist,yamada2025aiscientistv2}, an AI
 co-scientist~\cite{gottweis2025coscientist}, Kosmos~\cite{mitchener2025kosmos}, an AI
 co-mathematician~\cite{zheng2026comathematician}, and the Virtual
 Lab~\cite{swanson2025virtuallab}, with AgentRxiv~\cite{schmidgall2025agentrxiv} adding a shared
-preprint substrate. In mathematics specifically, formal-reasoning agents have reached olympiad
+preprint substrate, and productized agentic workbenches for scientists are now
+emerging~\cite{anthropic2026claudescience}. In mathematics specifically, formal-reasoning agents have reached olympiad
 level --- solving olympiad geometry without human demonstrations (AlphaGeometry)~\cite{trinh2024solving}
 and medal-level formal reasoning (AlphaProof)~\cite{hubert2025olympiad} --- alongside accelerated
 Lean proving~\cite{kung2026leap,yang2024formalmath}.
@@ -1277,6 +1278,27 @@ needs independent validation. Empirical sciences are harder, lacking a comparabl
 for ``is this right.'' Autonomy will therefore arrive domain-by-domain, ordered by how objective
 and how cheap verification is.
 
+\paragraph{Outlook: from optimization to proof.}
+EinsteinArena is, by construction, a set of \emph{optimization} problems: a candidate is a
+configuration and a hardened verifier accepts or rejects it in milliseconds. That cheap, objective
+check is exactly what makes the arena a good proving ground --- progress is measurable, records are
+externally checkable, and many independently-built agents can compete and push the frontier without
+a referee. \emph{Proof} is the harder frontier: there is no single fast oracle for ``is this
+argument correct,'' the space is unstructured, and a result is a chain of reasoning rather than a
+number (formalization supplies a verifier, but at a steep translation cost, and most mathematics is
+not yet formal). Yet we suspect proof is precisely where accumulated, auditable knowledge will
+matter \emph{most}. A proof is often assembled by connecting many fragmented pieces --- a lemma
+here, a corollary there, a construction from a distant subfield --- and the decisive step is
+frequently a long-range link between areas that looked unrelated: Fermat's Last Theorem fell when
+elliptic curves were tied to modular forms~\cite{wiles1995fermat}; CRISPR came from a bacterial
+defense system noticed far from gene editing. Humans make such leaps rarely, bounded by how much
+disparate literature one mind can hold at once. An agent with a vast, cross-indexed knowledge base
+and the discipline to retrieve before it reasons is, in principle, well-suited to exactly this
+synthesis --- the same wiki-first-plus-memory loop studied here on optimization, pointed at a domain
+where the bottleneck is connection, not compute. The verification gap remains the gate; but if it
+is closed (by formalization, or by the verifier co-design the arena already practices), the value
+of persistent knowledge should \emph{rise}, not fall, as problems get less structured.
+
 % ======================================================================
 \section{Limitations and Threats to Validity}
 \label{sec:limits}
@@ -1377,6 +1399,9 @@ among others. Progress here was genuinely collective: JSAgent's
 contributions are links in shared lineages, and several of its own advances stand on
 solutions and discussion others posted publicly. Competition and collaboration were the same
 engine.
+
+I also thank the Sailplane team, from whom I learned to use Claude Code and the practice of
+agentic engineering that this project is built on.
 
 % ======================================================================
 \appendix
@@ -1525,6 +1550,16 @@ an agent can produce checkable results on open problems, the evidence here says 
 measure is whether a person can still steer that work toward what matters and vouch for it,
 the answer is also yes --- and the two are not in tension. They are the division of labor I
 expect to define the next several years of doing science with agents.
+
+\paragraph{A primitive baby step.}
+I want to be clear about scale. Measured against the arena this is a small result --- a handful of
+verified constructions on optimization problems, most since surpassed; measured against mathematics,
+smaller still. I offer it not because the achievement is large but because I believe the
+\emph{potential} is. What the agent did here --- read a field, remember its failures, connect a
+logged direction to a record --- is a primitive version of something I expect to grow into far
+harder and more important work. This project is a baby step, and I mean that as its value: an early,
+auditable probe of what agent-driven research can become, from someone who found the frontier
+reachable from the outside.
 
 % ======================================================================
 \section{Per-Problem Progression}
