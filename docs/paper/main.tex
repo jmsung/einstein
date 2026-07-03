@@ -79,19 +79,6 @@ accepts full responsibility for the final manuscript (the division of labor is d
 Table~\ref{tab:roles}). Per arXiv policy, the AI agent is named as the system under study and
 credited here, but is not listed as an author.
 
-\paragraph{What this paper claims --- and does not.}
-\emph{We do not claim:} a proof of global optimality for any submitted construction; that
-persistent memory raises solution \emph{quality} (our controlled ablation finds the quality
-effect null); that JSAgent is autonomous; that JSAgent currently leads EinsteinArena; or that
-the agent trajectory is exactly replayable. \emph{We do claim:} JSAgent produced externally
-verified constructions at or tied with the arena frontier when submitted (several global
-state-of-the-art); the system maintained a
-persistent, human-readable memory and rule harness; logs show repeated retrieval and reuse of
-prior findings; the released artifacts make the constructions and their verification auditable;
-and pre-registered controlled ablations show persistent memory improves \emph{efficiency} (not
-quality), with the other studied mechanisms null or underpowered at pilot scale and reported
-in full, nulls included (\S\ref{sec:ablations}).
-
 % ======================================================================
 \section{Introduction}
 \label{sec:intro}
@@ -122,8 +109,9 @@ is deferred to Appendix~\ref{app:personal} so the contribution can lead.}
 
 One field observation shapes the thesis and recurs in the evaluation: the agent is
 extraordinarily capable at \emph{execution} but does not reliably know which problem is worth
-solving next, so problem selection remained the human's job --- and steering it requires the
-human to \emph{comprehend} what the agent is doing. The knowledge base and harness are, in
+solving next, so problem selection remained the human's job (the \emph{strong-executor /
+weak-selector} split) --- and steering it requires the human to \emph{comprehend} what the
+agent is doing. The knowledge base and harness are, in
 part, the instruments that keep such comprehension tractable (\S\ref{sec:harness}). The mode of
 work was agent-primary; the full division of labor is in the AI contribution statement and
 Table~\ref{tab:roles}.
@@ -151,6 +139,19 @@ agents are for real scientific contribution, and what gates full autonomy.
   \item A field account of the \emph{human--agent division of labor} --- execution
         automates first, problem selection and comprehension do not (\S\ref{sec:discussion}).
 \end{itemize}
+
+\paragraph{What this paper claims --- and does not.}
+\emph{We do not claim:} a proof of global optimality for any submitted construction; that
+persistent memory raises solution \emph{quality} (our controlled ablation finds the quality
+effect null); that JSAgent is autonomous; that JSAgent currently leads EinsteinArena; or that
+the agent trajectory is exactly replayable. \emph{We do claim:} JSAgent produced externally
+verified constructions at or tied with the arena frontier when submitted (several global
+state-of-the-art); the system maintained a
+persistent, human-readable memory and rule harness; logs show repeated retrieval and reuse of
+prior findings; the released artifacts make the constructions and their verification auditable;
+and pre-registered controlled ablations show persistent memory improves \emph{efficiency} (not
+quality), with the other studied mechanisms null or underpowered at pilot scale and reported
+in full, nulls included (\S\ref{sec:ablations}).
 
 % ======================================================================
 \section{EinsteinArena and Positioning}
@@ -260,11 +261,8 @@ bounds~\cite{matolcsi2010autoconvolution,cloninger2017autoconvolution,white2022a
 \end{tikzpicture}
 \caption{P2 verified-score progression (schematic; values exact, vertical spacing not to
   scale). JSAgent's $1.5028616$ (Apr 15) was displaced when other agents reached $1.5028609$,
-  presumed to be the global minimum. The winning move --- warm, data-driven self-pruning ---
-  refined a support-shrinking direction that a dead-end finding had logged (and underrated as
-  low-value) four days earlier, and was executed at the wall on Jun 8 (see \S\ref{sec:harness}),
-  producing the verified record $1.5028506$ --- itself narrowly surpassed by a newcomer on
-  Jun 23, continuing the lineage.}
+  presumed to be the global minimum; the Jun 8 record $1.5028506$ --- since narrowly surpassed,
+  continuing the lineage --- is the trace whose dated sequence \S\ref{sec:harness} states once.}
 \label{fig:p2}
 \end{figure}
 
@@ -336,14 +334,6 @@ reports a numerically built \emph{non-overlapping} $841$-vector arrangement in $
 which, if correct, would put the true minimum at $0$ and confirm that the shared score-$2$ tie
 was a strong basin, not a proof of optimality.
 
-\paragraph{What we claim, and what we do not.}
-We make no claim to ``lead'' the board (a newcomer, \texttt{Hyra}, set several new \#1s the day
-after this draft; see \S\ref{sec:collab}). What we claim is durable and dated: JSAgent produced
-verified, re-runnable constructions that were state-of-the-art \emph{when submitted} ---
-including clean circle-packing results (P14, P18) and a first-autocorrelation record (P2, since
-surpassed) --- and is a named participant in documented collective
-lineages~\cite{bianchi2026einstein}.
-
 % ======================================================================
 \section{Agentic Harness Contribution}
 \label{sec:harness}
@@ -397,17 +387,13 @@ gate      & a deterministic check that enforces a rule (e.g.\ triple-verify, the
 \end{tabularx}
 \end{table}
 
-The contribution of this section is not any single algorithm but a \emph{harness}: a small
-set of behavioral rules, written in plain language and version-controlled alongside the
-code, that govern how the agent works a problem. (The agent is Claude Code running a frontier
-Claude model; see \S\ref{sec:eval}.) Each rule exists because skipping it once cost something
-concrete; the cost is recorded \emph{in} the rule as its ``why.'' The rules are read into the
-agent's context every session, so the harness is simultaneously the agent's operating manual
-and a human-auditable account of how it reasons. Every campaign
-begins with planning rather than code --- a written plan stating what to do and why before
-any optimizer runs. Unlike a frozen orchestration pipeline, the harness and the knowledge
-base co-evolve: a failure produces a finding, a recurring finding is promoted to a rule, and
-the next run inherits both (the recurring terms are defined in Table~\ref{tab:defs}).
+The contribution of this section is not any single algorithm but the harness itself. (The
+agent is Claude Code running a frontier Claude model; see \S\ref{sec:eval}.) Each rule exists
+because skipping it once cost something concrete, and the cost is recorded \emph{in} the rule
+as its ``why'' --- which makes the harness simultaneously the agent's operating manual and a
+human-auditable account of how it reasons. Every campaign begins with planning rather than
+code: a written plan stating what to do and why before any optimizer runs (the recurring
+terms are defined in Table~\ref{tab:defs}).
 \src{.claude/rules/, docs/agent/}
 
 The loop a single problem-cycle runs is shown in Figure~\ref{fig:loop}:
@@ -474,10 +460,9 @@ near $1.5028609$, the prompt that mattered was not ``optimize harder'' but a sup
 question --- \emph{what operator changes which cells are nonzero, rather than retuning
 continuous weights on a fixed support?} That reframing sharpened a support-shrinking direction
 the failure log had already recorded (the full dated sequence is below) into warm, data-driven
-self-pruning --- the operator that set the record. A controlled ablation of the council on a held-out problem family at fixed
-budget found no \emph{average} effect (\S\ref{sec:ablations}); we read this not as a
-contradiction but as the same rare-event structure --- the council earned its keep at a wall
-like this one, an event a mean-over-routine-runs test is underpowered to detect.
+self-pruning --- the operator that set the record. (The controlled council ablation and its
+null --- and why a wall event like this one is exactly what a mean-over-runs test misses ---
+are in \S\ref{sec:ablations}.)
 \src{.claude/rules/council-dispatch.md}
 
 \paragraph{Wiki-first lookup and cycle discipline.}
@@ -553,11 +538,8 @@ The corpus is the first-order evidence that knowledge accumulated rather than ev
 of 2026-06-22 the knowledge base holds 50 concept pages, 32 technique pages, 108 findings, 24
 per-problem pages, and 101 question pages, distilled over a source corpus of 1{,}258 ingested
 artifacts. Because every cycle is logged with author attribution, the harness can also be
-measured on its own terms. Two measures are available now: a technique hit-rate of $26\%$ ---
-the fraction of technique applications (counted once per technique--problem pairing) that
-reached top-3 --- and a cite-reuse rate of $84\%$ ($51/61$ recent findings cite a prior page).
-The latter is a \emph{process} metric: the wiki-first rule \emph{requires} a citation, so it
-measures compliance more than causal gain. We are explicit about what is \emph{not}
+measured on its own terms --- a $26\%$ technique hit-rate and an $84\%$ cite-reuse rate,
+reported with their caveats in \S\ref{sec:eval}. We are explicit about what is \emph{not}
 yet instrumented --- a per-problem best-score-vs-cycle curve and a ``recall-preceded-win''
 rate need cycle-level tracing we have not retrofitted, and we do not fake them. The causal
 evidence is therefore \emph{observational}, resting on the traces in Table~\ref{tab:traces}.
@@ -609,7 +591,7 @@ Trace & Prior KB item retrieved & Later action and effect & Supports \\
 \midrule
 P2 & a dead-end finding logged support-shrinking as ``what might still work'' 4 days earlier (rated low-value) &
   a warm, data-driven refinement of that direction set a verified record
-  ($1.5028609\to 1.5028506$; since surpassed), overturning the note's own floor-confirmed verdict & persistence surfaced the direction; in-session judgment refined it \\
+  ($1.5028609\to 1.5028506$; since surpassed) & persistence surfaced the direction; in-session judgment refined it \\
 P3 & cross-resolution basin transfer, distilled from earlier autocorrelation work &
   retrieved and reapplied; frontier value at posting ($0.96199\to 0.96221$; rank since
   moved) & cross-problem method transfer \\
@@ -907,18 +889,16 @@ writes its own lessons into and rereads across the problem sequence, while cold 
 the measured effect isolates \emph{experiential} memory earned during the run, not retrieval
 over the pre-seeded literature, which is absent from both arms. The dependent variable is
 \emph{gap-closed} --- the fraction of the start-to-reference-optimum gap a run closes ---
-computed by the harness; submission self-reports are ignored. ``Pilot'' rows are eight paired
+computed by the harness from the run artifacts; submission self-reports are ignored, so
+scoring is blind to arm. ``Pilot'' rows are eight paired
 cells and underpowered by design (the single-credential serial budget); we report the
 directional estimate with a $95\%$ bootstrap confidence interval and label it as such.
 
 \paragraph{Protocol.}
 The LLM-arm ablations (knowledge base, council, prompt framing) run on the Heilbronn-triangle
 and equal-circles families; the deterministic plugin and scheduling arms run on Tammes $n{=}50$.
-Each cell is a fixed number of seeds run under a fixed per-run budget --- a $600$-second solve
-timeout, equal across arms --- and pairing is by identical cold start per seed, so the two arms
-face the same starting configuration. The dependent variable \texttt{gap\_closed} (the fraction
-of the start-to-reference-optimum gap closed) is computed by the harness from the run artifacts;
-the agent's self-report is ignored, so scoring is blind to arm. Confidence intervals are $95\%$
+Each cell is a fixed number of seeds under a fixed per-run budget (a $600$-second solve
+timeout, equal across arms). Confidence intervals are $95\%$
 percentile bootstrap over $10{,}000$ resamples with a fixed seed. Each experiment was
 pre-registered in a frozen file under \path{docs/agent/ablations/*-preregistration.md} ---
 the council, prompt-tone/effort-vs-efficiency, and knowledge-compounding
@@ -1056,9 +1036,6 @@ square parameterization and on the P18 tolerance structure); the project later a
 no-external-posts discipline, after which submissions were its only public output. Throughout,
 the full reasoning record --- the knowledge base, cycle logs, and promotion history ---
 remained private and canonical during the campaign; there were no blog or social-media posts.
-The collaboration was thus asymmetric: JSAgent drew continuously on public information and
-contributed verified results (and, early on, some method writeups), but its compounding memory
-stayed private.
 
 \paragraph{The tension, from inside.}
 These two pulls conflict. The forcing function rewards posting a partial result early; posting
@@ -1216,27 +1193,6 @@ reached verified frontier constructions on several open problems. If a non-speci
 this far, a domain expert paired with the same kind of agent should push further --- the
 expert-plus-agent pairing is, we believe, where the rapid progress will come from.
 
-\paragraph{Usable now, task by task --- and why domain expertise gains.}
-Full autonomy is not the near-term prize; \emph{augmentation} is, and it is available today. Even
-where no closed verifier-gated loop exists, an agent is already useful to a working scientist for
-concrete sub-tasks that need no autonomy at all: curating fragmented literature into summarized,
-cross-linked pages (the knowledge base of this paper is one such artifact); generating and
-sharpening hypotheses; and carrying the engineering \emph{around} data analysis --- integrating
-and orchestrating existing open-source tools, writing the glue code, handling version control,
-summarizing results, and standing up an analysis or visualization dashboard \emph{on demand}
-rather than pre-building it. The enabling shift is that natural language is becoming the interface
-to computation: a scientist states intent in plain English and the agent supplies the
-implementation, so the quantitative-and-programming barrier that has gated much of computational
-science becomes increasingly \emph{delegable}. The consequence runs opposite to the usual worry ---
-as that technical barrier falls, the scarce and decisive input becomes \emph{domain expertise}:
-knowing which question matters, which result would be surprising, and which artifact is
-trustworthy --- exactly the judgment a verifier cannot supply and the human retained here (the
-strong-executor / weak-selector split, Table~\ref{tab:roles}). How far this reaches is
-domain-ordered: mathematics and other verifier-rich areas are already making real progress,
-whereas wet-lab sciences such as biology automate more slowly --- gated not by reasoning but by
-the physical experiment. But the task-level usefulness --- curation, hypothesis framing, analysis,
-orchestration, tooling-on-demand --- is available across all of them now.
-
 \paragraph{The case against, and the limits.}
 Several of the results are empirical ties or near-ties rather than proofs: no dual
 certificate yet matches a value to confirm global optimality, so an $N$-agent tie should be
@@ -1270,6 +1226,29 @@ Submission                  & decides (non-records) & prepares & gate chain (rec
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{Usable now, task by task --- and why domain expertise gains.}
+Full autonomy is not the near-term prize; \emph{augmentation} is, and it is available today. Even
+where no closed verifier-gated loop exists, an agent is already useful to a working scientist for
+concrete sub-tasks that need no autonomy at all: curating fragmented literature into summarized,
+cross-linked pages (the knowledge base of this paper is one such artifact); generating and
+sharpening hypotheses; and carrying the engineering \emph{around} data analysis --- integrating
+and orchestrating existing open-source tools, writing the glue code, handling version control,
+summarizing results, and standing up an analysis or visualization dashboard \emph{on demand}
+rather than pre-building it.
+
+The enabling shift is that natural language is becoming the interface
+to computation: a scientist states intent in plain English and the agent supplies the
+implementation, so the quantitative-and-programming barrier that has gated much of computational
+science becomes increasingly \emph{delegable}. The consequence runs opposite to the usual worry ---
+as that technical barrier falls, the scarce and decisive input becomes \emph{domain expertise}:
+knowing which question matters, which result would be surprising, and which artifact is
+trustworthy --- exactly the judgment a verifier cannot supply and the human retained here (the
+strong-executor / weak-selector split, Table~\ref{tab:roles}). How far this reaches is
+domain-ordered: mathematics and other verifier-rich areas are already making real progress,
+whereas wet-lab sciences such as biology automate more slowly --- gated not by reasoning but by
+the physical experiment. But the task-level usefulness --- curation, hypothesis framing, analysis,
+orchestration, tooling-on-demand --- is available across all of them now.
 
 \paragraph{The trajectory toward autonomy.}
 A recurring operating mode was long, unattended runs --- often overnight --- in which the human
@@ -1441,6 +1420,75 @@ P9  & Uncertainty principle              &     & \\
 \end{tabular}
 \end{table}
 
+\section{Per-Problem Progression}
+\label{app:progression}
+For the problems where JSAgent has real depth, the progression --- initial approach, the wall,
+the breakthrough, the verified result --- is given below, each traceable to the cited wiki
+pages. Ranks are as of the 2026-06-22 sweep (Table~\ref{tab:standings}); where the documented
+progression predates that snapshot, both are stated.
+
+\paragraph{P2 --- first autocorrelation inequality (verified record, since surpassed).}
+\emph{Initial:} minimize $C=\max(f\!\star\!f)/(\int f)^2$; the larger-$n$ cascade that had
+worked on P4 was applied under the standard $\exp(v)$ parameterization. \emph{Wall:} the
+iterate peak-locked at $\delta\approx 5\mathrm{e}{-}8$ for every $n$ --- under $\exp(v)$ both
+gradient and Hessian vanish at dead cells ($\varphi'=\varphi''=0$), leaving a structurally flat
+dead-cell subspace the optimizer cannot prune; a later two-agent tie at $1.5028609$ looked like
+the global minimum. \emph{Breakthrough:} switch to $f=v^2$ (curvature $\varphi''(0)=2$ restores
+a finite boundary-KKT signal), then \emph{warm data-driven self-pruning} --- seed from a
+converged full-support basin and let the optimizer drive the smallest-magnitude cells to exact
+zero on a support-shrinking schedule. \emph{Result:} a verified arena record
+$C=1.5028506$ (2026-06-08), beating the prior \#1 by $\sim\!1\mathrm{e}{-}5$; the arena server
+reproduced it to $10^{-16}$. It was rank \#1 until 2026-06-23, when a newcomer (\texttt{Hyra})
+narrowly surpassed it --- an intermediate link, as the thesis predicts. \src{problems/2-first-autocorrelation.md, findings/p2-peak-locking-hessian-mechanism.md, findings/p2-warm-self-pruning-beats-record.md}
+
+\paragraph{P3 --- second autocorrelation inequality (frontier value at posting; rank since moved).}
+\emph{Initial:} maximize the ratio $C=\|f\!\star\!f\|_2^2/(\|f\!\star\!f\|_1\,\|f\!\star\!f\|_\infty)$
+from-scratch (Adam $+$ upsampling cascade) at $n=10^5$. \emph{Wall:} from-scratch search tops
+out near $0.91$ --- its basin is \emph{disjoint} from the SOTA basin, and upsampling preserves
+basin identity, so more resolution adds almost nothing. \emph{Breakthrough:}
+\emph{cross-resolution basin transfer} --- average-pool a public $n=1.6\mathrm{M}$ solution down
+to $10^5$ (landing in a structurally distinct basin) and refine with Dinkelbach $+$ a
+$\beta$-cascade. \emph{Result:} $C=0.962214$, the frontier value at that resolution ---
+credited to JSAgent in the platform paper (Fig.~6), though other agents reached a matching
+value in a close cluster; it has since been surpassed (rank \#3 at the 06-22 snapshot, \#4 by
+06-23) as the lineage it helped seed advanced. \src{problems/3-autocorrelation.md, techniques/cross-resolution-basin-transfer.md, findings/dead-end-p3-jaech-cascade-extended.md}
+
+\paragraph{P18 --- circles in a rectangle (rank \#1, clean).}
+\emph{Initial:} pack 21 circles in a rectangle of perimeter $\le 4$, maximizing $\sum r$;
+warm-start from the leader $+$ SLSQP polish. \emph{Wall:} the optimum is a zero-degree-of-freedom
+KKT point (64 active constraints $=$ 64 variables), so the float64 ceiling is the only headroom,
+and while \texttt{minImprovement} was $10^{-7}$ the available tolerance band ($\sim\!4\mathrm{e}{-}9$)
+could not clear the gate. \emph{Breakthrough:} when the operators lowered
+\texttt{minImprovement} to $10^{-9}$, an arena-tolerance SLSQP polish \emph{within} the verifier's
+tolerance band became admissible --- triple-verified against strict tolerance, with a
+uniform-radius-shrink fallback guaranteeing strict feasibility. \emph{Result:} $\sum r =
+2.3658323852$, sole rank \#1 (2026-04-12). \src{problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
+
+\paragraph{P14 --- circle packing in a square (rank \#1).}
+The most instructive episode for verification discipline. Ten parallel approaches all converged
+to a single basin-locked optimum at the float64 ceiling. Three constructions appeared to beat
+the long-standing ceiling by exploiting a $\sim\!10^{-9}$ pairwise-overlap tolerance ---
+but all three \emph{failed} a strict-tolerance recheck, so submitting one would have incurred a
+large penalty; triple-verify caught the trap. JSAgent instead took a near-ceiling position via a
+uniform-shrink squeeze. By the 2026-06-22 sweep JSAgent holds rank \#1 on the problem; the
+intervening progression is recorded in the per-problem tracking rather than reproduced here.
+\src{problems/14-circle-packing-square.md, findings/packing-techniques.md, findings/arena-proximity-guard.md}
+
+\paragraph{P9 --- uncertainty principle (a verification scar; not counted as a clean record).}
+\emph{Initial:} a polynomial with a single sign change at $x_\star$ (score $x_\star/2\pi$),
+warm-started from another agent's solution and pushed with standard optimizers. \emph{Wall:}
+fixed-degree optimizers all settle into the same plateau; \emph{k-climbing} (raising the
+polynomial degree to open new degrees of freedom) escapes it. \emph{The scar:} a buggy fast
+evaluator reported ever-better scores that fell \emph{below} the proven lower bound
+$0.2025$~\cite{bourgain2008heisenberg,cohn2019uncertaintyd12} --- mathematically impossible, so the evaluator was wrong; the problem was
+temporarily hidden pending a verifier fix. This incident is a principal reason triple-verify is
+the spine of the method. As discussed in \S\ref{sec:math}, the live board lists JSAgent at the
+top with $S\approx 0.318$, which lies \emph{above} the proven upper bound $0.3102$ under the
+standard normalization --- so we do not count P9 as a clean rank-\#1; the strongest
+cleanly-valid submission was $S=0.275$ ($k{=}16$).
+\src{problems/9-uncertainty-principle.md, findings/verification-patterns.md, findings/p9-uncertainty-push-trajectory.md}
+
+% ======================================================================
 \section{A Personal Account}
 \label{app:personal}
 \emph{This appendix is the first-person story of how the work began and what it felt like to
@@ -1573,73 +1621,6 @@ auditable probe of what agent-driven research can become, from someone who found
 reachable from the outside.
 
 % ======================================================================
-\section{Per-Problem Progression}
-\label{app:progression}
-For the problems where JSAgent has real depth, the progression --- initial approach, the wall,
-the breakthrough, the verified result --- is given below, each traceable to the cited wiki
-pages. Ranks are as of the 2026-06-22 sweep (Table~\ref{tab:standings}); where the documented
-progression predates that snapshot, both are stated.
-
-\paragraph{P2 --- first autocorrelation inequality (verified record, since surpassed).}
-\emph{Initial:} minimize $C=\max(f\!\star\!f)/(\int f)^2$; the larger-$n$ cascade that had
-worked on P4 was applied under the standard $\exp(v)$ parameterization. \emph{Wall:} the
-iterate peak-locked at $\delta\approx 5\mathrm{e}{-}8$ for every $n$ --- under $\exp(v)$ both
-gradient and Hessian vanish at dead cells ($\varphi'=\varphi''=0$), leaving a structurally flat
-dead-cell subspace the optimizer cannot prune; a later two-agent tie at $1.5028609$ looked like
-the global minimum. \emph{Breakthrough:} switch to $f=v^2$ (curvature $\varphi''(0)=2$ restores
-a finite boundary-KKT signal), then \emph{warm data-driven self-pruning} --- seed from a
-converged full-support basin and let the optimizer drive the smallest-magnitude cells to exact
-zero on a support-shrinking schedule. \emph{Result:} a verified arena record
-$C=1.5028506$ (2026-06-08), beating the prior \#1 by $\sim\!1\mathrm{e}{-}5$; the arena server
-reproduced it to $10^{-16}$. It was rank \#1 until 2026-06-23, when a newcomer (\texttt{Hyra})
-narrowly surpassed it --- an intermediate link, as the thesis predicts. \src{problems/2-first-autocorrelation.md, findings/p2-peak-locking-hessian-mechanism.md, findings/p2-warm-self-pruning-beats-record.md}
-
-\paragraph{P3 --- second autocorrelation inequality (frontier value at posting; rank since moved).}
-\emph{Initial:} maximize the ratio $C=\|f\!\star\!f\|_2^2/(\|f\!\star\!f\|_1\,\|f\!\star\!f\|_\infty)$
-from-scratch (Adam $+$ upsampling cascade) at $n=10^5$. \emph{Wall:} from-scratch search tops
-out near $0.91$ --- its basin is \emph{disjoint} from the SOTA basin, and upsampling preserves
-basin identity, so more resolution adds almost nothing. \emph{Breakthrough:}
-\emph{cross-resolution basin transfer} --- average-pool a public $n=1.6\mathrm{M}$ solution down
-to $10^5$ (landing in a structurally distinct basin) and refine with Dinkelbach $+$ a
-$\beta$-cascade. \emph{Result:} $C=0.962214$, the frontier value at that resolution ---
-credited to JSAgent in the platform paper (Fig.~6), though other agents reached a matching
-value in a close cluster; it has since been surpassed (rank \#3 at the 06-22 snapshot, \#4 by
-06-23) as the lineage it helped seed advanced. \src{problems/3-autocorrelation.md, techniques/cross-resolution-basin-transfer.md, findings/dead-end-p3-jaech-cascade-extended.md}
-
-\paragraph{P18 --- circles in a rectangle (rank \#1, clean).}
-\emph{Initial:} pack 21 circles in a rectangle of perimeter $\le 4$, maximizing $\sum r$;
-warm-start from the leader $+$ SLSQP polish. \emph{Wall:} the optimum is a zero-degree-of-freedom
-KKT point (64 active constraints $=$ 64 variables), so the float64 ceiling is the only headroom,
-and while \texttt{minImprovement} was $10^{-7}$ the available tolerance band ($\sim\!4\mathrm{e}{-}9$)
-could not clear the gate. \emph{Breakthrough:} when the operators lowered
-\texttt{minImprovement} to $10^{-9}$, an arena-tolerance SLSQP polish \emph{within} the verifier's
-tolerance band became admissible --- triple-verified against strict tolerance, with a
-uniform-radius-shrink fallback guaranteeing strict feasibility. \emph{Result:} $\sum r =
-2.3658323852$, sole rank \#1 (2026-04-12). \src{problems/18-circles-rectangle.md, findings/arena-proximity-guard.md}
-
-\paragraph{P14 --- circle packing in a square (rank \#1).}
-The most instructive episode for verification discipline. Ten parallel approaches all converged
-to a single basin-locked optimum at the float64 ceiling. Three constructions appeared to beat
-the long-standing ceiling by exploiting a $\sim\!10^{-9}$ pairwise-overlap tolerance ---
-but all three \emph{failed} a strict-tolerance recheck, so submitting one would have incurred a
-large penalty; triple-verify caught the trap. JSAgent instead took a near-ceiling position via a
-uniform-shrink squeeze. By the 2026-06-22 sweep JSAgent holds rank \#1 on the problem; the
-intervening progression is recorded in the per-problem tracking rather than reproduced here.
-\src{problems/14-circle-packing-square.md, findings/packing-techniques.md, findings/arena-proximity-guard.md}
-
-\paragraph{P9 --- uncertainty principle (a verification scar; not counted as a clean record).}
-\emph{Initial:} a polynomial with a single sign change at $x_\star$ (score $x_\star/2\pi$),
-warm-started from another agent's solution and pushed with standard optimizers. \emph{Wall:}
-fixed-degree optimizers all settle into the same plateau; \emph{k-climbing} (raising the
-polynomial degree to open new degrees of freedom) escapes it. \emph{The scar:} a buggy fast
-evaluator reported ever-better scores that fell \emph{below} the proven lower bound
-$0.2025$~\cite{bourgain2008heisenberg,cohn2019uncertaintyd12} --- mathematically impossible, so the evaluator was wrong; the problem was
-temporarily hidden pending a verifier fix. This incident is a principal reason triple-verify is
-the spine of the method. As discussed in \S\ref{sec:math}, the live board lists JSAgent at the
-top with $S\approx 0.318$, which lies \emph{above} the proven upper bound $0.3102$ under the
-standard normalization --- so we do not count P9 as a clean rank-\#1; the strongest
-cleanly-valid submission was $S=0.275$ ($k{=}16$).
-\src{problems/9-uncertainty-principle.md, findings/verification-patterns.md, findings/p9-uncertainty-push-trajectory.md}
 
 \bibliographystyle{unsrt}
 \bibliography{refs}
