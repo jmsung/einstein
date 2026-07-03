@@ -1,12 +1,12 @@
 # Compute routing — pick the right home for each workload
 
-**2026-05-24**: Modal cloud GPU is currently **NOT IN USE**. All workloads run on the local a local workstation (CPU + MPS). Modal scripts remain available; re-enable only if a workload genuinely needs sustained float64-CUDA throughput that MPS f32 + high-memory unified memory can't cover. The "cloud" column is kept in the decision matrix below as forward-looking reference.
+**2026-05-24**: Modal cloud GPU is currently **NOT IN USE**. All workloads run on the local workstation (CPU + MPS). Modal scripts remain available; re-enable only if a workload genuinely needs sustained float64-CUDA throughput that MPS f32 + unified memory can't cover. The "cloud" column is kept in the decision matrix below as forward-looking reference.
 
 ## Environments
 
-**Local: MacBook Pro a local workstation (high-memory unified memory) — primary** ✅
-- Many CPU cores + Apple Silicon GPU via MPS (float32 native; ~ on 4096³ matmul)
-- high-memory unified memory — fits LP / multistart / large-batch workloads the the local machine generation didn't previously cover
+**Local: a local workstation — primary** ✅
+- Many CPU cores + Apple Silicon GPU via MPS (float32 native)
+- ample unified memory — fits LP / multistart / large-batch workloads this machine didn't previously cover
 - Zero marginal cost; good for unbounded experimentation
 - Single-precision-tier on GPU (MPS = float32 only)
 
@@ -21,16 +21,16 @@
 |---|---|---|---|---|
 | mpmath ulp polish (any dps) | ✅ best | ❌ | ❌ | Pure CPU; scales with cores |
 | L-BFGS / Nelder-Mead / SLSQP (single run) | ✅ best | ❌ | ❌ | Sequential; GPU sits idle |
-| LP / IPM (HiGHS) | ✅ best | ❌ | only if high-memory RAM exhausted (rare) | a local workstation usually fits |
+| LP / IPM (HiGHS) | ✅ best | ❌ | only if high-memory RAM exhausted (rare) | the workstation usually fits |
 | Basin-hopping (small populations) | ✅ best | △ | ❌ | Python overhead dominates |
 | Basin-hopping (float32 large pop) | △ | ✅ best | △ | MPS shines for batched float32 |
 | CMA-ES large population | △ | ✅ float32 (default) | only if f64 strictly required | Default to MPS f32 |
 | Multistart 1000+ trials, quick each | ✅ best | △ | overkill | Multiprocess across cores |
 | SA parallel tempering (float64) | △ | ✅ try f32 first | only if f32 verified insufficient | Default to MPS f32 + verify precision |
-| Large LP / SDP (RAM-bound) | △ | ❌ | only if matrices > 96GB | high-memory unified usually covers it |
+| Large LP / SDP (RAM-bound) | △ | ❌ | only if matrices > 96GB | ample unified memory usually covers it |
 | GPU benchmark / calibration | ✅ | ✅ | (skip — not in use) | Local-only by default now |
 
-**Why:** Modal was justified when local CPU/GPU was undersized; the a local workstation's  MPS + high-memory unified eliminates most of the original reasons. Cost without speedup is waste; speedup at wrong precision is wrong score. Default local; revisit Modal only when a measurement says otherwise.
+**Why:** Modal was justified when local CPU/GPU was undersized; the workstation's MPS + ample unified memory eliminates most of the original reasons. Cost without speedup is waste; speedup at wrong precision is wrong score. Default local; revisit Modal only when a measurement says otherwise.
 
 **How to apply:**
 
@@ -46,11 +46,11 @@
 
 4. **If recommendation is `STAY ON CPU`** for a workload you assumed needed GPU, trust it. The GPU sits idle on sequential workloads.
 
-5. **Modal re-enable gate (currently in standby):** if a benchmark shows local a local workstation can't cover the workload (e.g. MPS f32 result fails the triple-verify precision floor and exact f64 reimpl is too slow), then and only then justify Modal with `hours × $/hr × ≥3× speedup-over-local`. Document the measurement that motivates the switch in `mb/<problem>/experiment-log.md`.
+5. **Modal re-enable gate (currently in standby):** if a benchmark shows local workstation can't cover the workload (e.g. MPS f32 result fails the triple-verify precision floor and exact f64 reimpl is too slow), then and only then justify Modal with `hours × $/hr × ≥3× speedup-over-local`. Document the measurement that motivates the switch in `mb/<problem>/experiment-log.md`.
 
 **Common pitfalls:**
 - Running Python `for` loop on GPU → idle GPU, slow wall-clock
-- Running 1000-trial multistart anywhere but a multicore local — multiprocess + Apple Accelerate single-thread workers is the right shape (see [local-compute-utilization-strategy](../../docs/wiki/findings/local-compute-utilization-strategy.md))
+- Running 1000-trial multistart anywhere but a multicore local — multiprocess + Apple Accelerate single-thread workers is the right shape (see [the workstation-utilization-strategy](../../docs/wiki/findings/the workstation-utilization-strategy.md))
 - Defaulting to Modal when MPS f32 hasn't been verified for precision — start local, escalate only on measurement
 - Skipping the local benchmark on a fresh machine — calibration drifts
 

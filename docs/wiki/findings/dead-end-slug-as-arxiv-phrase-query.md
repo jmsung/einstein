@@ -59,7 +59,7 @@ Listed in increasing ambition:
 - The three Phase-1 tools (`concept_inventory.py`, `pdf_to_md.py`, `seed_ingest.py`) are mechanically validated by 35 passing tests.
 - The vocabulary mapping pivot (sub-task 1.4b) added `docs/tools/concept-search-terms.yaml` with 33 hand-curated slug → arxiv-phrase entries. Re-running propose yielded **9/36 concepts with hits** (vs 1/15 pre-pivot), totalling ~19 raw candidates (~10–12 clearly relevant after eyeballing + dedup).
 - Phase 1 deliverable "30–50 new source/ papers" remains **partially met**: ~10–12 good candidates is the honest size of the gap, not 30–50. 18/36 mapped concepts still return 0 (vocab needs iteration); 9/36 are intentionally project-coined and unmappable.
-- Phase 2 (a local workstation calibration) does not depend on this; can proceed.
+- Phase 2 (the workstation calibration) does not depend on this; can proceed.
 - Phase 3 (outer orchestrator) is the natural home for the autonomous version of the vocabulary translation.
 
 ## Updated rule of thumb

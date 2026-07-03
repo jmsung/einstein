@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""local_benchmark.py — calibrate this a local workstation for the compute router.
+"""local_benchmark.py — calibrate this the workstation for the compute router.
 
 Measures:
 - CPU per-core throughput (numpy matmul, sequential)
@@ -58,7 +58,7 @@ def cpu_multicore_matmul():
 
 
 _MP_WORKER_N = 2048      # bigger matrix — make the math dominate pickle overhead
-_MP_WORKER_ITERS = 50    # 50 iters: serial workload ~5-10s, parallel should be ≤1s on multi-cores
+_MP_WORKER_ITERS = 50    # 50 iters: serial workload ~5-10s, parallel should be ≤1s on multi-core
 
 
 _BLAS_THREAD_ENV = {
@@ -173,7 +173,7 @@ def mpmath_seq_throughput():
 
 def ram_headroom():
     """How much float64 we can allocate (one big contiguous array)."""
-    # On high-memory unified-memory a local workstation, test up through 96GB — leave headroom
+    # On high-memory unified-memory the workstation, test up through 96GB — leave headroom
     # for the kernel + other processes. macOS will OOM-kill above ~100GB.
     sizes_gb = [1, 4, 16, 32, 64, 96]
     headroom = {}

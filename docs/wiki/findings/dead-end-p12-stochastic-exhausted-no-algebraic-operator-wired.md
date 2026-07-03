@@ -23,7 +23,7 @@ bandit successively recommended `memetic-tabu-search.md`, `bnb-exhaustive-w3.md`
 then `memetic-tabu-search.md` again. Every cycle declined to execute:
 
 - MTS already rediscovered byte-identical SOTA `1.2809320520721` in Exp 7
-  (1.26 B evaluations, 30 min a local workstation). Re-running is verified-no-change.
+  (1.26 B evaluations, 30 min the workstation). Re-running is verified-no-change.
 - `bnb-exhaustive-w3` is not wired in `optimizer_manifest.yaml` — the only
   P12 strategy is `verify_seed`.
 - All seven prior algebraic constructions (Turyn, Rudin–Shapiro, Fekete, Golay,

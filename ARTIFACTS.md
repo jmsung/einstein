@@ -102,7 +102,7 @@ that is by design (paper §3). Frozen 06-22 reading:
 - `uv sync` pins dependencies via `pyproject.toml` / `uv.lock`.
 - Python 3.13. Numerical compute: campaign-era work used a MacBook Air (M4) local plus Modal
   cloud for a few heavy campaigns (notably kissing d=11); since 2026-05-24 all work runs on a
-  MacBook Pro a local workstation (high-memory unified, MPS) with Modal retired. LLM inference: Claude Code (Max
+  a local workstation (ample unified memory, MPS) with Modal retired. LLM inference: Claude Code (Max
   subscription).
 - Known nondeterminism: multi-start search seeds, thread scheduling; the seed-rescoring and
   standings paths are deterministic.
