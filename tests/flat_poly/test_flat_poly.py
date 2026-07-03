@@ -205,8 +205,14 @@ class TestArenaMatch:
 # ---------------------------------------------------------------------------
 # Performance
 # ---------------------------------------------------------------------------
+@pytest.mark.slow
 class TestPerformance:
-    """Ensure evaluation is fast enough for optimization."""
+    """Ensure evaluation is fast enough for optimization.
+
+    Marked ``slow``: these are wall-clock budgets calibrated for local
+    hardware and excluded on CI (``-m "not slow"``), which runs on a shared,
+    variable-speed runner where even a warm best-of-N can miss the budget.
+    """
 
     def test_single_eval_under_200ms(self):
         """Single evaluation should be fast enough for optimization (< 200ms).

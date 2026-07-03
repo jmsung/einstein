@@ -2,8 +2,19 @@ name: Tests
 
 on:
   push:
+    # Doc-only commits (the paper lives in docs/paper/) cannot affect the code,
+    # so they no longer trigger the suite — this is what kept surfacing flaky
+    # tests on citation/paper edits.
+    paths-ignore:
+      - 'docs/**'
+      - 'mb/**'
+      - '**/*.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'mb/**'
+      - '**/*.md'
 
 jobs:
   pytest:
