@@ -1161,7 +1161,16 @@ automated design of agentic systems~\cite{hu2024ads}, agentic context
 engineering~\cite{zhang2025ace}), evaluated on benchmarks such as
 SWE-bench~\cite{jimenez2023swebench}. These socialize or optimize state \emph{across} agents
 or runs. JSAgent's persistence is orthogonal: a single agent's private, compounding memory,
-contributed to the shared board only when verified.
+contributed to the shared board only when verified. Closest to that mechanism is a line that
+reuses \emph{distilled} single-agent memory across problems: Buffer of
+Thoughts~\cite{yang2024bufferofthoughts} retrieves reusable thought templates, Agent Workflow
+Memory~\cite{wang2024agentworkflowmemory} induces reusable workflows, and
+Evo-Memory~\cite{wei2025evomemory} benchmarks whether such memory compounds across a task
+stream --- all reporting efficiency-style gains from reuse, as we do. JSAgent differs on three
+axes: the memory is \emph{human-readable} prose and plain-language rules (not templates,
+workflows, or embeddings) that a human reads to steer; every claim passes an \emph{objective
+external verifier}; and we report a controlled ablation in which the \emph{quality} effect is
+null, where this line typically reports the efficiency gain without isolating it from quality.
 
 \paragraph{Harness-as-artifact.}
 Closest in spirit is observability-driven harness evolution~\cite{lin2026ahe}, treating
@@ -1340,7 +1349,8 @@ knowledge base recorded a dead-end that closed the problem as ``floor-confirmed'
 later run overturned to set the record (\S\ref{sec:harness}); on P22 it recorded a competitor's
 ``structural cap at 840'' belief that a subsequent construction~\cite{takhanov2026kissing}
 disputes. Both were caught --- the first by the wall-hit discipline, the second by external
-literature --- but a wrong page that is \emph{not} caught would mislead the next cycle. The
+literature --- but a wrong page that is \emph{not} caught would mislead the next cycle
+(capability degradation under self-evolution is itself a documented failure mode~\cite{yu2026selfevolvingforget}). The
 mitigations are structural, not airtight: every page carries author attribution and citations,
 corrections are appended rather than overwritten (so the trail of what was believed-then-revised
 survives), and triple-verify gates any number the memory suggests before it is trusted.
