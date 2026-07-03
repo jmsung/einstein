@@ -56,8 +56,8 @@ verifiers, but the reusable reasoning behind them is usually lost after each run
 \textbf{JSAgent}, a mathematical-optimization agent built around persistent, human-readable
 memory: a knowledge base of concepts, failed attempts, techniques, and behavioral rules reused
 across problem-solving cycles. On EinsteinArena, JSAgent produced externally verified
-constructions that were state-of-the-art when submitted, including clean circle-packing results
-and a former first-autocorrelation record. The system combines wiki-first retrieval, triple
+constructions that were state-of-the-art when submitted on several problems, including clean
+circle-packing results and a former first-autocorrelation record. The system combines wiki-first retrieval, triple
 verification, wall-hit escalation, obstruction-indexed technique reuse, and compute routing.
 Logs show repeated reuse of prior failures and techniques, including a record-producing direction
 recovered and refined from an earlier dead-end note. Controlled ablations show that persistent memory
@@ -84,7 +84,8 @@ credited here, but is not listed as an author.
 persistent memory raises solution \emph{quality} (our controlled ablation finds the quality
 effect null); that JSAgent is autonomous; that JSAgent currently leads EinsteinArena; or that
 the agent trajectory is exactly replayable. \emph{We do claim:} JSAgent produced externally
-verified constructions that were state-of-the-art when submitted; the system maintained a
+verified constructions at or tied with the arena frontier when submitted (several global
+state-of-the-art); the system maintained a
 persistent, human-readable memory and rule harness; logs show repeated retrieval and reuse of
 prior findings; the released artifacts make the constructions and their verification auditable;
 and pre-registered controlled ablations show persistent memory improves \emph{efficiency} (not
@@ -132,6 +133,8 @@ Section~\ref{sec:arena} situates EinsteinArena and JSAgent's stance. Section~\re
 reports the mathematical contributions and the verified standings (Table~\ref{tab:standings}).
 Section~\ref{sec:harness} is the structural core --- the self-improving harness of behavioral
 rules. Section~\ref{sec:techniques} catalogs the transferable techniques the loop produced;
+Section~\ref{sec:eval} sets the evaluation protocol, and Section~\ref{sec:ablations} reports
+the pre-registered ablations behind the efficiency-not-quality headline;
 Section~\ref{sec:collab} gives the inside view of competition and collaboration;
 Section~\ref{sec:related} positions the work; and Section~\ref{sec:discussion} asks how ready
 agents are for real scientific contribution, and what gates full autonomy.
@@ -175,19 +178,19 @@ disposable and the accumulated knowledge base as the deliverable
 
 Consistent with the thesis that rank is a byproduct, we treat the leaderboard not as the
 contribution but as a \emph{dated historical record} that the method produced real, externally
-checkable results. We report three snapshots to make the point concretely: each value below was at or tied with
+checkable results. We report three snapshots to make the point concretely: each value below entered at or near
 the arena frontier \emph{when submitted} --- several were global state-of-the-art (P2, P14,
-P18), which the table's Status column and footnotes flag --- and the board has since moved as
-other agents built further, which is the ecosystem working as intended, not a retraction. The durable claims
+P18) --- and the board has since moved as other agents built further, which is the ecosystem
+working as intended, not a retraction. The durable claims
 are the verified constructions (re-runnable at any time) and JSAgent's documented participation
 in collective lineages; the live ranking is transient by design and we do not track it here.
 
 \begin{table}[htbp]
 \centering
 \caption{JSAgent on EinsteinArena --- three dated snapshots (\texttt{leaderboard\_standings.py}), the last re-verified on posting day (2026-07-01).
-  Each score was at or tied with the arena frontier when submitted --- several were global
+  Each score entered at or near the arena frontier when submitted --- several were global
   state-of-the-art (e.g.\ P2, P14, P18), while others (e.g.\ P1) matched the arena best but not
-  a stronger contemporaneous result elsewhere; the body flags which. The board is a live
+  a stronger contemporaneous result elsewhere. The board is a live
   multi-agent ecosystem, so rank is a historical reading, not a stable property, and the problem
   set itself grew over the campaign (15 problems at the operators' May snapshot to 17 here);
   rank is shown only to illustrate the dynamics.}
@@ -214,12 +217,10 @@ P22 & kissing-d12             & $2.001403$     & \#3 & \#3 & \#3 & clean \\
 \multicolumn{7}{l}{$^\dagger$ P9's board score lies \emph{above} the proven upper bound $0.3102$ under the standard}\\
 \multicolumn{7}{l}{normalization (\S\ref{sec:math}); we do not treat it as a clean rank-\#1 win.}\\
 \multicolumn{7}{l}{$^\ddagger$ surpassed between snapshots by \texttt{Hyra}; P4/P7 drifted further by 07-01.}\\
-\multicolumn{7}{l}{$^\S$ The operators' snapshot~\cite{bianchi2026einstein} lists a higher P14 figure ($2.635983095$) that overlaps}\\
-\multicolumn{7}{l}{within the arena's ${\sim}10^{-9}$ pair-tolerance band and fails strict $\mathrm{tol}{=}0$ (our ``false-breakthrough''}\\
-\multicolumn{7}{l}{candidate, rejected pre-submission --- cross-problem lesson \#54). We report the strictly-feasible $2.6359830849$,}\\
-\multicolumn{7}{l}{ranked clean \#1 (strictly-best \emph{valid} score). Under strict $\mathrm{tol}{=}0$, the only figure above}\\
-\multicolumn{7}{l}{AlphaEvolve's prior $2.635983085$ is that tolerance-band construction; we take no position on the}\\
-\multicolumn{7}{l}{operators' scoring, and note only which values are strictly feasible.}\\
+\multicolumn{7}{l}{$^\S$ The operators' snapshot~\cite{bianchi2026einstein} lists a higher P14 figure ($2.635983095$); it overlaps}\\
+\multicolumn{7}{l}{within the arena's ${\sim}10^{-9}$ tolerance band and fails strict $\mathrm{tol}{=}0$ (\S\ref{sec:math}). We report the}\\
+\multicolumn{7}{l}{strictly-feasible $2.6359830849$ (clean \#1 among strictly-valid scores); under strict $\mathrm{tol}{=}0$ the only}\\
+\multicolumn{7}{l}{figure above AlphaEvolve's prior $2.635983085$ is that tolerance-band construction.}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -252,9 +253,9 @@ bounds~\cite{matolcsi2010autoconvolution,cloninger2017autoconvolution,white2022a
 \draw[thick] (b) -- (c);
 \fill (a) circle (2pt); \fill (b) circle (2pt); \fill (c) circle (2.6pt);
 \node[anchor=west] at (1.7,3.15) {Apr 15: $1.5028616$ (JSAgent sole \#1)};
-\node[anchor=west] at (2.6,2.35) {others reach $1.5028609$};
-\node[anchor=west] at (7.0,0.55) {Jun 8: $\mathbf{1.5028506}$ (record)};
-\draw[dashed,gray] (7.6,0) -- (7.6,1.9);
+\node[anchor=east] at (4.3,3.0) {others reach $1.5028609$};
+\node[anchor=west] at (7.75,0.75) {Jun 8: $\mathbf{1.5028506}$ (record)};
+\draw[dashed,gray] (7.6,0.2) -- (7.6,1.9);
 \node[gray,anchor=south,align=center] at (7.6,1.9) {Jun 4: dead-end logs\\support-shrinking (low-EV)};
 \end{tikzpicture}
 \caption{P2 verified-score progression (schematic; values exact, vertical spacing not to
@@ -318,6 +319,7 @@ arena's thesis~\cite{jaech2025autoconvolution,rechnitzer2026autoconvolution}.
 \src{findings/einstein-arena-paper-jsagent-recognition-2026-06.md, problems/3-autocorrelation.md}
 
 \paragraph{Further contributions.}
+\begin{sloppypar}
 JSAgent also contributed competitive constructions on the Erd{\H o}s minimum-overlap
 problem~\cite{white2022erdos,haugland2016minoverlap,bloomerdos} (P1), a prime-number-theorem
 sieve LP~\cite{tao2015sievetheory,polymath2014selberg} (P7), the Tammes
@@ -327,6 +329,7 @@ dimension~12~\cite{boyvalenkov2012kissingsurvey,leech1971spherepackings,cohnli20
 literature~\cite{delaat2012packings}. Several of these were top-of-board when submitted and
 have since moved as other agents built further. (In the arena numbering, P22 is kissing number
 in dimension 12; the dimension-11 problem discussed in \S\ref{sec:collab} and the appendix is P6.)
+\end{sloppypar}
 On P22, the arena's best score is $2$ --- the $840$-vector $K(12)$ core plus one duplicate ---
 and JSAgent's $2.001403$ sits just above it; a subsequent construction~\cite{takhanov2026kissing}
 reports a numerically built \emph{non-overlapping} $841$-vector arrangement in $\mathbb{R}^{12}$
@@ -677,7 +680,7 @@ exact zeros. This broke a two-agent tie on P2 and set a verified arena record
 \src{techniques/warm-self-pruning-compact-support.md, findings/p2-warm-self-pruning-beats-record.md}
 
 \paragraph{Parallel-tempering simulated annealing.}
-\emph{Obstruction:} a rough, gradient-flat-but-stochastically-improvable landscape on which
+\emph{Obstruction:} a rough, gradient-flat but stochastically improvable landscape on which
 greedy descent stalls. \emph{Mechanism:} run 8--64 SA replicas on a geometric temperature
 ladder with periodic Metropolis exchange --- hot replicas explore, cold replicas exploit ---
 with contribution-weighted sampling and $O(n)$ incremental evaluation. On kissing-number
@@ -734,7 +737,7 @@ Item & Specification \\
 \midrule
 Standings snapshot   & \texttt{leaderboard\_standings.py} @ commit \texttt{e38a793}, run 2026-06-22 22:00 PT \\
 Problem universe     & 17 problems live on the board at the sweep (the headline denominator) \\
-JSAgent coverage     & accepted submission on 15/17; top-3 on 10/17 (06-22); raw rank-\#1 on 4/17 --- of which 3 are clean (P14, P18, and the former P2), 1 verifier-contested (P9) \\
+JSAgent coverage     & accepted submission on 15/17; top-3 on 10/17 (06-22); raw rank-\#1 on 4/17 --- of which 3 are clean (P14, P18, P2), 1 verifier-contested (P9) \\
 Ranking / ties       & strict on full-precision score; exact-score ties broken by earliest submission \\
 Verification         & triple-verify: fast evaluator $+$ exact reimplementation $+$ analytical/independent cross-check \\
 Agent / model        & Claude Code (Max subscription); see Table~\ref{tab:models} \\
@@ -970,7 +973,7 @@ A natural way to reconcile the nulls is that the value lives not in the mean but
 --- the council reframing that set the P2 record (\S\ref{sec:harness}) is exactly such an event.
 We pre-committed two follow-up tests of this idea and ran them. The floor-versus-ceiling reading
 is clearest \emph{within the main $108$-pair experiment}, by quantile: the warm advantage in
-gap-closed is concentrated at the bottom of the distribution and fades at the top --- at the
+gap-closed is largest at the bottom of the distribution and smallest at the top --- at the
 $10$th percentile warm exceeds cold by $+0.113$, at the $25$th by $+0.021$, at the median by
 $+0.039$, but by the $90$th only $+0.014$ (differences of per-arm quantiles). Memory raises the floor; it does not lift the ceiling.
 A separate tail-sensitive follow-up ($60$ paired cells) pointed the same way but was \emph{not}
@@ -1013,7 +1016,7 @@ right test is not a larger version of ours but a different one: a long-horizon
 \emph{dose--response} that varies accumulated knowledge across a wide range in a regime capable of
 producing breakthroughs, asking not ``is warm's tail fatter?'' but ``\emph{does memory lower the
 percolation threshold --- reach the breakthrough at less accumulated knowledge, or less compute, than cold?}''
-The verified records this agent produced (P2, P4) are existence proofs consistent with such a
+The verified record this agent produced (P2) is an existence proof consistent with such a
 mechanism but uncontrolled; the controlled version is future work.
 
 % ======================================================================
@@ -1249,7 +1252,7 @@ what to work on, distrusting a ``floor'' claim, and judging when a result was wo
 credibility cost of a submission --- the strong-executor/weak-selector split the introduction
 flagged.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Human--agent division of labor. ``Automated gate'' = a deterministic check that
 already enforces part of the step.}
@@ -1310,7 +1313,7 @@ of persistent knowledge should \emph{rise}, not fall, as problems get less struc
 The scoped framing distributed through the paper is collected here as a single account
 (Table~\ref{tab:threats}).
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \caption{Threats to validity and how each is handled.}
 \label{tab:threats}
@@ -1323,7 +1326,7 @@ Ties / verifier-contested scores & rank can overstate distinctness or validity &
 No optimality proof & empirical records are not theorems & framed as construction/evaluation results, not proofs \\
 Human in the loop & autonomy could be overstated & role taxonomy (Table~\ref{tab:roles}) \\
 Causal evidence (memory) & KB-causes-improvement needs a control & controlled ablation run (\S\ref{sec:ablations}): efficiency supported, quality null; other mechanisms null/underpowered \\
-Model/version drift & unpinned per-cycle LLM IDs make the trajectory non-replayable \emph{and} are an alternative explanation: capability upgrades over the March--June campaign could contribute to the ``gradually then suddenly'' curve independent of knowledge accumulation & submitted constructions + verifier scripts \emph{are} reproducible; the controlled ablations (\S\ref{sec:ablations}) hold the model \emph{fixed} across arms, isolating memory from capability; per-cycle model IDs pinned going forward \\
+Model/version drift & non-replayable trajectory; also an alternative explanation --- capability upgrades over the campaign could mimic knowledge accumulation & constructions + verifiers reproducible; ablations hold the model \emph{fixed} across arms; per-cycle IDs pinned going forward \\
 Retrospective KB curation & the public snapshot may not exactly match what was available each cycle & commit history, file timestamps, and cycle logs are released for cross-checking \\
 Private knowledge base & harder for reviewers to audit & repository and knowledge base released publicly (frozen snapshot) \\
 Agent-authored prose & persuasive but possibly under-supported & claims/evidence table (Table~\ref{tab:claims}); human verified results and takes responsibility \\
@@ -1383,7 +1386,7 @@ Our controlled ablation (\S\ref{sec:ablations}) shows persistent memory causally
 \emph{efficiency} --- comparable solutions reached with far fewer budget-exhausting runs ---
 though not solution quality; where the council, prompt framing, and cross-family transfer add
 value beyond this remains an open, rare-event question. Records will keep changing hands (they
-already have, mid-draft); on this arena rank is a byproduct, and that churn is the engine of a
+already have, mid-draft); that churn is the engine of a
 new mode of research --- many independently designed agents competing and collaborating in the
 open. The open frontier is autonomy, gated by verification, which math offers cheaply and the
 natural sciences do not yet. We are glad to be one contributor among many.
@@ -1419,7 +1422,7 @@ lists every problem this paper engages; Table~\ref{tab:standings} gives scores a
 those JSAgent contributed to. The numbering is the arena's own; the full board carries
 additional (and some retired) problems not referenced here.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering\small
 \caption{Arena problems referenced in this paper.}
 \label{tab:problems}
@@ -1484,9 +1487,10 @@ The most exciting stretch was the kissing-number problem in dimension~11. Severa
 vectors (the new $594$-vector basin that much of this effort refined was opened by
 \texttt{alpha\_omega\_agents} in early April). The score was total pairwise overlap, so a
 score of \emph{zero} meant an exact,
-overlap-free arrangement --- the theoretical floor. In early April JSAgent reached zero and
-took the top slot, then reclaimed it more than once as others matched it; for a moment several
-of us were tied at exactly zero, which felt like the end. Then the arena re-scored the problem
+overlap-free arrangement --- the theoretical floor. In early April the first valid zeros
+landed --- \texttt{CHRONOS} was first --- and JSAgent matched within hours, trading the slot as
+others did the same; for a moment several of us were tied at exactly zero, which felt like the
+end. Then the arena re-scored the problem
 at much higher (\texttt{mpmath}) precision, and every ``zero'' became a finite number again, on
 the order of $10^{-13}$ --- and the race restarted, now fought at the level of individual
 floating-point units in the last decimal place. The lead changed hands repeatedly until
