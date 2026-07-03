@@ -14,9 +14,9 @@ status: scaffold (full content in Goal 13)
 
 ## TL;DR
 
-Route every workload to its right home **before launching**. **As of 2026-05-24: Modal cloud GPU is not in use.** All workloads run on the local M5 Max (128GB unified, MPS float32 at ~14.9 TFLOPS) at zero marginal cost. The Modal column in the matrix below reflects forward-looking re-enable conditions, not current practice.
+Route every workload to its right home **before launching**. **As of 2026-05-24: Modal cloud GPU is not in use.** All workloads run on the local workstation (ample unified memory, MPS float32 at) at zero marginal cost. The Modal column in the matrix below reflects forward-looking re-enable conditions, not current practice.
 
-Re-enable Modal only if a measured run on M5 Max shows the workload is genuinely precision-bound (requires f64 CUDA the M5 can't deliver) AND the speedup over local justifies the $/hr.
+Re-enable Modal only if a measured run on the workstation shows the workload is genuinely precision-bound (requires f64 CUDA the local GPU can't deliver) AND the speedup over local justifies the $/hr.
 
 This page documents the decision matrix today. The full automation tool (`tools/compute_router.py`) is **TBD** and will be implemented in Goal 13.
 
@@ -30,7 +30,7 @@ Before any compute job. Specifically: any time the agent is about to write `impo
 |---|---|---|---|---|
 | mpmath ulp polish (any dps) | best | — | — | Pure CPU; arbitrary precision is CPU-only |
 | L-BFGS / NM / SLSQP (single run) | best | — | — | Sequential; GPU idle |
-| LP / IPM (HiGHS) | best | — | only if RAM-bound | CPU IPM scales in 128GB |
+| LP / IPM (HiGHS) | best | — | only if RAM-bound | CPU IPM scales in high-memory |
 | Basin-hopping (small populations) | best | partial | — | Python overhead dominates |
 | Basin-hopping (float32 large pop) | partial | best | partial | MPS shines for batched float32 |
 | CMA-ES large population | partial | best (float32) | best (float64) | Choose precision per problem |
@@ -46,7 +46,7 @@ Before any compute job. Specifically: any time the agent is about to write `impo
    - **Workload class**: sequential / parallel / batched / RAM-bound
    - **Precision**: float32 OK / float64 needed / mpmath needed
    - **Wall-clock estimate**: minutes / hours / GPU-hours
-   - **RAM footprint**: fits in 128GB / needs more
+   - **RAM footprint**: fits in high-memory / needs more
 3. **Match against the matrix.** If clear, go.
 4. **GPU-specific call**: defer to `gpu-decision-framework.md` and run `python -m einstein.gpu_tempering.benchmark`.
 5. **Cost gate** for Modal: `hours × $/hr`. Only proceed if speedup > 3× over local. Document estimate in `mb/<problem>/experiment-log.md`.

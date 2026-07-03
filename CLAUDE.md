@@ -28,7 +28,7 @@ uv run pre-commit install              # enable lint + formatting on every commi
 uv run python -m pytest tests/ -v      # run all tests (also runs on CI)
 uv run ruff check .                    # lint manually
 uv run ...                             # run scripts
-modal run ...                          # (Modal currently not in use — local M5 only)
+modal run ...                          # (Modal currently not in use — local only)
 ```
 
 ## Code conventions
@@ -44,8 +44,8 @@ modal run ...                          # (Modal currently not in use — local M
 ### Compute routing
 Two first-class environments. Always route the workload before launching — see `docs/wiki/techniques/compute-router.md` and `.claude/rules/compute-router.md`.
 
-- **Local M5 Max (128GB)**: mpmath polish, sequential CPU optimizers (L-BFGS / NM / SLSQP), small basin-hopping, MPS float32 batch ops, large multistart with multiprocess
-- **Modal A100/H100 (NOT IN USE as of 2026-05-24)**: previously used for sustained float64 GPU parallel (parallel tempering, CMA-ES large-pop float64) and RAM-bound large LP/SDP. Currently the M5 Max's 128 GB unified memory + MPS f32 (14.9 TFLOPS) covers these workloads at zero marginal cost. Keep Modal scripts available — re-enable only if a specific workload genuinely needs float64-GPU sustained throughput.
+- **Local workstation**: mpmath polish, sequential CPU optimizers (L-BFGS / NM / SLSQP), small basin-hopping, MPS float32 batch ops, large multistart with multiprocess
+- **Modal A100/H100 (NOT IN USE as of 2026-05-24)**: previously used for sustained float64 GPU parallel (parallel tempering, CMA-ES large-pop float64) and RAM-bound large LP/SDP. Currently the workstation's unified memory + MPS f32 covers these workloads at zero marginal cost. Keep Modal scripts available — re-enable only if a specific workload genuinely needs float64-GPU sustained throughput.
 
 ### Triple-verify
 Every score must be verified three ways before trusting: fast local evaluator, exact reimplementation, cross-check vs analytical bound or different method. If any two disagree, the score is fake.

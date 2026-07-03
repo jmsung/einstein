@@ -83,7 +83,7 @@ Convergence diagnostics:
 
 ## Compute profile
 
-**Local CPU only**. NM is inherently sequential (each iteration depends on the previous); GPU parallelism doesn't help for vanilla NM. M5 Max single-core handles up to ~10⁵ iterations/second for the P9 polynomial-root setup. Cost: seconds to minutes for typical convergence.
+**Local CPU only**. NM is inherently sequential (each iteration depends on the previous); GPU parallelism doesn't help for vanilla NM. the workstation single-core handles up to ~10⁵ iterations/second for the P9 polynomial-root setup. Cost: seconds to minutes for typical convergence.
 
 If you need GPU-style parallelism, use **CMA-ES** instead — it maintains a population of `4 + ⌊3 ln n⌋` trial points per generation, naturally parallel.
 

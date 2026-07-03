@@ -63,7 +63,7 @@ Convergence: O(1/t) for smooth convex `f` over a bounded convex set. Sublinear, 
 
 ## Compute profile
 
-**Local CPU (recommended)**. FW is usually CPU-bound because the LMO call (a small LP) doesn't parallelize meaningfully across feasible-set dimensions. M5 Max with 128GB handles LP sizes of `N ~ 10⁵` comfortably via HiGHS interior-point. Cost: minutes to hours wall-clock for the autocorrelation family at `n ~ 90,000`. No Modal needed.
+**Local CPU (recommended)**. FW is usually CPU-bound because the LMO call (a small LP) doesn't parallelize meaningfully across feasible-set dimensions. the workstation with high-memory handles LP sizes of `N ~ 10⁵` comfortably via HiGHS interior-point. Cost: minutes to hours wall-clock for the autocorrelation family at `n ~ 90,000`. No Modal needed.
 
 ## References
 

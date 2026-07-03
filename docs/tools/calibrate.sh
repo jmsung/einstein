@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # calibrate.sh — recalibrate this machine for the compute router.
 #
-# Detects the device (sysctl-derived key like apple-m5-max-18c-128gb),
+# Detects the device (sysctl-derived key like apple-the workstation-high-memory),
 # runs scripts/local_benchmark.py, diffs key metrics against the prior
 # calibration for this device if one exists, then prints sample router
 # invocations the user can sanity-check.

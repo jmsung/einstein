@@ -10,7 +10,7 @@ any single failure short-circuits the cycle into a skip with a reason.
   3. Daily token budget not hit — today's row in `mb/logs/inner-agent-budget.md`
                                   under cap
   4. Network reachable          — HEAD on arxiv + arena under 5s
-  5. M5 Max not throttling      — `pmset -g therm` shows
+  5. the workstation not throttling      — `pmset -g therm` shows
                                   CPU_Speed_Limit == 100 (or no such line —
                                   meaning macOS hasn't recorded any thermal
                                   pressure)
@@ -346,7 +346,7 @@ def precheck(
       mechanical path; LLM-only checks (budget, reach, thermal) are not
       relevant and are not run.
     - **LLM-only checks** (only when kill switch is OFF): budget under cap,
-      arxiv + arena reachable, M5 Max not throttling.
+      arxiv + arena reachable, the workstation not throttling.
 
     `skip_reachability` / `skip_thermal` short-circuit the expensive checks
     for tests and CI.

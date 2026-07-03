@@ -49,7 +49,7 @@ Flag algebra (Razborov 2007) translates extremal-graph problems — counting sub
 
 ## Compute profile
 
-Local CPU usually suffices for flag types up to size ~7–8. Larger flags need Modal RAM (Mosek loves 128GB+). FlagMatic is CPU-only.
+Local CPU usually suffices for flag types up to size ~7–8. Larger flags need Modal RAM (Mosek loves high-memory+). FlagMatic is CPU-only.
 
 ## References
 

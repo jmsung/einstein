@@ -59,10 +59,10 @@ Toolchain state at diagnosis:
 | Xcode tools | `/Library/Developer/CommandLineTools` |
 | `qmd` (installed → updated) | 2.1.0 → **2.5.2** |
 | `node-llama-cpp` (bundled) | 3.18.1 (latest on npm) |
-| GPU | Apple M5 Max, VRAM 107.5 GB |
+| GPU | Apple the workstation, VRAM 107.5 GB |
 
 `qmd doctor` device probe confirms Metal IS detected (`✓ device probe: GPU
-metal (macOS Metal backend); offloading enabled; devices: Apple M5 Max`) — the
+metal (macOS Metal backend); offloading enabled; devices: Apple the workstation`) — the
 stderr warning is from a *probe step* that the runtime then succeeds in
 overriding. But the actual `qmd query` execution hits the documented Darwin
 Metal finalizer abort (`Abort trap: 6`, exit code 134) on every run:
@@ -116,7 +116,7 @@ exit path.
 ## What this rules out as the root cause
 
 - **Not** missing vectors (4436 already present pre-fix).
-- **Not** Metal entirely absent (probe detects M5 Max GPU successfully).
+- **Not** Metal entirely absent (probe detects the workstation GPU successfully).
 - **Not** node-llama-cpp version mismatch (already at latest 3.18.1).
 - **Not** Xcode toolchain missing (`xcode-select -p` returns valid path).
 - **Not** an embed bug (`qmd embed` completes successfully even with the

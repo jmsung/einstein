@@ -26,7 +26,7 @@ Test: for each `y ∈ [6968, 8010] \ A_sota` and each `x ∈ A_sota`, compute c(
 - 0 swaps preserved c(A) at 1043
 - 0 swaps improved c(A) above 1043
 
-Reproducer: `cb/scripts/difference_bases/extended_span_search.py` (~30 seconds on M5 Max).
+Reproducer: `cb/scripts/difference_bases/extended_span_search.py` (~30 seconds on the workstation).
 
 ## Why it failed
 
@@ -54,7 +54,7 @@ This is itself a sharpening of the structural result: the rigidity at SOTA isn't
 
 ## What might still work
 
-1. **2-swap with extended span.** Two new marks have more flexibility in joint gap-filling. Prior 2-swap was random 20M at fixed span=6967 (0 hits). Extended-span 2-swap is untested. Search size: O(90² × 1043²) ≈ 8.8B raw, but smart pruning (only swaps where both new marks contribute to specific gaps) might bring it down to ~1B — tractable in numba on M5 (~hours).
+1. **2-swap with extended span.** Two new marks have more flexibility in joint gap-filling. Prior 2-swap was random 20M at fixed span=6967 (0 hits). Extended-span 2-swap is untested. Search size: O(90² × 1043²) ≈ 8.8B raw, but smart pruning (only swaps where both new marks contribute to specific gaps) might bring it down to ~1B — tractable in numba locally (~hours).
 2. **From-scratch construction in the extended-span design space.** Don't start from SOTA atom. Use Wichmann or Bose-Chowla seeded in `[0, 7500]` and locally search. Different basin entirely.
 3. **The other cross-pollination threads** from the literature search — Saarela-Vanhatalo partial words, optimal transport, Bernshteyn-Tait inversion. These don't depend on the SOTA atom at all.
 

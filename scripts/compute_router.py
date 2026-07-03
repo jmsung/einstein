@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """compute_router.py — recommend local-cpu / local-mps / modal for a given workload.
 
-Device-aware: this repo can run on multiple Macs (M5 Max desktop, M-Pro/Air
+Device-aware: this repo can run on multiple Macs (the local workstation and smaller Macs
 laptops, etc). Calibrations live one-per-device under
 `docs/agent/calibrations/<device-key>.json`. The router fingerprints the
 current device (`sysctl machdep.cpu.brand_string` + cores + memory tier),
@@ -130,7 +130,7 @@ def route(workload: str, precision: str, hours: float, ram_gb: float,
         if ram_gb <= 96 and precision in ("mpmath", "f64"):
             return ("local-cpu", [
                 "Sequential / mpmath workload — GPU sits idle.",
-                "M5-class CPU is the right home; cost = 0.",
+                "the local CPU is the right home; cost = 0.",
                 "If LP becomes RAM-bound (>96GB), Modal — but try local first.",
             ])
 
@@ -158,11 +158,11 @@ def route(workload: str, precision: str, hours: float, ram_gb: float,
     if workload in ("lp-large", "sdp", "ipm-huge"):
         if ram_gb > 96:
             return ("modal", [
-                f"RAM footprint {ram_gb}GB exceeds 128GB local headroom (with overhead).",
+                f"RAM footprint {ram_gb}GB exceeds the local RAM headroom (with overhead).",
                 "Modal multi-A100 / H100 with 80-160GB GPU RAM + node RAM is the right home.",
             ])
         return ("local-cpu", [
-            f"RAM footprint {ram_gb}GB fits in 128GB local; HiGHS IPM scales fine on M5.",
+            f"RAM footprint {ram_gb}GB fits in local RAM; HiGHS IPM scales fine.",
             "Modal would add startup overhead with no compute benefit.",
         ])
 
@@ -171,7 +171,7 @@ def route(workload: str, precision: str, hours: float, ram_gb: float,
         return ("local-cpu", [
             "Many short trials parallel — multiprocess Pool on cores wins.",
             "Local because: zero queue time, easy to interrupt, no $/hr.",
-            "M5 Max gotcha: BLAS-bound workers contend on Accelerate threads — "
+            "the workstation gotcha: BLAS-bound workers contend on Accelerate threads — "
             "use single-thread BLAS or Python-bound work for linear MP scaling.",
         ])
 

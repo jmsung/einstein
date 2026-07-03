@@ -25,7 +25,7 @@ private_tracking: ../../mb/problems/12-flat-polynomials/
 Find a degree-69 polynomial with +/-1 coefficients that minimizes max|p(z)| / sqrt(71) on the unit circle, evaluated at 1M sample points (Littlewood / flat polynomials problem).
 
 ## Approach
-SOTA (1.2809) is a proven 4-flip local optimum — three independent searchers converge to the identical solution, suggesting it is the true minimum reachable by any local-search procedure. Memetic tabu search (vectorized, 18K rounds, 1.26B evaluations on M5 Max) independently rediscovered SOTA from random init. Simulated annealing (single-bit-flip neighborhood, 2M iters x 10 restarts) cannot escape: SOTA's 4-flip basin is wider than 2-flip moves can cross. Algebraic constructions explored — Turyn, Rudin-Shapiro, Fekete polynomials — none match SOTA. The 0.06 gap to rank #2 indicates an algebraic barrier that stochastic search cannot bridge.
+SOTA (1.2809) is a proven 4-flip local optimum — three independent searchers converge to the identical solution, suggesting it is the true minimum reachable by any local-search procedure. Memetic tabu search (vectorized, 18K rounds, 1.26B evaluations on the workstation) independently rediscovered SOTA from random init. Simulated annealing (single-bit-flip neighborhood, 2M iters x 10 restarts) cannot escape: SOTA's 4-flip basin is wider than 2-flip moves can cross. Algebraic constructions explored — Turyn, Rudin-Shapiro, Fekete polynomials — none match SOTA. The 0.06 gap to rank #2 indicates an algebraic barrier that stochastic search cannot bridge.
 
 ## Result
 - **Score**: 1.3539 (best from-scratch; rediscovered SOTA 1.2809)

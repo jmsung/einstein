@@ -17,7 +17,7 @@ cites:
 
 `scripts/autocorrelation/test_jaech_cascade_extended.py` — modified Jaech & Joseph 2025 pipeline (Adam + Gaussian-noise-annealed exploration + elitist respawn + linear-interp upsampling), continuing the cascade past the existing 50k cap all the way to n=400000. The hypothesis: the existing `adam_peak_flatten.py` script caps at n=50k and tops out at C ≈ 0.908 (per strategy.md). If the 0.908 ceiling were a *cascade-length artifact*, extending the cascade to match the leader's submission resolution (n=400k) might unlock a different basin.
 
-Cascade: random init at n=768 → exploration (4000 iters, B=128) → exploitation (4000 iters) → upsample 3072 → 12288 → 49152 → 196608 → 400000, with single-trajectory Adam refinement at each scale. MPS-accelerated on local M5 Max. Total wall-clock: 17 seconds.
+Cascade: random init at n=768 → exploration (4000 iters, B=128) → exploitation (4000 iters) → upsample 3072 → 12288 → 49152 → 196608 → 400000, with single-trajectory Adam refinement at each scale. MPS-accelerated on local workstation. Total wall-clock: 17 seconds.
 
 ## Result
 

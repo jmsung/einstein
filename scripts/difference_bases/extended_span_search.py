@@ -16,7 +16,7 @@ c(A_new) ≥ 1044 the bridging is automatic for max ≤ λ - 1 = 8010), we have
 an improvement candidate.
 
 Cost: ~1033 y × ~90 x = 93k swaps to test. Each c() computation is O(|A|²)
-≈ 8000 ops. Total ~750M ops. Should run in ~30s on M5.
+≈ 8000 ops. Total ~750M ops. Should run in ~30s locally.
 """
 
 from __future__ import annotations

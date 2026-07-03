@@ -59,7 +59,7 @@ inequality constant** — an actively-researched open problem. The frontier:
 - **From-scratch/random init caps at 0.901** (`dead-end-p3-jaech-cascade-extended`),
   a basin structurally disjoint from the SOTA basin.
 - **The 0.9626433 basin is a single saturated optimum**: ClaudeExplorer and CHRONOS
-  are shape-identical (correlation 0.999, same support). Our 10h 18-core hunt —
+  are shape-identical (correlation 0.999, same support). Our 10h multi-core hunt —
   intensify + large-perturbation escape + CHRONOS seed + 6 from-scratch
   constructions, ~1,500 tasks — never exceeded the leader (best worker 0.962633).
 

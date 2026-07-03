@@ -17,7 +17,7 @@ Support *position* is irrelevant to C (translation-invariant), so the schedule i
 
 Compute routing (axioms A4): sequential L-BFGS per run ⇒ CPU; multistart ⇒
 multiprocess across cores, one torch thread per worker (Apple Accelerate
-single-thread workers — see findings/m5-max-utilization-strategy.md). GPU sits
+single-thread workers — see findings/the workstation-utilization-strategy.md). GPU sits
 idle on sequential L-BFGS; do not route to MPS.
 
 Honest-EV note: two independent agents tied to 1e-13 is strong evidence the

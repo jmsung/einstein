@@ -8,7 +8,7 @@ extended cascade unlocks a basin > 0.91 from random init at n=400k, we have
 genuine new ground (and motivation for a GPU campaign at n ≥ 1.6M). If the
 cascade tops out at 0.91 anyway, the from-scratch ceiling is structural.
 
-Usage: budget ~30-45 min on local M5 Max (MPS or CPU).
+Usage: budget ~30-45 min on local workstation (MPS or CPU).
 """
 
 from __future__ import annotations

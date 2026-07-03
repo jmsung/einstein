@@ -1,6 +1,6 @@
 """Massive parallel GPU search for the 841st vector position.
 
-Leverages MPS (Metal Performance Shaders) on M5 Max: evaluate millions
+Leverages MPS (Metal Performance Shaders) on the workstation: evaluate millions
 of random unit vectors as candidate fillers, each scored against the
 CHRONOS 840 core. Keep the best batch. Then refine best candidates on CPU
 with exact Riemannian gradient descent in float64.
@@ -10,7 +10,7 @@ with exact Riemannian gradient descent in float64.
 - Phase 2 (CPU, float64): Refine top candidates with exact hinge RGD.
 
 Memory: 1M candidates × 12 dims × 4 bytes (fp32) = 48 MB each side; Gram
-rows are 1M × 840 × 4 = 3.4 GB. Fits comfortably in 128 GB.
+rows are 1M × 840 × 4 = 3.4 GB. Fits comfortably in high-memory.
 """
 
 from __future__ import annotations
