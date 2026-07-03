@@ -33,7 +33,7 @@ wall-ledger 2026-06-28). What formulation makes the N=16000 LP tractable?
 
 ## Falsifiable answer shape
 A concrete recipe that returns a feasible base score ≥0.99622 at maxkey=16000 in
-< ~10 min on the a local workstation. Candidate operators to test (the untried moves):
+< ~10 min on the workstation. Candidate operators to test (the untried moves):
 1. **Dual / column-generation** (`scripts/prime/colgen_prime.py`): solve the dual or
    generate keys by reduced cost; the dual constraint count may be far smaller.
 2. ~~**Bounded violation range**~~ — **RULED OUT** (measured 2026-06-28): the worst-case

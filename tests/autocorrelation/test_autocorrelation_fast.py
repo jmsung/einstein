@@ -101,7 +101,7 @@ class TestFastEdgeCases:
 class TestFastPerformance:
     """FFT evaluator must be fast enough for optimization loops.
 
-    Wall-clock budgets calibrated for a local workstation (Apple Silicon, ~ MPS).
+    Wall-clock budgets calibrated for the workstation (Apple Silicon MPS).
     GitHub Actions shared 2-vCPU x86_64 runners are ~2–3× slower for FFT and
     these budgets consistently miss by 5–25%. Marked `slow` and skipped in CI
     (`pytest -m "not slow"` in .github/workflows/test.yml); run locally with

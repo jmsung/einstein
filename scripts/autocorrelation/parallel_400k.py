@@ -1,4 +1,4 @@
-"""Parallel 400k new-basin hunt for P3 — use the whole a local workstation.
+"""Parallel 400k new-basin hunt for P3 — use the whole the workstation.
 
 Measured facts (see findings/p3-resolution-is-the-lever-2026-06.md):
 - Arena scores at submitted length; POST cap ~4.5MB; n=400000 fits at leader

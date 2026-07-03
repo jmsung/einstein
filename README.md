@@ -77,7 +77,7 @@ uv run ruff check .                    # lint manually
 uv run python scripts/<problem>/...    # run a per-problem entry point
 ```
 
-Compute is routed per workload — local a local workstation for sequential / float32 / multistart; Modal A100/H100 for sustained float64 GPU parallel. See [`docs/wiki/techniques/compute-router.md`](docs/wiki/techniques/compute-router.md).
+Compute is routed per workload — local workstation for sequential / float32 / multistart; Modal A100/H100 for sustained float64 GPU parallel. See [`docs/wiki/techniques/compute-router.md`](docs/wiki/techniques/compute-router.md).
 
 ## Citation
 

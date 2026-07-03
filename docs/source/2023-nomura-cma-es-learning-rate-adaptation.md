@@ -31,7 +31,7 @@ Update $m$ and $\Sigma$ with adaptive factors $\eta_m, \eta_\Sigma \in (0,1]$; e
 With defaults $\alpha=1.4$, $\beta_m=0.1$, $\beta_\Sigma=0.03$, $\gamma=0.1$, LRA-CMA-ES achieves 100% success on Rastrigin up to $d=40$ at default $\lambda$, matches small-$\eta$ tuned CMA-ES on weak noise ($\sigma_n^2=1$), and uniquely keeps improving under strong noise ($\sigma_n^2=10^6$) on Noisy Sphere/Ellipsoid/Rastrigin where all fixed-$\eta$ baselines stall. Failure mode: 40-D Schaffer, where the SNR adaptation under-shrinks $\eta$.
 
 ## Why it matters here
-Directly relevant to compute-router routing for CMA-ES workloads (P1, P11, P14, P15, P16 polish phases) — it removes the $\lambda$-vs-$\eta$ tuning sweep that currently consumes a council cycle, and offers a worker-count-friendly alternative to PSA-CMA-ES for parallel basin-hopping on local the local machine / Modal. Complements existing wiki coverage of parallel tempering and basin rigidity by giving a tuning-free convergence regulator.
+Directly relevant to compute-router routing for CMA-ES workloads (P1, P11, P14, P15, P16 polish phases) — it removes the $\lambda$-vs-$\eta$ tuning sweep that currently consumes a council cycle, and offers a worker-count-friendly alternative to PSA-CMA-ES for parallel basin-hopping on local / Modal. Complements existing wiki coverage of parallel tempering and basin rigidity by giving a tuning-free convergence regulator.
 
 ## Open questions / connections
 - Why does LRA fail on 40-D Schaffer where tuned small-$\eta$ succeeds? — SNR estimator pathology near non-smooth fractal landscapes.

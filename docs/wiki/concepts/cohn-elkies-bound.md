@@ -82,7 +82,7 @@ For non-special dimensions:
 When the council dispatches with category `kissing_number` or `sphere_packing`:
 
 1. **Cohn persona** ([personas/cohn.md](../personas/cohn.md)) explicitly asks: *"compute the LP bound. What's the gap?"* — first action.
-2. Use existing implementations: de Laat–Leijenhorst's clustered SDP (2024, [source/2024-delaat-kissing-sdp.md](../../source/2024-delaat-kissing-sdp.md)) is the SOTA computational machinery. For `d ≤ 24`, results are tractable on a local workstation via SDPA-GMP.
+2. Use existing implementations: de Laat–Leijenhorst's clustered SDP (2024, [source/2024-delaat-kissing-sdp.md](../../source/2024-delaat-kissing-sdp.md)) is the SOTA computational machinery. For `d ≤ 24`, results are tractable on the workstation via SDPA-GMP.
 3. Compare LP bound to current arena SOTA. The gap tells you how hard the problem really is:
    - **Tight gap** → SOTA is provably optimal; pivot to a different problem.
    - **Wide gap** → room exists; LP bound is loose but the magic-function approach might exist.

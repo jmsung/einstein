@@ -27,20 +27,20 @@ def test_device_key_format() -> None:
     assert key == key.lower()
     assert " " not in key
     assert "." not in key
-    # Should encode at least brand + cores; e.g. 'local-workstation-calib'
+    # Should encode at least brand + cores; e.g. 'apple-silicon-a-high-memory'
     assert "-" in key
 
 
 def test_device_key_includes_core_count_and_memory_tier() -> None:
     """Two machines with same CPU brand but different cores/RAM get distinct keys."""
-    k_18_128 = cr._build_device_key(brand="a local workstation", cores=18, memory_bytes=128 * 1024**3)
-    k_12_36 = cr._build_device_key(brand="Apple silicon Pro", cores=12, memory_bytes=36 * 1024**3)
-    k_18_64 = cr._build_device_key(brand="a local workstation", cores=18, memory_bytes=64 * 1024**3)
-    assert k_18_128 != k_12_36
-    assert k_18_128 != k_18_64
+    k_a = cr._build_device_key(brand="Apple Silicon A", cores=10, memory_bytes=32 * 1024**3)
+    k_b = cr._build_device_key(brand="Apple Silicon B", cores=12, memory_bytes=36 * 1024**3)
+    k_a_big = cr._build_device_key(brand="Apple Silicon A", cores=10, memory_bytes=64 * 1024**3)
+    assert k_a != k_b
+    assert k_a != k_a_big
     # Order-stable shape: brand → cores → memory
-    assert "" in k_18_128 and "high-memory" in k_18_128
-    assert "12c" in k_12_36 and "36gb" in k_12_36
+    assert "10c" in k_a and "32gb" in k_a
+    assert "12c" in k_b and "36gb" in k_b
 
 
 # ---------------- calibration loading ----------------
@@ -51,15 +51,15 @@ def test_load_calibration_exact_match(tmp_path: Path) -> None:
     cal_dir.mkdir()
     sample = {
         "version": 1, "timestamp": "2026-05-23",
-        "device": {"key": "local-workstation-calib"},
+        "device": {"key": "apple-silicon-a-high-memory"},
         "cpu_multi_core": {"matmul_4096_seconds": 0.33},
         "mps": {"mps_available": True, "matmul_4096_f32_seconds": 0.009},
         "ram": {"96GB": "ok"},
     }
-    (cal_dir / "local-workstation-calib.json").write_text(json.dumps(sample))
+    (cal_dir / "apple-silicon-a-high-memory.json").write_text(json.dumps(sample))
 
     cal, source = cr.load_calibration(
-        device_key_override="local-workstation-calib",
+        device_key_override="apple-silicon-a-high-memory",
         calibrations_dir=cal_dir,
     )
     assert source == "exact-match"
@@ -71,20 +71,20 @@ def test_load_calibration_falls_back_to_most_recent(tmp_path: Path) -> None:
     cal_dir = tmp_path / "cal"
     cal_dir.mkdir()
     # An older Air calibration
-    (cal_dir / "apple-m4-air-8c-16gb.json").write_text(json.dumps({
+    (cal_dir / "apple-silicon-c-8c-16gb.json").write_text(json.dumps({
         "version": 1, "timestamp": "2026-04-01",
-        "device": {"key": "apple-m4-air-8c-16gb"},
+        "device": {"key": "apple-silicon-c-8c-16gb"},
         "cpu_multi_core": {"matmul_4096_seconds": 1.2},
     }))
-    # A newer a local workstation calibration — should win
-    (cal_dir / "local-workstation-calib.json").write_text(json.dumps({
+    # A newer the workstation calibration — should win
+    (cal_dir / "apple-silicon-a-high-memory.json").write_text(json.dumps({
         "version": 1, "timestamp": "2026-05-23",
-        "device": {"key": "local-workstation-calib"},
+        "device": {"key": "apple-silicon-a-high-memory"},
         "cpu_multi_core": {"matmul_4096_seconds": 0.33},
     }))
 
     cal, source = cr.load_calibration(
-        device_key_override="apple-m4-pro-12c-36gb",  # neither file
+        device_key_override="apple-silicon-d-12c-36gb",  # neither file
         calibrations_dir=cal_dir,
     )
     assert source == "fallback-most-recent"
@@ -95,7 +95,7 @@ def test_load_calibration_no_files_uses_conservative_defaults(tmp_path: Path) ->
     cal_dir = tmp_path / "cal"
     cal_dir.mkdir()
     cal, source = cr.load_calibration(
-        device_key_override="local-workstation-calib",
+        device_key_override="apple-silicon-a-high-memory",
         calibrations_dir=cal_dir,
     )
     assert source == "conservative-default"
@@ -110,7 +110,7 @@ def test_load_calibration_no_files_uses_conservative_defaults(tmp_path: Path) ->
 def _local_cal() -> dict:
     return {
         "version": 1,
-        "device": {"key": "local-workstation-calib"},
+        "device": {"key": "apple-silicon-a-high-memory"},
         "cpu_multi_core": {"matmul_4096_seconds": 0.33, "gflops_estimate": 418},
         "mps": {"mps_available": True, "matmul_4096_f32_seconds": 0.009, "gflops_estimate": 14900},
         "ram": {"96GB": "ok"},

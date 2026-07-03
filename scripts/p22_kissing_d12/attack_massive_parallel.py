@@ -1,6 +1,6 @@
 """Massive parallel GPU search for the 841st vector position.
 
-Leverages MPS (Metal Performance Shaders) on a local workstation: evaluate millions
+Leverages MPS (Metal Performance Shaders) on the workstation: evaluate millions
 of random unit vectors as candidate fillers, each scored against the
 CHRONOS 840 core. Keep the best batch. Then refine best candidates on CPU
 with exact Riemannian gradient descent in float64.

@@ -69,7 +69,7 @@ The self-improving wiki-agent architecture. Each is a `.claude/rules/` rule with
 - **Wall-hit escalation** — consult failure ledger + re-dispatch council before brute force.
 - **Failure-is-a-finding** — dead-ends with the *why*; the P2 record came verbatim from a
   4-day-old dead-end's "what might still work" section.
-- **Compute router** — route workload to a local workstation CPU/MPS before launching.
+- **Compute router** — route workload to the workstation CPU/MPS before launching.
 - Evidence the loop *works*: `docs/agent/cycle-log.md` (agent-vs-human authorship mix,
   records-per-100-cycles), `docs/agent/metrics.md`, the trajectory classifier.
 - Sources: all of `.claude/rules/`, `docs/agent/`.

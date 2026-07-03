@@ -47,7 +47,7 @@ What has *not* been done: an LP/SDP dual certificate (the L4-norm or Mahler-meas
 Ordered by cheapest-informative-move to most-decisive:
 
 1. **Adjacent-degree catalogue check** — Mossinghoff (2024) and Balister et al. (2019) construct flat sequences at all degrees. If their constructions at deg 68 / deg 70 produce different SOTA topologies, that's evidence for an alternative-family at deg 69.
-2. **5-bit or 6-bit exhaustive flip search** from SOTA — `C(70,5) = 12 271 512` and `C(70,6) = 131 115 985` neighborhood evaluations, each a 1M-FFT (~10 ms). Tractable on local a local workstation. If 5/6-flip moves all worsen the score, raises empirical confidence; if any improves, H1 collapses.
+2. **5-bit or 6-bit exhaustive flip search** from SOTA — `C(70,5) = 12 271 512` and `C(70,6) = 131 115 985` neighborhood evaluations, each a 1M-FFT (~10 ms). Tractable on local workstation. If 5/6-flip moves all worsen the score, raises empirical confidence; if any improves, H1 collapses.
 3. **PSL / cyclotomic factor analysis** — SOTA's `Φ_35` cyclotomic component is the documented spectral bottleneck (`evaluator.phi35_score`). Dissect the SOTA's character against PSL₂(p) representations for relevant primes; check whether the construction is a Φ₃₅-engineered design.
 4. **L4-Mahler SDP cap** — write the moment-positivity SDP for the L∞ norm of ±1 polynomials at degree 69, solve via MOSEK or HiGHS dual, compare bound to SOTA. The Cohn–Elkies analog for this problem family.
 

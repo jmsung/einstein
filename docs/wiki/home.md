@@ -60,7 +60,7 @@ understand → wiki-first → council dispatch (questions, not solutions)
                        → look back (generalize) → failure log → cycle
 ```
 
-Compute is routed per workload: local a local workstation for sequential and float32 batch; Modal cloud for sustained float64 GPU. See [`techniques/compute-router.md`](techniques/compute-router.md) and [`../.claude/rules/compute-router.md`](../.claude/rules/compute-router.md).
+Compute is routed per workload: local workstation for sequential and float32 batch; Modal cloud for sustained float64 GPU. See [`techniques/compute-router.md`](techniques/compute-router.md) and [`../.claude/rules/compute-router.md`](../.claude/rules/compute-router.md).
 
 ## Operating principles
 

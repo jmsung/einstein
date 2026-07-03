@@ -23,7 +23,7 @@ The cycle-2 finding [`p19-kronecker-bridging-threshold.md`](p19-kronecker-bridgi
 
 **Goal**: find any 90-mark atom A in [0, 8010] with `c(A) ≥ 1044` (which, combined with `max(A) ≥ 4005`, would yield `v(A ⊕ 8011·{0,1,4,6}) ≥ 49110 > 49109` and beat the 7-way SOTA tie).
 
-**Approach 1 — direct BnB from scratch.** Ran `scripts/difference_bases/atom_bnb.py --mode direct --target-v 1044 --S-max 8010 --k 90 --time-limit 1800` on a local workstation. Goal-directed DFS starting from `A=[0]`, branching `new_mark = a + d*` where `d*` is the smallest uncovered diff and `a` ranges over current marks. **Result: 0 hits across 3,715,000,000 nodes / 1801.9s wall-clock (~2.06M nodes/sec, time-limited).** The search reached level 78–79 (out of 90) repeatedly but never extended a partial atom to the full c(A)≥1044 solution. Tree was nowhere near exhaustion at the budget — search space too wide for a complete proof — but the persistent ceiling at level 78–79 is consistent with the structural argument below.
+**Approach 1 — direct BnB from scratch.** Ran `scripts/difference_bases/atom_bnb.py --mode direct --target-v 1044 --S-max 8010 --k 90 --time-limit 1800` on the workstation. Goal-directed DFS starting from `A=[0]`, branching `new_mark = a + d*` where `d*` is the smallest uncovered diff and `a` ranges over current marks. **Result: 0 hits across 3,715,000,000 nodes / 1801.9s wall-clock (~2.06M nodes/sec, time-limited).** The search reached level 78–79 (out of 90) repeatedly but never extended a partial atom to the full c(A)≥1044 solution. Tree was nowhere near exhaustion at the budget — search space too wide for a complete proof — but the persistent ceiling at level 78–79 is consistent with the structural argument below.
 
 **Approach 2 — Wichmann-family construction at k=90.** The cycle-2 prediction cited "Wichmann gives c(A) ≈ 1500 for k=90." We tested this empirically with two standard formulations:
 - Pegg-style gap pattern `[1]^r + [r+1] + [2r+1]^(r-1) + [4r+3] + [2r+1]^s + [4r+2] + [3r+2] + [1]^(r-1)`
@@ -84,13 +84,13 @@ These directions remain genuinely untested:
 1. **Different `(R, λ)` template.** Prior work fixed `R={0,1,4,6}` and `λ=8011`. Perhaps a different (R, λ) admits an atom with c≥1044 more easily — but the 4-mark Sidon enumeration already closed R={0,1,4,6} as uniquely best in cycle 1, and λ-only sweep [7000, 9000] (atom fixed) gave 0 hits.
 2. **Asymmetric Kronecker / multi-block.** Drop the perfect symmetry of `A ⊕ λ·R`. E.g., `B = A_1 ⊕ λ_1·R_1 ⊕ A_2 ⊕ λ_2·R_2` with two independent atoms. Untested at scale; combinatorics multiply.
 3. **Cross-pollination from outside the ruler literature.** Saarela–Vanhatalo (combinatorics on words), Bernshteyn–Tait inversion (turning the lower-bound proof into a constructor), optimal-transport relaxation. Each is a research arc, not a 1-day experiment.
-4. **2-swap with extended span.** Search size O(90² × 1043²) ≈ 8.8B raw, ~hours on the local machine with smart pruning. Not done; could close the 1-swap → w=3 BnB → from-scratch chain with one more layer.
+4. **2-swap with extended span.** Search size O(90² × 1043²) ≈ 8.8B raw, ~hours locally with smart pruning. Not done; could close the 1-swap → w=3 BnB → from-scratch chain with one more layer.
 
 ## Reproduction
 
 ```bash
 cd cb/  # or any worktree
-# Direct BnB at extended span (cycle 12, this finding) — ~30 min on a local workstation, 0 hits:
+# Direct BnB at extended span (cycle 12, this finding) — ~30 min on the workstation, 0 hits:
 uv run python scripts/difference_bases/atom_bnb.py \
   --mode direct --target-v 1044 --S-max 8010 --k 90 \
   --time-limit 1800 --max-nodes 20000000000
@@ -99,7 +99,7 @@ uv run python scripts/difference_bases/atom_bnb.py \
 uv run python scripts/difference_bases/cross_block_analysis.py
 ```
 
-`atom_bnb.py` was promoted from `mb/.../private-scripts/` to public during cycle 12 with the post-refactor `SOTA_PATH` fix. JIT-compiled inner loop, ~2M nodes/sec on a local workstation.
+`atom_bnb.py` was promoted from `mb/.../private-scripts/` to public during cycle 12 with the post-refactor `SOTA_PATH` fix. JIT-compiled inner loop, ~2M nodes/sec on the workstation.
 
 ## See also
 

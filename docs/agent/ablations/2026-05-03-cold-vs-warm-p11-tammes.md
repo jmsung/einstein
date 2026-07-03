@@ -114,7 +114,7 @@ This is the **audit half**. The cold-side run requires a fresh Claude session wi
 3. **Acts**: download Hardin–Sloane reference, apply SLSQP active-pair polish at `tol_active = 1e-3` (the wiki's load-bearing recipe), verify with mpmath at 80 dps, optionally run rotation lottery to land at the best ulp within the basin.
 4. **Final score**: 0.513472084680564 (the float64 ceiling), confirmed via mpmath true-math optimum 0.51347208468056470849...
 5. **Time**: ~30 minutes (mostly compute on the 30K-trial rotation lottery to nail the best-ulp landing).
-6. **Compute**: 30K SLSQP polish runs on a local workstation local CPU = trivial.
+6. **Compute**: 30K SLSQP polish runs on the workstation local CPU = trivial.
 
 ### Cold-wiki agent
 

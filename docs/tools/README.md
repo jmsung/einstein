@@ -163,5 +163,5 @@ projection of that trail.
 - [`docs/agent/cycle-log.md`](../agent/cycle-log.md) — the append-only audit trail
 - [`docs/agent/skill-library.md`](../agent/skill-library.md) — technique hit-rate ledger consumed by `strategy_picker`
 - [`docs/agent/calibrations/`](../agent/calibrations/) — per-device compute calibrations
-- [`docs/wiki/findings/local-compute-utilization-strategy.md`](../wiki/findings/local-compute-utilization-strategy.md) — what multi-core + MPS + high-memory unlocks
+- [`docs/wiki/findings/the workstation-utilization-strategy.md`](../wiki/findings/the workstation-utilization-strategy.md) — what multi-core + MPS + high-memory unlocks
 - [`docs/wiki/findings/dead-end-slug-as-arxiv-phrase-query.md`](../wiki/findings/dead-end-slug-as-arxiv-phrase-query.md) — why `concept-search-terms.yaml` exists

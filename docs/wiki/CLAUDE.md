@@ -130,7 +130,7 @@ This is a deliberate departure from the jongmin-wiki "wiki pages NEVER created a
 | `concepts/` | 49 pages | LP duality, equioscillation, Cohn-Elkies, modular forms, basin rigidity, parameterization selection | Distillation across multiple problems / sources |
 | `techniques/` | 31 pages | Parallel tempering, mpmath ulp polish, Remez exchange, SDP flag algebra, compute router | Concept + implementation knowledge |
 | `personas/` | 21 pages + `_synthesis.md` | Gauss, Riemann, Tao, Conway, Polya, Hilbert, Cohn, Razborov, … | Hand-curated per mathematician |
-| `findings/` | 47 pages | Q→A pages with cites — incl. 2 from this branch: `local-compute-utilization-strategy`, `dead-end-slug-as-arxiv-phrase-query` | Single-problem or council outputs |
+| `findings/` | 47 pages | Q→A pages with cites — incl. 2 from this branch: `the workstation-utilization-strategy`, `dead-end-slug-as-arxiv-phrase-query` | Single-problem or council outputs |
 | `problems/` | 22 + `_inventory.md` | One short index per arena problem | Per-problem rollup |
 | `questions/` | 17+ pages | "Why does X work?" with status: open/answered/abandoned | Council dispatch + gap detect + gap_search auto-file |
 | `../source/` | 197+ papers | 1:1 distillations of ingested artifacts; see [`source/INDEX.md`](../source/INDEX.md) | `/wiki-ingest` (interactive) or `docs/tools/seed_ingest.py` (bulk) |

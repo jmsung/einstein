@@ -93,7 +93,7 @@ def test_mps_faster_than_cpu_for_large_f32_matmul(mps_device) -> None:
     dt_mps = (time.perf_counter() - t0) / 3
 
     # MPS should be at least 2× faster for this size; if not, MPS is
-    # falling back to CPU silently or the the local machine MPS path has regressed.
+    # falling back to CPU silently or the MPS path has regressed.
     speedup = dt_cpu / dt_mps
     assert speedup >= 2.0, (
         f"MPS speedup over CPU for 2048² f32 matmul is only {speedup:.1f}× "
