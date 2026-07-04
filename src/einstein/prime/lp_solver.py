@@ -48,14 +48,18 @@ def _g_of_seed(seed_pf: dict[int, float], max_n: int) -> np.ndarray:
 
 def _violations(keys_arr: np.ndarray, f: np.ndarray, max_n: int, tol: float = 1e-12):
     worst = -1e18
-    viols: list[int] = []
+    scored: list[tuple[float, int]] = []
     for start in range(1, max_n + 1, 100_000):
         end = min(start + 100_000, max_n + 1)
         g = _build_rows(keys_arr, np.arange(start, end)) @ f
         worst = max(worst, float(g.max()))
         for idx in np.where(g > 1.0 + tol)[0]:
-            viols.append(start + int(idx))
-    return worst, viols
+            scored.append((float(g[idx]), start + int(idx)))
+    # Deepest violations first: x-ascending cut order left the worst violators
+    # (high x) deferred for rounds — worstG stalled ~15-20 while the count
+    # collapsed (rung-48000 v3, 2026-07-03). Magnitude order kills worstG early.
+    scored.sort(reverse=True)
+    return worst, [x for _, x in scored]
 
 
 def _solve_cutting_plane(
@@ -68,11 +72,18 @@ def _solve_cutting_plane(
     time_limit: int,
     max_rounds: int,
     log,
+    var_bound: float = 10.0,
 ) -> dict:
     """Crossover-off HiGHS solve with integer-grid cutting planes over a fixed key set.
 
     Returns dict(f, score, worst, active, row_dual, feasible, rounds). `row_dual` is
     aligned to the returned `active` constraint order (for column-generation pricing).
+
+    `var_bound`: variable box |f(k)| <= var_bound. For a rescale-safe solve pass
+    10/(1+ARENA_TOL): a box-bound value scaled by the tolerance lever would exceed
+    the arena's hard +/-10 clip; the verifier then re-derives f(1) from the clipped
+    values, and the broken zero-sum leaks a linear-in-x term into G (violation found
+    at x=85847 on the 24000-support base, 2026-07-03).
     """
     import highspy
 
@@ -90,7 +101,14 @@ def _solve_cutting_plane(
     ]:
         h.setOptionValue(opt, val)
     h.addCols(
-        n, c, np.full(n, -10.0), np.full(n, 10.0), 0, np.array([]), np.array([]), np.array([])
+        n,
+        c,
+        np.full(n, -var_bound),
+        np.full(n, var_bound),
+        0,
+        np.array([]),
+        np.array([]),
+        np.array([]),
     )
 
     def add_rows(ns: list[int]) -> None:
@@ -120,6 +138,10 @@ def _solve_cutting_plane(
 
     for rnd in range(max_rounds):
         t0 = time.time()
+        # HiGHS time_limit is CUMULATIVE across run() calls on one model: without this
+        # reset, round 0 consumes the whole budget and later rounds get scraps
+        # (observed 2026-07-03: R0 2450s -> R1 killed at 254s on a 2700s limit).
+        h.setOptionValue("time_limit", float(time_limit) * (rnd + 1))
         h.run()
         status = h.modelStatusToString(h.getModelStatus())
         sol = h.getSolution()
@@ -164,11 +186,13 @@ def solve_sieve_lp(
     time_limit: int = 1200,
     max_rounds: int = 12,
     log=print,
+    var_bound: float = 10.0,
 ) -> tuple[np.ndarray | None, float, float, int]:
     """Solve the P7 sieve LP over `keys`, warm-started from `seed_pf`.
 
     Returns (f_vec, base_score, worst_G, n_rounds). f_vec is aligned to sorted(keys).
     Requires `highspy` (HiGHS Python interface) for the crossover-off IPM solve.
+    Pass `var_bound=10/(1+ARENA_TOL)` for a rescale-safe solve (see _solve_cutting_plane).
     """
     keys = sorted(keys)
     ka = np.array(keys, dtype=np.float64)
@@ -178,7 +202,15 @@ def solve_sieve_lp(
     active = sorted(set(int(i) for i in np.where(g_seed > 0.5)[0]) | set(range(1, max_n + 1, 200)))
     log(f"  vars={len(keys)} maxkey={int(ka[-1])} range=[1,{max_n}] init_cons={len(active)}")
     r = _solve_cutting_plane(
-        ka, c, active, max_n, ipm_tol=ipm_tol, time_limit=time_limit, max_rounds=max_rounds, log=log
+        ka,
+        c,
+        active,
+        max_n,
+        ipm_tol=ipm_tol,
+        time_limit=time_limit,
+        max_rounds=max_rounds,
+        log=log,
+        var_bound=var_bound,
     )
     return r["f"], r["score"], r["worst"], r["rounds"]
 
@@ -187,12 +219,13 @@ def colgen_sieve_lp(
     seed_pf: dict[int, float],
     candidate_keys: list[int],
     *,
-    max_keys: int = 1999,
+    max_keys: int = 2000,  # verifier caps len(raw)>2000 BEFORE adding key 1 -> 2000 free keys, 2001 effective (OrganonAgent thread 188)
     add_per_round: int = 80,
     rounds: int = 8,
     xcap_mult: int = 10,
     time_limit: int = 600,
     log=print,
+    var_bound: float = 10.0,
 ) -> tuple[dict[int, float] | None, float, float]:
     """Column generation on the P7 sieve LP.
 
@@ -214,13 +247,17 @@ def colgen_sieve_lp(
         ka = np.array(keys, dtype=np.float64)
         max_n = xcap_mult * int(ka[-1])
         c = np.array([math.log(k) / k for k in keys], dtype=np.float64)
-        g_seed = _g_of_seed(seed_pf, max_n)
+        # Same seed-range cap as the grown solve: scanning the seed's G over a wider
+        # range than 10x its own maxkey floods the model with ~60k near-binding rows.
+        seed_span = xcap_mult * max(k for k in seed_pf if k >= 2)
+        g_seed = _g_of_seed(seed_pf, min(seed_span, max_n))
         active = sorted(
             set(int(i) for i in np.where(g_seed > 0.5)[0]) | set(range(1, max_n + 1, 200))
         )
         log(f"[colgen {rnd}] support={len(keys)} maxkey={int(ka[-1])}")
         res = _solve_cutting_plane(
-            ka, c, active, max_n, ipm_tol=1e-8, time_limit=time_limit, max_rounds=10, log=log
+            ka, c, active, max_n, ipm_tol=1e-8, time_limit=time_limit, max_rounds=20, log=log,
+            var_bound=var_bound,
         )
         if not res["feasible"]:
             log("  master infeasible/timeout — stop")
@@ -255,12 +292,25 @@ def colgen_sieve_lp(
         gka = np.array(grown, dtype=np.float64)
         gmax_n = xcap_mult * int(gka[-1])
         gc = np.log(gka) / gka
-        g2 = _g_of_seed(seed_pf, gmax_n)
+        # Near-binding rows from the seed: scan ONLY the seed's own range. The seed's
+        # G sits near 1 at ~57k points when scanned over the grown range (degenerate
+        # Mertens structure), and a ~60k-row IPM pass blows any per-round budget
+        # (rung-48000 v2, 2026-07-03: 5x3600s rounds, none converged). The seed was
+        # only ever verified/binding within 10*its own maxkey; far-range violations
+        # are few and get discovered incrementally by the cutting planes.
+        seed_range = xcap_mult * max(k for k in seed_pf if k >= 2)
+        g2 = _g_of_seed(seed_pf, min(seed_range, gmax_n))
+        # Pre-seed the new keys' multiples over the FULL grown range: floor(x/k)
+        # jumps exactly at x = m*k, so a fresh column k binds there first (Exp 14 wall).
+        new_mults = {m * k for k in improving for m in range(1, gmax_n // k + 1)}
         gactive = sorted(
-            set(int(i) for i in np.where(g2 > 0.5)[0]) | set(range(1, gmax_n + 1, 200))
+            set(int(i) for i in np.where(g2 > 0.9)[0])
+            | set(range(1, gmax_n + 1, 200))
+            | new_mults
         )
         res2 = _solve_cutting_plane(
-            gka, gc, gactive, gmax_n, ipm_tol=1e-8, time_limit=time_limit, max_rounds=10, log=log
+            gka, gc, gactive, gmax_n, ipm_tol=1e-8, time_limit=time_limit, max_rounds=20, log=log,
+            var_bound=var_bound,
         )
         if not res2["feasible"]:
             log("  grown master infeasible/timeout — keep best, stop")

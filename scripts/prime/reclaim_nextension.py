@@ -37,8 +37,8 @@ from einstein.prime.lp_solver import solve_sieve_lp  # noqa: E402
 from scripts.prime.optimize_prime_reclaim import build_solution, get_squarefree  # noqa: E402
 
 ARENA_TOL = 1e-4
-LEADER_BASE = 0.9962211
-LEADER_SCALED = 0.9963197
+LEADER_BASE = 0.9964190817  # CHRONOS 24000 clean base, reproduced 2026-07-03
+LEADER_SCALED = 0.9965177  # CHRONOS 2026-06-30, maxkey 24000 + rescale (was MAOJIASONG 0.9963197)
 MB_SOL = Path(__file__).resolve().parents[2] / ".mb/problems/7-prime-number-theorem/solutions"
 
 
@@ -74,7 +74,7 @@ def exact_max_constraint(pf: dict[int, float], xcap_mult: int = 10) -> float:
     return best
 
 
-def select_top(keys: list[int], f: np.ndarray, max_keys: int = 1999) -> list[int]:
+def select_top(keys: list[int], f: np.ndarray, max_keys: int = 2000) -> list[int]:
     contrib = sorted(((abs(f[j]) * math.log(k) / k, k) for j, k in enumerate(keys)), reverse=True)
     return sorted(k for _, k in contrib[:max_keys])
 
@@ -105,7 +105,7 @@ def main() -> None:
     if f1 is None:
         log("  phase-1 infeasible")
         return
-    selected = select_top(pool, f1, 1999)
+    selected = select_top(pool, f1, 2000)
     log(f"Phase 2: re-solve on top {len(selected)} keys (maxkey={max(selected)})")
     f2, base2, worst2, _ = solve_sieve_lp(selected, full_seed, time_limit=args.time_limit, log=log)
     if f2 is None:
@@ -126,7 +126,7 @@ def main() -> None:
 
     os.makedirs("results/problem-7-prime", exist_ok=True)
     out = f"results/problem-7-prime/nextension_{args.seed}_{label.split('(')[0]}.json"
-    json.dump({"partial_function": {str(k): v for k, v in scaled_pf.items()}}, open(out, "w"))
+    json.dump({"partial_function": {str(k): v for k, v in scaled_pf.items() if k != 1}}, open(out, "w"))  # f(1) re-derived by verifier; do not spend a slot
     log(f"  saved -> {out}")
     if base > LEADER_BASE + 1e-9 and feasible:
         log(f"  *** base BEATS leader by {base - LEADER_BASE:.2e} — real basin advance ***")

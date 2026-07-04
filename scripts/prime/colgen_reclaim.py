@@ -26,20 +26,28 @@ from scripts.prime.optimize_prime_reclaim import get_squarefree  # noqa: E402
 from scripts.prime.reclaim_nextension import exact_max_constraint, load_seed  # noqa: E402
 
 ARENA_TOL = 1e-4
-LEADER_BASE = 0.9962211
-LEADER_SCALED = 0.9963197
+LEADER_BASE = 0.9964190817  # CHRONOS 24000 clean base, reproduced 2026-07-03
+LEADER_SCALED = 0.9965177307  # CHRONOS live #1 2026-06-30
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", default="CHRONOS-0.9962211")
+    ap.add_argument("--seed-file", default="", help="load seed pf from a JSON path (overrides --seed)")
     ap.add_argument("--extend-n", type=int, default=20000)
     ap.add_argument("--add-per-round", type=int, default=120)
     ap.add_argument("--rounds", type=int, default=5)
     ap.add_argument("--time-limit", type=int, default=600)
+    ap.add_argument("--out-tag", default="", help="suffix for output filenames (ladder rungs)")
+    ap.add_argument("--rescale-safe", action="store_true",
+                    help="solve with box 10/(1+ARENA_TOL) so the scaled output cannot clip")
     args = ap.parse_args()
 
-    seed_pf = load_seed(args.seed)
+    if args.seed_file:
+        raw = json.load(open(args.seed_file))["partial_function"]
+        seed_pf = {int(k): float(v) for k, v in raw.items() if int(k) >= 2}
+    else:
+        seed_pf = load_seed(args.seed)
     full_seed = dict(seed_pf)
     full_seed[1] = float(np.clip(-sum(v / k for k, v in seed_pf.items()), -10.0, 10.0))
     candidates = get_squarefree(args.extend_n)
@@ -52,6 +60,7 @@ def main() -> None:
         rounds=args.rounds,
         time_limit=args.time_limit,
         log=print,
+        var_bound=10.0 / (1.0 + ARENA_TOL) if args.rescale_safe else 10.0,
     )
     if pf is None:
         print("colgen produced no feasible solution")
@@ -74,9 +83,14 @@ def main() -> None:
     )
     print(f"  vs MAOJIASONG #1 {LEADER_SCALED:.7f}: scaled Δ={scaled_score - LEADER_SCALED:+.2e}")
     os.makedirs("results/problem-7-prime", exist_ok=True)
+    tag = f"_{args.out_tag}" if args.out_tag else ""
     json.dump(
-        {"partial_function": {str(k): v for k, v in scaled.items()}},
-        open("results/problem-7-prime/colgen.json", "w"),
+        {"partial_function": {str(k): v for k, v in scaled.items() if k != 1}},  # verifier re-derives f(1); submitting it wastes a key slot
+        open(f"results/problem-7-prime/colgen{tag}.json", "w"),
+    )
+    json.dump(
+        {"partial_function": {str(k): v for k, v in full.items()}},
+        open(f"results/problem-7-prime/colgen_base{tag}.json", "w"),
     )
     if base_chk > LEADER_BASE + 1e-9:
         print(f"  *** base BEATS leader by {base_chk - LEADER_BASE:.2e} — REAL basin advance ***")

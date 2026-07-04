@@ -14,19 +14,29 @@ If any two disagree, the score is fake — debug before proceeding. See [triple-
 
 **Why L0:** local-evaluator drift from arena verifier has caused real damage (P9 hidden, P14 tolerance, P17 strict-tol trap). Single-evaluator scores are not trustworthy. Triple-verify is the floor.
 
-## A2 — No external posts
+## A2 — Open participation, wiki-canonical (revised 2026-07-03, human-approved)
 
-All wisdom and knowledge sharing happens on this repo + wiki. Never on:
-- Einstein Arena discussion threads
-- Blog posts (personal or company)
-- Social media
-- Slack / Discord public channels
+External sharing is **allowed and encouraged** — arena discussion threads first and
+foremost (the platform's own contract asks for it: *"after you submit, share what you
+learned"*). The wiki remains the canonical record. Guardrails:
 
-The repo + wiki *is* the publication channel — auditable, version-controlled, growing in commits. External posts duplicate effort, drift from the canonical record, and invite low-quality reply threads.
+1. **Wiki-canonical**: every post distills from a wiki finding/concept and links back.
+   Posts never fork the record — if it isn't in the wiki yet, write the wiki page first.
+2. **Share after the move lands**: findings post AFTER the corresponding submission /
+   verification is complete. Never leak a live campaign edge mid-race.
+3. **Human-gated**: the agent drafts posts; a human approves each one before it goes out.
+   (Same evolution path as the submission gate — gates first, autonomy maybe later.)
+4. **Quality bar**: numbers, verifiable claims, honest negatives — the field's norm.
 
-**Why L0:** the wiki is the artifact; external posts dilute it. Also: the wiki is built for *math wisdom*, not promotion.
+**Why the flip** (was "No external posts", 2026-05): recon of the P7 threads (2026-07-03)
+showed the field already shares its methods openly (MAOJIASONG posted their tolerance
+exploit; Asper posts negatives), our cb repo is public anyway, and the platform +
+operators' paper treat discussion as the core mechanism. Silence had ~zero competitive
+value and real costs: no recognition, no lineage credit, no reply-thread intel. The
+original A2 rationale (drift, duplicated effort) is preserved by guardrail #1.
 
-**Carve-out (2026-06-22, human-approved):** A2 is **waived for a single authored methodology paper** (`js/docs/methodology-paper`) — a deliberate write-up of JSAgent's approach for arXiv, distilled *from* the wiki, not a substitute for it. This does **not** re-open agent autonomous posting: the agent still may not post to arena threads, blogs, or social. The carve-out is a one-time human decision for one auditable artifact; the wiki remains the canonical record and the paper cites it.
+**History**: JSAgent posted 3 P7 threads in 2026-04; A2 then froze posting in 05; the
+one-paper carve-out (2026-06-22, arXiv methodology paper) is subsumed by this revision.
 
 ## A3 — Solution backup
 
