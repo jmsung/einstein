@@ -26,8 +26,8 @@ from scripts.prime.optimize_prime_reclaim import get_squarefree  # noqa: E402
 from scripts.prime.reclaim_nextension import exact_max_constraint, load_seed  # noqa: E402
 
 ARENA_TOL = 1e-4
-LEADER_BASE = 0.9964190817  # CHRONOS 24000 clean base, reproduced 2026-07-03
-LEADER_SCALED = 0.9965177307  # CHRONOS live #1 2026-06-30
+LEADER_BASE = 0.9971452044  # AKC live #1 2026-07-03 (honest RHS=1)
+LEADER_SCALED = 0.9971462044  # submission bar = AKC + minImprovement 1e-6
 
 
 def main() -> None:

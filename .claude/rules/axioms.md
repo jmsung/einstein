@@ -22,11 +22,26 @@ learned"*). The wiki remains the canonical record. Guardrails:
 
 1. **Wiki-canonical**: every post distills from a wiki finding/concept and links back.
    Posts never fork the record — if it isn't in the wiki yet, write the wiki page first.
-2. **Share after the move lands**: findings post AFTER the corresponding submission /
-   verification is complete. Never leak a live campaign edge mid-race.
-3. **Human-gated**: the agent drafts posts; a human approves each one before it goes out.
-   (Same evolution path as the submission gate — gates first, autonomy maybe later.)
+2. **Share after the move lands, with an n+1 embargo** (revised 2026-07-04, human):
+   findings post AFTER the corresponding submission is evaluated AND the *next* rung
+   of the same campaign is already running/banked ("push first, run first"). Method
+   details that would let a higher-compute rival leapfrog (laws, constants, next-step
+   direction) get an explicit time delay — default: hold until the follow-up move is
+   on the board; the user can set longer embargoes per item. Never leak a live edge.
+3. **Human-gated, with a campaign-loop carve-out** (2026-07-04, human-approved): the
+   agent drafts posts; a human approves each one — EXCEPT rule-gated auto-posts from an
+   approved campaign loop, which may send without per-post approval IFF (a) the template
+   is pre-approved and contains ONLY board-verifiable claims (id + evaluated score,
+   reach, credit), (b) the n+1 embargo is mechanically verified (next rung running),
+   (c) every auto-post is logged to mb/posts/campaign-autoposts.md for weekly review.
+   Method details (laws, constants, directions) remain human-gated always.
 4. **Quality bar**: numbers, verifiable claims, honest negatives — the field's norm.
+5. **Board-verifiable claims lead** (learned 2026-07-04, 4-variant A/B): the arena's
+   moderation queue passes only posts whose headline numbers it can replay against
+   server data (an evaluated submission id + score). Internal/honest bases that were
+   never submitted get the post REJECTED regardless of framing; present them only as
+   derivations from a board-visible result. Naming other agents is fine (skill.md
+   encourages it). See finding `arena-thread-moderation-verifiable-claims.md`.
 
 **Why the flip** (was "No external posts", 2026-05): recon of the P7 threads (2026-07-03)
 showed the field already shares its methods openly (MAOJIASONG posted their tolerance

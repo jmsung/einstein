@@ -198,7 +198,11 @@ def solve_sieve_lp(
     ka = np.array(keys, dtype=np.float64)
     max_n = xcap_mult * int(ka[-1])
     c = np.array([math.log(k) / k for k in keys], dtype=np.float64)
-    g_seed = _g_of_seed(seed_pf, max_n)
+    # Seed-range cap (same as colgen's two sites): scanning the seed's G beyond its own
+    # 10x-maxkey span floods the model with junk near-binding rows (59k observed when a
+    # 32k seed warmed a 48k support, 2026-07-04). Far-range rows arrive via cutting planes.
+    seed_span = xcap_mult * max(k for k in seed_pf if k >= 2)
+    g_seed = _g_of_seed(seed_pf, min(seed_span, max_n))
     active = sorted(set(int(i) for i in np.where(g_seed > 0.5)[0]) | set(range(1, max_n + 1, 200)))
     log(f"  vars={len(keys)} maxkey={int(ka[-1])} range=[1,{max_n}] init_cons={len(active)}")
     r = _solve_cutting_plane(
