@@ -73,11 +73,22 @@ def _solve_cutting_plane(
     max_rounds: int,
     log,
     var_bound: float = 10.0,
+    prune_cap: int | None = None,
+    keep_margin: float = 0.5,
+    pin_rounds: int = 3,
 ) -> dict:
     """Crossover-off HiGHS solve with integer-grid cutting planes over a fixed key set.
 
     Returns dict(f, score, worst, active, row_dual, feasible, rounds). `row_dual` is
     aligned to the returned `active` constraint order (for column-generation pricing).
+
+    `prune_cap`: when set, once the active constraint set exceeds this many rows, drop
+    SLACK rows (g(x) < 1 - keep_margin) except those added within the last `pin_rounds`
+    rounds (re-entry pinning → finite termination), and rebuild a fresh model from the
+    lean set. Without this the IPM slows unboundedly as rows accumulate — at reach 96k
+    the 43k-row model stopped certifying within budget (2026-07-05). AKC thread 244:
+    "slack-row dropping with re-entry pinning holds the model near the binding set,
+    same certified optimum, about half the wall clock." Default None = no pruning.
 
     `var_bound`: variable box |f(k)| <= var_bound. For a rescale-safe solve pass
     10/(1+ARENA_TOL): a box-bound value scaled by the tolerance lever would exceed
@@ -89,36 +100,35 @@ def _solve_cutting_plane(
 
     n = len(ka)
     inf = highspy.kHighsInf
-    h = highspy.Highs()
-    for opt, val in [
-        ("output_flag", False),
-        ("solver", "ipm"),
-        ("run_crossover", "off"),
-        ("primal_feasibility_tolerance", 1e-7),
-        ("dual_feasibility_tolerance", 1e-7),
-        ("ipm_optimality_tolerance", ipm_tol),
-        ("time_limit", float(time_limit)),
-    ]:
-        h.setOptionValue(opt, val)
-    h.addCols(
-        n,
-        c,
-        np.full(n, -var_bound),
-        np.full(n, var_bound),
-        0,
-        np.array([]),
-        np.array([]),
-        np.array([]),
-    )
 
-    def add_rows(ns: list[int]) -> None:
+    def make_model() -> "highspy.Highs":
+        hh = highspy.Highs()
+        for opt, val in [
+            ("output_flag", False),
+            ("solver", "ipm"),
+            ("run_crossover", "off"),
+            ("primal_feasibility_tolerance", 1e-7),
+            ("dual_feasibility_tolerance", 1e-7),
+            ("ipm_optimality_tolerance", ipm_tol),
+            ("time_limit", float(time_limit)),
+        ]:
+            hh.setOptionValue(opt, val)
+        hh.addCols(
+            n, c, np.full(n, -var_bound), np.full(n, var_bound),
+            0, np.array([]), np.array([]), np.array([]),
+        )
+        return hh
+
+    def add_rows_to(hh, ns: list[int]) -> None:
         a = _build_rows(ka, np.array(ns))
         r = a.shape[0]
         starts = np.arange(0, r * n, n)
         idx = np.tile(np.arange(n), r)
-        h.addRows(r, np.full(r, -inf), np.full(r, 1.0), r * n, starts, idx, a.flatten())
+        hh.addRows(r, np.full(r, -inf), np.full(r, 1.0), r * n, starts, idx, a.flatten())
 
-    add_rows(active)
+    h = make_model()
+    add_rows_to(h, active)
+    added_round = {int(x): 0 for x in active}  # x -> round it entered (for pinning)
     # `best` always holds the highest-score grid-feasible point seen, so a feasible f is
     # never lost. `feasible` means *converged* (status Optimal): only converged points are
     # trustworthy as an optimum, so colgen gates its support-trim on this flag and never
@@ -170,8 +180,29 @@ def _solve_cutting_plane(
         new = [v for v in viols[:5000] if v not in set(active)]
         if not new:
             break
+        for v in new:
+            added_round[int(v)] = rnd + 1
         active = sorted(set(active) | set(new))
-        add_rows(new)
+
+        # Slack-row pruning: keep the IPM model near the binding set. Rebuild fresh
+        # from near-binding + recently-pinned + new rows once the model gets large.
+        if prune_cap and len(active) > prune_cap:
+            gA = _build_rows(ka, np.array(active)) @ f
+            new_set = set(new)
+            keep = [
+                x for x, g in zip(active, gA)
+                if g > 1.0 - keep_margin
+                or (rnd + 1 - added_round.get(int(x), 0)) < pin_rounds
+                or int(x) in new_set
+            ]
+            keep = sorted(set(keep))
+            dropped = len(active) - len(keep)
+            active = keep
+            h = make_model()
+            add_rows_to(h, active)
+            log(f"    pruned {dropped} slack rows -> cons={len(active)}")
+        else:
+            add_rows_to(h, new)
     best.setdefault("row_dual", np.zeros(len(best["active"])))
     best.setdefault("rounds", max_rounds)
     return best
@@ -187,6 +218,7 @@ def solve_sieve_lp(
     max_rounds: int = 12,
     log=print,
     var_bound: float = 10.0,
+    prune_cap: int | None = None,
 ) -> tuple[np.ndarray | None, float, float, int]:
     """Solve the P7 sieve LP over `keys`, warm-started from `seed_pf`.
 
@@ -215,6 +247,7 @@ def solve_sieve_lp(
         max_rounds=max_rounds,
         log=log,
         var_bound=var_bound,
+        prune_cap=prune_cap,
     )
     return r["f"], r["score"], r["worst"], r["rounds"]
 

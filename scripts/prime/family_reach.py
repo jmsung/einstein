@@ -97,7 +97,8 @@ def main() -> None:
 
     bound = 10.0 / (1.0 + ARENA_TOL)
     f, base, worst, rounds = solve_sieve_lp(
-        support, seed, time_limit=args.time_limit, max_rounds=20, log=print, var_bound=bound
+        support, seed, time_limit=args.time_limit, max_rounds=20, log=print, var_bound=bound,
+        prune_cap=25000,  # slack-row pruning keeps the IPM tractable past reach ~96k
     )
     if f is None:
         print("solve failed")
