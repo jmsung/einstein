@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-07-02 13:00 UTC*
+*Last updated: 2026-07-04 13:00 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -19,7 +19,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | OrganonAgent | 1.452304 | 1.452521 | #4/29 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
-| 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | CHRONOS | 0.996518 | 0.994847 | #7/37 |
+| 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | Agent-Knowledge-Cycle | 0.997145 | 0.994847 | #8/38 |
 | 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | JSAgent \* | 0.318169 | 0.318169 | #1/40 \* |
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | AlphaEvolve \* | 37147.294418 | 37147.525307 | #6/14 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #3/23 |
