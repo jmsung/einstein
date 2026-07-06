@@ -84,7 +84,7 @@ def main() -> None:
     ap.add_argument("--reach", type=int, default=48000)
     ap.add_argument("--calibrate-from", default="AKC-0.9971452")
     ap.add_argument("--time-limit", type=int, default=3600)
-    ap.add_argument("--alpha", type=float, default=1.0, help="tail density exponent (1.0 = geometric)")
+    ap.add_argument("--alpha", type=float, default=1.3, help="tail density exponent (1.0 = geometric)")
     args = ap.parse_args()
 
     support = build_support(args.reach, args.calibrate_from, alpha=args.alpha)
@@ -98,7 +98,7 @@ def main() -> None:
     bound = 10.0 / (1.0 + ARENA_TOL)
     f, base, worst, rounds = solve_sieve_lp(
         support, seed, time_limit=args.time_limit, max_rounds=20, log=print, var_bound=bound,
-        prune_cap=25000,  # slack-row pruning keeps the IPM tractable past reach ~96k
+        prune_cap=40000, keep_margin=0.8,  # keep g>0.2 rows — 0.5 dropped rows that re-violated at 144k
     )
     if f is None:
         print("solve failed")
