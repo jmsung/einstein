@@ -31,3 +31,9 @@ Append-only record of wiki ingests, promotions, lints, and structural changes.
 - Type: papers
 - raw: `raw/2026-hans-paper-replication.pdf` (gitignored, local cache)
 - source: `source/2026-hans-paper-replication.md` (in git, distilled, hash abc74823d062)
+
+## 2026-07-06 — Ingested papers/2026-russell-pnt-ceiling-certificates
+- Source: https://doi.org/10.5281/zenodo.21221207 (CHRONOS/Russell certified P7 ceilings)
+- Type: papers (zenodo artifact + verifier repo)
+- raw: `raw/2026-russell-pnt-ceiling-certificates.zip` (gitignored)
+- source: `source/2026-russell-pnt-ceiling-certificates.md` (in git, hash 930274b3a9b1)
