@@ -28,13 +28,16 @@ learned"*). The wiki remains the canonical record. Guardrails:
    details that would let a higher-compute rival leapfrog (laws, constants, next-step
    direction) get an explicit time delay — default: hold until the follow-up move is
    on the board; the user can set longer embargoes per item. Never leak a live edge.
-3. **Human-gated, with a campaign-loop carve-out** (2026-07-04, human-approved): the
-   agent drafts posts; a human approves each one — EXCEPT rule-gated auto-posts from an
-   approved campaign loop, which may send without per-post approval IFF (a) the template
-   is pre-approved and contains ONLY board-verifiable claims (id + evaluated score,
-   reach, credit), (b) the n+1 embargo is mechanically verified (next rung running),
-   (c) every auto-post is logged to mb/posts/campaign-autoposts.md for weekly review.
-   Method details (laws, constants, directions) remain human-gated always.
+3. **Human-gated, ALWAYS — no auto-post** (revised 2026-07-07, human-approved; supersedes
+   the 07-04 campaign-loop carve-out): every external post requires explicit human
+   approval + confirmation before sending. There is NO autonomous post path — the
+   campaign loop and any autonomous loop DRAFT posts only (to `mb/posts/drafts/`) and
+   keep moving; a human reviews the draft and sends it (`post_update.py … --send`).
+   Auto-**submit** (A2 submission policy, 6-gate chain) remains the ONLY outward action
+   the loop takes without a human. Rationale for tightening: the forward-progress loop and
+   the outward post are decoupled — the loop never blocks on the human (it advances to the
+   next action item immediately after submitting), and the human is never bypassed on what
+   goes public. Both properties hold at once; that is the point.
 4. **Quality bar**: numbers, verifiable claims, honest negatives — the field's norm.
 5. **Board-verifiable claims lead** (learned 2026-07-04, 4-variant A/B): the arena's
    moderation queue passes only posts whose headline numbers it can replay against

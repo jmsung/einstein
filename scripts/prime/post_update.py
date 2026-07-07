@@ -1,11 +1,14 @@
-"""Auto-post a campaign rung update to thread 251 — n+1 embargo enforced by the caller.
+"""Draft (or, human-only, send) a campaign rung update to thread 251.
+
+NO AUTO-POST. External posts always require explicit human approval — this is the ONLY
+outward action that is never autonomous (auto-submit is; auto-post is not). The autonomous
+loop calls this WITHOUT --send, so it can only ever write a draft for review. A live post
+happens only when a human runs this with --send after reading the draft. The n+1 embargo
+(draft rung N only once N+1 is running) is still enforced by the caller for draft timing.
 
 Template is BOARD-VERIFIABLE-CLAIMS ONLY (lesson: arena-thread-moderation-verifiable-
 claims finding): submission id + evaluated score, reach, credit line. No internal
 numbers, no laws, no next-step direction (those wait for the human's periodic deep post).
-
-Mode file results/problem-7-prime/POST_MODE: 'live' sends; anything else writes a draft
-to mb/posts/drafts/ only.
 """
 
 from __future__ import annotations
@@ -30,6 +33,12 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--reach", type=int, required=True)
     ap.add_argument("--gates-log", required=True)
+    ap.add_argument(
+        "--send",
+        action="store_true",
+        help="HUMAN-ONLY: actually post live. Without it (the loop's path), always writes a "
+        "draft for human approval. Never pass --send from an autonomous loop.",
+    )
     args = ap.parse_args()
 
     m = re.search(r"ACCEPTED: id=(\d+) score=([0-9.]+)", open(args.gates_log).read())
@@ -45,15 +54,16 @@ def main() -> None:
         f"delay per our usual cadence; solution is public — happy to be checked."
     )
 
-    mode = ""
-    mode_file = OUT / "POST_MODE"
-    if mode_file.exists():
-        mode = mode_file.read_text().strip()
-    if mode != "live":
+    # NO AUTO-POST: without an explicit human --send, always draft for approval.
+    if not args.send:
         DRAFTS.mkdir(parents=True, exist_ok=True)
         p = DRAFTS / f"{datetime.date.today()}-p7-reach{args.reach}.md"
-        p.write_text(f"# DRAFT reply for thread {THREAD}\n\n{body}\n")
-        print(f"post_update: DRAFT written -> {p} (POST_MODE != live)")
+        p.write_text(
+            f"# DRAFT reply for thread {THREAD} — AWAITING HUMAN APPROVAL\n\n"
+            f"Approve+send:  uv run python scripts/prime/post_update.py "
+            f"--reach {args.reach} --gates-log {args.gates_log} --send\n\n---\n\n{body}\n"
+        )
+        print(f"post_update: DRAFT written -> {p} (no --send; human approval required to post)")
         return
 
     req = urllib.request.Request(

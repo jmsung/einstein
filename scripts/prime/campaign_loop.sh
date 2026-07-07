@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# P7 autonomous campaign loop — progress -> submit -> run-next -> post (n+1 embargo).
+# P7 autonomous campaign loop — progress -> submit -> run-next -> DRAFT post (n+1 embargo).
 #
 #   rung N solves (box-aware family_reach)
 #     -> gate_and_submit --live   (5 gates incl. live-SOTA cushion; axioms 6-gate class)
 #     -> A3 backup + experiment-log row
-#     -> START rung N+1 FIRST ("push first, run first")
-#     -> THEN post rung N's update (only if: N accepted AND N+1 running AND template mode=live)
+#     -> START rung N+1 FIRST ("push first, run first") — loop NEVER waits on the human
+#     -> THEN DRAFT rung N's update (only if: N accepted AND N+1 running)
 #   stall: gates HELD twice in a row, or rung produces no artifact, or per-rung wall > MAX_RUNG_H
 #   kill:  touch results/problem-7-prime/STOP   (checked between every step)
 #
-# Posting starts in DRAFT mode (writes mb/posts/drafts/, sends nothing) until the human
-# approves the template: echo live > results/problem-7-prime/POST_MODE
+# NO AUTO-POST. Auto-submit is the ONLY autonomous outward action. The loop's post step
+# ALWAYS drafts (calls post_update.py without --send) and keeps moving; the draft lands in
+# mb/posts/drafts/ for the human to review and send with --send. The human is never a
+# blocker for compute progress — only a gate on the outward post.
 set -u
 cd "$(dirname "$0")/../.." || exit 1
 caffeinate -ims -w $$ &
@@ -25,7 +27,7 @@ ts() { date +"%m-%d %H:%M"; }
 log() { echo "[$(ts)] $*" | tee -a "$LOG"; }
 stop() { log "STOP: $*"; date > "$OUT/CAMPAIGN_DONE"; exit 0; }
 
-log "CAMPAIGN LOOP START at reach=$REACH (kill: touch $OUT/STOP; posts: $OUT/POST_MODE)"
+log "CAMPAIGN LOOP START at reach=$REACH (kill: touch $OUT/STOP; posts DRAFT-only, human sends)"
 
 while :; do
   [ -f "$OUT/STOP" ] && stop "kill switch"
@@ -52,8 +54,8 @@ while :; do
     cp "$ART" ".mb/problems/7-prime-number-theorem/solutions/solution-campaign-reach$REACH-$base.json"
     cp "$ART" ".mb/problems/7-prime-number-theorem/solutions/solution-best.json"
     NEXT=$(python3 -c "print(int($REACH * 1.5 // 1000 * 1000))")
-    log "starting rung $NEXT FIRST (n+1 embargo), then posting $REACH update"
-    # post AFTER next rung is confirmed running: fire-and-forget the post step below
+    log "starting rung $NEXT FIRST (n+1 embargo), then DRAFTING $REACH update for human approval"
+    # DRAFT rung N AFTER next rung is confirmed running (no --send → never posts live).
     ( sleep 300;  # give the next rung 5 min to be visibly solving
       pgrep -f "reach $NEXT" >/dev/null && \
       uv run python scripts/prime/post_update.py --reach "$REACH" --gates-log "$OUT/gates-$REACH.log" \
