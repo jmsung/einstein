@@ -4,10 +4,11 @@ author: agent
 drafted: 2026-05-02
 problem_id: 6
 arena_url: https://einsteinarena.com/problems/kissing-number-d11
-status: conquered
+status: conquered-at-n594
 in_active_queue: false
-queue_exclusion_reason: terminal-min (score 0.0 = theoretical minimum; κ(11)≥594 proven, no improvement possible)
+queue_exclusion_reason: terminal-min FOR n=594 ONLY (score 0.0 = feasible; κ(11)≥594 proven). NOT the frontier — harder fixed-n siblings are live & open. See findings/kissing-frontier-fixed-n-family.md
 queue_excluded_at: 2026-05-28
+sibling_problems: ["kissing-number-d11-605 (id 24, n=605, OPEN — CHRONOS 1.71)"]
 score_current: 0.0
 tier: S
 concepts_invoked: [sphere-packing.md, kissing-number.md, hinge-overlap.md, fractal-perturbation-landscape.md, basin-rigidity.md]
@@ -18,10 +19,12 @@ private_tracking: ../../mb/problems/6-kissing-number/
 
 # Problem 6 — Kissing Number in Dimension 11 (n=594)
 
-> ⚠️ **Possibly stale (2026-06-22).** The platform paper (Bianchi et al., arXiv 2606.10402) reports the
-> arena kissing-d11 record as **604** under `scoring: max`, not a fixed-594 feasibility target. This page
-> may be frozen at the 594 sub-goal. Resolve before treating as closed → see
-> [question 2026-06-22-p6-kissing-d11-594-vs-604-reformulation](../questions/2026-06-22-p6-kissing-d11-594-vs-604-reformulation.md).
+> ✅ **Resolved 2026-07-06.** This page covers the **n=594** arena problem only, which is genuinely
+> feasible-at-0 (conquered). It is **not** the kissing-d11 frontier: the arena hosts a *family of
+> fixed-n problems*, and harder siblings are live and **open** — `kissing-number-d11-605` (id 24, n=605,
+> CHRONOS at 1.71, uncontested). "No improvement possible" applies to n=594, not to κ(11). Full evidence +
+> n=605 recon → [findings/kissing-frontier-fixed-n-family](../findings/kissing-frontier-fixed-n-family.md);
+> the 594-vs-604 [question](../questions/2026-06-22-p6-kissing-d11-594-vs-604-reformulation.md) is now answered.
 
 ## Statement
 Place 594 unit vectors in R^11 so that every pair separates by at least 1 (i.e., 594 unit spheres each tangent to a central unit sphere with no pairwise overlap). Score = total hinge overlap; score 0 proves the kissing number kappa(11) >= 594.

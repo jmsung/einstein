@@ -115,8 +115,10 @@ def overlap_loss_mpmath(vectors, dps: int = 50) -> float:
     from mpmath import sqrt as mpsqrt
 
     arr = np.asarray(vectors, dtype=np.float64)
-    if arr.ndim != 2 or arr.shape != (N_VECTORS, DIMENSION):
-        raise ValueError(f"Expected shape ({N_VECTORS}, {DIMENSION}), got {arr.shape}")
+    # n and d are inferred from the input — the kissing family spans several
+    # fixed-n problems (d11 n=594/605, d12 n=841/842) sharing one overlap objective.
+    if arr.ndim != 2:
+        raise ValueError(f"Expected a 2-D (n, d) array, got shape {arr.shape}")
 
     mp.dps = dps
     n, d = arr.shape
