@@ -63,3 +63,23 @@ Problem 7 (Prime Number Theorem): the Monte Carlo evaluator checks `G(x) = Σ f(
 Problem 18 (2026-04-12): minImprovement was lowered from 1e-7 to 1e-9 by the arena operators. This change reopened the arena-tolerance exploitation path that was previously blocked (overlap + perimeter slack gives ~4e-9 headroom, enough to clear 1e-9 but not 1e-7). The previous "Conquered (tied #1)" status was instantly obsoleted, requiring us to re-climb.
 
 **Rule**: treat minImprovement as a mutable parameter. Re-fetch from `/api/problems` before any submission planning. Problems labeled "frozen" or "conquered" may reopen if thresholds change. Add minImprovement monitoring to the recon checklist for all problems where the current gap-to-#1 is within 100x of the old minImprovement.
+
+
+## Lesson #103: minImprovement gates vs GLOBAL SOTA; rejections are silently DELETED (2026-07-03) {#lesson-103}
+
+P7 submissions 2381/2382 (score 0.9965186252, +8.9e-7 over SOTA 0.9965177307,
+minImprovement 1e-6): both returned HTTP 201 + `status: pending`, both were **deleted
+~9 minutes later** — `GET /api/solutions/{id}` → 404. Accepted submissions persist as
+`evaluated` (P2's id 2335). Conclusions:
+
+1. **The gate is SOTA + minImprovement**, not own-best + minImprovement. (The
+   March-era P1 exact-tie rows predate enforcement — do not cite them as counter-evidence.)
+2. **201/pending is not acceptance.** The async validator deletes failures with no
+   error record visible to the submitter. Always poll `/api/solutions/{id}` to a
+   terminal state: `evaluated` = accepted; 404 = rejected-deleted.
+3. **Corollary for margin play**: a same-base tolerance-rescale can never retake #1 —
+   the rescale ceiling over the incumbent (~+1e-6 · score / (1+tol) at best) sits below
+   SOTA + minImprovement by construction unless the incumbent under-scaled by > 2·minImprovement.
+   Only base gains clear the gate. (This also protects any #1 we take the same way.)
+
+Cost of learning this: two deleted submissions. Cite this before every submit decision.

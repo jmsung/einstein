@@ -14,19 +14,44 @@ If any two disagree, the score is fake — debug before proceeding. See [triple-
 
 **Why L0:** local-evaluator drift from arena verifier has caused real damage (P9 hidden, P14 tolerance, P17 strict-tol trap). Single-evaluator scores are not trustworthy. Triple-verify is the floor.
 
-## A2 — No external posts
+## A2 — Open participation, wiki-canonical (revised 2026-07-03, human-approved)
 
-All wisdom and knowledge sharing happens on this repo + wiki. Never on:
-- Einstein Arena discussion threads
-- Blog posts (personal or company)
-- Social media
-- Slack / Discord public channels
+External sharing is **allowed and encouraged** — arena discussion threads first and
+foremost (the platform's own contract asks for it: *"after you submit, share what you
+learned"*). The wiki remains the canonical record. Guardrails:
 
-The repo + wiki *is* the publication channel — auditable, version-controlled, growing in commits. External posts duplicate effort, drift from the canonical record, and invite low-quality reply threads.
+1. **Wiki-canonical**: every post distills from a wiki finding/concept and links back.
+   Posts never fork the record — if it isn't in the wiki yet, write the wiki page first.
+2. **Share after the move lands, with an n+1 embargo** (revised 2026-07-04, human):
+   findings post AFTER the corresponding submission is evaluated AND the *next* rung
+   of the same campaign is already running/banked ("push first, run first"). Method
+   details that would let a higher-compute rival leapfrog (laws, constants, next-step
+   direction) get an explicit time delay — default: hold until the follow-up move is
+   on the board; the user can set longer embargoes per item. Never leak a live edge.
+3. **Human-gated, with a campaign-loop carve-out** (2026-07-04, human-approved): the
+   agent drafts posts; a human approves each one — EXCEPT rule-gated auto-posts from an
+   approved campaign loop, which may send without per-post approval IFF (a) the template
+   is pre-approved and contains ONLY board-verifiable claims (id + evaluated score,
+   reach, credit), (b) the n+1 embargo is mechanically verified (next rung running),
+   (c) every auto-post is logged to mb/posts/campaign-autoposts.md for weekly review.
+   Method details (laws, constants, directions) remain human-gated always.
+4. **Quality bar**: numbers, verifiable claims, honest negatives — the field's norm.
+5. **Board-verifiable claims lead** (learned 2026-07-04, 4-variant A/B): the arena's
+   moderation queue passes only posts whose headline numbers it can replay against
+   server data (an evaluated submission id + score). Internal/honest bases that were
+   never submitted get the post REJECTED regardless of framing; present them only as
+   derivations from a board-visible result. Naming other agents is fine (skill.md
+   encourages it). See finding `arena-thread-moderation-verifiable-claims.md`.
 
-**Why L0:** the wiki is the artifact; external posts dilute it. Also: the wiki is built for *math wisdom*, not promotion.
+**Why the flip** (was "No external posts", 2026-05): recon of the P7 threads (2026-07-03)
+showed the field already shares its methods openly (MAOJIASONG posted their tolerance
+exploit; Asper posts negatives), our cb repo is public anyway, and the platform +
+operators' paper treat discussion as the core mechanism. Silence had ~zero competitive
+value and real costs: no recognition, no lineage credit, no reply-thread intel. The
+original A2 rationale (drift, duplicated effort) is preserved by guardrail #1.
 
-**Carve-out (2026-06-22, human-approved):** A2 is **waived for a single authored methodology paper** (`js/docs/methodology-paper`) — a deliberate write-up of JSAgent's approach for arXiv, distilled *from* the wiki, not a substitute for it. This does **not** re-open agent autonomous posting: the agent still may not post to arena threads, blogs, or social. The carve-out is a one-time human decision for one auditable artifact; the wiki remains the canonical record and the paper cites it.
+**History**: JSAgent posted 3 P7 threads in 2026-04; A2 then froze posting in 05; the
+one-paper carve-out (2026-06-22, arXiv methodology paper) is subsumed by this revision.
 
 ## A3 — Solution backup
 
