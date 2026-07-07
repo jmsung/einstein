@@ -1,16 +1,24 @@
-"""Automated polish+submit loop for P6 Kissing Number.
+"""Automated polish+submit loop for the fixed-n kissing family.
+
+One problem per invocation (``--problem-id`` / ``--slug``): P6 d11 n=594, id 24
+d11 n=605, P22 d12 n=841, id 25 d12 n=842 — all share one overlap objective.
 
 Design
 ------
 One full cycle per invocation:
   1. Check the arena leaderboard.
-  2. Run a bounded polish from our local best, using the ulp-coord sweep.
-  3. If the polish yields a score strictly below the current leader on the
-     leaderboard AND strictly below our last submission, submit it.
-  4. Leave the new best on disk for the next invocation.
+  2. Run a bounded polish from our local best (the ulp-coord sweep).
+  3. Re-score the polished vectors on the REAL objective (overlap_loss_mpmath —
+     never the polish's saved surrogate) and triple-verify three independent
+     code paths.
+  4. Route the decision through the canonical 6-gate ``auto_submit.try_submit``
+     (kill switch / triple-verify / daily-cap / throttle / arena-#1 SOTA /
+     POST + flock'd audit). Submit IFF it strictly beats live arena #1 by the
+     margin floor.
+  5. Leave the new best on disk for the next invocation.
 
-This script is meant to be called by a launchd agent (macOS) or cron on a
-schedule. The schedule itself is defined by the operator's per-machine
+This script is meant to be called by ``push_loop.sh`` (persistent loop) or a
+launchd agent / cron. The schedule is defined by the operator's per-machine
 launchd plist (not committed to this repo).
 
 Environment
@@ -21,11 +29,11 @@ Runs inside the project's uv venv. Inherits the arena credentials from
 Usage
 -----
     uv run python scripts/kissing_number/cron_polish_submit.py \
-        --budget 1200
+        --problem-id 24 --slug kissing-number-d11-605 --budget 1200
 
-    # Dry run: polish and report, don't submit
+    # Dry run: polish, honest-score, run the gates, but do not POST
     uv run python scripts/kissing_number/cron_polish_submit.py \
-        --budget 300 --dry-run
+        --problem-id 24 --slug kissing-number-d11-605 --budget 300 --dry-run
 """
 
 from __future__ import annotations
@@ -253,18 +261,22 @@ def main() -> int:
         polish_log = LOG_DIR / f"polish-{int(time.time())}.log"
         surrogate, improved = run_polish_chain(warm_start, args.budget, polish_log)
 
-        # 4. Honest score on the REAL objective — never trust the polish surrogate.
+        # 4. Triple-verify the REAL objective three independent ways — never the
+        #    polish surrogate. The `cross` scorer IS overlap_loss_mpmath(dps50),
+        #    the arena ground truth, so it doubles as the honest submit score
+        #    (step 5) — no second bignum pass.
         v, _ = load_best_on_disk()
-        score = honest_score(v)
         payload = {"vectors": v.tolist()}
+        tv_result = tv.run_payload(PROBLEM_ID, payload)
+        log(f"triple-verify: passed={tv_result.passed} — {tv_result.reason}")
+
+        # 5. Honest submit score = the mpmath ground-truth path from triple-verify
+        #    (fallback to a direct eval if that scorer raised).
+        score = tv_result.cross if tv_result.cross is not None else honest_score(v)
         log(
             f"honest score (overlap_loss_mpmath dps50): {score:.10e} "
             f"(disk surrogate={surrogate:.4e}, improved={improved})"
         )
-
-        # 5. Triple-verify the real objective three independent ways.
-        tv_result = tv.run_payload(PROBLEM_ID, payload)
-        log(f"triple-verify: passed={tv_result.passed} — {tv_result.reason}")
 
         # 6. Effective margin floor = max(arena minImprovement, our --margin-floor).
         try:
