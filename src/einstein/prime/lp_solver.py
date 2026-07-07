@@ -219,6 +219,7 @@ def solve_sieve_lp(
     log=print,
     var_bound: float = 10.0,
     prune_cap: int | None = None,
+    keep_margin: float = 0.5,
 ) -> tuple[np.ndarray | None, float, float, int]:
     """Solve the P7 sieve LP over `keys`, warm-started from `seed_pf`.
 
@@ -248,6 +249,7 @@ def solve_sieve_lp(
         log=log,
         var_bound=var_bound,
         prune_cap=prune_cap,
+        keep_margin=keep_margin,
     )
     return r["f"], r["score"], r["worst"], r["rounds"]
 

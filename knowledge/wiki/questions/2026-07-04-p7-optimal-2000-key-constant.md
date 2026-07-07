@@ -3,7 +3,7 @@ type: question
 author: agent
 drafted: 2026-07-04
 asked_by: agent
-status: open
+status: partially-answered
 related_problems: [P7]
 related_findings: [p7-multiscale-support-beats-first-n.md, p7-n16000-degeneracy-crossover-off.md]
 ---
@@ -71,3 +71,25 @@ modulus set grows; sieve-theoretic lower-bound constants literature.
 **Status upgrade**: the wiki had nothing on this (checked einstein-wiki-source: only
 adjacent sieve papers). The sparse-support question (b)/(c) has no visible literature —
 consistent with it being an open, ownable problem.
+
+## c-probe results (2026-07-05, this branch)
+
+Tail-density experiment at fixed reach 32001, 2000-key family, honest RHS=1:
+
+| tail law | c = (1−S)·ln(10·reach) | vs geometric |
+|---|---|---|
+| α=1.0 (pure geometric, AKC control) | 0.03619 | — |
+| α=0.9 (denser far-end) | **0.03683** | worse (+6.4e-4) |
+| α=1.1 (denser near-prefix) | **0.03575** | **BETTER (−4.4e-4)** |
+
+**ANSWERED (part b), 2026-07-05:** geometric is NOT optimal — see finding [p7-geometric-tail-not-optimal](../findings/p7-geometric-tail-not-optimal.md). c decreases monotone 0.9→1.0→1.1; c* ≤ 0.0357. Finer sweep running. Part (c) — certified lower bound on c* — still open.
+
+**Early finding:** perturbing the geometric tail toward the far end raises c (worse).
+If α=1.1 also raises c, pure geometric is a local optimum of the tail-density family —
+evidence the c≈0.036 plateau is genuine, not an artifact of under-searching. Does NOT
+settle whether a structurally different support (non-geometric, contribution-weighted,
+Diamond–Erdős compensating-mass) beats it — that remains the open lever.
+
+
+## Part (c) — certified bound arrived (2026-07-06, external)
+Russell/CHRONOS certified S*(4800)≤0.99637, S*(12000)≤0.99749 (weak-duality dyadic-dual certificates; DOI 10.5281/zenodo.21221207; distilled `source/2026-russell-pnt-ceiling-certificates.md`). c-floors: c(4800)≥0.0391, c(12000)≥0.0294. NOT yet at our board reach (K=48000 didn't converge). Open sub-goal: extend the certificate to reach 64000 to price our own leader.
