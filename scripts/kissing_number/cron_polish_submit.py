@@ -52,14 +52,30 @@ from check_submission import (  # noqa: E402
 
 from einstein.kissing_number.evaluator import overlap_loss_mpmath  # noqa: E402
 
-PROBLEM_ID = 6
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+LOG_DIR = PROJECT_ROOT / "logs" / "kissing_cron"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+# Per-problem config — set by _configure() from CLI (default: P6 / n=594, back-compat).
+# The whole kissing family shares this one loop; only (id, slug) change per problem:
+#   6  kissing-number-d11      (n=594, solved)   24  kissing-number-d11-605 (n=605, open)
+#   22 kissing-number-d12      (n=841)           25  kissing-number-d12-842 (n=842, open)
+PROBLEM_ID = 6
 RESULTS_DIR = PROJECT_ROOT / "results" / "problem-6-kissing-number"
 POLISH_TRAIL = RESULTS_DIR / "polish-trail"
 STATE_FILE = RESULTS_DIR / "cron_state.json"
 LOCK_FILE = RESULTS_DIR / "cron.lock"
-LOG_DIR = PROJECT_ROOT / "logs" / "kissing_cron"
-LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _configure(problem_id: int, slug: str) -> None:
+    """Point all per-problem paths at <id>-<slug>. Call once at start of main()."""
+    global PROBLEM_ID, RESULTS_DIR, POLISH_TRAIL, STATE_FILE, LOCK_FILE
+    PROBLEM_ID = problem_id
+    RESULTS_DIR = PROJECT_ROOT / "results" / f"problem-{problem_id}-{slug}"
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    POLISH_TRAIL = RESULTS_DIR / "polish-trail"
+    STATE_FILE = RESULTS_DIR / "cron_state.json"
+    LOCK_FILE = RESULTS_DIR / "cron.lock"
 
 
 def log(msg: str) -> None:
@@ -238,12 +254,17 @@ def main() -> int:
     parser.add_argument(
         "--force-submit", action="store_true", help="skip leader check and submit whatever disk has"
     )
+    parser.add_argument("--problem-id", type=int, default=6, help="arena problem id (6/24/22/25)")
+    parser.add_argument(
+        "--slug", default="kissing-number", help="results dir slug: results/problem-<id>-<slug>/"
+    )
     args = parser.parse_args()
+    _configure(args.problem_id, args.slug)
 
     if not acquire_lock():
         return 0
     try:
-        log(f"=== cron tick (budget={args.budget}s dry_run={args.dry_run}) ===")
+        log(f"=== cron tick p{PROBLEM_ID} (budget={args.budget}s dry_run={args.dry_run}) ===")
         state = load_state()
 
         # 1. Check leaderboard
