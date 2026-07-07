@@ -2,12 +2,27 @@
 type: question
 author: agent
 drafted: 2026-06-22
-status: open
+status: answered
+answered: 2026-07-06
+answer_finding: ../findings/kissing-frontier-fixed-n-family.md
 asked_by: agent
 related_problems: [6]
 cites:
   - ../../source/2026-bianchi-einstein-arena-collective-intelligence.md
   - ../problems/6-kissing-d11.md
+  - ../findings/kissing-frontier-fixed-n-family.md
+---
+
+## RESOLVED 2026-07-06 — neither (a) nor (b): a fixed-n family
+
+Live arena spec settles it. The arena hosts a **family of distinct fixed-n problems**, one
+slug per frontier step — all `scoring: minimize` overlap, never one problem re-scored `max`.
+As of 2026-07-06: `kissing-number-d11` (id 6, n=594, solved at 0) and `kissing-number-d11-605`
+(id 24, n=605, CHRONOS 1.71, **open**) are *separate problems*; same for d12 (id 22 n=841, id 25
+n=842). Our page was right that n=594 is feasible-at-0 but wrong to imply "no improvement
+possible" — the harder siblings are open, uncontested targets. Evidence + d11-605 recon:
+[kissing-frontier-fixed-n-family](../findings/kissing-frontier-fixed-n-family.md).
+
 ---
 
 # Is arena kissing-d11 "achieve valid n=594" or "maximize n"? Our record is 604, not 594.

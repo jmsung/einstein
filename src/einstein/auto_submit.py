@@ -24,6 +24,7 @@ human can review weekly. No silent rejections.
 from __future__ import annotations
 
 import datetime as dt
+import fcntl
 import json
 import logging
 import os
@@ -77,6 +78,8 @@ PROBLEM_MINIMIZE: dict[int, bool] = {
     18: False,  # circles-rectangle      — "maximizing the sum of radii"
     19: True,  # difference-bases       — "minimizing |B|²/v"
     22: True,  # kissing-d12            — "Lower score is better"
+    24: True,  # kissing-d11-605        — "Lower score is better" (fixed-n family)
+    25: True,  # kissing-d12-842        — "Lower score is better" (fixed-n family)
 }
 
 AUDIT_LOG_HEADER = (
@@ -103,12 +106,7 @@ class AutoSubmitResult:
 # ---------------- audit log ----------------
 
 
-def _ensure_audit_header(audit_log: Path) -> None:
-    """Create the audit log + header if it doesn't exist."""
-    if audit_log.is_file():
-        return
-    audit_log.parent.mkdir(parents=True, exist_ok=True)
-    audit_log.write_text("# auto-submit audit log\n\n" + AUDIT_LOG_HEADER)
+_AUDIT_PREAMBLE = "# auto-submit audit log\n\n" + AUDIT_LOG_HEADER
 
 
 def _append_audit_row(
@@ -123,7 +121,6 @@ def _append_audit_row(
     arena_id: str | None = None,
 ) -> None:
     """Append one row to mb/logs/auto-submit.md."""
-    _ensure_audit_header(audit_log)
     score_s = f"{score:.14g}" if isinstance(score, (int, float)) else "—"
     status_s = str(http_status) if http_status is not None else "—"
     arena_s = str(arena_id) if arena_id is not None else "—"
@@ -133,8 +130,22 @@ def _append_audit_row(
         f"| {timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')} | {problem_id} | "
         f"{score_s} | {decision} | {reason_safe} | {status_s} | {arena_s} |\n"
     )
+    # The kissing family runs one push-loop per problem, all sharing this single
+    # audit log. An exclusive flock serializes concurrent appends so rows never
+    # interleave or clobber each other (harness mb-safety, PR #18). The header is
+    # written on first use UNDER the same lock — doing it in a pre-lock
+    # check-then-write would let two concurrent first-writers each see the file
+    # missing and the second's header truncate the first's row (defeating the
+    # gate: a lost `submitted` row bypasses the daily-cap / throttle counters).
+    audit_log.parent.mkdir(parents=True, exist_ok=True)
     with audit_log.open("a") as fh:
-        fh.write(row)
+        try:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            if os.fstat(fh.fileno()).st_size == 0:
+                fh.write(_AUDIT_PREAMBLE)
+            fh.write(row)
+        finally:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
 def _parse_audit_log(audit_log: Path) -> list[dict]:
