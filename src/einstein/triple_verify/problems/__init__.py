@@ -27,6 +27,7 @@ _MODULES: tuple[str, ...] = (
     "p18_circles_rectangle",
     "p19_difference_bases",
     "p22_kissing_d12",
+    "p_kissing",
 )
 
 for _m in _MODULES:

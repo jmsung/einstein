@@ -24,6 +24,23 @@ def _now() -> dt.datetime:
     return dt.datetime(2026, 5, 24, 4, 0, 0, tzinfo=UTC)
 
 
+def _flock_worker(audit_path: str, i: int) -> None:
+    """Module-level (spawn-picklable) worker for the flock concurrency test."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(_REPO / "src"))
+    from einstein import auto_submit as _asub
+
+    _asub._append_audit_row(
+        Path(audit_path),
+        timestamp=dt.datetime(2026, 5, 24, 4, 0, i % 60, tzinfo=UTC),
+        problem_id=24,
+        score=1.7 + i * 1e-6,
+        decision="rejected",
+        reason=f"worker {i}",
+    )
+
+
 def _passing_tv() -> dict:
     return {"fast": 2.6359, "exact": 2.6359, "cross": 2.6359, "passed": True}
 
@@ -253,6 +270,31 @@ def test_problem_minimize_map_directions() -> None:
     m = auto_submit.PROBLEM_MINIMIZE
     assert m[2] is True and m[4] is True and m[10] is True and m[12] is True
     assert m[3] is False and m[7] is False and m[14] is False
+    # kissing-d11-605 (24) and kissing-d12-842 (25): "Lower score is better".
+    assert m[24] is True and m[25] is True
+
+
+def test_audit_append_is_flock_serialized(tmp_path: Path) -> None:
+    """Concurrent per-problem loops share one auto-submit.md. Parallel appends
+    must not interleave/corrupt rows — each write holds an exclusive flock. With
+    N processes each writing one row, the log must end with exactly N data rows,
+    all well-formed (7 pipe-delimited cells)."""
+    import multiprocessing as mp
+
+    audit = tmp_path / "audit.md"
+
+    n = 24
+    procs = [mp.Process(target=_flock_worker, args=(str(audit), i)) for i in range(n)]
+    for p in procs:
+        p.start()
+    for p in procs:
+        p.join()
+
+    data_rows = [ln for ln in audit.read_text().splitlines() if ln.startswith("| 20")]
+    assert len(data_rows) == n, f"expected {n} intact rows, got {len(data_rows)}"
+    for ln in data_rows:
+        cells = ln.strip().strip("|").split("|")
+        assert len(cells) == 7, f"corrupted row (not 7 cells): {ln!r}"
 
 
 def test_leaderboard_fetch_failure_blocks(tmp_path: Path) -> None:

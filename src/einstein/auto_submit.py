@@ -24,6 +24,7 @@ human can review weekly. No silent rejections.
 from __future__ import annotations
 
 import datetime as dt
+import fcntl
 import json
 import logging
 import os
@@ -77,6 +78,8 @@ PROBLEM_MINIMIZE: dict[int, bool] = {
     18: False,  # circles-rectangle      — "maximizing the sum of radii"
     19: True,  # difference-bases       — "minimizing |B|²/v"
     22: True,  # kissing-d12            — "Lower score is better"
+    24: True,  # kissing-d11-605        — "Lower score is better" (fixed-n family)
+    25: True,  # kissing-d12-842        — "Lower score is better" (fixed-n family)
 }
 
 AUDIT_LOG_HEADER = (
@@ -133,8 +136,15 @@ def _append_audit_row(
         f"| {timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')} | {problem_id} | "
         f"{score_s} | {decision} | {reason_safe} | {status_s} | {arena_s} |\n"
     )
+    # The kissing family runs one push-loop per problem, all sharing this single
+    # audit log. An exclusive flock serializes concurrent appends so rows never
+    # interleave or clobber each other (harness mb-safety, PR #18).
     with audit_log.open("a") as fh:
-        fh.write(row)
+        try:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            fh.write(row)
+        finally:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
 def _parse_audit_log(audit_log: Path) -> list[dict]:
