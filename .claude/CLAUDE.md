@@ -11,7 +11,7 @@ einstein is a **single-developer math knowledge base + agent codebase**, public,
 
 The work loop is **understand → wiki-first → council dispatch → gap detect → research → distill → specialize → execute → look back → failure-log → commit**. Each cycle compounds in the wiki.
 
-Math wisdom is the goal — not arena rank. Submission is verification only. No external posts; the wiki is the publication channel.
+Math wisdom is the goal — not arena rank. Submission is verification only. External sharing is open per A2 (wiki-canonical, human-gated); the wiki is the canonical record.
 
 ## Layout
 

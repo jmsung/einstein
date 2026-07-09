@@ -25,3 +25,15 @@ Append-only record of wiki ingests, promotions, lints, and structural changes.
 - **goal 11** — qmd collections wired: `einstein-wiki` (136 docs over wiki/) and `einstein-wiki-source` (45 docs over source/) registered; embeddings generated (414 chunks). Sample query "Cohn-Elkies LP bound" returns wiki/personas/cohn.md (93%) + wiki/concepts/lp-duality.md (92%).
 - **2026-05-02 lint pass (post P19 cycles 1-4)** — 145 pages total. Resolved 3 concept↔finding name collisions (basin-rigidity, float64-ceiling, k-climbing): findings now point at concepts via `synthesized_into:` frontmatter + header note. Index staleness caught: 11 docs from this branch were unindexed; refreshed via `tools/refresh_qmd.sh` (now part of cycle-discipline). Orphans: 7 problem index pages (by design — entry points) + 2 newest dead-end findings (will gain incoming). 0 broken cites detected. `cycle-discipline.md` updated: REFUSE to start cycle without qmd query; REFUSE to end cycle without `tools/refresh_qmd.sh`.
 - **2026-05-24 lint pass (post autonomous-loop cycle 23)** — 181 pages. Rewrote 91 cites `../source/X.md` → `../../source/X.md` (off-by-one `../`, source/ is sibling of wiki/, not nested). Removed 31 dead pointers to pre-refactor MB layout (`knowledge.yaml`, `problem-N-slug/strategy.md`). Removed obsolete `[[../home]] | [[../index]]` breadcrumb from `findings/p22-d12-construction-survey.md`. Added `concepts/agentic-harness.md` to index. Result: 0 orphans, 0 broken cites, 0 body link gaps.
+
+## 2026-07-05 — Ingested papers/2026-hans-paper-replication
+- Source: https://arxiv.org/abs/2607.02134
+- Type: papers
+- raw: `raw/2026-hans-paper-replication.pdf` (gitignored, local cache)
+- source: `source/2026-hans-paper-replication.md` (in git, distilled, hash abc74823d062)
+
+## 2026-07-06 — Ingested papers/2026-russell-pnt-ceiling-certificates
+- Source: https://doi.org/10.5281/zenodo.21221207 (CHRONOS/Russell certified P7 ceilings)
+- Type: papers (zenodo artifact + verifier repo)
+- raw: `raw/2026-russell-pnt-ceiling-certificates.zip` (gitignored)
+- source: `source/2026-russell-pnt-ceiling-certificates.md` (in git, hash 930274b3a9b1)

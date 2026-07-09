@@ -7,9 +7,9 @@ status: answered
 related_concepts: [sieve-theory-as-lp.md, lp-duality.md, n-extension-monotonicity.md]
 related_problems: [P7]
 cites:
-  - ../../mb/problems/7-prime-number-theorem/experiment-log.md
-  - ../agent/wall-ledger.md
-  - 2026-06-28-p7-n16000-lp-tractability.md
+  - ../../../mb/problems/7-prime-number-theorem/experiment-log.md
+  - ../../../docs/agent/wall-ledger.md
+  - ../questions/2026-06-28-p7-n16000-lp-tractability.md
   - prime-number-theorem-lp.md
 ---
 
@@ -81,7 +81,28 @@ solves the same 5338×1999 LP to **Optimal in ~320s**, reproducing the leader ba
   would need a fundamentally different solver (dual/Lagrangian, or persistent warm-basis
   column adds) or a non-LP structural insight — open, out of current reach.
 
+## Update 2026-07-02 — the "LP ceiling" conclusion is REFUTED; the pricing pool was the bound
+
+The 06-30 leaderboard falsifies "0.99622 is at/near the true LP ceiling":
+**CHRONOS took #1 @ 0.9965177 with maxkey=24000** (recon-verified payload: nkeys=2000,
+exactMaxC=1.0000990 → base ≈ 0.99642 with the rescale backed out). Two more records
+landed after this finding was drafted: MAOJIASONG 0.9963197 (16000 base + fuller
+rescale, 06-27) and CHRONOS 0.9965177 (**24000 base** + rescale, 06-30).
+
+**Why Exp 14 missed it**: column-generation pricing scanned squarefree candidates
+**≤ 18000** and found max |rc| = 2.35e-5 — correctly showing the 2000-key support is
+near-optimal *for that pool*. CHRONOS extended the *pool* to 24000. The conclusion
+should have been scoped "near-LP-optimal **for maxkey ≤ 18000**," not "the true LP
+ceiling." Lesson: an optimality claim from pricing is only as wide as the pricing pool.
+
+Also verified live (2026-07-02): P7 `minImprovement = 1e-6` (stricter than the 1e-8
+default; unchanged) — the June record burst is **not** a threshold change; submission
+frequency *fell* (1–2/day vs 4–5/day in March). It is N-extension + the saturated
+rescale lever, nothing else. Open question:
+[2026-07-02-p7-nextension-saturation-point](../questions/2026-07-02-p7-nextension-saturation-point.md).
+
 ## Wisdom hook
 A degenerate LP that "won't solve" is often the solver insisting on a vertex it doesn't
 need: turn crossover off and take the interior optimum. Sieve / Mertens-type LPs are
 degenerate by construction (the identity binds many constraints at once).
+**And: never state an optimality conclusion wider than the pricing pool that produced it.**
