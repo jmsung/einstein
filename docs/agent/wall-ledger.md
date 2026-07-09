@@ -94,6 +94,12 @@ council move; the record requires a seed of its distinct topology.
 
 | 2026-07-03 | P7 prime-number-theorem | Grown-LP IPM does not fit ANY per-round budget: the 24000-seed's Mertens-degenerate G sits within 0.1 of binding at ~57k x-points when scanned over the grown 480k range, so the init model carries ~60k dense rows and one HiGHS IPM pass exceeds 3600s on the fanless Air (5x3600s rounds, none converged — pool >24k still never actually tested) | (A) cumulative-2700s budget (2 runs), (B) per-round 2700s, (C) per-round 3600s + g>0.9 threshold (still 59,574 init rows — the near-binding set is intrinsic, not a threshold artifact) | wall-ledger 06-28 + 07-03 rows, finding p7-n16000-degeneracy-crossover-off (degeneracy = binding-row flood), rung-48000 logs v1/v2 | Cap the seed-G near-binding scan to the SEED's own range (10x seed maxkey; worst-x ~8x maxkey), pre-seed new keys' multiples over the full grown range, let cutting planes discover far-range violations incrementally: init rows ~60k -> ~10k | pending (rung 48k v3) | experiment-log Exp 18 |
 
+### 2026-07-07 — P7 reach ceiling ~64k (geometric-tail IPM oscillation) — SOLVED (js/feat/p7-nextension-reclaim-v2)
+
+| date | problem | obstruction | failed attempts | wisdom consulted | resolving move | outcome | finding |
+|---|---|---|---|---|---|---|---|
+| 2026-07-07 | P7 prime-number-theorem | P7 reach ceiling ~64k: the geometric-tail IPM **oscillates** on rebuild-and-prune past 64k — worstG will not converge monotonically, so reach beyond ~64k could not be certified (basis of the earlier "reach ceiling ≈64k" verdict) | geometric tail at 96k / 144k oscillated (worstG bounced, no clean certificate); keep_margin sweep reduced the oscillation amplitude but did not eliminate it | wall-hit escalation (2nd-failure stop); α-family c-probe (c-optimum flat past α≈1.2) | **α=1.3 front-loaded tail family** — replaces the geometric tail; certifies 80k & 96k with worstG decreasing MONOTONICALLY (42.3→1.0, zero oscillation at 80k) — RECORD 4 (id 2394, 80k, 0.9975314760) then RECORD 5 (id 2397, 96k, 0.9976233976) | **solved** — new JSAgent #1 0.9976233976; "reach ceiling ≈64k" verdict OVERTURNED | `findings/p7-n16000-degeneracy-crossover-off.md` (RECORD 4→5 trajectory §) |
+
 ## Lesson distilled (meta)
 The dominant time-sink is **brute-forcing past a wall instead of escalating to wisdom
 at the 2nd failure.** The council diagnoses obstructions and rules out whole families

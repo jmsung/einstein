@@ -29,14 +29,14 @@ Pre-loaded from migration; counts are HISTORICAL (pre-refactor episodes). New cy
 | `mpmath-ulp-polish.md` | float64-ceiling family | 10 | 6 | 5 | 2026-06-01 | 0.60 |
 | `slsqp-active-pair-polish.md` | packing / kissing | 29 | 6 | 1 | 2026-06-12 | 0.21 |
 | `arena-tolerance-slsqp.md` | packing | 35 | 9 | 1 | 2026-06-12 | 0.26 |
-| `larger-n-cascade.md` | autocorrelation | 20 | 4 | 3 | 2026-06-12 | 0.20 |
+| `larger-n-cascade.md` | autocorrelation | 21 | 5 | 4 | 2026-07-07 | 0.24 |
 | `cross-resolution-basin-transfer.md` | autocorrelation | 10 | 1 | 1 | 2026-06-11 | 0.10 |
 | `bounded-lbfgs-per-region-sigmoid.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `boundary-snap-for-kinks.md` | extremal-graph | 1 | 1 | 1 | 2026-04-09 | 1.00 |
 | `first-order-link-tangent-test.md` | kissing-tight | 2 | 1 | 1 | 2026-04-25 | 0.50 |
 | `kronecker-search-decomposition.md` | discrete-combinatorics | 2 | 0 | 2 | 2026-05-02 | 0.00 |
 | `bnb-exhaustive-w3.md` | discrete-combinatorics | 1 | 0 | 1 | 2026-04-09 | 0.00 |
-| `lp-cutting-plane-warmstart.md` | sieve | 2 | 2 | 1 | 2026-04-15 | 1.00 |
+| `lp-cutting-plane-warmstart.md` | sieve | 3 | 3 | 2 | 2026-07-07 | 1.00 |
 | `dinkelbach-fractional-programming.md` | autocorrelation-ratio | 10 | 1 | 0 | 2026-06-02 | 0.10 |
 | `gap-space-parameterization.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |
 | `k-climbing.md` | uncertainty | 2 | 1 | 1 | 2026-04-19 | 0.50 |

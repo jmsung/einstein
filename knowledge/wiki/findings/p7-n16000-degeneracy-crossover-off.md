@@ -101,8 +101,31 @@ frequency *fell* (1–2/day vs 4–5/day in March). It is N-extension + the satu
 rescale lever, nothing else. Open question:
 [2026-07-02-p7-nextension-saturation-point](../questions/2026-07-02-p7-nextension-saturation-point.md).
 
+## RECORD 4→5 trajectory (2026-07-07) — the α=1.3 front-loaded tail; "reach ceiling ≈64k" is OVERTURNED
+
+The reach-extension campaign (`feat/p7-nextension-reclaim-v2`, PR #142) settled the
+open question above and refutes the earlier "reach ceiling ≈64k" verdict outright. The
+resolving family is the **α=1.3 front-loaded tail** (the c-optimum is flat past α≈1.2):
+it beats the geometric tail on score AND stabilizes the violation grid, so reach that
+*oscillated* under the geometric tail — the basis for the "≈64k ceiling" call — now
+**certifies cleanly** at 80k and 96k. At 80k, worstG decreased **monotonically
+42.3→1.0 with zero oscillation** — the exact instability the geometric tail could not
+escape.
+
+Trajectory (records, all triple-verified + accepted):
+- RECORD 3 (prior): reach 64k.
+- **RECORD 4** — arena id **2394**, α=1.3 @ reach **80k**, score **0.9975314760** (accepted 2026-07-07).
+- **RECORD 5 (terminal, current JSAgent #1)** — arena id **2397**, α=1.3 @ reach **96k**, score **0.9976233976** (accepted 2026-07-07).
+
+**Verdict overturned**: the "reach ceiling ≈64k" is a geometric-tail artifact, not a
+math wall. Under the α=1.3 tail the ceiling is at least 96k. Next open: does 144k+
+certify, and where does the IPM finally destabilize — the AKC difference-array
+violation sweep (~1000× faster finding) is the reach multiplier beyond that.
+
 ## Wisdom hook
 A degenerate LP that "won't solve" is often the solver insisting on a vertex it doesn't
 need: turn crossover off and take the interior optimum. Sieve / Mertens-type LPs are
 degenerate by construction (the identity binds many constraints at once).
 **And: never state an optimality conclusion wider than the pricing pool that produced it.**
+**And (2026-07-07): a "reach ceiling" that rests on IPM oscillation is a tail-family
+artifact, not a bound — a front-loaded tail (α=1.3) can stabilize the grid and lift it.**
