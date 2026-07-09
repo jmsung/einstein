@@ -48,7 +48,7 @@ def _new_question_proposal(pid: str = "test-q-001") -> Proposal:
     return Proposal(
         id=pid,
         type=ProposalType.NEW_QUESTION.value,
-        target_path="docs/wiki/questions/2026-05-25-test-q.md",
+        target_path="knowledge/wiki/questions/2026-05-25-test-q.md",
         proposed_diff="---\nbody\n---\n",
         evidence_cycles=[],
         predicted_regressions=["none"],
@@ -320,7 +320,7 @@ def test_audit_row_carries_proposer_id(tmp_path: Path) -> None:
     p = Proposal(
         id="prov-001",
         type=ProposalType.NEW_QUESTION.value,
-        target_path="docs/wiki/questions/2026-05-25-prov.md",
+        target_path="knowledge/wiki/questions/2026-05-25-prov.md",
         proposed_diff="---\nbody\n---\n",
         evidence_cycles=[],
         predicted_regressions=["none"],

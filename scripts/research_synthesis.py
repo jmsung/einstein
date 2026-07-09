@@ -7,7 +7,7 @@ issues a small number of qmd queries against `einstein-wiki-source` +
 `LiteratureSynthesis`, and writes the result as
 `mb/problems/<id>-<slug>/literature-synthesis-<YYYY-MM-DD>.md`.
 
-Design anchor: `docs/wiki/findings/research-synthesis-design.md` (Patterns A/B/C/D).
+Design anchor: `knowledge/wiki/findings/research-synthesis-design.md` (Patterns A/B/C/D).
 Schema: `einstein.research_synthesis.schema.LiteratureSynthesis`.
 
 Usage::

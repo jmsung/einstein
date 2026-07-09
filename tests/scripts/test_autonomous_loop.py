@@ -58,7 +58,7 @@ def _write_problem(
 
 
 def _build_wiki_with_problems(tmp_path: Path, problems: list[dict]) -> Path:
-    pdir = tmp_path / "docs" / "wiki" / "problems"
+    pdir = tmp_path / "knowledge" / "wiki" / "problems"
     pdir.mkdir(parents=True)
     for p in problems:
         _write_problem(pdir, **p)
@@ -295,9 +295,9 @@ def test_format_cycle_log_row_with_cited_sources_renders_count() -> None:
         outcome="no-change",
         notes="smoke",
         cited_sources=[
-            "docs/source/2026-lee-meta-harness.md",
-            "docs/source/2024-baek-researchagent.md",
-            "docs/source/2026-zhang-hyperagents.md",
+            "knowledge/source/2026-lee-meta-harness.md",
+            "knowledge/source/2024-baek-researchagent.md",
+            "knowledge/source/2026-zhang-hyperagents.md",
         ],
     )
     last_cell = row.rstrip().rstrip("|").rstrip().split("|")[-1].strip()
@@ -1180,13 +1180,13 @@ def test_snapshot_wiki_mb_paths_captures_untracked(tmp_path: Path) -> None:
         tmp_path,
         tracked=["src/keep.py"],
         untracked=[
-            "docs/wiki/findings/dead-end-x.md",
+            "knowledge/wiki/findings/dead-end-x.md",
             "mb/problems/14/log.md",
             "scripts/should-be-ignored.py",
         ],
     )
     paths = al._snapshot_wiki_mb_paths(repo)
-    assert "docs/wiki/findings/dead-end-x.md" in paths
+    assert "knowledge/wiki/findings/dead-end-x.md" in paths
     assert "mb/problems/14/log.md" in paths
     # Scope filter — untracked files outside wiki/mb don't appear
     assert "scripts/should-be-ignored.py" not in paths
@@ -1195,15 +1195,15 @@ def test_snapshot_wiki_mb_paths_captures_untracked(tmp_path: Path) -> None:
 def test_snapshot_wiki_mb_paths_captures_modified(tmp_path: Path) -> None:
     repo = _init_git_repo_with_paths(
         tmp_path,
-        modified=["docs/wiki/concepts/foo.md", "mb/progress.md"],
+        modified=["knowledge/wiki/concepts/foo.md", "mb/progress.md"],
     )
     paths = al._snapshot_wiki_mb_paths(repo)
-    assert "docs/wiki/concepts/foo.md" in paths
+    assert "knowledge/wiki/concepts/foo.md" in paths
     assert "mb/progress.md" in paths
 
 
 def test_snapshot_wiki_mb_paths_empty_on_clean_repo(tmp_path: Path) -> None:
-    repo = _init_git_repo_with_paths(tmp_path, tracked=["docs/wiki/x.md"])
+    repo = _init_git_repo_with_paths(tmp_path, tracked=["knowledge/wiki/x.md"])
     paths = al._snapshot_wiki_mb_paths(repo)
     assert paths == set()
 
@@ -1229,19 +1229,19 @@ def test_format_wiki_writes_note_empty() -> None:
 
 
 def test_format_wiki_writes_note_single() -> None:
-    out = al._format_wiki_writes_note(["docs/wiki/findings/a.md"])
-    assert out == "wiki_writes=docs/wiki/findings/a.md"
+    out = al._format_wiki_writes_note(["knowledge/wiki/findings/a.md"])
+    assert out == "wiki_writes=knowledge/wiki/findings/a.md"
 
 
 def test_format_wiki_writes_note_at_cap() -> None:
-    paths = [f"docs/wiki/x{i}.md" for i in range(5)]
+    paths = [f"knowledge/wiki/x{i}.md" for i in range(5)]
     out = al._format_wiki_writes_note(paths)
     assert out.count(",") == 4
     assert "+more" not in out
 
 
 def test_format_wiki_writes_note_over_cap() -> None:
-    paths = [f"docs/wiki/x{i}.md" for i in range(8)]
+    paths = [f"knowledge/wiki/x{i}.md" for i in range(8)]
     out = al._format_wiki_writes_note(paths)
     # Keeps first 5 + collapses tail
     assert "+3-more" in out
@@ -1298,7 +1298,7 @@ def test_run_one_cycle_appends_wiki_writes_to_notes(tmp_path: Path) -> None:
     snapshots = iter(
         [
             set(),
-            {"docs/wiki/findings/dead-end-x.md", "docs/wiki/questions/2026-05-24-y.md"},
+            {"knowledge/wiki/findings/dead-end-x.md", "knowledge/wiki/questions/2026-05-24-y.md"},
         ]
     )
     with patch.object(
@@ -1327,7 +1327,7 @@ def test_run_one_cycle_leaves_notes_clean_when_delta_empty(tmp_path: Path) -> No
     log.write_text("## Cycles\n\n| # | problem |\n|---|---|\n")
 
     # Both snapshots identical → delta = empty
-    with patch.object(al, "_snapshot_wiki_mb_paths", return_value={"docs/wiki/existing.md"}):
+    with patch.object(al, "_snapshot_wiki_mb_paths", return_value={"knowledge/wiki/existing.md"}):
         al.run_one_problem(
             problems_dir=pdir,
             cycle_log=log,
@@ -1515,7 +1515,7 @@ def test_inner_attempt_llm_dead_end(tmp_path: Path) -> None:
         strategy="hexagonal-tiling",
         score=None,
         payload=None,
-        dead_end_finding="docs/wiki/findings/dead-end-hexagonal-tiling.md",
+        dead_end_finding="knowledge/wiki/findings/dead-end-hexagonal-tiling.md",
     )
     result = al.inner_attempt(
         problem,
@@ -1529,7 +1529,7 @@ def test_inner_attempt_llm_dead_end(tmp_path: Path) -> None:
     )
     assert result["outcome"] == "dead-end"
     assert result["findings_added"] == 1
-    assert "dead_end=docs/wiki/findings/dead-end-hexagonal-tiling.md" in result["notes"]
+    assert "dead_end=knowledge/wiki/findings/dead-end-hexagonal-tiling.md" in result["notes"]
 
 
 def test_inner_attempt_llm_converged_overrides_score(tmp_path: Path) -> None:
@@ -3304,7 +3304,7 @@ def test_parallel_fanout_timeout_bandit_skill_update_tried_not_top3(
 
 
 def test_parallel_autofile_findings_env_default_off(tmp_path: Path, monkeypatch) -> None:
-    """Default-off: writing to docs/wiki/findings/ is high-stakes, opt-in only."""
+    """Default-off: writing to knowledge/wiki/findings/ is high-stakes, opt-in only."""
     monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
     assert al._parallel_autofile_findings() is False
 
@@ -3418,7 +3418,7 @@ def test_fanout_dead_end_default_off_no_file_written(tmp_path: Path, monkeypatch
     monkeypatch.setenv("EINSTEIN_PARALLEL_K", "2")
     monkeypatch.delenv("EINSTEIN_PARALLEL_AUTOFILE_FINDINGS", raising=False)
     # Capture findings dir state before
-    findings_dir = al._REPO / "docs" / "wiki" / "findings"
+    findings_dir = al._REPO / "knowledge" / "wiki" / "findings"
     before = set(findings_dir.glob("dead-end-*.md")) if findings_dir.exists() else set()
     dispatcher = _scoring_dispatcher({"tech-A": 0.3, "tech-B": 2.5})
     al.inner_attempt(p14, dry_run=False, skill_library=lib, dispatcher=dispatcher)

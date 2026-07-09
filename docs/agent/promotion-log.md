@@ -1,6 +1,6 @@
 # Promotion log
 
-Append-only record of finding→concept promotions. A finding becomes a concept when it's cited 3+ times across other wiki pages OR invoked across 3+ distinct problems. Promotion is **human-gated** (per `docs/wiki/CLAUDE.md` line 41).
+Append-only record of finding→concept promotions. A finding becomes a concept when it's cited 3+ times across other wiki pages OR invoked across 3+ distinct problems. Promotion is **human-gated** (per `knowledge/wiki/CLAUDE.md` line 41).
 
 Why this log exists: without a trail, "promotion happened" is unverifiable, and the wiki silently leaks high-leverage findings that should have graduated. The cycle-log measures cycle-level work; this log measures wisdom compounding.
 

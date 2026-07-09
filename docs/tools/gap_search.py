@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gap_search.py — auto-suggest source artifacts for open gap questions.
 
-Closes the gap→ingest chain. Reads docs/wiki/questions/*.md with status: open,
+Closes the gap→ingest chain. Reads knowledge/wiki/questions/*.md with status: open,
 builds a search query from the question's title + related_concepts frontmatter,
 queries the arxiv API, and appends a "## Suggested sources" section to the
 question file with the top hits. Human still has to approve + /wiki-ingest;
@@ -35,7 +35,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[2]
-QUESTIONS = _REPO / "docs" / "wiki" / "questions"
+QUESTIONS = _REPO / "knowledge" / "wiki" / "questions"
 DEFAULT_CYCLE_LOG = _REPO / "docs" / "agent" / "cycle-log.md"
 DEFAULT_STALE_REPORT = _REPO.parent / "mb" / "logs" / "stale-questions.md"
 DEFAULT_META_LOOP_REPORT = _REPO.parent / "mb" / "logs" / "meta-loop-report.md"

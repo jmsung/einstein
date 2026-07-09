@@ -57,11 +57,11 @@ def test_audit_checkout_passes_on_clean_room(tmp_path):
 
 def test_audit_checkout_flags_leaked_answer_key(tmp_path):
     co = tmp_path / "einstein-cold"
-    (co / "docs" / "wiki" / "problems").mkdir(parents=True)
-    (co / "docs" / "wiki" / "problems" / "2-foo.md").write_text("SOTA scores here")
+    (co / "knowledge" / "wiki" / "problems").mkdir(parents=True)
+    (co / "knowledge" / "wiki" / "problems" / "2-foo.md").write_text("SOTA scores here")
     receipt = ar.audit_checkout(co)
     assert receipt["passed"] is False
-    assert "docs/wiki" in receipt["leaked_answer_key_files"]
+    assert "knowledge/wiki" in receipt["leaked_answer_key_files"]
 
 
 def test_audit_checkout_does_not_flag_code_with_firewall_substring_names(tmp_path):
@@ -252,7 +252,7 @@ def test_assert_clean_checkout_passes_on_clean_room(tmp_path):
 
 def test_assert_clean_checkout_raises_on_leaked_wiki(tmp_path):
     co = tmp_path / "einstein-cold"
-    (co / "docs" / "wiki").mkdir(parents=True)
+    (co / "knowledge" / "wiki").mkdir(parents=True)
     with pytest.raises(ar.AirGapViolation):
         ar.assert_clean_checkout(co)
 
@@ -266,7 +266,7 @@ def test_run_experiment_aborts_before_running_on_dirty_checkout(tmp_path):
     # A leaked wiki in either arm checkout must abort the batch BEFORE any compute
     # (pre-flight hard gate) — no records written.
     co = _checkout(tmp_path)
-    (co / "einstein-warm" / "docs" / "source").mkdir(parents=True)
+    (co / "einstein-warm" / "knowledge" / "source").mkdir(parents=True)
     res = tmp_path / "results"
     with pytest.raises(ar.AirGapViolation):
         ar.run_experiment(_problems(), [1], _fake_solver, results_dir=res, checkout_root=co)

@@ -35,7 +35,7 @@ General background; no direct arena tie. Tangentially relevant as a reference ar
 
 ## Open questions / connections
 - Can the Multi-LLM-as-Judge rubric (coverage/structure/relevance + NLI-based citation recall/precision) be adapted to score wiki findings/concepts for the cycle-log's "self-improvement" honesty checks?
-- The 51% overgeneralization rate suggests RAG citations alone don't constrain LLM parametric drift — what's the analog risk when an agent writes `docs/wiki/findings/` from retrieved sources?
+- The 51% overgeneralization rate suggests RAG citations alone don't constrain LLM parametric drift — what's the analog risk when an agent writes `knowledge/wiki/findings/` from retrieved sources?
 - Extends STORM (Shao et al. 2024) and PaperRobot (Wang et al. 2019) from <4k to 64k-token generation via parallel subsection drafting; the chunked-outline-merge trick is the key scaling move.
 
 ## Key terms

@@ -13,7 +13,7 @@ Higher C is better. Three structurally distinct routes:
 CAUTION — this score is **resolution-dependent**. The seed is the n=100000
 board-consistent basin; do NOT swap in the 1.6M raw solution, which scores
 0.9627 only at high resolution and does not transfer to the arena
-(docs/wiki/findings/dead-end-p3-resolution-inflation.md). All three checks run
+(knowledge/wiki/findings/dead-end-p3-resolution-inflation.md). All three checks run
 at the seed's own resolution, so they verify *that array's* C2 — they do not by
 themselves certify cross-resolution / arena agreement.
 """

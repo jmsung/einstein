@@ -245,8 +245,8 @@ class TestConstraintTolerance:
     The arena tolerance is ~1e-4, not 1e-12: every leaderboard solution sits at
     exact maxC ≈ 1+1e-4, so the strict `>1.0+1e-12` local gate zeroes real
     tolerance-band solutions and produces a triple-verify mismatch. See
-    docs/wiki/concepts/arena-tolerance-drift.md and
-    docs/wiki/findings/arena-proximity-guard.md.
+    knowledge/wiki/concepts/arena-tolerance-drift.md and
+    knowledge/wiki/findings/arena-proximity-guard.md.
     """
 
     # Minimal tolerance-band fixture. For f = {2: c} (c < 0), evaluate normalizes

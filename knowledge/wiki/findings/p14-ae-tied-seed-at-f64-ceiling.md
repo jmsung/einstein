@@ -2,13 +2,13 @@
 type: finding
 author: agent
 drafted: 2026-06-08
-question_origin: docs/wiki/questions/2026-06-01-p14-ae-tied-seed-mpmath-polish.md
+question_origin: knowledge/wiki/questions/2026-06-01-p14-ae-tied-seed-mpmath-polish.md
 status: answered
 related_problems: [14]
 related_concepts: [float64-ceiling, basin-rigidity, mpmath-ulp-polish, n-agent-tie-not-global-min]
 cites:
   - mb/problems/14-circle-packing-square/solutions/solution-AE-tied-rank2.json
-  - docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
+  - knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
   - scripts/circle_packing_square/mpmath_ulp_polish.py
 ---
 

@@ -9,16 +9,16 @@ This repo is the public artifact. It has three layers, each with its own contrac
 | Layer | Path | Contract | What lives here |
 |---|---|---|---|
 | **Code** | `src/`, `scripts/`, `tests/`, `results/` | this file (below) | optimizer code, evaluators, per-problem scripts |
-| **Docs** | `docs/` | this file (below) + [`docs/wiki/CLAUDE.md`](docs/wiki/CLAUDE.md) | the knowledge layer: `wiki/` (synthesis), `source/` (1:1 distillations), `raw/` (gitignored originals), plus narrative pages (`arena.md`, `timeline.md`, `posts/`) |
+| **Docs** | `docs/` | this file (below) + [`knowledge/wiki/CLAUDE.md`](knowledge/wiki/CLAUDE.md) | the knowledge layer: `wiki/` (synthesis), `source/` (1:1 distillations), `raw/` (gitignored originals), plus narrative pages (`arena.md`, `timeline.md`, `posts/`) |
 | **Rules** | `.claude/rules/` | [`.claude/CLAUDE.md`](.claude/CLAUDE.md) | behavioral rules for human + agent (one topic per file) |
 
-`docs/raw/` (gitignored) holds native originals; `docs/source/` holds 1:1 LLM distillations. Both feed `docs/wiki/`. Worktree tracking lives in `mb/` (private repo, sibling of cb).
+`knowledge/raw/` (gitignored) holds native originals; `knowledge/source/` holds 1:1 LLM distillations. Both feed `knowledge/wiki/`. Worktree tracking lives in `mb/` (private repo, sibling of cb).
 
 ## Goal
 
 **Generalized math wisdom**, not arena rank. The agent solves problems, learns from failure, and writes back to the wiki. Each cycle compounds. Submission is a wisdom-verification tool, not a goal — the autonomous loop may auto-submit new arena records that pass the 6-gate chain in [`.claude/rules/axioms.md`](.claude/rules/axioms.md) (strict-improvement over arena #1, triple-verify, 1-hour throttle, daily cap, kill switch, audit log); all other cases still require human approval. **No external posts** — all knowledge stays on this repo + wiki.
 
-See [`mb/completed/js-refactor-wiki-bootstrap.md`](../mb/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `docs/wiki/home.md`).
+See [`mb/completed/js-refactor-wiki-bootstrap.md`](../mb/completed/js-refactor-wiki-bootstrap.md) for the full design rationale (during refactor; afterward see `knowledge/wiki/home.md`).
 
 ## Setup
 
@@ -38,11 +38,11 @@ modal run ...                          # (Modal currently not in use — local o
 - `src/einstein/optimizer.py`, `knowledge.py` — shared modules
 - `scripts/{problem}/` — per-problem optimizer entry points (public)
 - `tests/{problem}/` — per-problem pytest tests
-- `docs/wiki/problems/{id}-{name}.md` — per-problem index in the wiki (deep wisdom and approach)
+- `knowledge/wiki/problems/{id}-{name}.md` — per-problem index in the wiki (deep wisdom and approach)
 - `results/problem-{id}-{name}/` — result files (gitignored)
 
 ### Compute routing
-Two first-class environments. Always route the workload before launching — see `docs/wiki/techniques/compute-router.md` and `.claude/rules/compute-router.md`.
+Two first-class environments. Always route the workload before launching — see `knowledge/wiki/techniques/compute-router.md` and `.claude/rules/compute-router.md`.
 
 - **Local workstation**: mpmath polish, sequential CPU optimizers (L-BFGS / NM / SLSQP), small basin-hopping, MPS float32 batch ops, large multistart with multiprocess
 - **Modal A100/H100 (NOT IN USE as of 2026-05-24)**: previously used for sustained float64 GPU parallel (parallel tempering, CMA-ES large-pop float64) and RAM-bound large LP/SDP. Currently the workstation's unified memory + MPS f32 covers these workloads at zero marginal cost. Keep Modal scripts available — re-enable only if a specific workload genuinely needs float64-GPU sustained throughput.
@@ -66,6 +66,6 @@ For math problems: every hard problem follows the **math-solving protocol** in `
 
 ## See also
 
-- `docs/wiki/home.md` — narrative front door of the math knowledge base
-- `docs/wiki/problems/_inventory.md` — concept-coverage compass across 23 problems
+- `knowledge/wiki/home.md` — narrative front door of the math knowledge base
+- `knowledge/wiki/problems/_inventory.md` — concept-coverage compass across 23 problems
 - `mb/progress.md` — branch state

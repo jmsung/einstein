@@ -5,11 +5,11 @@ The agent gets smarter ONLY by closing this loop. Skipping any step breaks compo
 ```
    ┌──────────────────────────────────────────────────────────────┐
    ▼                                                              │
-1. GAP DETECT     A question came up that docs/wiki/ doesn't answer.   │
+1. GAP DETECT     A question came up that knowledge/wiki/ doesn't answer.   │
                   (From council dispatch, from work, from         │
                   protocol step 4.)                                │
                                                                   │
-2. FILE QUESTION  docs/wiki/questions/<YYYY-MM-DD>-<slug>.md            │
+2. FILE QUESTION  knowledge/wiki/questions/<YYYY-MM-DD>-<slug>.md            │
                   status: open, asked_by, related_problems         │
                   THIS IS THE STEP MOST OFTEN SKIPPED.             │
                                                                   │
@@ -18,16 +18,16 @@ The agent gets smarter ONLY by closing this loop. Skipping any step breaks compo
                   for partial answers.                             │
                                                                   │
 4. INGEST         /wiki-ingest the relevant artifact —             │
-                  human-gated. Lands in docs/raw/ + docs/source/ atomic.     │
+                  human-gated. Lands in knowledge/raw/ + knowledge/source/ atomic.     │
                                                                   │
 5. DISTILL        /wiki-learn or /wiki-query --file-back to        │
-                  produce docs/wiki/findings/<slug>.md with cites,      │
+                  produce knowledge/wiki/findings/<slug>.md with cites,      │
                   closing the question (status: answered,          │
                   answer_finding: <path>).                         │
                                                                   │
 6. PROMOTE?       If the finding is cited 3+ times OR              │
                   generalizes beyond a single problem,             │
-                  human-gated promotion to docs/wiki/concepts/.         │
+                  human-gated promotion to knowledge/wiki/concepts/.         │
                                                                   │
 7. CYCLE          Next question loops back to step 1.              │
                                                                   └──
@@ -41,7 +41,7 @@ The agent gets smarter ONLY by closing this loop. Skipping any step breaks compo
 - **Filing is fast** — 30 seconds, 4 frontmatter fields, 2 sentences of body. No excuse.
 - **Step 5 is the deliverable** — a question without a finding is half-done work. After answering, ALWAYS author the finding before moving on.
 - **Step 6 (promotion)** is human-gated to prevent agent-driven concept inflation. Don't promote your own findings unprompted.
-- **Cite hygiene**: every finding cites at least one docs/source/ entry or external paper; every concept cites the findings it grew from.
+- **Cite hygiene**: every finding cites at least one knowledge/source/ entry or external paper; every concept cites the findings it grew from.
 
 **Triggering moments:** any time `/wiki-query` returns "the wiki has nothing on this." Any time a council persona surfaces a question with no answer. Any time the optimizer hits a wall and the why is unclear.
 

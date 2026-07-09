@@ -96,7 +96,7 @@ def classify_signals(
             Signal(
                 name="record",
                 action="author positive finding + technique; skill-library top3++",
-                destination="docs/wiki/findings/",
+                destination="knowledge/wiki/findings/",
                 rationale=f"outcome={outcome}",
             )
         )
@@ -106,7 +106,7 @@ def classify_signals(
             Signal(
                 name="dead_end",
                 action='author findings/dead-end-* WITH a "What might still work" section',
-                destination=_dead_end_path(notes) or "docs/wiki/findings/dead-end-*.md",
+                destination=_dead_end_path(notes) or "knowledge/wiki/findings/dead-end-*.md",
                 rationale="Δ<min after a wall",
             )
         )
@@ -116,7 +116,7 @@ def classify_signals(
             Signal(
                 name="triple_verify_disagreement",
                 action="author verifier-mismatch finding; flag submission for review",
-                destination="docs/wiki/findings/",
+                destination="knowledge/wiki/findings/",
                 rationale="triple-verify did not pass — local↔arena drift suspected",
             )
         )

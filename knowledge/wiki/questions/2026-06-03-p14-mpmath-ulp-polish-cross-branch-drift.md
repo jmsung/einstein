@@ -7,7 +7,7 @@ status: open
 related_problems: [14]
 related_concepts: [float64-ceiling, basin-rigidity, mpmath-precision]
 cites:
-  - docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
+  - knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
   - src/einstein/optimizer_manifest.yaml
   - src/einstein/ulp_polish.py
 ---

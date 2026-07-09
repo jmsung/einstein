@@ -191,7 +191,7 @@ def test_meta_self_edit_diff_goes_through_unified_diff_path(tmp_path: Path) -> N
 
 # ---------------- DGM-node-114 adversarial guard ----------------
 # Closes the open question at
-# docs/wiki/questions/2026-05-28-recursive-meta-dgm-node-114-guard.md
+# knowledge/wiki/questions/2026-05-28-recursive-meta-dgm-node-114-guard.md
 
 
 def test_a_wins_rejects_arm_that_hides_dead_ends() -> None:
@@ -247,7 +247,7 @@ def test_a_wins_rejects_arm_that_inflates_findings_by_skipping_dead_ends() -> No
     # The follow-on finding referenced in the question file would tighten this.
     assert d.a_wins(), (
         "current guard allows inflated-findings + no-dead-ends; "
-        "see docs/wiki/questions/2026-05-28-recursive-meta-dgm-node-114-guard.md"
+        "see knowledge/wiki/questions/2026-05-28-recursive-meta-dgm-node-114-guard.md"
     )
 
 

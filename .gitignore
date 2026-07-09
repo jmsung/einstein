@@ -35,9 +35,9 @@ outcmaes/
 # Large result files
 *.npy
 
-# docs/raw/ — local cache of native-format originals (PDFs, transcripts, etc.).
-# docs/source/ holds the in-git distillations; docs/raw is regenerable from source frontmatter.
-docs/raw/
+# knowledge/raw/ — local cache of native-format originals (PDFs, transcripts, etc.).
+# knowledge/source/ holds the in-git distillations; knowledge/raw is regenerable from source frontmatter.
+knowledge/raw/
 .obsidian/
 
 .claude/scheduled_tasks.lock

@@ -10,7 +10,7 @@ cites:
   - src/einstein/ulp_polish.py
   - src/einstein/circles_rectangle/evaluator.py
   - scripts/circles_rectangle/seeds/best.json
-  - docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
+  - knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
 ---
 
 # Dead end: dual-gate ULP polish on a tolerance-band seed (P18 circles-in-rectangle)

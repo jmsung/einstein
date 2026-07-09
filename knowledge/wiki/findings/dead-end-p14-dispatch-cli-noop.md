@@ -10,8 +10,8 @@ cites:
   - src/einstein/optimizer_manifest.yaml
   - scripts/circle_packing_square/newton_max.py
   - scripts/circle_packing_square/slsqp_polish.py
-  - docs/wiki/findings/p14-manifest-wire-fix-verified.md
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/findings/p14-manifest-wire-fix-verified.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
 ---
 
 # Dead end: the autonomous loop's sanctioned P14 execution channel is a no-op

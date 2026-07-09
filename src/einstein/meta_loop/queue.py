@@ -13,7 +13,7 @@ Two operations:
   `<queue_dir>-resolved/`.
 
 The `apply` op is **human-initiated only** — there is no auto-merge code
-path. Per `docs/wiki/findings/recursive-meta-design.md` § "Revert path",
+path. Per `knowledge/wiki/findings/recursive-meta-design.md` § "Revert path",
 the queue entry references the pre-edit snapshot so a revert is a
 `git apply --reverse` plus restoring the snapshot.
 

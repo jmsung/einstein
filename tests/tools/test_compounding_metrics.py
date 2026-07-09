@@ -54,11 +54,11 @@ def test_technique_hit_rate_positional_parse() -> None:
 
 def test_cite_reuse_rate() -> None:
     records = [
-        {"cited_sources": ["docs/source/x.md"]},  # baseline (first citing)
-        {"cited_sources": ["docs/source/x.md"]},  # reuse → counts
-        {"cited_sources": ["docs/source/y.md"]},  # new → eligible, not reuse
+        {"cited_sources": ["knowledge/source/x.md"]},  # baseline (first citing)
+        {"cited_sources": ["knowledge/source/x.md"]},  # reuse → counts
+        {"cited_sources": ["knowledge/source/y.md"]},  # new → eligible, not reuse
         {"cited_sources": []},  # skipped (cites nothing)
-        {"cited_sources": ["docs/source/y.md"]},  # reuse
+        {"cited_sources": ["knowledge/source/y.md"]},  # reuse
     ]
     rate, reuse, eligible = cm.cite_reuse_rate(records)
     assert (reuse, eligible) == (2, 3)

@@ -7,7 +7,7 @@ from einstein.knowledge import KNOWLEDGE_PATH
 
 _no_yaml = pytest.mark.skipif(
     KNOWLEDGE_PATH is None,
-    reason="knowledge.yaml removed in wiki refactor — data shredded to docs/wiki/techniques/",
+    reason="knowledge.yaml removed in wiki refactor — data shredded to knowledge/wiki/techniques/",
 )
 
 

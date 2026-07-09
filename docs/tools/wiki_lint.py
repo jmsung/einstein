@@ -14,7 +14,7 @@ nonzero if any findings exist.
 Usage:
     uv run python docs/tools/wiki_lint.py                       # report only
     uv run python docs/tools/wiki_lint.py --strict              # nonzero exit on findings
-    uv run python docs/tools/wiki_lint.py --wiki docs/wiki/     # custom wiki dir
+    uv run python docs/tools/wiki_lint.py --wiki knowledge/wiki/     # custom wiki dir
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[2]
-DEFAULT_WIKI = _REPO / "docs" / "wiki"
+DEFAULT_WIKI = _REPO / "knowledge" / "wiki"
 
 # Pages that look like indices / housekeeping and should never count as orphans.
 _HOUSEKEEPING_BASENAMES = {"index.md", "home.md", "README.md", "log.md"}

@@ -2,15 +2,15 @@
 type: finding
 author: agent
 drafted: 2026-05-27
-question_origin: docs/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
+question_origin: knowledge/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
 status: answered
 related_problems: [14]
 related_concepts: [float64-ceiling, basin-rigidity]
 cites:
   - src/einstein/optimizer_manifest.yaml
   - scripts/circle_packing_square/slsqp_polish.py
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
-  - docs/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
 ---
 
 # P14 manifest now exposes strict-tol-safe default (`slsqp_polish`)

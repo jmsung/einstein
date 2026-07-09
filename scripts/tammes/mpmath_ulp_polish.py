@@ -11,7 +11,7 @@ single-coordinate ulp step is accepted only if it strictly increases the exact
 distance. At a jammed contact-graph optimum almost every ulp move shrinks some
 active pair, so the expected — and honest — outcome is ~zero accepts: a
 triple-verified confirmation that the seed already sits at its float64 ceiling
-(see docs/wiki/concepts/float64-ceiling.md).
+(see knowledge/wiki/concepts/float64-ceiling.md).
 
 Usage (via dispatch):
     uv run python -m einstein.optimizer_dispatch --problem-id 11 --strategy mpmath_ulp_polish

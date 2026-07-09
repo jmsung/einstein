@@ -1,6 +1,6 @@
 """Tests for docs/tools/concept_inventory.py.
 
-The inventory walks docs/wiki/problems/*.md, aggregates the
+The inventory walks knowledge/wiki/problems/*.md, aggregates the
 `concepts_invoked` / `techniques_used` / `findings_produced` frontmatter
 fields, cross-checks existence against the wiki + source/ layers, and
 classifies each referent by coverage status. The output drives bulk

@@ -230,7 +230,7 @@ def test_apply_code_edit_writes_techniques_page(tmp_path: Path) -> None:
     proposal = make_code_edit_proposal(_gap(), now=dt.datetime(2026, 5, 31, tzinfo=UTC))
     runner, _ = _make_fake_runner()
     ml_shadow.apply_proposal_to_worktree(proposal, spec, runner=runner)
-    page = spec.path / "docs" / "wiki" / "techniques" / "mpmath-ulp-polish.md"
+    page = spec.path / "knowledge" / "wiki" / "techniques" / "mpmath-ulp-polish.md"
     assert page.is_file()
     body = page.read_text()
     assert "type: technique" in body

@@ -112,7 +112,7 @@ def _render_draft_body(gap: ToolGap, *, slug: str, drafted: str) -> str:
 Source: tool-autosynthesis (proposer {PROPOSER_ID}, drafted {drafted}).
 Promotion gate: ANY use of this script must clear the
 `tool_autosynthesis_promotion_decision` chain (validator + shadow A/B +
-human approval). See `docs/wiki/findings/tool-autosynthesis-design.md`.
+human approval). See `knowledge/wiki/findings/tool-autosynthesis-design.md`.
 
 DO NOT IMPORT THIS MODULE FROM PRODUCTION CODE. It lives under
 `scripts/proposed/` precisely because it is unverified; promotion to

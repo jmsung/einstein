@@ -1,7 +1,7 @@
 """Projected-Hessian floor certificate for sphere-constrained energy minima.
 
 Promoted from the P10 Phase-7 finding
-(docs/wiki/findings/p10-wales-global-min-hessian-certificate.md). A second-order
+(knowledge/wiki/findings/p10-wales-global-min-hessian-certificate.md). A second-order
 *certificate* that a configuration is a strict local minimum — stronger and
 cheaper than a micro-perturbation lottery.
 

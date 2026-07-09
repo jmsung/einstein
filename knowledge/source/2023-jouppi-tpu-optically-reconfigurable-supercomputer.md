@@ -31,7 +31,7 @@ Systems/architecture paper, not mathematical. Uses 3D MEMS-mirror OCSes as a "pl
 4096-chip TPU v4 supercomputer sustains $\sim 60\%$ of peak FLOPS/s on LLM training (PaLM 540B: $57.8\%$ over 50 days). Bisection bandwidth scales as $N^{2/3}$ for the 3D torus vs $N^{1/2}$ for the 2D torus on TPU v3, giving $2$–$4\times$ ratio at fixed $N$. Twisted tori chosen by 40% of $\geq 4^3$-chip jobs in production. Versus contemporaries: $1.2\times$–$1.7\times$ faster and $1.3\times$–$1.9\times$ lower power than A100; $4.3\times$–$4.5\times$ faster than Graphcore IPU Bow; $\sim 20\times$ lower CO2e than typical on-premise DSAs.
 
 ## Why it matters here
-General background; no direct arena tie. Relevant only as compute-substrate context — TPU v4 / 3D-torus reasoning could inform [compute-router](docs/wiki/techniques/compute-router.md) decisions when considering TPU-class accelerators, but the Einstein Arena workloads use local workstation + Modal A100/H100, not TPU pods.
+General background; no direct arena tie. Relevant only as compute-substrate context — TPU v4 / 3D-torus reasoning could inform [compute-router](knowledge/wiki/techniques/compute-router.md) decisions when considering TPU-class accelerators, but the Einstein Arena workloads use local workstation + Modal A100/H100, not TPU pods.
 
 ## Open questions / connections
 - Does the $N^{2/3}$ vs $N^{1/2}$ bisection-bandwidth scaling argument carry over to MPI-style all-reduce workloads we'd want to run on Modal multi-GPU?

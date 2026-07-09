@@ -41,10 +41,10 @@ def test_record_signal_from_notes_marker() -> None:
 
 def test_dead_end_signal_and_path_extraction() -> None:
     sigs = classify_signals(
-        _result(outcome="dead-end", notes="dead_end=docs/wiki/findings/dead-end-x.md; foo")
+        _result(outcome="dead-end", notes="dead_end=knowledge/wiki/findings/dead-end-x.md; foo")
     )
     de = [s for s in sigs if s.name == "dead_end"]
-    assert de and de[0].destination == "docs/wiki/findings/dead-end-x.md"
+    assert de and de[0].destination == "knowledge/wiki/findings/dead-end-x.md"
     assert "What might still work" in de[0].action
 
 

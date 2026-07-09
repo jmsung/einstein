@@ -47,7 +47,7 @@ LOCKFILE = _REPO / ".autonomous-loop.lock"
 DAILY_TOKEN_BUDGET = 5_000_000  # axioms.md / precheck hard ceiling
 REFRESH_S = 30
 ARENA_URL = "https://einsteinarena.com"
-PROBLEMS_DIR = _REPO / "docs" / "wiki" / "problems"
+PROBLEMS_DIR = _REPO / "knowledge" / "wiki" / "problems"
 
 
 # ----------------------------- parsing -----------------------------
@@ -495,7 +495,7 @@ def current_problem(
 _SCHED_LOG = _LOGS / "scheduler.log"
 CONTROL_LOG = _LOGS / "dashboard-control.log"
 LAUNCHD_LABEL = "com.einstein.autonomous-loop"
-FINDINGS_DIR = _REPO / "docs" / "wiki" / "findings"
+FINDINGS_DIR = _REPO / "knowledge" / "wiki" / "findings"
 
 # Allowlisted log files the viewer may render (name → path). No arbitrary reads.
 LOG_FILES = {
@@ -632,7 +632,7 @@ def read_log(name: str, *, tail: int = 300) -> tuple[str, str, bool]:
     """Return (title, body, is_markdown) for an allowlisted log or finding.
 
     `name` is either a LOG_FILES key, or 'finding:<slug>' restricted to
-    docs/wiki/findings/ (path-traversal guarded). Logs come back **newest-first**
+    knowledge/wiki/findings/ (path-traversal guarded). Logs come back **newest-first**
     (last `tail` lines, reversed) so the latest entry is at the top — no
     scrolling. Findings come back as raw markdown (is_markdown=True) for the
     caller to render. Unknown/unsafe names return a refusal — never reads

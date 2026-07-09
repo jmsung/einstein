@@ -8,8 +8,8 @@ related_concepts: [float64-ceiling, arena-tolerance-drift, basin-rigidity]
 cites:
   - scripts/circle_packing_square/newton_max.py
   - mb/problems/14-circle-packing-square/experiment-log.md
-  - docs/wiki/findings/arena-proximity-guard.md
-  - docs/wiki/problems/14-circle-packing-square.md
+  - knowledge/wiki/findings/arena-proximity-guard.md
+  - knowledge/wiki/problems/14-circle-packing-square.md
 ---
 
 # Dead end: `newton_max` default config is strict-tol-unsafe on P14
@@ -83,7 +83,7 @@ Neither is wired into `optimizer_manifest.yaml`.
   (e.g., mpmath-ulp-polish, which would replace newton_max's role correctly), not for
   rank improvement on P14 specifically.
 - The open question
-  [`docs/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md`](../questions/2026-05-24-p14-strict-tol-manifest-wiring.md)
+  [`knowledge/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md`](../questions/2026-05-24-p14-strict-tol-manifest-wiring.md)
   owns the wire-fix.
 
 ## See also

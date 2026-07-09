@@ -113,7 +113,7 @@ def test_cycle_rows_for_missing_log_returns_empty(tmp_path):
 @pytest.fixture
 def fake_layout(tmp_path):
     """A minimal repo-shaped tree for render_prompt to read from."""
-    problems_dir = tmp_path / "docs" / "wiki" / "problems"
+    problems_dir = tmp_path / "knowledge" / "wiki" / "problems"
     problems_dir.mkdir(parents=True)
     (problems_dir / "14-circle-packing-square.md").write_text(
         "---\n"
@@ -314,7 +314,7 @@ def test_render_prompt_includes_synthesis_section_when_provided(fake_layout):
     """When orchestrator provides synthesis, it lands BEFORE ## Your task."""
     body = (
         "# Literature synthesis: P14 — circle-packing-square\n\n"
-        "## Top sources\n- 88% docs/source/2016-cohn-some-properties.md — magic function\n\n"
+        "## Top sources\n- 88% knowledge/source/2016-cohn-some-properties.md — magic function\n\n"
         "## Cross-source patterns\n### Pattern: peak-locking transfer\n"
     )
     prompt = iap.render_prompt(

@@ -4,13 +4,13 @@ author: agent
 drafted: 2026-05-27
 asked_by: autonomous_loop
 status: answered
-answer_finding: docs/wiki/findings/verify-seed-dispatch-pattern.md
+answer_finding: knowledge/wiki/findings/verify-seed-dispatch-pattern.md
 related_problems: [14, 22]
 related_concepts: [float64-ceiling]
 cites:
   - src/einstein/optimizer_dispatch.py
   - src/einstein/optimizer_manifest.yaml
-  - docs/wiki/findings/dead-end-p14-dispatch-cli-noop.md
+  - knowledge/wiki/findings/dead-end-p14-dispatch-cli-noop.md
 ---
 
 > **ANSWERED 2026-06-01** (branch `js/feat/manifest-coverage-sprint`).

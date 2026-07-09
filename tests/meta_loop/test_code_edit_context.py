@@ -99,24 +99,24 @@ def test_gather_skips_own_suggested_tool(tmp_path: Path) -> None:
 
 def test_gather_reads_technique_page(tmp_path: Path) -> None:
     manifest = _write_manifest(tmp_path)
-    tdir = tmp_path / "docs" / "wiki" / "techniques"
+    tdir = tmp_path / "knowledge" / "wiki" / "techniques"
     tdir.mkdir(parents=True)
     (tdir / "mpmath-ulp-polish.md").write_text("# mpmath ulp polish\n\nULP-step descent.\n")
     ctx = gather_context(
         _gap(suggested="mpmath-ulp-polish"), repo_root=tmp_path, manifest_path=manifest
     )
-    assert ctx.technique_page_path == "docs/wiki/techniques/mpmath-ulp-polish.md"
+    assert ctx.technique_page_path == "knowledge/wiki/techniques/mpmath-ulp-polish.md"
     assert "ULP-step descent" in (ctx.technique_page or "")
 
 
 def test_gather_reads_open_questions(tmp_path: Path) -> None:
     manifest = _write_manifest(tmp_path)
-    qdir = tmp_path / "docs" / "wiki" / "questions"
+    qdir = tmp_path / "knowledge" / "wiki" / "questions"
     qdir.mkdir(parents=True)
     qpath = qdir / "2026-05-31-p14-x.md"
     qpath.write_text("---\nstatus: open\n---\n\nWhat is the float64 ceiling for P14?\n")
     ctx = gather_context(
-        _gap(questions=[Path("docs/wiki/questions/2026-05-31-p14-x.md")]),
+        _gap(questions=[Path("knowledge/wiki/questions/2026-05-31-p14-x.md")]),
         repo_root=tmp_path,
         manifest_path=manifest,
     )
@@ -126,7 +126,7 @@ def test_gather_reads_open_questions(tmp_path: Path) -> None:
 
 def test_render_prompt_context_includes_all_sections(tmp_path: Path) -> None:
     manifest = _write_manifest(tmp_path)
-    tdir = tmp_path / "docs" / "wiki" / "techniques"
+    tdir = tmp_path / "knowledge" / "wiki" / "techniques"
     tdir.mkdir(parents=True)
     (tdir / "mpmath-ulp-polish.md").write_text("# mpmath ulp polish\n")
     ctx = gather_context(_gap(), repo_root=tmp_path, manifest_path=manifest)

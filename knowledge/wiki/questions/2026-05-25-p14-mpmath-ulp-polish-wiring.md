@@ -4,13 +4,13 @@ author: agent
 drafted: 2026-05-25
 asked_by: autonomous_loop
 status: answered
-answer_finding: docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
+answer_finding: knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
 related_problems: [14]
 related_concepts: [float64-ceiling, basin-rigidity, arena-tolerance-drift]
 cites:
-  - docs/wiki/findings/p14-manifest-wire-fix-verified.md
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
-  - docs/wiki/techniques/mpmath-ulp-polish.md
+  - knowledge/wiki/findings/p14-manifest-wire-fix-verified.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/techniques/mpmath-ulp-polish.md
 ---
 
 # Wire an mpmath-ulp-polish optimizer block into the P14 manifest

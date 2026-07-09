@@ -25,8 +25,8 @@ def test_parse_frontmatter_inline_and_block_lists() -> None:
         "author: agent\n"
         "related_problems: [2, 19]\n"
         "cites:\n"
-        "  - docs/source/a.md\n"
-        "  - docs/source/b.md\n"
+        "  - knowledge/source/a.md\n"
+        "  - knowledge/source/b.md\n"
         "---\n"
         "body\n"
     )
@@ -34,7 +34,7 @@ def test_parse_frontmatter_inline_and_block_lists() -> None:
     assert meta["type"] == "finding"
     assert meta["author"] == "agent"
     assert meta["related_problems"] == ["2", "19"]
-    assert meta["cites"] == ["docs/source/a.md", "docs/source/b.md"]
+    assert meta["cites"] == ["knowledge/source/a.md", "knowledge/source/b.md"]
 
 
 def test_parse_frontmatter_none_when_absent() -> None:
@@ -50,9 +50,9 @@ def test_valid_frontmatter_requires_type_and_known_author() -> None:
 
 
 def test_has_cite_variants() -> None:
-    assert cg.has_cite({"cites": ["docs/source/a.md"]}, "")
+    assert cg.has_cite({"cites": ["knowledge/source/a.md"]}, "")
     assert cg.has_cite({"related_concepts": ["x"]}, "")
-    assert cg.has_cite({}, "see docs/source/foo.md for details")
+    assert cg.has_cite({}, "see knowledge/source/foo.md for details")
     assert cg.has_cite({}, "https://arxiv.org/abs/1234.5678")
     assert not cg.has_cite({"cites": []}, "no references here at all")
 
@@ -72,8 +72,8 @@ def _init_repo(tmp_path: Path) -> Path:
     _run(repo, "config", "user.name", "t")
     _run(repo, "checkout", "-q", "-b", "main")
     (repo / "docs" / "agent").mkdir(parents=True)
-    (repo / "docs" / "wiki" / "findings").mkdir(parents=True)
-    (repo / "docs" / "wiki" / "concepts").mkdir(parents=True)
+    (repo / "knowledge" / "wiki" / "findings").mkdir(parents=True)
+    (repo / "knowledge" / "wiki" / "concepts").mkdir(parents=True)
     (repo / "docs" / "agent" / "cycle-log.md").write_text(
         "# Cycle log\n\n| # | problem | notes |\n|---|---|---|\n| 0 | seed | x |\n"
     )
@@ -85,7 +85,7 @@ def _init_repo(tmp_path: Path) -> Path:
 
 def _good_finding() -> str:
     return (
-        "---\ntype: finding\nauthor: agent\ncites:\n  - docs/source/x.md\n---\n"
+        "---\ntype: finding\nauthor: agent\ncites:\n  - knowledge/source/x.md\n---\n"
         "# Dead end\nwhy it failed\n"
     )
 
@@ -115,7 +115,7 @@ def test_gate_fails_with_finding_but_no_cite(tmp_path: Path) -> None:
     repo = _init_repo(tmp_path)
     log = repo / "docs" / "agent" / "cycle-log.md"
     log.write_text(log.read_text() + "| 1 | P2-x | a record |\n")
-    (repo / "docs" / "wiki" / "findings" / "d.md").write_text(
+    (repo / "knowledge" / "wiki" / "findings" / "d.md").write_text(
         "---\ntype: finding\nauthor: agent\n---\nno citation in body\n"
     )
     passed, reasons = cg.check_capture(repo, "main")
@@ -127,7 +127,7 @@ def test_gate_passes_with_row_and_cited_finding(tmp_path: Path) -> None:
     repo = _init_repo(tmp_path)
     log = repo / "docs" / "agent" / "cycle-log.md"
     log.write_text(log.read_text() + "| 1 | P2-x | a record |\n")
-    (repo / "docs" / "wiki" / "findings" / "d.md").write_text(_good_finding())
+    (repo / "knowledge" / "wiki" / "findings" / "d.md").write_text(_good_finding())
     passed, reasons = cg.check_capture(repo, "main")
     assert passed, reasons
 
@@ -136,8 +136,8 @@ def test_gate_passes_with_concept_too(tmp_path: Path) -> None:
     repo = _init_repo(tmp_path)
     log = repo / "docs" / "agent" / "cycle-log.md"
     log.write_text(log.read_text() + "| 9 | P2-x | x |\n")
-    (repo / "docs" / "wiki" / "concepts" / "c.md").write_text(
-        "---\ntype: concept\nauthor: hybrid\ncites:\n  - docs/wiki/findings/d.md\n---\nbody\n"
+    (repo / "knowledge" / "wiki" / "concepts" / "c.md").write_text(
+        "---\ntype: concept\nauthor: hybrid\ncites:\n  - knowledge/wiki/findings/d.md\n---\nbody\n"
     )
     passed, _ = cg.check_capture(repo, "main")
     assert passed
@@ -147,7 +147,7 @@ def test_readme_does_not_satisfy_capture(tmp_path: Path) -> None:
     repo = _init_repo(tmp_path)
     log = repo / "docs" / "agent" / "cycle-log.md"
     log.write_text(log.read_text() + "| 1 | P2-x | x |\n")
-    (repo / "docs" / "wiki" / "findings" / "README.md").write_text(_good_finding())
+    (repo / "knowledge" / "wiki" / "findings" / "README.md").write_text(_good_finding())
     passed, reasons = cg.check_capture(repo, "main")
     assert not passed
     assert any("findings" in r for r in reasons)
@@ -158,7 +158,7 @@ def test_committed_changes_count(tmp_path: Path) -> None:
     repo = _init_repo(tmp_path)
     log = repo / "docs" / "agent" / "cycle-log.md"
     log.write_text(log.read_text() + "| 1 | P2-x | x |\n")
-    (repo / "docs" / "wiki" / "findings" / "d.md").write_text(_good_finding())
+    (repo / "knowledge" / "wiki" / "findings" / "d.md").write_text(_good_finding())
     _run(repo, "add", "-A")
     _run(repo, "commit", "-q", "-m", "capture")
     passed, reasons = cg.check_capture(repo, "main")
@@ -179,6 +179,6 @@ def test_main_exit_codes(tmp_path: Path, capsys) -> None:
     assert "NOT SATISFIED" in capsys.readouterr().out
     log = repo / "docs" / "agent" / "cycle-log.md"
     log.write_text(log.read_text() + "| 1 | P2-x | x |\n")
-    (repo / "docs" / "wiki" / "findings" / "d.md").write_text(_good_finding())
+    (repo / "knowledge" / "wiki" / "findings" / "d.md").write_text(_good_finding())
     assert cg.main(["--repo", str(repo), "--base", "main"]) == 0
     assert "OK" in capsys.readouterr().out

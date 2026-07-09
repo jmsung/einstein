@@ -18,13 +18,13 @@ def sample() -> S.LiteratureSynthesis:
         queries=["circle packing square optimal", "newton max polish strict tol"],
         top_sources=[
             S.Hit(
-                path="docs/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
+                path="knowledge/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
                 score=0.88,
                 snippet="filesystem-as-feedback over prior candidates",
                 collection="einstein-wiki-source",
             ),
             S.Hit(
-                path="docs/source/2024-baek-researchagent-iterative-research-idea.md",
+                path="knowledge/source/2024-baek-researchagent-iterative-research-idea.md",
                 score=0.83,
                 snippet="entity co-occurrence retrieval surfaces cross-domain",
                 collection="einstein-wiki-source",
@@ -32,7 +32,7 @@ def sample() -> S.LiteratureSynthesis:
         ],
         top_wiki=[
             S.Hit(
-                path="docs/wiki/concepts/equioscillation.md",
+                path="knowledge/wiki/concepts/equioscillation.md",
                 score=0.71,
                 snippet="Chebyshev equioscillation criterion",
                 collection="einstein-wiki",
@@ -43,7 +43,7 @@ def sample() -> S.LiteratureSynthesis:
                 name="A: raw artifact > summary",
                 description="Meta-Harness +15pt traces-over-summary ablation supports keeping full distillation",
                 supporting_sources=[
-                    "docs/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
+                    "knowledge/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
                 ],
             ),
         ],
@@ -51,7 +51,7 @@ def sample() -> S.LiteratureSynthesis:
             S.ProposedApproach(
                 description="Try Newton-max polish with strict tol=0",
                 cited_sources=[
-                    "docs/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
+                    "knowledge/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
                 ],
                 rationale="Filesystem-of-prior-attempts pattern; precedent for additive over destructive edits",
             ),

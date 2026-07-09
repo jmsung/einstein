@@ -6,10 +6,10 @@ question_origin: problem-2
 status: answered
 related_concepts: [basin-rigidity, parameterization-induced-rank-deficiency, float64-ceiling]
 cites:
-  - docs/wiki/findings/verify-seed-dispatch-pattern.md
-  - docs/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md
-  - docs/wiki/problems/2-first-autocorrelation.md
-  - docs/wiki/findings/p2-peak-locking-hessian-mechanism.md
+  - knowledge/wiki/findings/verify-seed-dispatch-pattern.md
+  - knowledge/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md
+  - knowledge/wiki/problems/2-first-autocorrelation.md
+  - knowledge/wiki/findings/p2-peak-locking-hessian-mechanism.md
   - src/einstein/optimizer_manifest.yaml
   - docs/agent/cycle-log.md
 ---

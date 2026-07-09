@@ -15,7 +15,7 @@ All commands below were run on 2026-06-23 and their outputs recorded verbatim.
 | Artifact | Path | Notes |
 |---|---|---|
 | Behavioral rules (the harness) | `.claude/rules/` | one rule per file; read into the agent each session |
-| Knowledge base | `docs/wiki/` (concepts, techniques, findings, problems, questions), `docs/source/` | the durable artifact the paper is about |
+| Knowledge base | `knowledge/wiki/` (concepts, techniques, findings, problems, questions), `knowledge/source/` | the durable artifact the paper is about |
 | Self-improvement layer | `docs/agent/` | cycle-log, skill-library, metrics, wall-ledger |
 | Per-problem optimizer code | `scripts/<problem>/`, `src/einstein/<problem>/` | search + evaluators |
 | Committed construction seeds | `scripts/<problem>/seeds/best.json[.gz]` | in-repo, deterministic, no dependence on private data |
@@ -67,7 +67,7 @@ uv run python scripts/first_autocorrelation/self_pruning_search.py   # search; w
 ```
 This is the honest distinction: the seed gives the basin; the record is the self-pruning output.
 The methodology trace (dead-end finding → warm self-pruning → record) is documented in
-`docs/wiki/findings/p2-warm-self-pruning-beats-record.md`.
+`knowledge/wiki/findings/p2-warm-self-pruning-beats-record.md`.
 
 ---
 
@@ -79,7 +79,7 @@ uv run python scripts/leaderboard_standings.py --agent JSAgent
 Emits the live board (problem, JSAgent score, rank, leader). The paper reports two dated
 snapshots (2026-06-22, 2026-06-23); the board is dynamic, so current output will differ —
 that is by design (paper §3). Frozen 06-22 reading:
-`docs/wiki/findings/arena-standings-snapshot-2026-06-22.md`.
+`knowledge/wiki/findings/arena-standings-snapshot-2026-06-22.md`.
 
 ---
 

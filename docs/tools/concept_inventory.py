@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """concept_inventory.py — generate the wiki's concept coverage matrix.
 
-Walks `docs/wiki/problems/*.md`, aggregates the `concepts_invoked`,
+Walks `knowledge/wiki/problems/*.md`, aggregates the `concepts_invoked`,
 `techniques_used`, and `findings_produced` frontmatter lists, then
 cross-checks each referent against:
 
-  1. its own page in `docs/wiki/{concepts,techniques,findings}/`
-  2. a citing entry in `docs/source/` (substring match on body)
+  1. its own page in `knowledge/wiki/{concepts,techniques,findings}/`
+  2. a citing entry in `knowledge/source/` (substring match on body)
 
 Each referent is classified:
 
@@ -267,7 +267,7 @@ def emit_markdown(report: Report, path: Path) -> None:
     lines.append("")
     lines.append(
         "Programmatic view of concept/technique/finding references across "
-        "`docs/wiki/problems/*.md` frontmatter, classified by wiki + source/ coverage. "
+        "`knowledge/wiki/problems/*.md` frontmatter, classified by wiki + source/ coverage. "
         "Drives `docs/tools/seed_ingest.py`."
     )
     lines.append("")

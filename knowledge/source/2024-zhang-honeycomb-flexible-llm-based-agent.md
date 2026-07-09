@@ -35,7 +35,7 @@ General background; no direct arena tie — this is an agent-systems / RAG paper
 
 ## Open questions / connections
 - Does Inductive Tool Construction (LLM-drafted → human-verified → decomposed into atomic functions) transfer to math-optimization tool authoring for arena problems?
-- How does a BM25+Contriever hybrid compare to the project's current qmd-only retrieval over `docs/wiki/` + `docs/source/`?
+- How does a BM25+Contriever hybrid compare to the project's current qmd-only retrieval over `knowledge/wiki/` + `knowledge/source/`?
 - ToolHub-only hurt SciQA (90.84 → 85.57) — when does tool injection degrade rather than help? Relevant to council-dispatch and self-improvement-loop design.
 
 ## Key terms

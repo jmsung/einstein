@@ -169,7 +169,7 @@ Trigger words override:
 | Worktree-done distillation | Reusable concept/technique → `wiki/concepts|techniques/` |
 | Finding cited 3+ times | Promote to a concept (human-gated) |
 | Autonomous-loop cycle | `scripts/autonomous_loop.py` appends one row to `docs/agent/cycle-log.md`; `docs/tools/cycle_runner.sh` runs `refresh_qmd` → `wiki_graph --file-questions` → `gap_search` → `wiki_lint` → promotion-log check |
-| Bulk seed ingest | `docs/tools/seed_ingest.py {propose, author-sweep, citation-crawl}` writes candidates JSON; human approves; `apply` runs parallel-download + batch PDF→md → `docs/source/*.md` |
+| Bulk seed ingest | `docs/tools/seed_ingest.py {propose, author-sweep, citation-crawl}` writes candidates JSON; human approves; `apply` runs parallel-download + batch PDF→md → `knowledge/source/*.md` |
 
 ## Precedence
 

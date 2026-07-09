@@ -3,11 +3,11 @@
 **Status:** Phase 0+1+4 done (`js/feat/meta-learning-automation`, PR #122);
 **Phase 2 done** (`js/feat/meta-learning-inner-agent`, 2026-06-09) — the headless
 inner agent is instrumented + reliability-fixed + cost-proven, verdict **CONDITIONAL
-GO** for Phase 3 (`docs/wiki/findings/inner-agent-first-run.md`). Phase 3 (scheduler)
+GO** for Phase 3 (`knowledge/wiki/findings/inner-agent-first-run.md`). Phase 3 (scheduler)
 remains a follow-on, gated on this branch's two entry conditions.
 
 **Audience:** this is an *agent-process* design doc, not math wisdom — hence `docs/agent/`
-(next to `cycle-log.md` / `skill-library.md` it governs), not `docs/wiki/`.
+(next to `cycle-log.md` / `skill-library.md` it governs), not `knowledge/wiki/`.
 
 ---
 
@@ -54,7 +54,7 @@ automatic capture doesn't degrade into spam.
 | Measurement | `docs/agent/{cycle-log,skill-library,metrics,promotion-log}.md` | ✅ |
 | Recall | qmd + REFUSING cycle-start query (`cycle-discipline`) + council seeding | ✅ |
 | Hook infra | `.claude/hooks/wall-detector.sh` (PostToolUse Bash) | ✅ — hooks already run |
-| Knowledge | `docs/wiki/{concepts,techniques,findings,rules}` | ✅ |
+| Knowledge | `knowledge/wiki/{concepts,techniques,findings,rules}` | ✅ |
 
 The closed loop: **select → recall → attempt → detect-signal → capture → index → prune.**
 Every arrow has an owner; "attempt" has a wired LLM inner-agent path (not yet proven for
@@ -69,7 +69,7 @@ strict-parse → 40% fallback, now lenient-drop), pinned the capture-gate base
 per-cycle, and added exact token+cost accounting via the json envelope. An
 8-cycle pilot passed every quantitative criterion (0% fallback, 100% parse, 0
 timeouts, 0 crashes, ~$0.27/cycle) → **CONDITIONAL GO** for Phase 3
-(`docs/wiki/findings/inner-agent-first-run.md`, bar in
+(`knowledge/wiki/findings/inner-agent-first-run.md`, bar in
 `docs/agent/inner-agent-readiness.md`). Original framing below.
 
 `inner_attempt(problem)` already has a **headless Claude Code agent** path
@@ -109,7 +109,7 @@ injection, per-run cross-pollination surfacing. 7-run supervised rollout: reliab
 green (15/17 LLM-path, ~$0.6/cycle, 0 spurious submits) but targeting initially ground
 P12 from stale frontmatter + raw-headroom spread — fixed and live-verified (queue
 P3→P10→P4). **Verdict: NOT yet unattended** — see
-`docs/wiki/findings/scheduler-supervised-rollout-verdict.md` for the precondition list
+`knowledge/wiki/findings/scheduler-supervised-rollout-verdict.md` for the precondition list
 (clean v2 attended window, weekly-audit habit, P7 onboarding).
 
 ## The non-negotiable: capture without pruning = spam (Phase 4, THIS branch)
@@ -154,7 +154,7 @@ weak one's drift, which is why the quality gates are not optional.
 - ~~What exactly counts as "verified" for the capture-gate's cite requirement (triple-verify
   pass? any cite? a cite to `source/`)?~~ **Resolved (Phase 0):** *any cite* — a non-empty
   `cites:` frontmatter list (canonical; 99/100 findings use it) OR an inline
-  `docs/source/`/`docs/wiki/`/URL/arxiv reference. Triple-verify gates *submission*, not
+  `knowledge/source/`/`knowledge/wiki/`/URL/arxiv reference. Triple-verify gates *submission*, not
   *capture*; the anti-bloat lint (Phase 4) + human promotion gate are the bloat counters, so
   the capture cite-bar stays low to avoid trapping honest dead-ends. (`docs/tools/capture_gate.py::has_cite`.)
 - ~~Should the `Stop` hook hard-block or warn-then-log on first offense?~~ **Resolved (Phase 0):**

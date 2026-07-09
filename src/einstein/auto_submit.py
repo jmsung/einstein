@@ -59,7 +59,7 @@ KILL_SWITCH_ENV = "EINSTEIN_AUTO_SUBMIT"  # set to "0" to disable
 # "new record" twice, because the caller never passed `minimize`, so gate 5
 # defaulted to maximise. Callers MUST look the direction up here and fail closed
 # when a problem is absent (never guess). See
-# docs/wiki/findings/dead-end-auto-submit-direction-sign.md.
+# knowledge/wiki/findings/dead-end-auto-submit-direction-sign.md.
 PROBLEM_MINIMIZE: dict[int, bool] = {
     1: True,  # erdos-overlap          — "Lower C is better"
     2: True,  # first-autocorrelation  — "Minimize C(f) = max(f★f)/(∫f)²"

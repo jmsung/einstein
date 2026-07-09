@@ -44,8 +44,8 @@ self-improvement loop.
 ## The question
 
 The branch [`js/feat/research-synthesis`](../../../../mb/active/js-feat-research-synthesis.md)
-opens with a concrete asymmetry: `docs/source/` now holds 1256 distilled
-papers and `docs/wiki/` holds 194 synthesis pages, but `mb/<problem>/`
+opens with a concrete asymmetry: `knowledge/source/` now holds 1256 distilled
+papers and `knowledge/wiki/` holds 194 synthesis pages, but `mb/<problem>/`
 cycles rarely cite anything from either. The wiki grows; attempt provenance
 doesn't. **What design pattern, attested in literature, would close that loop
 without bolting on a parallel system?**
@@ -108,7 +108,7 @@ without bolting on a parallel system?**
 - **CiteME** ([`2024-press-citeme-can-language-models.md`](../../source/2024-press-citeme-can-language-models.md))
   asks whether language models *cite accurately*. The answer matters: a
   citation provenance field that the model fabricates is worse than none, so
-  the schema needs to be machine-verifiable against actual `docs/source/*.md`
+  the schema needs to be machine-verifiable against actual `knowledge/source/*.md`
   filenames, not free-text references.
 
 - **AutoSurvey** ([`2024-wang-autosurvey-large-language-models.md`](../../source/2024-wang-autosurvey-large-language-models.md))
@@ -126,7 +126,7 @@ Code-as-Harness survey's "intermediate program state" category, and
 ResearchAgent's full-related-paper context all carry the same shape: the next
 attempt is conditioned on the *artifact* the prior attempt produced, with
 minimal compression. Five sources, same move. The einstein wiki already
-follows this for `docs/source/` (1:1 distillation of each ingested paper) —
+follows this for `knowledge/source/` (1:1 distillation of each ingested paper) —
 the gap is that the cycle prompt does not hand those distillations to the
 attempt generator. G2 fixes this.
 
@@ -150,7 +150,7 @@ entity-co-occurrence retrieval, AutoSurvey's multi-judge cite tracking, CiteME's
 verifiability concern, and the einstein wiki's existing 3-cite promotion rule
 in [`wiki-attribution.md`](../../../.claude/rules/wiki-attribution.md).
 The proposal: extend the cycle-log row schema with `cited_sources: []`, and
-when a `docs/source/<file>.md` accumulates ≥3 cite counts across cycles,
+when a `knowledge/source/<file>.md` accumulates ≥3 cite counts across cycles,
 auto-surface it as a promotion candidate from `source/` → `concepts/`. This
 turns "the wiki compounds" from an intent into a measured quantity per cycle.
 G4 implements; G7 measures whether the signal is real.
@@ -199,7 +199,7 @@ also applies here: every primitive in the left column was sized for the full
   [`council-dispatch`](../../../.claude/rules/council-dispatch.md) (questions,
   not solutions); citations make the questions falsifiable.
 - **G4 (cycle-log + promotion candidates)**: Pattern C. CiteME's verifiability
-  concern says the field must validate against existing `docs/source/*.md`
+  concern says the field must validate against existing `knowledge/source/*.md`
   paths, not accept free text.
 - **G5 (gap → arxiv loop)**: closes the loop AHE leaves open (89% of
   regressions unforeseen) by escalating questions that survive 3+ cycles

@@ -34,7 +34,7 @@ On 2,294 tasks with BM25@13k: Claude 2 1.96%, GPT-4-turbo 1.31%, ChatGPT-3.5 0.1
 General background; no direct arena tie. The Einstein Arena agent is itself a long-context code-editing agent over a 23-problem repo with a wiki, so SWE-bench's findings on **context-length degradation, localization failure, and model preference for shorter/simpler patches than the gold edit** are directly relevant to how the autonomous loop should structure prompts and how strictly to gate "the optimizer change is correct."
 
 ## Open questions / connections
-- Does the "models distract on long context / fail to localize" finding generalize to math-optimizer code edits, and does retrieval over `docs/wiki/` mitigate it the way BM25 partially mitigates here?
+- Does the "models distract on long context / fail to localize" finding generalize to math-optimizer code edits, and does retrieval over `knowledge/wiki/` mitigate it the way BM25 partially mitigates here?
 - How to capture the gold-patch quality dimension ("structural improvements that anticipate future issues") that current pass/fail tests miss — relevant for measuring whether wiki-write quality compounds.
 - Extends prior code benchmarks (HumanEval, MBPP, APPS) by demanding multi-file, repo-scale, test-verified edits; future work: agentic loops on SWE-bench (which later became SWE-agent / Devin evaluations).
 

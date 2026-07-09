@@ -43,7 +43,7 @@ log = logging.getLogger("tool_autosynthesis_shadow")
 _REPO = Path(__file__).resolve().parents[1]
 DEFAULT_MB = _REPO.parent / "mb"
 DEFAULT_CYCLE_LOG = _REPO / "docs" / "agent" / "cycle-log.md"
-DEFAULT_QUESTIONS_DIR = _REPO / "docs" / "wiki" / "questions"
+DEFAULT_QUESTIONS_DIR = _REPO / "knowledge" / "wiki" / "questions"
 DEFAULT_SHADOW_LOG = DEFAULT_MB / "logs" / "tool-autosynthesis-shadow.md"
 
 

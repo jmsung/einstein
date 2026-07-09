@@ -117,7 +117,7 @@ def draft_stub(
 ) -> tuple[str, str]:
     """Build the (relative_path, file_content) for a stub finding.
 
-    Path: `docs/wiki/findings/dead-end-<tech-slug>-p<id>-<YYYY-MM-DD>.md`.
+    Path: `knowledge/wiki/findings/dead-end-<tech-slug>-p<id>-<YYYY-MM-DD>.md`.
     Content: full frontmatter (status: stub) + structured "What we tried"
     + an explicit "Why it failed" TODO placeholder pointing at /wiki-learn.
 
@@ -126,7 +126,7 @@ def draft_stub(
     """
     tech_slug = _slug(candidate.technique or "unknown")
     fname = f"dead-end-{tech_slug}-p{problem.problem_id}-{today}.md"
-    rel_path = f"docs/wiki/findings/{fname}"
+    rel_path = f"knowledge/wiki/findings/{fname}"
 
     frontmatter = (
         "---\n"
@@ -137,7 +137,7 @@ def draft_stub(
         "status: stub\n"
         "related_concepts: []\n"
         f"cites:\n"
-        f"  - docs/wiki/problems/{problem.problem_id}-{problem.slug}.md\n"
+        f"  - knowledge/wiki/problems/{problem.problem_id}-{problem.slug}.md\n"
         "---\n\n"
     )
     body = (

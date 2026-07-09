@@ -1,6 +1,6 @@
 # agent/
 
-Self-improvement infrastructure. The third layer of the artifact (alongside `docs/wiki/` the brain and `.claude/rules/` the policy). This is the **dynamics** layer — measures whether the agent actually self-improves over cycles.
+Self-improvement infrastructure. The third layer of the artifact (alongside `knowledge/wiki/` the brain and `.claude/rules/` the policy). This is the **dynamics** layer — measures whether the agent actually self-improves over cycles.
 
 ## Layout
 

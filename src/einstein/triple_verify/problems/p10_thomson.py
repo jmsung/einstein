@@ -23,7 +23,7 @@ checks above verify the *energy value*; whether the config is a strict local
 *minimum* is certified separately by the projected-Hessian floor test in
 ``einstein.thomson.hessian_certificate.certify_local_min`` (λ_min gap ≈3.41, 3
 rotational zero modes, 0 negative modes). See
-docs/wiki/findings/p10-wales-global-min-hessian-certificate.md.
+knowledge/wiki/findings/p10-wales-global-min-hessian-certificate.md.
 """
 
 from __future__ import annotations

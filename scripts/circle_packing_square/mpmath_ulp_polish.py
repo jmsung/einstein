@@ -2,7 +2,7 @@
 """mpmath_ulp_polish.py — ULP-step coordinate descent for P14 (Circle Packing, n=26).
 
 The body the autosynthesis loop has been asking for (cycles 49–51): the
-`mpmath-ulp-polish` technique exists in `docs/wiki/techniques/mpmath-ulp-polish.md`
+`mpmath-ulp-polish` technique exists in `knowledge/wiki/techniques/mpmath-ulp-polish.md`
 and the skill-library, but had no script for problem 14. This is it.
 
 What it does (per the technique spec)

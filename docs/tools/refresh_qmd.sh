@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Refresh qmd indices for the einstein wiki + source collections.
 #
-# Run this after any commit that touches docs/wiki/ or docs/source/. The qmd index
+# Run this after any commit that touches knowledge/wiki/ or knowledge/source/. The qmd index
 # does NOT auto-detect new files; without this, the agent's NEXT cycle
 # can't query its prior cycle's findings.
 #
@@ -22,7 +22,7 @@ set -euo pipefail
 # with `Abort trap: 6` (the documented Darwin Metal finalizer abort).
 # CPU fallback is fast enough for our corpus (≤20s for a full hybrid
 # query+rerank on ~1700 docs); embed is one-shot and unaffected.
-# See: docs/wiki/findings/qmd-metal-embed-fix.md
+# See: knowledge/wiki/findings/qmd-metal-embed-fix.md
 export QMD_FORCE_CPU=1
 
 if ! command -v qmd >/dev/null 2>&1; then

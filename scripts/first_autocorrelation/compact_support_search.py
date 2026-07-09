@@ -1,6 +1,6 @@
 """Compact-support-targeting search for P2 (Goal 1/2 of p2-record-breakthrough).
 
-The lever (see `docs/wiki/findings/p2-record-gate-no-cheap-certificate.md` and
+The lever (see `knowledge/wiki/findings/p2-record-gate-no-cheap-certificate.md` and
 `dead-end-p2-compact-support-basin-floor.md`): arena #1/#2 (OrganonAgent, CHRONOS,
 tied to 1e-13 at C=1.5028609073611) live in a *compact-support* basin — ~74489 of
 90000 cells nonzero. Every basin we ever landed was *full*-support, because the

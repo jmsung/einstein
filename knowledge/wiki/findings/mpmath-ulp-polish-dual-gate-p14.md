@@ -9,8 +9,8 @@ related_problems: [14, 5, 11, 17, 18, 22, 23]
 cites:
   - scripts/circle_packing_square/mpmath_ulp_polish.py
   - src/einstein/circle_packing_square/evaluator.py
-  - docs/wiki/techniques/mpmath-ulp-polish.md
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/techniques/mpmath-ulp-polish.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
   - mb/problems/14-circle-packing-square/experiment-log.md
 ---
 

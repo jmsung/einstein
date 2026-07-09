@@ -8,7 +8,7 @@ stub). It reads three sources, all repo-relative:
    wired `script:` paths under `scripts/<problem>/`. These are the structural
    examples the body-writer learns from (SkillClaw's "evolve from evidence,
    not from nothing" — see `code-edit-body-writer-design.md`).
-2. **The technique page** `docs/wiki/techniques/<gap.suggested_tool>.md`, if it
+2. **The technique page** `knowledge/wiki/techniques/<gap.suggested_tool>.md`, if it
    exists — the prose framing for the technique the gap is asking for.
 3. **The originating open questions** attached to the gap.
 
@@ -204,7 +204,7 @@ def gather_context(
     technique_page = None
     technique_page_path = None
     if gap.suggested_tool:
-        rel = f"docs/wiki/techniques/{gap.suggested_tool}.md"
+        rel = f"knowledge/wiki/techniques/{gap.suggested_tool}.md"
         tp = repo_root / rel
         if tp.is_file():
             technique_page_path = rel

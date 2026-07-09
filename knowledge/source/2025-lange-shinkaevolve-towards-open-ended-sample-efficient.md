@@ -35,7 +35,7 @@ Directly relevant to the einstein autonomous-loop: this is the closest published
 
 ## Open questions / connections
 - Can the UCB1 LLM-bandit and novelty-rejection be ported to JSAgent's cycle runner to cut compute per problem?
-- Meta-scratchpad ↔ docs/wiki/findings: is periodic LLM-summary of recent findings a viable wiki-distillation augmentation?
+- Meta-scratchpad ↔ knowledge/wiki/findings: is periodic LLM-summary of recent findings a viable wiki-distillation augmentation?
 - The discovered circle-packing program (golden-angle spiral + corner/edge anchors + SLSQP + SA-reheat) is a concrete recipe to ablate against current P1/P11/P15 baselines.
 - Island migration with best-program-pinning (Tanese 1989, Romera-Paredes 2024) — does this map to per-problem branch separation in mb/?
 - Extends AlphaEvolve (Novikov 2025), OpenEvolve (Sharma 2025), LLM4AD (Liu 2024); contrast with FunSearch (Romera-Paredes 2024) and ADAS (Hu 2024).

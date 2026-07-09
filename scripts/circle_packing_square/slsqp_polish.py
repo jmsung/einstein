@@ -19,9 +19,9 @@ Why this exists (Goal-7 dogfood receipt):
   the only optimizer wired for P14 — `newton_max` — defaults to
   `--pair-gap=-9e-10`, the arena-tolerance-band exploit explicitly rejected
   after the 2026-04-09 false-breakthrough 500-pt penalty. See
-  `docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md` and the
+  `knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md` and the
   open question
-  `docs/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md`.
+  `knowledge/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md`.
   This script is the answer.
 
 Usage (via dispatch):

@@ -2,13 +2,13 @@
 type: index
 author: agent
 generated_at: 2026-05-23
-source: generated from docs/source/*.md frontmatter
+source: generated from knowledge/source/*.md frontmatter
 paper_count: 197
 ---
 
 # Source corpus — 197 papers
 
-Browsable manifest of the ingested literature in `docs/source/`. Each entry is a 1:1 LLM distillation of an external artifact (paper, PDF, web page, repo README) with frontmatter capturing the provenance (URL, ingest date, author attribution). Grouped by topic.
+Browsable manifest of the ingested literature in `knowledge/source/`. Each entry is a 1:1 LLM distillation of an external artifact (paper, PDF, web page, repo README) with frontmatter capturing the provenance (URL, ingest date, author attribution). Grouped by topic.
 
 ## Topic breakdown
 

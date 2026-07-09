@@ -1,6 +1,6 @@
 """meta_loop.shadow — A/B harness for proposals (Goal 5).
 
-Per `docs/wiki/findings/meta-loop-design-from-literature.md` § evaluation:
+Per `knowledge/wiki/findings/meta-loop-design-from-literature.md` § evaluation:
 
   Self-attribution is asymmetric (AHE result, 89% of regressions unforeseen).
   Shadow A/B is the regression-foresight gap-filler — fork two worktrees,
@@ -301,7 +301,7 @@ def _stub_skill_library_row(
 
 
 def _stub_techniques_page(slug: str, *, drafted: str, gap_canonical: str) -> str:
-    """Render a minimal `docs/wiki/techniques/<slug>.md` for the autosynth stub.
+    """Render a minimal `knowledge/wiki/techniques/<slug>.md` for the autosynth stub.
 
     Required because the inner strategy_picker / bandit logs the
     technique path and downstream tooling (qmd, wiki_lint) expects the
@@ -402,7 +402,7 @@ def _apply_code_edit_graduation(
     # Techniques-page coupling: write a stub wiki/techniques/<slug>.md so
     # downstream tooling (qmd, wiki_lint, the bandit's logging) sees a
     # real file at the path the skill-library row points to.
-    tech_path = spec.path / "docs" / "wiki" / "techniques" / f"{slug}.md"
+    tech_path = spec.path / "knowledge" / "wiki" / "techniques" / f"{slug}.md"
     if not tech_path.exists():
         tech_path.parent.mkdir(parents=True, exist_ok=True)
         tech_path.write_text(
@@ -412,7 +412,7 @@ def _apply_code_edit_graduation(
                 gap_canonical=_extract_gap_canonical_from_body(proposal.proposed_diff),
             )
         )
-        paths_to_add.append(f"docs/wiki/techniques/{slug}.md")
+        paths_to_add.append(f"knowledge/wiki/techniques/{slug}.md")
 
     add = r(["git", "add", *paths_to_add], spec.path, None)
     if not add.ok:
@@ -549,7 +549,7 @@ class MetaArmMetrics:
     below are what distinguishes the two — they read from the audit log the
     gate chain writes to, not from cycle-log.
 
-    See `docs/wiki/findings/recursive-meta-design.md` § "What shadow A/B wins
+    See `knowledge/wiki/findings/recursive-meta-design.md` § "What shadow A/B wins
     means for the meta layer". The Goodhart counter-measure remains the
     dead-end-non-regression check on the cycle-log side (`ShadowDelta.a_wins`).
     """

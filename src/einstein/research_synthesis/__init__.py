@@ -1,6 +1,6 @@
 """research_synthesis — pre-cycle literature synthesis for the autonomous loop.
 
-Anchored in `docs/wiki/findings/research-synthesis-design.md` (G0). The package
+Anchored in `knowledge/wiki/findings/research-synthesis-design.md` (G0). The package
 turns the four cross-source patterns (raw artifact > summary, change-manifests,
 citation provenance, pre-cycle synthesis) into runnable substrate:
 

@@ -2,18 +2,18 @@
 """promotion_candidates.py — surface source/ pages cited ≥N times cross-cycle.
 
 Goal 4 of `js/feat/research-synthesis`. Reads the per-cycle citation sidecar
-(`mb/logs/cited-sources.jsonl`), counts citations per `docs/source/<file>.md`
+(`mb/logs/cited-sources.jsonl`), counts citations per `knowledge/source/<file>.md`
 path, and writes `mb/logs/promotion-candidates.md` listing any path that
 crossed the threshold (default 3 distinct cycles).
 
 The human reviews the candidates file and decides which sources to promote to
-`docs/wiki/concepts/<file>.md` (per `.claude/rules/wiki-attribution.md`).
+`knowledge/wiki/concepts/<file>.md` (per `.claude/rules/wiki-attribution.md`).
 
 **Meta-loop integration (deferred)**: when the meta-loop branch lands, each
 candidate above the threshold will additionally be emitted as a `rule_edit`
 proposal of the shape::
 
-    {"kind": "promote_source_to_concept", "source": "docs/source/X.md",
+    {"kind": "promote_source_to_concept", "source": "knowledge/source/X.md",
      "rationale": "cited in N cycles across M problems"}
 
 so the meta-loop's existing gate chain + review CLI processes it without a
@@ -111,11 +111,11 @@ def _render_markdown(by_source: dict[str, dict], threshold: int) -> tuple[str, i
         f"_Updated: {today}. Threshold: ≥{threshold} distinct cycle(s)._",
         "",
         (
-            "Each `docs/source/<file>.md` below has been declared as a "
+            "Each `knowledge/source/<file>.md` below has been declared as a "
             "load-bearing citation in ≥3 distinct inner-agent cycles. Per "
             "`.claude/rules/wiki-attribution.md`, the next step is human "
             "review: read the source distillation, decide whether to author "
-            "a `docs/wiki/concepts/<file>.md` page that synthesizes its claims "
+            "a `knowledge/wiki/concepts/<file>.md` page that synthesizes its claims "
             "into the project's vocabulary."
         ),
         "",

@@ -3,7 +3,7 @@
 Scans `docs/agent/cycle-log.md` notes for the canonical markers that show up
 when the inner agent could have dispatched but couldn't, then clusters them
 into `ToolGap` records keyed by *suggested tool slug* (preferred) or
-*marker pattern* (fallback). Joined with open `docs/wiki/questions/*.md`
+*marker pattern* (fallback). Joined with open `knowledge/wiki/questions/*.md`
 tagged `tool-gap` so a long-running question can also seed a gap.
 
 Read-only; mirrors the shape of `diagnose.py`. The downstream proposer
@@ -11,7 +11,7 @@ Read-only; mirrors the shape of `diagnose.py`. The downstream proposer
 `scripts/proposed/<tool>.py`.
 
 Threshold: ≥3 cycles AND ≥2 distinct problem ids (rationale in
-`docs/wiki/findings/tool-autosynthesis-design.md`). The ≥2 distinct
+`knowledge/wiki/findings/tool-autosynthesis-design.md`). The ≥2 distinct
 problems constraint is what prevents one-stuck-problem from masquerading
 as recurrence.
 """

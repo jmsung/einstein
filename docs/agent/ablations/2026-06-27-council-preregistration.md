@@ -83,7 +83,7 @@ all 4 core personas (Gauss/Conway/Erdős/Cohn) returned genuine on-topic questio
 (cost $0.49, 100s), pairing held (identical cold-init both arms), and both arms scored
 (off gap 0.000 — output invalid, floored; on gap 0.383). Persona config:
 `config/ablation_council_smoke.md` (4 core personas, faithful condensation of
-`docs/wiki/personas/`).
+`knowledge/wiki/personas/`).
 
 Given the equal-solve-budget cell cost (~22 min: 100s dispatch + 2×600s solves) and the
 single-credential serial constraint, the confirmatory is run at a **directional** scale,

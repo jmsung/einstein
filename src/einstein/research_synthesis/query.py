@@ -115,7 +115,7 @@ def query_qmd(
     """Run `qmd query <text> -c <collection> -n <n>` and parse hits.
 
     Sets `QMD_FORCE_CPU=1` in the environment to avoid the Darwin Metal
-    finalizer SIGABRT (see docs/wiki/findings/qmd-metal-embed-fix.md).
+    finalizer SIGABRT (see knowledge/wiki/findings/qmd-metal-embed-fix.md).
     """
     runner_fn: Runner = runner or _default_runner
     if runner is None and shutil.which(qmd_bin) is None:

@@ -86,7 +86,7 @@ _TARGET_PATTERNS: dict[str, list[re.Pattern[str]]] = {
         re.compile(r"^src/einstein/autonomous_loop_queue\.yaml$"),
     ],
     ProposalType.NEW_QUESTION.value: [
-        re.compile(r"^docs/wiki/questions/\d{4}-\d{2}-\d{2}-[a-z0-9_\-]+\.md$"),
+        re.compile(r"^knowledge/wiki/questions/\d{4}-\d{2}-\d{2}-[a-z0-9_\-]+\.md$"),
     ],
     # Scope-of-one for the recursive case (see recursive-meta-design.md):
     # the meta-loop may propose edits to its own CLI driver, and ONLY to that

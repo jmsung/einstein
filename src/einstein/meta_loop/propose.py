@@ -4,7 +4,7 @@ Reads the diagnostic report + raw filesystem (cycle-log, findings, dead-ends),
 invokes an LLM proposer with filesystem-tool access, parses typed proposals
 back, writes them to `mb/proposals/pending/`.
 
-Per `docs/wiki/findings/meta-loop-design-from-literature.md`:
+Per `knowledge/wiki/findings/meta-loop-design-from-literature.md`:
 - Filesystem-as-feedback (Meta-Harness): raw rows + raw markdown beat
   summaries. The proposer reads the diagnostic AS WELL AS the raw files;
   the report is a launchpad, not a substitute.

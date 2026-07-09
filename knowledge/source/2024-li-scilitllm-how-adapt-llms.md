@@ -31,11 +31,11 @@ Hybrid pipeline: (1) **CPT** — parse 73k textbooks + 625k papers with PyPDF2, 
 SciLitLLM-7B/14B trained on 23.7B CPT tokens (1 epoch, seq 2048, cosine LR $10^{-5}\to 0$, weight decay 0.1, grad clip 1.0; 3 days on 32 A100s for 7B, 7 days for 14B). New SciLitIns dataset: 93k instructions / 86M tokens across 3 domains and 5 task types. Contamination analysis (3×50-char substring match per GPT-4 protocol) shows 1.1–11% rates on SciAssess but negligible effect: clean-set vs full-set scores differ by $\leq 1.3$ pp. Human–quality-filter Spearman agreement (0.76 CPT, 0.88 SFT) matches or exceeds human–human (0.58, 0.89).
 
 ## Why it matters here
-General background; no direct arena tie. The CPT+SFT recipe, PDF→clean-text pipeline, and educational-value quality filter are methodological references for any future "agent ingests its own corpus" work in einstein's `docs/raw/` → `docs/source/` flow, but the paper covers no math optimization, packing, or extremal-combinatorics content that bears on the 23 arena problems.
+General background; no direct arena tie. The CPT+SFT recipe, PDF→clean-text pipeline, and educational-value quality filter are methodological references for any future "agent ingests its own corpus" work in einstein's `knowledge/raw/` → `knowledge/source/` flow, but the paper covers no math optimization, packing, or extremal-combinatorics content that bears on the 23 arena problems.
 
 ## Open questions / connections
-- Could the fineweb-edu-style quality classifier be retrained on the einstein wiki's existing high-vs-low-quality `docs/source/` distillations to auto-score new ingests?
-- The synthetic-instruction pipeline (keyword sampling + Levenshtein dedup + multi-axis LLM rubric) is a possible template for generating diverse `docs/wiki/questions/` seeds during council dispatch — but the paper offers no evidence this transfers to mathematical reasoning tasks.
+- Could the fineweb-edu-style quality classifier be retrained on the einstein wiki's existing high-vs-low-quality `knowledge/source/` distillations to auto-score new ingests?
+- The synthetic-instruction pipeline (keyword sampling + Levenshtein dedup + multi-axis LLM rubric) is a possible template for generating diverse `knowledge/wiki/questions/` seeds during council dispatch — but the paper offers no evidence this transfers to mathematical reasoning tasks.
 - Extends Phi/Gunasekar "educational value" filtering and SciRIFF/SciGLM/ChemLLM instruction-tuning lines; leaves open whether CPT+SFT helps on reasoning-heavy (not retrieval-heavy) scientific tasks.
 
 ## Key terms

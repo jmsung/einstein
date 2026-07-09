@@ -4,13 +4,13 @@ Phase-8 promotion of the resolution-comparability lesson from the autocorrelatio
 campaign. These problems score a *discretised* functional ratio that is only
 meaningful at the resolution the array is scored on — comparing a score computed
 at one resolution to a leaderboard scored at another caused the P3 resolution-
-inflation false-record class (docs/wiki/findings/dead-end-p3-resolution-inflation.md).
+inflation false-record class (knowledge/wiki/findings/dead-end-p3-resolution-inflation.md).
 
 WHY THIS IS PROCEDURAL, NOT NUMERICAL: we tried a *numerical* agreement predicate
 (re-discretise f to a finer grid, require the score to be stable). It does not
 discriminate — linear-interp upsampling shifts even a clean 100k-native P3 seed by
 ~6e-4, because the functional is genuinely resolution-dependent for ALL f, not
-just inflated ones (docs/wiki/findings/dead-end-resolution-agreement-predicate.md).
+just inflated ones (knowledge/wiki/findings/dead-end-resolution-agreement-predicate.md).
 The only safe rule is procedural: **score on the exact array you submit, at a
 length within the arena cap.** A score computed at any other resolution is not
 comparable to the leaderboard and must never back a submission claim.
@@ -28,7 +28,7 @@ import numpy as np
 # high-res score. The live #1 (ClaudeExplorer, 0.9626433) is an n=400000 array
 # whose C2 recomputes to its exact board score, proving the arena scores at the
 # submitted length up to the 2M cap. See
-# docs/wiki/findings/p3-resolution-is-the-lever-2026-06.md.
+# knowledge/wiki/findings/p3-resolution-is-the-lever-2026-06.md.
 ARENA_RESOLUTION_CAP = 2_000_000
 
 

@@ -9,7 +9,7 @@ cites:
   - scripts/verify_seed.py
   - src/einstein/optimizer_dispatch.py
   - src/einstein/optimizer_manifest.yaml
-  - docs/wiki/findings/dead-end-p14-dispatch-cli-noop.md
+  - knowledge/wiki/findings/dead-end-p14-dispatch-cli-noop.md
   - docs/agent/cycle-log.md
 ---
 

@@ -34,7 +34,7 @@ generator → candidate → evaluator → result ─┐
 
 - **Generator**: LLM or program-synthesis model emitting code, a configuration, or a chain-of-thought.
 - **Evaluator**: deterministic check — unit tests (SWE-bench, [`source/2023-jimenez-swe-bench-can-language-models.md`](../../source/2023-jimenez-swe-bench-can-language-models.md)), Kaggle leaderboard scoring ([MLE-bench](../../source/2024-chan-mle-bench-evaluating-machine-learning.md)), Minecraft game state ([Voyager](../../source/2023-wang-voyager-open-ended-embodied-agent.md)), arena verifier (this repo).
-- **Memory**: structured store the controller and generator can both read — Voyager's skill library, ExpeL's insight buffer ([`source/2023-zhao-expel-llm-agents-experiential.md`](../../source/2023-zhao-expel-llm-agents-experiential.md)), FunSearch's program database ([`source/2023-romera-paredes-funsearch.md`](../../source/2023-romera-paredes-funsearch.md)), AlphaEvolve's evolutionary database ([`source/2025-novikov-alphaevolve.md`](../../source/2025-novikov-alphaevolve.md)), this repo's `docs/wiki/`.
+- **Memory**: structured store the controller and generator can both read — Voyager's skill library, ExpeL's insight buffer ([`source/2023-zhao-expel-llm-agents-experiential.md`](../../source/2023-zhao-expel-llm-agents-experiential.md)), FunSearch's program database ([`source/2023-romera-paredes-funsearch.md`](../../source/2023-romera-paredes-funsearch.md)), AlphaEvolve's evolutionary database ([`source/2025-novikov-alphaevolve.md`](../../source/2025-novikov-alphaevolve.md)), this repo's `knowledge/wiki/`.
 - **Controller**: picks the next prompt / strategy — curriculum (Voyager), evolutionary selection (FunSearch, AlphaEvolve), strategy picker with 1+1 rule (this repo's [`docs/tools/strategy_picker.py`](../../tools/strategy_picker.py)).
 
 ## When it applies
@@ -63,8 +63,8 @@ The autonomous-loop branch (`feat/autonomous-loop`) instantiates the pattern:
 | Harness component | This repo's analogue |
 |---|---|
 | Generator | Claude (via `claude -p` in `llm_distill.py`, council dispatch via `src/einstein/council.py`) |
-| Evaluator | Triple-verify infrastructure + arena verifier ([`docs/wiki/concepts/arena-platform.md`](arena-platform.md)) |
-| Memory | `docs/wiki/` + `docs/source/` (1193 entries as of 2026-05-23) + `docs/agent/skill-library.md` + `docs/agent/cycle-log.md` |
+| Evaluator | Triple-verify infrastructure + arena verifier ([`knowledge/wiki/concepts/arena-platform.md`](arena-platform.md)) |
+| Memory | `knowledge/wiki/` + `knowledge/source/` (1193 entries as of 2026-05-23) + `docs/agent/skill-library.md` + `docs/agent/cycle-log.md` |
 | Controller | `docs/tools/strategy_picker.py` (1+1 rule), `scripts/autonomous_loop.py` (outer + inner) |
 | Curriculum | Problem queue with tier-S→C priority + active/inactive predicate |
 

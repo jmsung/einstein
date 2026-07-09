@@ -6,8 +6,8 @@ asked_by: autonomous_loop cycle 54
 status: open
 related_problems: [14-circle-packing-square]
 related_findings:
-  - docs/wiki/findings/p14-slack-budget-middle-prediction-confirmed.md
-  - docs/wiki/findings/p14-mpmath-slack-budget-analysis.md
+  - knowledge/wiki/findings/p14-slack-budget-middle-prediction-confirmed.md
+  - knowledge/wiki/findings/p14-mpmath-slack-budget-analysis.md
 ---
 
 # Does AlphaEvolve's published n=26 config pass `evaluate_strict(tol=0)`?
@@ -39,7 +39,7 @@ The cost is one 5-minute script. The information is enormous.
 
 ## What "answer" looks like
 
-A short finding `docs/wiki/findings/p14-ae-strict-feasibility-{verdict}.md`
+A short finding `knowledge/wiki/findings/p14-ae-strict-feasibility-{verdict}.md`
 with:
 
 - AE coordinates extracted from `ae_original_notebook.ipynb` (the JSON

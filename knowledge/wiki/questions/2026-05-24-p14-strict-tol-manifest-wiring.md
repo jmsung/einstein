@@ -5,15 +5,15 @@ drafted: 2026-05-24
 asked_by: autonomous_loop (cycle 50/51)
 related_problems: [14]
 status: answered
-answer_finding: docs/wiki/findings/p14-manifest-wired-slsqp-polish.md
+answer_finding: knowledge/wiki/findings/p14-manifest-wired-slsqp-polish.md
 related_concepts: [float64-ceiling, arena-tolerance-drift]
 cites:
   - src/einstein/optimizer_manifest.yaml
   - scripts/circle_packing_square/newton_max.py
   - scripts/circle_packing_square/slsqp_polish.py
   - scripts/circle_packing_square/polish.py
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
-  - docs/wiki/findings/p14-manifest-wired-slsqp-polish.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/findings/p14-manifest-wired-slsqp-polish.md
 ---
 
 # Wire a strict-tol-safe default optimizer into the P14 manifest

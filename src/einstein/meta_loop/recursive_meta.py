@@ -4,7 +4,7 @@ A non-LLM proposer that reads the meta-proposals audit log and emits at most
 one `meta_self_edit` candidate when (a) ≥10 audit rows of usage data exist
 and (b) a meta-layer failure pattern is detected.
 
-See `docs/wiki/findings/recursive-meta-design.md` for the rationale behind the
+See `knowledge/wiki/findings/recursive-meta-design.md` for the rationale behind the
 ≥10-cycle floor and the never-auto-merge stance. The proposer pairs with the
 extra-tight gate chain on `meta_self_edit` (Goal 3); the floor is enforced at
 both the proposer (refuse to emit) and the gate (refuse to accept) for defense
@@ -20,7 +20,7 @@ auto-merges its own proposal — it surfaces a candidate to
 
 Plug point: this module exposes `propose_meta_self_edit` as a
 `Callable[[ProposerInput], list[dict]]` — matching the swap-surface contract
-described in `docs/wiki/findings/meta-loop-swap-surface.md`. Inject it into
+described in `knowledge/wiki/findings/meta-loop-swap-surface.md`. Inject it into
 `propose.run(proposer=propose_meta_self_edit)` to replace the LLM proposer.
 """
 

@@ -56,7 +56,7 @@ def _write_audit_log(
         ts = (base_ts + dt.timedelta(minutes=n)).strftime("%Y-%m-%dT%H:%M:%SZ")
         text += (
             f"| {ts} | prop-acc-{i:03d} | new_question | "
-            f"docs/wiki/questions/2026-05-28-q-{i}.md | accepted | — | "
+            f"knowledge/wiki/questions/2026-05-28-q-{i}.md | accepted | — | "
             f"all gates passed | metaharness-llm-v1 |\n"
         )
         n += 1

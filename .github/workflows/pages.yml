@@ -1,7 +1,7 @@
 name: Deploy Pages
 
 # Root-cause fix for the recurring "Deployment failed, try again later" noise:
-#  - path filter: only content that is actually published (docs/wiki, narrative
+#  - path filter: only content that is actually published (knowledge/wiki, narrative
 #    pages, _config.yml) triggers a build+deploy. docs/paper/**, src/, tests/,
 #    etc. no longer fire Pages at all.
 #  - concurrency cancel-in-progress: a burst of pushes cancels superseded runs
@@ -11,7 +11,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/wiki/**'
+      - 'knowledge/wiki/**'
       - 'docs/*.md'
       - 'docs/posts/**'
       - 'docs/_config.yml'

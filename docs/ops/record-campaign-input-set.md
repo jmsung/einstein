@@ -74,7 +74,7 @@ A problem is in the campaign input set iff **all three** hold:
   `src/einstein/optimizer_manifest.yaml` (the loop can produce a real,
   triple-verified score, not `dispatch: no-manifest-entry`).
 - **(b) Headroom** — `rank-current ≥ #2` (a record is still available to take)
-  **OR** at least one `status: open` question in `docs/wiki/questions/`.
+  **OR** at least one `status: open` question in `knowledge/wiki/questions/`.
 - **(c) Not closed** — not `retired`, and not operator-excluded via
   `in_active_queue: false`.
 

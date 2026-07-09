@@ -80,4 +80,4 @@ The wiki, the rules, the agent code, and the cycle log together form a **legible
 
 ## Status
 
-Live as of 2026-05-23. Started 2026-05-02 from a private memory bank, scaled to a 197-paper source/ corpus + 180-page synthesis layer + autonomous orchestrator under `scripts/autonomous_loop.py` driving 22 cycles to date. The autonomous loop runs under `/loop` or cron via `docs/tools/cycle_runner.sh`; per-device compute calibrations live at `docs/agent/calibrations/<device-key>.json`. Conventions are still tightening — `docs/tools/wiki_lint.py` surfaces drift; `docs/source/INDEX.md` is the live paper manifest.
+Live as of 2026-05-23. Started 2026-05-02 from a private memory bank, scaled to a 197-paper source/ corpus + 180-page synthesis layer + autonomous orchestrator under `scripts/autonomous_loop.py` driving 22 cycles to date. The autonomous loop runs under `/loop` or cron via `docs/tools/cycle_runner.sh`; per-device compute calibrations live at `docs/agent/calibrations/<device-key>.json`. Conventions are still tightening — `docs/tools/wiki_lint.py` surfaces drift; `knowledge/source/INDEX.md` is the live paper manifest.

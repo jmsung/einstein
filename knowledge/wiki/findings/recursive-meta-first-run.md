@@ -127,7 +127,7 @@ zero dead-ends)? The latter is the partial gap documented in
 
 If the cycle-log over the first 30 days shows zero queued candidates,
 the right finding is
-`docs/wiki/findings/dead-end-recursive-meta-thresholds-too-tight.md` —
+`knowledge/wiki/findings/dead-end-recursive-meta-thresholds-too-tight.md` —
 file it and open a follow-on question on which threshold to relax
 (more likely `RECURRING_REJECTION_MIN=3` than `META_SELF_EDIT_CYCLE_FLOOR=10`).
 

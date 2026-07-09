@@ -128,7 +128,7 @@ def test_render_prompt_includes_sibling_section(tmp_path: Path) -> None:
         cycle_log=tmp_path / "no-log.md",
         skill_library=tmp_path / "no-lib.md",
         experiment_log_dir=tmp_path,
-        sibling_findings_section="- docs/wiki/findings/p2-warm-pruning.md (2026-06-08)",
+        sibling_findings_section="- knowledge/wiki/findings/p2-warm-pruning.md (2026-06-08)",
     )
     assert "connect-the-dots" in prompt
     assert "p2-warm-pruning" in prompt

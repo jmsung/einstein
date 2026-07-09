@@ -80,7 +80,7 @@ You are reading top retrieval hits from the einstein wiki + source distillations
 Produce a JSON object matching the LiteratureSynthesis schema. Anchor every
 proposed approach in 1+ cited_sources from the lists below. Cross-source
 patterns must be backed by 2+ supporting_sources. The cross_source_patterns
-should NOT re-derive what `docs/wiki/findings/research-synthesis-design.md`
+should NOT re-derive what `knowledge/wiki/findings/research-synthesis-design.md`
 already covers (patterns A/B/C/D); name *new* patterns specific to this
 problem's literature.
 

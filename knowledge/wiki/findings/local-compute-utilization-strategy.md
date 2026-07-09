@@ -125,8 +125,8 @@ This is a special case of B. mpmath at dps=50–80 is pure Python + GMP — no B
 ## See also
 
 - [.claude/rules/compute-router.md](../../../.claude/rules/compute-router.md) — authoritative decision matrix; this finding is the workstation-specific empirical addendum.
-- [docs/wiki/techniques/compute-router.md](../techniques/compute-router.md) — public framing of the router.
-- [docs/wiki/findings/gpu-modal-compute.md](gpu-modal-compute.md) — the prior finding about "running sequential Python on GPU wastes money"; this one is the dual: "running parallel float32 on CPU wastes time."
+- [knowledge/wiki/techniques/compute-router.md](../techniques/compute-router.md) — public framing of the router.
+- [knowledge/wiki/findings/gpu-modal-compute.md](gpu-modal-compute.md) — the prior finding about "running sequential Python on GPU wastes money"; this one is the dual: "running parallel float32 on CPU wastes time."
 - [scripts/local_benchmark.py](../../../scripts/local_benchmark.py) — the measurement instrument.
 - [scripts/compute_router.py](../../../scripts/compute_router.py) — where these findings should flow into routing rules.
 - [docs/tools/calibrate.sh](../../tools/calibrate.sh) — recalibrate on this Mac or a new one (writes per-device).

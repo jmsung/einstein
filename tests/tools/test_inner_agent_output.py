@@ -22,10 +22,10 @@ VALID_RESPONSE: dict = {
     "payload": {"radii": [0.1, 0.2], "centers": [[0, 0], [1, 1]]},
     "dead_end_finding": None,
     "new_questions": [
-        "docs/wiki/questions/2026-05-24-p14-rotation-lottery.md",
+        "knowledge/wiki/questions/2026-05-24-p14-rotation-lottery.md",
     ],
     "wiki_writes": [
-        "docs/wiki/questions/2026-05-24-p14-rotation-lottery.md",
+        "knowledge/wiki/questions/2026-05-24-p14-rotation-lottery.md",
         "mb/problems/14-circle-packing-square/experiment-log.md",
     ],
     "converged": False,
@@ -50,7 +50,7 @@ def test_parse_response_with_dead_end():
     payload = dict(VALID_RESPONSE)
     payload["score"] = None
     payload["payload"] = None
-    payload["dead_end_finding"] = "docs/wiki/findings/dead-end-rotation-lottery.md"
+    payload["dead_end_finding"] = "knowledge/wiki/findings/dead-end-rotation-lottery.md"
     payload["converged"] = True
     resp = iao.parse_response(json.dumps(payload))
     assert resp.score is None
@@ -169,23 +169,23 @@ def test_payload_string_rejected():
 
 def test_dead_end_finding_wrong_prefix_rejected():
     payload = dict(VALID_RESPONSE)
-    payload["dead_end_finding"] = "docs/wiki/findings/some-other-finding.md"
+    payload["dead_end_finding"] = "knowledge/wiki/findings/some-other-finding.md"
     with pytest.raises(iao.InnerAgentOutputError, match="dead-end-"):
         iao.parse_response(json.dumps(payload))
 
 
 def test_new_questions_must_be_list():
     payload = dict(VALID_RESPONSE)
-    payload["new_questions"] = "docs/wiki/questions/foo.md"
+    payload["new_questions"] = "knowledge/wiki/questions/foo.md"
     with pytest.raises(iao.InnerAgentOutputError, match="new_questions.*expected list"):
         iao.parse_response(json.dumps(payload))
 
 
 def test_new_questions_wrong_prefix_rejected():
     payload = dict(VALID_RESPONSE)
-    payload["new_questions"] = ["docs/wiki/findings/oops.md"]
+    payload["new_questions"] = ["knowledge/wiki/findings/oops.md"]
     with pytest.raises(
-        iao.InnerAgentOutputError, match="new_questions\\[0\\].*docs/wiki/questions/"
+        iao.InnerAgentOutputError, match="new_questions\\[0\\].*knowledge/wiki/questions/"
     ):
         iao.parse_response(json.dumps(payload))
 
@@ -278,8 +278,8 @@ def test_cited_sources_field_accepted():
     """When the agent declares cited_sources, they round-trip into the response."""
     payload = dict(VALID_RESPONSE)
     payload["cited_sources"] = [
-        "docs/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
-        "docs/source/2024-baek-researchagent-iterative-research-idea.md",
+        "knowledge/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
+        "knowledge/source/2024-baek-researchagent-iterative-research-idea.md",
     ]
     resp = iao.parse_response(json.dumps(payload))
     assert resp.cited_sources == payload["cited_sources"]
@@ -294,22 +294,22 @@ def test_cited_sources_absent_defaults_to_empty_list():
 
 
 def test_cited_sources_wrong_prefix_dropped_not_rejected():
-    """Phase 2 Goal 1: a non-docs/source/ entry is DROPPED (kept valid ones),
+    """Phase 2 Goal 1: a non-knowledge/source/ entry is DROPPED (kept valid ones),
     not rejected — a stray citation must never force a mechanical fallback.
     Pilot cycle 1 fell back precisely because this used to raise."""
     payload = dict(VALID_RESPONSE)
     payload["cited_sources"] = [
-        "docs/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md",  # dropped
-        "docs/source/2026-lee-meta-harness.md",  # kept
+        "knowledge/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md",  # dropped
+        "knowledge/source/2026-lee-meta-harness.md",  # kept
     ]
     resp = iao.parse_response(json.dumps(payload))
-    assert resp.cited_sources == ["docs/source/2026-lee-meta-harness.md"]
+    assert resp.cited_sources == ["knowledge/source/2026-lee-meta-harness.md"]
 
 
 def test_cited_sources_all_wrong_prefix_yields_empty_but_valid():
     """All-bad cited_sources → empty list, but the response still parses."""
     payload = dict(VALID_RESPONSE)
-    payload["cited_sources"] = ["docs/wiki/concepts/equioscillation.md"]
+    payload["cited_sources"] = ["knowledge/wiki/concepts/equioscillation.md"]
     resp = iao.parse_response(json.dumps(payload))
     assert resp.cited_sources == []
     assert resp.strategy  # rest of the response is intact
@@ -318,7 +318,7 @@ def test_cited_sources_all_wrong_prefix_yields_empty_but_valid():
 def test_cited_sources_not_list_rejected():
     """Wrong type up top (string instead of list) raises a clear error."""
     payload = dict(VALID_RESPONSE)
-    payload["cited_sources"] = "docs/source/X.md"
+    payload["cited_sources"] = "knowledge/source/X.md"
     with pytest.raises(iao.InnerAgentOutputError, match="cited_sources"):
         iao.parse_response(json.dumps(payload))
 
@@ -330,7 +330,7 @@ def test_append_citation_record_creates_file_when_missing(tmp_path):
         p,
         cycle_id=42,
         problem="P19-difference-bases",
-        cited_sources=["docs/source/2026-lee-meta-harness.md"],
+        cited_sources=["knowledge/source/2026-lee-meta-harness.md"],
     )
     assert p.exists()
     lines = p.read_text().splitlines()
@@ -338,7 +338,7 @@ def test_append_citation_record_creates_file_when_missing(tmp_path):
     rec = json.loads(lines[0])
     assert rec["cycle_id"] == 42
     assert rec["problem"] == "P19-difference-bases"
-    assert rec["cited_sources"] == ["docs/source/2026-lee-meta-harness.md"]
+    assert rec["cited_sources"] == ["knowledge/source/2026-lee-meta-harness.md"]
     assert "ts" in rec
 
 
@@ -347,7 +347,7 @@ def test_append_citation_record_appends_to_existing(tmp_path):
     p = tmp_path / "cited-sources.jsonl"
     for i in range(3):
         iao.append_citation_record(
-            p, cycle_id=i, problem=f"Pn-{i}", cited_sources=[f"docs/source/X{i}.md"]
+            p, cycle_id=i, problem=f"Pn-{i}", cited_sources=[f"knowledge/source/X{i}.md"]
         )
     lines = p.read_text().splitlines()
     assert len(lines) == 3
@@ -370,7 +370,7 @@ def test_append_citation_record_includes_arm_when_env_set(tmp_path, monkeypatch)
         p,
         cycle_id=10,
         problem="P14-circle-packing-square",
-        cited_sources=["docs/source/X.md"],
+        cited_sources=["knowledge/source/X.md"],
     )
     rec = json.loads(p.read_text().strip())
     assert rec["arm"] == "A"

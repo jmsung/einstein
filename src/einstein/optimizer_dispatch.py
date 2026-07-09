@@ -299,7 +299,7 @@ def main(argv: list[str] | None = None) -> int:
     stdout, and returns exit code 0 on success / 1 on dispatch failure. This is
     what makes the manifest reachable from the autonomous toolset — without it,
     the documented command was a silent no-op (see
-    docs/wiki/findings/dead-end-p14-dispatch-cli-noop.md).
+    knowledge/wiki/findings/dead-end-p14-dispatch-cli-noop.md).
     """
     import argparse
 

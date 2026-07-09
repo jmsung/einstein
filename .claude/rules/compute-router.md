@@ -50,10 +50,10 @@
 
 **Common pitfalls:**
 - Running Python `for` loop on GPU → idle GPU, slow wall-clock
-- Running 1000-trial multistart anywhere but a multicore local — multiprocess + Apple Accelerate single-thread workers is the right shape (see [the workstation-utilization-strategy](../../docs/wiki/findings/the workstation-utilization-strategy.md))
+- Running 1000-trial multistart anywhere but a multicore local — multiprocess + Apple Accelerate single-thread workers is the right shape (see [the workstation-utilization-strategy](../../knowledge/wiki/findings/the workstation-utilization-strategy.md))
 - Defaulting to Modal when MPS f32 hasn't been verified for precision — start local, escalate only on measurement
 - Skipping the local benchmark on a fresh machine — calibration drifts
 
 **Triggering pattern:** any time the agent is about to write `import torch` + `cuda` OR `modal.function`, the router check runs first. **Local-only by default as of 2026-05-24**; cloud re-enable requires a documented benchmark + cost/speedup case.
 
-See also: [docs/wiki/techniques/compute-router.md](../../docs/wiki/techniques/compute-router.md) (built in Goal 13), [findings/gpu-modal-compute.md](../../docs/wiki/findings/gpu-modal-compute.md), [axioms](axioms.md) (A4 GPU/compute pre-audit).
+See also: [knowledge/wiki/techniques/compute-router.md](../../knowledge/wiki/techniques/compute-router.md) (built in Goal 13), [findings/gpu-modal-compute.md](../../knowledge/wiki/findings/gpu-modal-compute.md), [axioms](axioms.md) (A4 GPU/compute pre-audit).

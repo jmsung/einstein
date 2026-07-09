@@ -1,7 +1,7 @@
 """meta_loop.meta_gate — 6-gate decision chain for meta-proposals.
 
 Mirrors `src/einstein/auto_submit.py`'s gate pattern. Per
-`docs/wiki/findings/meta-loop-design-from-literature.md`:
+`knowledge/wiki/findings/meta-loop-design-from-literature.md`:
 
   Gate order (fail-fast, cheapest first):
     1. Kill switch         — env EINSTEIN_META_LOOP=0 disables the loop
@@ -46,7 +46,7 @@ DEFAULT_DAILY_CAP = 2
 # Per-type minimum evidence cycle count. `new_question` is a read-only
 # artifact that can stand on findings/dead-ends — cycle count not required.
 # `meta_self_edit` is the extra-tight recursive case: see
-# `docs/wiki/findings/recursive-meta-design.md` § "Why ≥10 cycles, not 3".
+# `knowledge/wiki/findings/recursive-meta-design.md` § "Why ≥10 cycles, not 3".
 DEFAULT_EVIDENCE_THRESHOLDS: dict[str, int] = {
     ProposalType.RULE_EDIT.value: 3,
     ProposalType.MANIFEST_TWEAK.value: 3,
@@ -87,7 +87,7 @@ class GateDecision(str, Enum):
     `QUEUED` is the never-auto-merge outcome for `meta_self_edit` — every
     gate passed, but the diff is parked in `mb/meta-self-edit-queue/` for
     human review rather than applied. See
-    `docs/wiki/findings/recursive-meta-design.md` § "Revert path".
+    `knowledge/wiki/findings/recursive-meta-design.md` § "Revert path".
     """
 
     ACCEPTED = "accepted"
@@ -334,7 +334,7 @@ def evaluate_meta_self_edit_post_shadow(
     """Post-shadow gate chain for meta_self_edit (G3 of recursive-meta).
 
     Runs AFTER `shadow.run_shadow` has produced a `ShadowResult`. Gates A–D
-    per `docs/wiki/findings/recursive-meta-design.md`:
+    per `knowledge/wiki/findings/recursive-meta-design.md`:
 
     - **A** (cycles ≥ 10): re-checks `evidence_cycles` count (defense in depth)
     - **B** (shadow statistical): `a_wins(min_findings_delta=findings_delta_min)`

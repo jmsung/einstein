@@ -138,11 +138,11 @@ regime measures the effort channel explicitly. Report both — do not collapse t
 - **Air-gap fidelity (audited 2026-06-28).** The runner air-gap is two mechanisms:
   (a) `ALLOWED_TOOLS` omits every web/retrieval tool (`ablation_runner.py:51` — no
   `WebSearch`/`WebFetch`/`Task`), and (b) the clean-room checkout physically strips the
-  knowledge layer (`build_ablation_repos.sh` `rm -rf docs/wiki docs/source docs/agent mb
+  knowledge layer (`build_ablation_repos.sh` `rm -rf knowledge/wiki knowledge/source docs/agent mb
   results`), verified by `audit_checkout` (`_ANSWER_KEY_DIRS`). Consequence for *this*
   ablation and the live v3 runs: the 2026-06-29 knowledge ingest (PR #134, +1147
-  `docs/source/` pages) is **outside** the checkout the arms run in **regardless of which
-  commit the checkout is built from** — the build deletes `docs/source/` wholesale — so it
+  `knowledge/source/` pages) is **outside** the checkout the arms run in **regardless of which
+  commit the checkout is built from** — the build deletes `knowledge/source/` wholesale — so it
   cannot contaminate any arm. **Residual hole:** the cwd lives inside the arm checkout (so
   `uv run` resolves the venv) and is explicitly *"not a hard sandbox — absolute-path access
   remains"* (`ablation_runner.py:226`); `Bash`/`qmd` could in principle reach the *real*
