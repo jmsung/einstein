@@ -7,9 +7,9 @@ status: answered
 related_concepts: [sieve-theory-as-lp.md, lp-duality.md, n-extension-monotonicity.md]
 related_problems: [P7]
 cites:
-  - ../../mb/problems/7-prime-number-theorem/experiment-log.md
-  - ../agent/wall-ledger.md
-  - 2026-06-28-p7-n16000-lp-tractability.md
+  - ../../../mb/problems/7-prime-number-theorem/experiment-log.md
+  - ../../../docs/agent/wall-ledger.md
+  - ../questions/2026-06-28-p7-n16000-lp-tractability.md
   - prime-number-theorem-lp.md
 ---
 
