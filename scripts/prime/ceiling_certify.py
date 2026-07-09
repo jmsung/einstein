@@ -77,7 +77,8 @@ def main() -> None:
     print(f"K={r['K']}  sum_y={r['sum_y_float']:.16f}  10*sum|r|_upper={r['ten_sum_abs_r_upper']:.6e}")
     print(f"CERTIFIED:  S*({r['K']}) <= {r['B_upper_str']}")
     if args.verify_ref and "B_float" in d:
-        exp = float(d["B_float"]); ours = float(r["B_upper"])
+        exp = float(d["B_float"])
+        ours = float(r["B_upper"])
         print(f"reference B_float = {exp:.16f}  |  ours = {ours:.16f}  |  Δ = {ours - exp:+.2e}")
         print("MATCH" if abs(ours - exp) < 1e-12 else "MISMATCH — investigate")
 

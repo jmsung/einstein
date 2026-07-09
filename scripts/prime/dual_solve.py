@@ -17,7 +17,6 @@ set. Extends the certificate ladder past K=12000.
 from __future__ import annotations
 
 import argparse
-import math
 import time
 
 import numpy as np
@@ -49,8 +48,10 @@ def solve_uncapped_dual(K: int, TOL: float = 1.0001, xcap_mult: int = 10,
     active = sorted(set(range(1, max_n + 1, step)) | set(range(1, min(2000, max_n))))
 
     def add_rows(ns):
-        a = build_rows(ns); r = a.shape[0]
-        starts = np.arange(0, r * n, n); idx = np.tile(np.arange(n), r)
+        a = build_rows(ns)
+        r = a.shape[0]
+        starts = np.arange(0, r * n, n)
+        idx = np.tile(np.arange(n), r)
         h.addRows(r, np.full(r, -inf), np.full(r, TOL), r * n, starts, idx, a.flatten())
 
     add_rows(active)
@@ -76,11 +77,14 @@ def solve_uncapped_dual(K: int, TOL: float = 1.0001, xcap_mult: int = 10,
             best = (list(active), np.array(sol.row_dual), score)
             break
         if not viols:
-            best = (list(active), np.array(sol.row_dual), score); break
+            best = (list(active), np.array(sol.row_dual), score)
+            break
         new = [v for v in viols[:8000] if v not in set(active)]
         if not new:
-            best = (list(active), np.array(sol.row_dual), score); break
-        active = sorted(set(active) | set(new)); add_rows(new)
+            best = (list(active), np.array(sol.row_dual), score)
+            break
+        active = sorted(set(active) | set(new))
+        add_rows(new)
     if best is None:
         return None
     active_rows, row_dual, score = best
@@ -99,7 +103,8 @@ def main() -> None:
 
     out = solve_uncapped_dual(args.K, time_limit=args.time_limit)
     if out is None:
-        print("dual solve did not converge"); return
+        print("dual solve did not converge")
+        return
     m, y, score_lp = out
     two_p = 1 << args.denom_pow
     Y = np.ceil(y * two_p).astype(object)               # round UP, keeps validity
