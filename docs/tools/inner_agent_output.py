@@ -13,9 +13,9 @@ Schema:
       "strategy": "<one-line name>",
       "score": <float | null>,
       "payload": <object | null>,
-      "dead_end_finding": <"docs/wiki/findings/dead-end-..." | null>,
-      "new_questions": [<paths under docs/wiki/questions/>],
-      "wiki_writes": [<paths under docs/wiki/ or mb/>],
+      "dead_end_finding": <"knowledge/wiki/findings/dead-end-..." | null>,
+      "new_questions": [<paths under knowledge/wiki/questions/>],
+      "wiki_writes": [<paths under knowledge/wiki/ or mb/>],
       "converged": <bool>,
       "notes": "<<= 200 chars, single line>"
     }
@@ -26,9 +26,9 @@ Validation rules (each field surfaces a precise error on failure):
   - `score`            real number (int → coerced to float) or null;
                        bool is rejected (Python's isinstance(True, int) trap)
   - `payload`          dict or null
-  - `dead_end_finding` null OR path starting with `docs/wiki/findings/dead-end-`
-  - `new_questions`    list of strings, each starting with `docs/wiki/questions/`
-  - `wiki_writes`      list of strings, each starting with `docs/wiki/` or `mb/`
+  - `dead_end_finding` null OR path starting with `knowledge/wiki/findings/dead-end-`
+  - `new_questions`    list of strings, each starting with `knowledge/wiki/questions/`
+  - `wiki_writes`      list of strings, each starting with `knowledge/wiki/` or `mb/`
   - `converged`        strict bool (not 0/1)
   - `notes`            single-line string, ≤ 200 chars
 
@@ -51,19 +51,19 @@ log = logging.getLogger("inner_agent_output")
 # ---------------- constants ----------------
 
 MAX_NOTES_CHARS = 200
-DEAD_END_PREFIX = "docs/wiki/findings/dead-end-"
-QUESTIONS_PREFIX = "docs/wiki/questions/"
-WIKI_OR_MB_PREFIXES = ("docs/wiki/", "mb/")
-SOURCE_PREFIX = "docs/source/"
+DEAD_END_PREFIX = "knowledge/wiki/findings/dead-end-"
+QUESTIONS_PREFIX = "knowledge/wiki/questions/"
+WIKI_OR_MB_PREFIXES = ("knowledge/wiki/", "mb/")
+SOURCE_PREFIX = "knowledge/source/"
 
 OUTPUT_SCHEMA = """{
   "strategy": "<one-line name of the approach tried this cycle>",
   "score": <float | null>,
   "payload": <object | null — solution payload for auto_submit, per-problem shape>,
-  "dead_end_finding": <"docs/wiki/findings/dead-end-..." | null>,
-  "new_questions": [<paths under docs/wiki/questions/ written this cycle>],
-  "wiki_writes": [<all paths written under docs/wiki/ or mb/ this cycle>],
-  "cited_sources": [<paths under docs/source/ that informed this attempt; empty list is OK>],
+  "dead_end_finding": <"knowledge/wiki/findings/dead-end-..." | null>,
+  "new_questions": [<paths under knowledge/wiki/questions/ written this cycle>],
+  "wiki_writes": [<all paths written under knowledge/wiki/ or mb/ this cycle>],
+  "cited_sources": [<paths under knowledge/source/ that informed this attempt; empty list is OK>],
   "converged": <bool — true if no plausible next step remains>,
   "notes": "<<= 200 chars, single line, for cycle-log notes column>"
 }"""
@@ -88,7 +88,7 @@ class InnerAgentResponse:
     notes: str
     # Goal 4 of js/feat/research-synthesis. Optional in the agent reply
     # (default empty for backwards-compat with pre-G4 responses); each
-    # entry must start with docs/source/.
+    # entry must start with knowledge/source/.
     cited_sources: list[str] = field(default_factory=list)
 
 
@@ -208,13 +208,13 @@ def _filter_path_list(v: Any, field_name: str, prefixes: tuple[str, ...]) -> lis
     but individual entries that aren't strings or don't match `prefixes` are
     *dropped with a warning* rather than rejected. Used for `cited_sources`:
     the agent frequently cites a findings/concepts page it actually read, but
-    that field feeds the docs/source/-only promotion detector, so the right
+    that field feeds the knowledge/source/-only promotion detector, so the right
     behavior is to keep the valid source/ paths and discard the rest — NOT to
     fail the whole (otherwise valid) cycle and force a mechanical fallback.
 
     Phase 2 Goal 1 reliability fix: pilot cycles fell back precisely because a
-    single `docs/wiki/findings/...` entry in `cited_sources` raised here. See
-    `docs/wiki/findings/inner-agent-cited-sources-parse-fallback.md`.
+    single `knowledge/wiki/findings/...` entry in `cited_sources` raised here. See
+    `knowledge/wiki/findings/inner-agent-cited-sources-parse-fallback.md`.
     """
     if not isinstance(v, list):
         raise InnerAgentOutputError(f"field {field_name!r}: expected list, got {type(v).__name__}")
@@ -286,7 +286,7 @@ def validate(raw: dict) -> InnerAgentResponse:
             WIKI_OR_MB_PREFIXES,
         ),
         # Optional (default []) for backwards compat with pre-G4 agent replies.
-        # Lenient: non-docs/source/ entries are dropped, not rejected — a stray
+        # Lenient: non-knowledge/source/ entries are dropped, not rejected — a stray
         # citation must never force a mechanical fallback (Phase 2 Goal 1).
         cited_sources=_filter_path_list(
             raw.get("cited_sources", []),

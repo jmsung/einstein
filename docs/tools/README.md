@@ -1,7 +1,7 @@
 # docs/tools/ — autonomous-loop tooling
 
 Programmatic tools that let JSAgent run itself. The wiki layer
-(`docs/wiki/`) is the knowledge it acts on; this directory is the
+(`knowledge/wiki/`) is the knowledge it acts on; this directory is the
 machinery that acts. Together they form the agent-driven discovery
 loop described in [`mb/active/feat-autonomous-loop.md`](../../../mb/active/feat-autonomous-loop.md).
 
@@ -9,12 +9,12 @@ loop described in [`mb/active/feat-autonomous-loop.md`](../../../mb/active/feat-
 
 | Tool | Purpose |
 |---|---|
-| [`refresh_qmd.sh`](refresh_qmd.sh) | Re-index `docs/wiki/` and `docs/source/` in qmd. Run at cycle-end. |
+| [`refresh_qmd.sh`](refresh_qmd.sh) | Re-index `knowledge/wiki/` and `knowledge/source/` in qmd. Run at cycle-end. |
 | [`wiki_graph.py`](wiki_graph.py) | Wiki gap detector (FLT-style). Surfaces missing concepts / connections / chains / umbrellas; can auto-file top-3 as open questions. |
 | [`gap_search.py`](gap_search.py) | For each open question, query arxiv (math categories) and append `## Suggested sources`. |
 | [`concept_inventory.py`](concept_inventory.py) | Walks problem frontmatter, classifies referents as well-covered / under-sourced / missing-page / orphan-or-singleton. |
 | [`pdf_to_md.py`](pdf_to_md.py) | Thin wrapper around `opendataloader-pdf` (Java backend) for math-aware PDF → markdown. |
-| [`seed_ingest.py`](seed_ingest.py) | Two-step bulk arxiv ingest: `propose` searches per concept + writes a candidates JSON; `apply` downloads approved PDFs and writes `docs/source/` entries. Supports `--auto-approve-above THRESHOLD` for relevance-thresholded auto-ingest. |
+| [`seed_ingest.py`](seed_ingest.py) | Two-step bulk arxiv ingest: `propose` searches per concept + writes a candidates JSON; `apply` downloads approved PDFs and writes `knowledge/source/` entries. Supports `--auto-approve-above THRESHOLD` for relevance-thresholded auto-ingest. |
 | [`concept-search-terms.yaml`](concept-search-terms.yaml) | Slug → literature-vocabulary mapping consumed by `seed_ingest propose`. Curated; agent-coined slugs that have no literature analog get an empty list (intentionally-unmapped). |
 | [`strategy_picker.py`](strategy_picker.py) | Reads `docs/agent/skill-library.md` + problem category, applies the autoresearch 1+1 rule (prior + novel). Also exports `convergence_detect()`. |
 | [`calibrate.sh`](calibrate.sh) | Device-agnostic recalibration wrapper: runs `scripts/local_benchmark.py`, prints drift vs prior, prints sample router invocations. |
@@ -26,7 +26,7 @@ loop described in [`mb/active/feat-autonomous-loop.md`](../../../mb/active/feat-
 | [`inner_agent_gates.py`](inner_agent_gates.py) | Pre-cycle resource gates: kill switch (`EINSTEIN_INNER_AGENT=0`), sentinel file (`mb/.inner-agent-disabled`), daily budget. |
 | [`inner_agent_budget.py`](inner_agent_budget.py) | CLI + library for the daily token-budget ledger (`mb/logs/inner-agent-budget.md`). |
 | [`notify_milestone.py`](notify_milestone.py) | macOS notification helper — fires a banner when `auto_submit` accepts a new arena record. |
-| [`distill_paper.py`](distill_paper.py) | Distill a single `docs/raw/<id>.pdf` (or arxiv URL) into a `docs/source/<id>.md` LLM-distillation. |
+| [`distill_paper.py`](distill_paper.py) | Distill a single `knowledge/raw/<id>.pdf` (or arxiv URL) into a `knowledge/source/<id>.md` LLM-distillation. |
 | [`llm_distill.py`](llm_distill.py) | Lower-level LLM distillation primitive used by `distill_paper` + `seed_ingest` apply step. |
 | [`select_top.py`](select_top.py) | Pick the top-N candidates from a `*-candidates.json` (used inside the seed-ingest pipeline). |
 | [`seed-authors.yaml`](seed-authors.yaml) | Author-list seed for `seed_ingest propose` (broad-stroke literature sweep). |
@@ -44,7 +44,7 @@ The top-level orchestrator lives one directory up at
 ┌────────────────────────────────────────────────────────────────┐
 │ scripts/autonomous_loop.py  (outer orchestrator)               │
 │                                                                │
-│  1. load problem queue from docs/wiki/problems/*.md frontmatter│
+│  1. load problem queue from knowledge/wiki/problems/*.md frontmatter│
 │     (Tier S→A→B→C; skip frozen/conquered/blocked/hidden)       │
 │                                                                │
 │  2. pick top-priority active problem                           │
@@ -163,5 +163,5 @@ projection of that trail.
 - [`docs/agent/cycle-log.md`](../agent/cycle-log.md) — the append-only audit trail
 - [`docs/agent/skill-library.md`](../agent/skill-library.md) — technique hit-rate ledger consumed by `strategy_picker`
 - [`docs/agent/calibrations/`](../agent/calibrations/) — per-device compute calibrations
-- [`docs/wiki/findings/the workstation-utilization-strategy.md`](../wiki/findings/the workstation-utilization-strategy.md) — what multi-core + MPS + high-memory unlocks
-- [`docs/wiki/findings/dead-end-slug-as-arxiv-phrase-query.md`](../wiki/findings/dead-end-slug-as-arxiv-phrase-query.md) — why `concept-search-terms.yaml` exists
+- [`knowledge/wiki/findings/the workstation-utilization-strategy.md`](../wiki/findings/the workstation-utilization-strategy.md) — what multi-core + MPS + high-memory unlocks
+- [`knowledge/wiki/findings/dead-end-slug-as-arxiv-phrase-query.md`](../wiki/findings/dead-end-slug-as-arxiv-phrase-query.md) — why `concept-search-terms.yaml` exists

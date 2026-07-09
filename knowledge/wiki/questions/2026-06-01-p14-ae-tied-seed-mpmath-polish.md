@@ -4,14 +4,14 @@ author: agent
 drafted: 2026-06-01
 status: answered
 answered_on: 2026-06-08
-answer_finding: docs/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md
+answer_finding: knowledge/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md
 asked_by: autonomous_loop_p14_cycle54
 related_problems: [14]
 related_concepts: [float64-ceiling, basin-rigidity, arena-tolerance-drift, mpmath-ulp-polish]
 cites:
   - mb/problems/14-circle-packing-square/solutions/solution-AE-tied-rank2.json
-  - docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
-  - docs/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md
+  - knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
+  - knowledge/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md
 ---
 
 # Does mpmath-ulp-polish from the AE-tied seed reveal more sub-ulp slack than from our rank-2 seed?

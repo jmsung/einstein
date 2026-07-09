@@ -35,7 +35,7 @@ General background; no direct arena tie. The Einstein Arena agent works on pure 
 
 ## Open questions / connections
 - Can SELFIES-style "syntactically-safe" representations inspire a similar always-valid encoding for combinatorial/geometric configurations (e.g., point sets that satisfy hard constraints by construction)?
-- The self-questioning pipeline (GPT-3.5 extracts Q&A pairs from abstracts) is a template for auto-populating `docs/wiki/questions/` from ingested sources — but the wiki currently uses gap-detection (`wiki_graph.py`), not abstract mining.
+- The self-questioning pipeline (GPT-3.5 extracts Q&A pairs from abstracts) is a template for auto-populating `knowledge/wiki/questions/` from ingested sources — but the wiki currently uses gap-detection (`wiki_graph.py`), not abstract mining.
 - Extends instruction-tuning literature (Alpaca, FLAN, Baize, COIG, UltraChat) into a specialized scientific domain; does not extend any math/optimization line of work.
 
 ## Key terms

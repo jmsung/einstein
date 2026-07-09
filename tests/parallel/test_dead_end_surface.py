@@ -184,8 +184,8 @@ def test_draft_stub_filename_pattern():
         winner=winner,
         today="2026-05-27",
     )
-    # Pattern: docs/wiki/findings/dead-end-<tech-slug>-p<id>-<date>.md
-    assert path.startswith("docs/wiki/findings/dead-end-")
+    # Pattern: knowledge/wiki/findings/dead-end-<tech-slug>-p<id>-<date>.md
+    assert path.startswith("knowledge/wiki/findings/dead-end-")
     assert "newton-max" in path or "newton_max" in path  # tech in name
     assert "p14" in path
     assert "2026-05-27" in path

@@ -6,20 +6,20 @@ When starting a hard problem (recon phase), dispatch a council of mathematician 
 
 **How to apply:**
 
-1. **Parse problem category** from `mb/<problem>/strategy.md` and `docs/wiki/problems/_inventory.md`. Categories: sphere_packing, kissing_number, autocorrelation, discrete_geometry, packing, extremal_graph, sieve_theory, uncertainty, combinatorics, …
+1. **Parse problem category** from `mb/<problem>/strategy.md` and `knowledge/wiki/problems/_inventory.md`. Categories: sphere_packing, kissing_number, autocorrelation, discrete_geometry, packing, extremal_graph, sieve_theory, uncertainty, combinatorics, …
 
-2. **Read each persona's wiki page** (`docs/wiki/personas/<name>.md`) BEFORE dispatching. The page is the seed — without reading it, you're just pattern-matching on the name.
+2. **Read each persona's wiki page** (`knowledge/wiki/personas/<name>.md`) BEFORE dispatching. The page is the seed — without reading it, you're just pattern-matching on the name.
 
 3. **Spawn 3–5 personas in parallel** as research subagents, seeded with:
    - Problem statement
    - Top-3 SOTA solutions (downloaded via arena API)
    - The persona's wiki page (stance + heuristics + when-stuck-I-ask)
-   - Existing relevant findings (from `docs/wiki/findings/`)
+   - Existing relevant findings (from `knowledge/wiki/findings/`)
    - Instruction: **write 2–3 questions, not a solution**
 
 4. **Check specialist triggers** (in each persona's frontmatter): if the problem matches the persona's `trigger.categories`, also dispatch them.
 
-5. **Each persona's output** lands in `docs/wiki/questions/<YYYY-MM-DD>-<problem>-<persona>-<slug>.md` with frontmatter `author: agent`, `asked_by: <persona>`, `status: open`.
+5. **Each persona's output** lands in `knowledge/wiki/questions/<YYYY-MM-DD>-<problem>-<persona>-<slug>.md` with frontmatter `author: agent`, `asked_by: <persona>`, `status: open`.
 
 6. **Synthesize**: read all the questions; group by approach; rank by expected impact. Pick the top 3 to research first via [self-improvement-loop](self-improvement-loop.md).
 
@@ -33,4 +33,4 @@ When starting a hard problem (recon phase), dispatch a council of mathematician 
 
 **Cost budget**: ~$X tokens per problem for the full council. Run ONCE per problem during recon, not on every iteration. Re-dispatch when: the problem category shifts, new evidence arrives, **OR you hit a wall** (per [wall-hit-escalation](wall-hit-escalation.md) — 2 failed attempts / retuned method ≥2× / >30 min with no gain). A wall is a *re-trigger*, not a recon-only event: seed the re-dispatch with the attempts that failed and why, and ask each persona for ONE concrete NEW move outside the failed class. The P4 record-breakthrough session proved the cost of NOT re-dispatching — 10+ brute-force variants over hours where a wall-triggered council would have ruled out the families in minutes.
 
-See also: [docs/wiki/personas/](../../docs/wiki/personas/), [self-improvement-loop](self-improvement-loop.md), [ask-the-question-first](ask-the-question-first.md).
+See also: [knowledge/wiki/personas/](../../knowledge/wiki/personas/), [self-improvement-loop](self-improvement-loop.md), [ask-the-question-first](ask-the-question-first.md).

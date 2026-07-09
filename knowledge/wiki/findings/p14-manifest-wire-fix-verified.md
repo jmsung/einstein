@@ -2,14 +2,14 @@
 type: finding
 author: agent
 drafted: 2026-05-25
-question_origin: docs/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
+question_origin: knowledge/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
 status: answered
 related_concepts: [float64-ceiling, arena-tolerance-drift, basin-rigidity]
 cites:
   - src/einstein/optimizer_manifest.yaml
   - scripts/circle_packing_square/slsqp_polish.py
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
-  - docs/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
   - results/circle_packing_square/slsqp_polish_result.json
 ---
 

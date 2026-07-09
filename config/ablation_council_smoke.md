@@ -6,8 +6,8 @@ LLM sessions rather than the full ~10-persona council. The four personas chosen 
 the smoke problem's `discrete_geometry` / Heilbronn category: Gauss, Conway, Erdős, Cohn.
 
 The content of each persona below is a **faithful condensation** of its full wiki page in
-`docs/wiki/personas/` (stance, ranked heuristics, when-stuck-I-ask, famous moves). It is not
-invented — each single-line field traces back to the corresponding `docs/wiki/personas/<name>.md`.
+`knowledge/wiki/personas/` (stance, ranked heuristics, when-stuck-I-ask, famous moves). It is not
+invented — each single-line field traces back to the corresponding `knowledge/wiki/personas/<name>.md`.
 This file is parsed by `src/einstein/council/personas.py::load_personas`. There is no
 `## Specialist Bench` section — the smoke is core-only.
 

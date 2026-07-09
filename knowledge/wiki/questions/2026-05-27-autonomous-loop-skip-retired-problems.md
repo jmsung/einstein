@@ -12,7 +12,7 @@ related_concepts: [float64-ceiling.md]
 
 The orchestrator dispatched cycle_id=0 for P17 (retired-17-hexagon-packing) on 2026-05-27. Outcome by inspection alone, before any compute:
 
-- `docs/wiki/problems/retired-17-hexagon-packing.md` declares `status: retired`, retired_at 2026-05-23, arena URL returns HTTP 404, score 3.9416523 at known-optimal float64-ceiling basin (already #1 tied).
+- `knowledge/wiki/problems/retired-17-hexagon-packing.md` declares `status: retired`, retired_at 2026-05-23, arena URL returns HTTP 404, score 3.9416523 at known-optimal float64-ceiling basin (already #1 tied).
 - `src/einstein/optimizer_manifest.yaml` has no entry for `17:` (only 14 and 22), so `optimizer_dispatch` can return nothing.
 - Existing wisdom in [`findings/float64-ceiling.md`](../findings/float64-ceiling.md) already classifies P17a as "basin rigid at sub-ulp; strict-tol trap nearly cost 500 pts" — further compute cannot improve the score and there is no arena to submit to.
 

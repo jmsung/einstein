@@ -327,7 +327,7 @@ def make_solve_fn(
 # URL/substring firewall in `ablation.is_firewalled` is for transcript tool-call
 # targets, not filesystem paths — applied to every file it false-flags code like
 # `scripts/leaderboard_standings.py`.)
-_ANSWER_KEY_DIRS = ("docs/wiki", "docs/source", "docs/agent", "mb", "results")
+_ANSWER_KEY_DIRS = ("knowledge/wiki", "knowledge/source", "docs/agent", "mb", "results")
 
 
 def audit_checkout(checkout: str | Path) -> dict:

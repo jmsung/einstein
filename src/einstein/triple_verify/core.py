@@ -2,7 +2,7 @@
 
 The agreement rule (the disagreement protocol from
 `.claude/rules/triple-verify.md`, design in
-`docs/wiki/findings/triple-verify-wiring-design.md`):
+`knowledge/wiki/findings/triple-verify-wiring-design.md`):
 
   - three-way agreement within tolerance → passed=True
   - any pair outside tolerance         → passed=False (two-way mismatch = a bug)

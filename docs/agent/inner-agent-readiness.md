@@ -4,10 +4,10 @@
 Phase 2 / Gap 1). This is the **falsifiable bar** the headless inner-agent must clear before
 Phase 3 (the cron scheduler) is allowed to start. Goal 4 of this branch issues the GO/NO-GO
 verdict by measuring the pilot against this checklist; the verdict lands in
-`docs/wiki/findings/inner-agent-first-run.md`.
+`knowledge/wiki/findings/inner-agent-first-run.md`.
 
 **Audience:** agent-process, not math wisdom — hence `docs/agent/` (next to the design doc
-`meta-learning-automation.md` it extends), not `docs/wiki/`.
+`meta-learning-automation.md` it extends), not `knowledge/wiki/`.
 
 ---
 
@@ -131,7 +131,7 @@ and fixing it was the point.
      test artifacts.)
 4. **LLM visit, post-fix (cycles 287–288)** — **R7 positive, both branches:**
    - Cycle 287: agent Wrote
-     `docs/wiki/findings/dead-end-p12-stochastic-exhausted-no-algebraic-operator-wired.md`
+     `knowledge/wiki/findings/dead-end-p12-stochastic-exhausted-no-algebraic-operator-wired.md`
      (layered math+tooling obstruction, 4 concrete untried operators, skip-cite
      instruction), `findings_added=1`, captured by the git-status delta. $1.01.
    - Cycle 288: bandit re-picked the unwired technique → agent **cited the cycle-287
@@ -140,7 +140,7 @@ and fixing it was the point.
 | Criterion | Goal-0 status |
 |---|---|
 | R7 capture path positively exercised | ✅ cycle 287 (write branch) + 288 (cite branch) |
-| R8 human spot-check of captures | ✅ human verdict **keep** (2026-06-09) — `dead-end-p12-stochastic-exhausted-no-algebraic-operator-wired.md` judged keep-worthy (cites wiki pages + an open question; no `docs/source/` entry, accepted for an infra-flavored dead-end) |
+| R8 human spot-check of captures | ✅ human verdict **keep** (2026-06-09) — `dead-end-p12-stochastic-exhausted-no-algebraic-operator-wired.md` judged keep-worthy (cites wiki pages + an open question; no `knowledge/source/` entry, accepted for an infra-flavored dead-end) |
 
 **GO for Phase 3 scheduler build** (2026-06-09): both Phase-2 entry conditions cleared —
 R7 positively exercised on write + cite branches, R8 spot-check passed. Conditions

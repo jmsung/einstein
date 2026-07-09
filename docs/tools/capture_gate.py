@@ -4,7 +4,7 @@
 Converts the discretionary `cycle-discipline` / `failure-is-a-finding` rules into
 a deterministic gate: a cycle must not end "clean" unless it produced **(a)** a new
 `docs/agent/cycle-log.md` row AND **(b)** at least one new/edited
-`docs/wiki/findings/` or `docs/wiki/concepts/` page with valid attribution
+`knowledge/wiki/findings/` or `knowledge/wiki/concepts/` page with valid attribution
 frontmatter + ≥1 cite. This is the mechanism that was missing on 2026-06-08, when
 the P2 record capture only happened because a human asked.
 
@@ -14,7 +14,7 @@ Two open questions, resolved here:
 
 - **What counts as "verified" for the cite requirement?** → *any cite*: a non-empty
   `cites:` frontmatter list (the canonical mechanism — 99/100 findings use it) OR an
-  inline reference to a `docs/source/`/`docs/wiki/` path or an external URL/arxiv id.
+  inline reference to a `knowledge/source/`/`knowledge/wiki/` path or an external URL/arxiv id.
   We deliberately do NOT require a triple-verify pass here — that gates *submission*,
   not *capture*; the anti-bloat lint (Phase 4) + human promotion gate are the counters
   to low-value findings, per the design doc.
@@ -44,12 +44,12 @@ from pathlib import Path
 _ROW_RE = re.compile(r"^\+\|\s*\d+\s*\|")
 
 # Inline-citation fallback when a page omits the `cites:` frontmatter field.
-_INLINE_CITE_RE = re.compile(r"docs/(?:source|wiki)/|https?://|arxiv\.org|arXiv:\d", re.IGNORECASE)
+_INLINE_CITE_RE = re.compile(r"knowledge/(?:source|wiki)/|https?://|arxiv\.org|arXiv:\d", re.IGNORECASE)
 
 _VALID_AUTHORS = {"agent", "human", "hybrid"}
 
 CYCLE_LOG = "docs/agent/cycle-log.md"
-CAPTURE_DIRS = ("docs/wiki/findings/", "docs/wiki/concepts/")
+CAPTURE_DIRS = ("knowledge/wiki/findings/", "knowledge/wiki/concepts/")
 
 
 # --------------------------------------------------------------------------- git

@@ -63,13 +63,13 @@ and any future entry with the same signature inherit it for free.
 
 ## Why this is the right next gap to file (not solve in this cycle)
 
-Out of this cycle's write scope (`docs/wiki/`, `mb/`). Implementation lives
+Out of this cycle's write scope (`knowledge/wiki/`, `mb/`). Implementation lives
 in `scripts/autonomous_loop.py` and `src/einstein/optimizer_dispatch.py`.
 Filing the question is the gap-detect step; a follow-up branch implements.
 
 ## Suggested answer shape
 
-A `docs/wiki/findings/<slug>.md` finding referencing both dead-end findings
+A `knowledge/wiki/findings/<slug>.md` finding referencing both dead-end findings
 and the resulting `scripts/autonomous_loop.py` PR, plus a single helper
 docstring that captures the invariant ("dispatch iff arena_#1 lift is
 submittable under current minImprovement").

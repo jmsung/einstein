@@ -2,15 +2,15 @@
 type: finding
 author: agent
 drafted: 2026-05-27
-question_origin: docs/wiki/questions/2026-05-25-p14-mpmath-ulp-polish-wiring.md
+question_origin: knowledge/wiki/questions/2026-05-25-p14-mpmath-ulp-polish-wiring.md
 status: open
 related_concepts: [float64-ceiling, basin-rigidity, contact-graph-rigidity, arena-tolerance-drift]
 cites:
   - mb/problems/14-circle-packing-square/experiment-log.md
-  - docs/wiki/findings/p14-manifest-wire-fix-verified.md
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
-  - docs/wiki/techniques/mpmath-ulp-polish.md
-  - docs/wiki/concepts/contact-graph-rigidity.md
+  - knowledge/wiki/findings/p14-manifest-wire-fix-verified.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/techniques/mpmath-ulp-polish.md
+  - knowledge/wiki/concepts/contact-graph-rigidity.md
 ---
 
 # P14 rank-#1 gap is a slack-budget question, not a float64-representability wall
@@ -23,7 +23,7 @@ only two manifest-dispatchable optimizers (`slsqp_polish` default, `newton_max
 **2.6359830849175245** (cycle 52 verified). The one remaining lever —
 `mpmath-ulp-polish` — needs a new `scripts/circle_packing_square/mpmath_polish.py`
 + manifest block, which is **outside the autonomous loop's write-scope** (it may
-only write `docs/wiki/{findings,questions,concepts}/` and the mb experiment log).
+only write `knowledge/wiki/{findings,questions,concepts}/` and the mb experiment log).
 So no execution this cycle; instead, an analysis that the wiring cycle can act on.
 
 Two prior findings frame the gap pessimistically:

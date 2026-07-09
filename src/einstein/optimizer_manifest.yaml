@@ -109,7 +109,7 @@
       result_file: results/circle_packing_square/slsqp_polish_result.json
       result_parser: json_score_payload
     mpmath_ulp_polish:
-      # ULP-step coordinate descent (docs/wiki/techniques/mpmath-ulp-polish.md).
+      # ULP-step coordinate descent (knowledge/wiki/techniques/mpmath-ulp-polish.md).
       # Succeeds slsqp_polish at the float64 ceiling: reclaims sub-ulp radius
       # slack the SLSQP line-search leaves behind. Every accepted move must pass
       # BOTH the arena float64 strict check (tol=0) AND mpmath-exact (gap ≥ 0) —

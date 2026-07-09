@@ -6,10 +6,10 @@ question_origin: problem-3
 status: answered
 related_concepts: [basin-rigidity, float64-ceiling]
 cites:
-  - docs/wiki/findings/dead-end-p2-autonomous-loop-blocked-by-seed-backfill.md
-  - docs/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md
-  - docs/wiki/findings/verify-seed-dispatch-pattern.md
-  - docs/wiki/problems/3-autocorrelation.md
+  - knowledge/wiki/findings/dead-end-p2-autonomous-loop-blocked-by-seed-backfill.md
+  - knowledge/wiki/questions/2026-06-01-seed-backfill-gap-p3-p10-p12.md
+  - knowledge/wiki/findings/verify-seed-dispatch-pattern.md
+  - knowledge/wiki/problems/3-autocorrelation.md
   - src/einstein/optimizer_manifest.yaml
   - docs/agent/cycle-log.md
 ---

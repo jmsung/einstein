@@ -9,7 +9,7 @@ related_concepts: [float64-ceiling, basin-rigidity, arena-tolerance-drift]
 cites:
   - src/einstein/optimizer_manifest.yaml
   - scripts/circle_packing_square/mpmath_ulp_polish.py
-  - docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
+  - knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
 ---
 
 # Should the manifest expose `--seed` as a tunable for `mpmath_ulp_polish` (and the float64-ceiling family more broadly)?
@@ -21,7 +21,7 @@ cites:
 ## Why it matters
 
 1. Multi-seed coverage from the dispatch path lets the autonomous loop measure whether two seeds in the same problem actually share a float64 basin (informs the basin-rigidity concept), or merely both lie under the same minImprovement gate.
-2. The ae_tied seed is ALREADY rejected by the submission proximity guard (`docs/wiki/findings/arena-proximity-guard.md`), so polishing it is purely diagnostic — no submission-policy risk.
+2. The ae_tied seed is ALREADY rejected by the submission proximity guard (`knowledge/wiki/findings/arena-proximity-guard.md`), so polishing it is purely diagnostic — no submission-policy risk.
 3. The same wiring gap blocks the P5/P11/P17 ulp-polish entries from exploring alternate seeds, which is the natural next step once an in-repo "second basin" is found.
 
 ## Candidate resolutions

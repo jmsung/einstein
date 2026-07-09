@@ -7,7 +7,7 @@ status: open
 related_problems: [2, 3, 10, 12]
 related_concepts: [basin-rigidity, float64-ceiling]
 cites:
-  - docs/wiki/findings/verify-seed-dispatch-pattern.md
+  - knowledge/wiki/findings/verify-seed-dispatch-pattern.md
   - scripts/verify_seed.py
 ---
 

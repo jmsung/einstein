@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Sequence
 
 _REPO = Path(__file__).resolve().parents[2]
-DEFAULT_PROBLEMS_DIR = _REPO / "docs" / "wiki" / "problems"
+DEFAULT_PROBLEMS_DIR = _REPO / "knowledge" / "wiki" / "problems"
 DEFAULT_CYCLE_LOG = _REPO / "docs" / "agent" / "cycle-log.md"
 DEFAULT_SKILL_LIBRARY = _REPO / "docs" / "agent" / "skill-library.md"
 DEFAULT_EXPERIMENT_DIR = _REPO.parent / "mb" / "problems"
@@ -141,9 +141,9 @@ TOOL_ALLOWLIST = """- Read, Grep
 - Task                                                 — dispatch council subagents (e.g. Tao, Cohn, Razborov)
 
 **Write scope** — restrict to these two trees per `wiki-attribution.md`:
-  - `docs/wiki/findings/` — new finding pages (including `dead-end-<slug>.md`)
-  - `docs/wiki/questions/` — new gap questions
-  - `docs/wiki/concepts/` — only if a concept is genuinely missing (rare)
+  - `knowledge/wiki/findings/` — new finding pages (including `dead-end-<slug>.md`)
+  - `knowledge/wiki/questions/` — new gap questions
+  - `knowledge/wiki/concepts/` — only if a concept is genuinely missing (rare)
   - `mb/problems/<id>-<slug>/experiment-log.md` — append per-attempt notes
 
 Every wiki page MUST include the `author: agent` frontmatter field. The
@@ -196,7 +196,7 @@ def sibling_findings(
     if not category or category == "?":
         return None
     if findings_dir is None:
-        findings_dir = _REPO / "docs" / "wiki" / "findings"
+        findings_dir = _REPO / "knowledge" / "wiki" / "findings"
 
     candidates: list[tuple[str, str]] = []  # (drafted, line)
     try:
@@ -219,7 +219,7 @@ def sibling_findings(
         drafted = m.group(1) if m else "0000-00-00"
         pid_str = ",".join(f"P{p}" for p in sorted(sibling_pids))
         candidates.append(
-            (drafted, f"- docs/wiki/findings/{path.name} ({pid_str}, drafted {drafted})")
+            (drafted, f"- knowledge/wiki/findings/{path.name} ({pid_str}, drafted {drafted})")
         )
     if not candidates:
         return None
@@ -260,7 +260,7 @@ def render_prompt(
     Args:
         problem_id: e.g. 14
         problem_slug: e.g. 'circle-packing-square'
-        file_slug: e.g. '14-circle-packing-square' (matches docs/wiki/problems/<file_slug>.md)
+        file_slug: e.g. '14-circle-packing-square' (matches knowledge/wiki/problems/<file_slug>.md)
         score_current, status, tier: problem state from frontmatter
         category: strategy-picker category (e.g. 'sphere-packing')
         cycle_id: the cycle-log row id this cycle will write
@@ -269,7 +269,7 @@ def render_prompt(
             (not the historical cycle-log). Empty on attempt 1.
         cycle_log: path to docs/agent/cycle-log.md
         skill_library: path to docs/agent/skill-library.md
-        problems_dir: path to docs/wiki/problems/
+        problems_dir: path to knowledge/wiki/problems/
         experiment_log_dir: path to mb/problems/ (each problem has its own subdir)
         cycle_log_tail_n: keep this many most-recent rows for this problem
         experiment_log_tail_lines: tail lines from experiment-log.md
@@ -391,7 +391,7 @@ emit a single JSON object matching the schema at the end. Concretely:
    step 0, refusing this step breaks the self-improvement loop.
 2. **COUNCIL** — if no prior cycles exist on this problem, dispatch 3–5
    personas via Task. Each writes a *question*, not a solution. Pick from
-   `docs/wiki/personas/`.
+   `knowledge/wiki/personas/`.
 3. **GAP DETECT** — for each council question, check coverage; escalate
    real gaps to step 4.
 4. **RESEARCH** — `gap_search.py` for arxiv candidates only if a gap is real.
@@ -405,17 +405,17 @@ emit a single JSON object matching the schema at the end. Concretely:
    A *declined or unactionable* attempt is a dead end too (per
    `.claude/rules/failure-is-a-finding.md`): if you abandon the chosen
    strategy for ANY reason (technique not wired in dispatch, known
-   obstruction, no actionable lever), first Grep `docs/wiki/findings/`
+   obstruction, no actionable lever), first Grep `knowledge/wiki/findings/`
    for an existing page covering that exact obstruction. If one exists,
    cite it in `notes`. If none does, Write
-   `docs/wiki/findings/dead-end-<slug>.md` yourself (author: agent
+   `knowledge/wiki/findings/dead-end-<slug>.md` yourself (author: agent
    frontmatter; sections "What we tried / Why it failed / What this
    rules out / What might still work"), list it in `wiki_writes`, AND
    set `dead_end_finding` to its path. Honest convergence with no new
    obstruction (everything already covered by existing findings) is the
    only case where writing nothing is correct.
 8. **CITED SOURCES** — populate `cited_sources` with every
-   `docs/source/<file>.md` path that materially informed this attempt
+   `knowledge/source/<file>.md` path that materially informed this attempt
    (read in step 1's wiki-first lookup, surfaced by gap_search, or
    referenced in a council question). Empty list is OK if no source/
    page was load-bearing. This field feeds `mb/logs/cited-sources.jsonl`

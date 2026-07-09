@@ -37,7 +37,7 @@ def _proposal(pid: str = "test-shadow-001", ptype: str = ProposalType.RULE_EDIT.
         return Proposal(
             id=pid,
             type=ptype,
-            target_path="docs/wiki/questions/2026-05-25-test.md",
+            target_path="knowledge/wiki/questions/2026-05-25-test.md",
             proposed_diff="---\nbody\n---\n",
             evidence_cycles=[10, 11, 12],
             predicted_regressions=["none"],

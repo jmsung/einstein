@@ -13,12 +13,12 @@ Five gap types detected:
 - TYPE 5 — missing umbrella  : cluster of related pages with no abstracting concept
 
 (TYPE 3 — structural analogy across problem statements — is LLM-only;
-documented in `docs/wiki/findings/finding-the-fertile-gaps.md` but not built here.)
+documented in `knowledge/wiki/findings/finding-the-fertile-gaps.md` but not built here.)
 
 Usage:
     uv run python docs/tools/wiki_graph.py                      # full report -> stdout
     uv run python docs/tools/wiki_graph.py --out docs/agent/wiki-gaps-2026-05-02.md
-    uv run python docs/tools/wiki_graph.py --file-questions     # auto-file top-3 as docs/wiki/questions/
+    uv run python docs/tools/wiki_graph.py --file-questions     # auto-file top-3 as knowledge/wiki/questions/
 
 Companion: cross-pollination-not-compute.md (the filter for which candidates
 to keep). This tool says what to *consider*. Together = the discipline.
@@ -35,8 +35,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[2]  # docs/tools/wiki_graph.py → cb/
-WIKI = _REPO / "docs" / "wiki"
-SOURCE = _REPO / "docs" / "source"
+WIKI = _REPO / "knowledge" / "wiki"
+SOURCE = _REPO / "knowledge" / "source"
 QUESTIONS = WIKI / "questions"
 AGENT_OUT = _REPO / "docs" / "agent"
 
@@ -735,14 +735,14 @@ def file_top_questions(type1, type2, today: str, n: int = 3) -> list[Path]:
             f"\n"
             f"## Why it matters\n"
             f"\n"
-            f"Per `docs/wiki/findings/finding-the-fertile-gaps.md`: pages with high semantic similarity but no explicit link likely share an underlying concept that hasn't been articulated. Either:\n"
+            f"Per `knowledge/wiki/findings/finding-the-fertile-gaps.md`: pages with high semantic similarity but no explicit link likely share an underlying concept that hasn't been articulated. Either:\n"
             f"\n"
             f"1. The connection is real and a bridge page should be authored, OR\n"
             f"2. The similarity is superficial (qmd false-positive) and we should note that.\n"
             f"\n"
             f"## Next step\n"
             f"\n"
-            f"Read both pages. If a structural connection exists, file as `docs/wiki/findings/<bridge-slug>.md`. If not, close this question with `status: superseded` and a one-line explanation.\n"
+            f"Read both pages. If a structural connection exists, file as `knowledge/wiki/findings/<bridge-slug>.md`. If not, close this question with `status: superseded` and a one-line explanation.\n"
         )
         files_written.append(out)
     return files_written
@@ -754,7 +754,7 @@ def main():
     p.add_argument(
         "--file-questions",
         action="store_true",
-        help="Auto-file top-3 Type-2 candidates as docs/wiki/questions/",
+        help="Auto-file top-3 Type-2 candidates as knowledge/wiki/questions/",
     )
     p.add_argument(
         "--no-qmd",

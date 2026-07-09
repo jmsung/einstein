@@ -6,7 +6,7 @@ grid-INDEPENDENT continuous supremum rather than the arena's 1e6-point grid max.
 
 Why the change: the arena score is a grid maximum, which underestimates the true
 sup because the peak rarely lands on a node. That grid-vs-continuum gap is the
-~7e-10 local↔arena drift (docs/wiki/findings/dead-end-p12-grid-sampling-drift.md
+~7e-10 local↔arena drift (knowledge/wiki/findings/dead-end-p12-grid-sampling-drift.md
 and its resolution finding/p12-grid-drift-resolution.md). Verifying the grid
 quantity made the three checks agree on a number that *isn't* what the arena
 reports. The continuous sup is drift-free: g(θ)=|p(e^{iθ})|² is an exact degree

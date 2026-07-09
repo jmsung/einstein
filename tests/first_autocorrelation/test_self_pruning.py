@@ -2,7 +2,7 @@
 
 Goal 1's cold-seed-on-fixed-window search dead-ended: cold seeds land +0.022 above
 arena #1 and a pre-imposed contiguous window is strictly worse than full support
-(`docs/wiki/findings/dead-end-p2-cold-seed-fixed-window.md`). The open path the
+(`knowledge/wiki/findings/dead-end-p2-cold-seed-fixed-window.md`). The open path the
 finding leaves is *warm self-pruning*: start from a near-converged full-support
 basin, let the optimizer choose which cells to zero (smallest-|v|, not a contiguous
 window), re-optimize allowing peak-locking, and shrink support toward ~74489.

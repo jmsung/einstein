@@ -21,7 +21,7 @@ state="${TMPDIR:-/tmp}/einstein-wall-${key}.count"
 THRESHOLD=3
 
 # WISDOM step → reset the counter (escalation happened).
-if printf '%s' "$cmd" | grep -Eq 'qmd query|wall-ledger|wiki-query|wiki-research|docs/wiki/questions|/council'; then
+if printf '%s' "$cmd" | grep -Eq 'qmd query|wall-ledger|wiki-query|wiki-research|knowledge/wiki/questions|/council'; then
   echo 0 > "$state"
   exit 0
 fi
@@ -35,7 +35,7 @@ if printf '%s' "$cmd" | grep -Eq 'optimize_|escape_|basin_hop|_sweep|campaign_|f
     cat >&2 <<EOF
 ⚠️  WALL PATTERN: $n consecutive compute launches with no wisdom step.
 Per .claude/rules/wall-hit-escalation.md, STOP brute-forcing now:
-  1. Name the obstruction (docs/wiki/questions/).
+  1. Name the obstruction (knowledge/wiki/questions/).
   2. grep docs/agent/wall-ledger.md for this obstruction — reuse a past resolving move if matched.
   3. qmd query einstein-wiki on the problem + obstruction + "dead-end".
   4. RE-DISPATCH the council seeded with what failed; implement ONE new move OUTSIDE the failed class.

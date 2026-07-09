@@ -14,7 +14,7 @@ The emitted diff is a **reviewable recommendation** appended to
 with posterior means), not an auto-apply patch — wiring technique → optimizer
 key is a human follow-up. The point of Goal 6 is to prove the swap surface
 end-to-end with a real non-LLM proposer, with provenance from row one. See
-`docs/wiki/findings/meta-loop-swap-surface.md`.
+`knowledge/wiki/findings/meta-loop-swap-surface.md`.
 """
 
 from __future__ import annotations

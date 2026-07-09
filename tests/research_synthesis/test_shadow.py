@@ -48,10 +48,10 @@ def test_cycles_with_citations_from_sidecar_counts_arm_records(tmp_path: Path) -
     """G9: sidecar reader counts records with arm=<arm> + non-empty cited_sources."""
     sidecar = tmp_path / "cited-sources.jsonl"
     sidecar.write_text(
-        '{"cycle_id": 1, "problem": "P14", "cited_sources": ["docs/source/X.md"], "ts": "2026-05-25T10:00:00+00:00", "arm": "A"}\n'
+        '{"cycle_id": 1, "problem": "P14", "cited_sources": ["knowledge/source/X.md"], "ts": "2026-05-25T10:00:00+00:00", "arm": "A"}\n'
         '{"cycle_id": 2, "problem": "P14", "cited_sources": [], "ts": "2026-05-25T10:01:00+00:00", "arm": "A"}\n'
-        '{"cycle_id": 3, "problem": "P19", "cited_sources": ["docs/source/Y.md"], "ts": "2026-05-25T10:02:00+00:00", "arm": "A"}\n'
-        '{"cycle_id": 1, "problem": "P14", "cited_sources": ["docs/source/Z.md"], "ts": "2026-05-25T10:03:00+00:00", "arm": "B"}\n'
+        '{"cycle_id": 3, "problem": "P19", "cited_sources": ["knowledge/source/Y.md"], "ts": "2026-05-25T10:02:00+00:00", "arm": "A"}\n'
+        '{"cycle_id": 1, "problem": "P14", "cited_sources": ["knowledge/source/Z.md"], "ts": "2026-05-25T10:03:00+00:00", "arm": "B"}\n'
     )
     assert shadow.cycles_with_citations_from_sidecar(sidecar, arm="A") == 2  # cycles 1, 3
     assert shadow.cycles_with_citations_from_sidecar(sidecar, arm="B") == 1

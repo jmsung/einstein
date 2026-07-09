@@ -55,14 +55,14 @@ def _add_diagnose(sub: argparse._SubParsersAction) -> None:
     p.add_argument(
         "--findings-dir",
         type=Path,
-        default=_REPO / "docs" / "wiki" / "findings",
-        help="path to docs/wiki/findings/",
+        default=_REPO / "knowledge" / "wiki" / "findings",
+        help="path to knowledge/wiki/findings/",
     )
     p.add_argument(
         "--questions-dir",
         type=Path,
-        default=_REPO / "docs" / "wiki" / "questions",
-        help="path to docs/wiki/questions/",
+        default=_REPO / "knowledge" / "wiki" / "questions",
+        help="path to knowledge/wiki/questions/",
     )
     p.add_argument(
         "--output",
@@ -81,8 +81,8 @@ def _add_propose(sub: argparse._SubParsersAction) -> None:
     p.add_argument(
         "--skill-library", type=Path, default=_REPO / "docs" / "agent" / "skill-library.md"
     )
-    p.add_argument("--findings-dir", type=Path, default=_REPO / "docs" / "wiki" / "findings")
-    p.add_argument("--questions-dir", type=Path, default=_REPO / "docs" / "wiki" / "questions")
+    p.add_argument("--findings-dir", type=Path, default=_REPO / "knowledge" / "wiki" / "findings")
+    p.add_argument("--questions-dir", type=Path, default=_REPO / "knowledge" / "wiki" / "questions")
     p.add_argument("--mb-logs-dir", type=Path, default=_DEFAULT_MB / "logs")
     p.add_argument("--proposals-root", type=Path, default=_DEFAULT_MB / "proposals")
     p.add_argument(

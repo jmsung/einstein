@@ -10,8 +10,8 @@ cites:
   - src/einstein/triple_verify/core.py
   - scripts/autonomous_loop.py
   - .claude/rules/axioms.md
-  - docs/wiki/techniques/triple-verify.md
-  - docs/wiki/findings/triple-verify-wiring-design.md
+  - knowledge/wiki/techniques/triple-verify.md
+  - knowledge/wiki/findings/triple-verify-wiring-design.md
 ---
 
 # Auto-submit gate chain status — gate 2 is now real (Phase 5)

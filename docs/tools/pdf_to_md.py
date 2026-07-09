@@ -20,7 +20,7 @@ Install:
 
 Usage:
     uv run python docs/tools/pdf_to_md.py paper.pdf --out paper.md
-    uv run python docs/tools/pdf_to_md.py docs/raw/papers/*.pdf --out-dir docs/source-md/
+    uv run python docs/tools/pdf_to_md.py knowledge/raw/papers/*.pdf --out-dir knowledge/source-md/
 """
 from __future__ import annotations
 

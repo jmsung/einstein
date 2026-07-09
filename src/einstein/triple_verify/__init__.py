@@ -20,7 +20,7 @@ Public API:
 
 A `problem_id` with no registration returns ``passed=False,
 reason="not_registered"`` — never a silent pass. See
-``docs/wiki/findings/triple-verify-wiring-design.md`` for the design.
+``knowledge/wiki/findings/triple-verify-wiring-design.md`` for the design.
 """
 
 from __future__ import annotations

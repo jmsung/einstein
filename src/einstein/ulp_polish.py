@@ -16,7 +16,7 @@ Phase 2a extraction from ``scripts/circle_packing_square/mpmath_ulp_polish.py``
    Gating on a single evaluator is unsafe: exact-only admits a move whose float64
    distance overlaps (the arena rejects it); float64-only re-opens the
    tolerance-band exploit. See
-   ``docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md``.
+   ``knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md``.
 
 What changes per problem is only the *adapter* — the merit functions, the
 optional feasibility predicate, and how candidate ulp moves are generated. The
@@ -27,7 +27,7 @@ Used by: P14 (circle_packing_square), P11 (tammes), P5 (min_distance_ratio).
 See each ``scripts/<problem>/mpmath_ulp_polish.py``. The technique has a
 soundness boundary — it does NOT apply to P18 (tolerance-band seed), P17
 (penalty-shaped score), or P22/P23 (O(n^2) mpmath); see
-``docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md`` and the three
+``knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md`` and the three
 ``dead-end-ulp-polish-*`` findings for why.
 """
 

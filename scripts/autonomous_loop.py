@@ -4,7 +4,7 @@
 Architecture (this file = OUTER loop; the inner attempt has a wired LLM path,
 `_try_llm_path` → `claude_headless`, with a mechanical fallback):
 
-    1. Load problem queue (docs/wiki/problems/*.md frontmatter)
+    1. Load problem queue (knowledge/wiki/problems/*.md frontmatter)
     2. Filter by status (skip blocked / hidden / shelved / frozen / conquered)
     3. Sort by tier (S>A>B>C) then problem_id ascending
     4. For each problem in the queue:
@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Callable
 
 _REPO = Path(__file__).resolve().parents[1]
-DEFAULT_PROBLEMS_DIR = _REPO / "docs" / "wiki" / "problems"
+DEFAULT_PROBLEMS_DIR = _REPO / "knowledge" / "wiki" / "problems"
 DEFAULT_CYCLE_LOG = _REPO / "docs" / "agent" / "cycle-log.md"
 DEFAULT_CYCLE_RUNNER = _REPO / "docs" / "tools" / "cycle_runner.sh"
 DEFAULT_SKILL_LIBRARY = _REPO / "docs" / "agent" / "skill-library.md"
@@ -569,7 +569,7 @@ _PARALLEL_AUTOFILE_TRUTHY = {"1", "true", "yes", "on"}
 def _parallel_autofile_findings() -> bool:
     """Goal 6: `EINSTEIN_PARALLEL_AUTOFILE_FINDINGS` (default OFF) opt-in.
 
-    Writing to `docs/wiki/findings/` is high-stakes — mechanical heuristics
+    Writing to `knowledge/wiki/findings/` is high-stakes — mechanical heuristics
     can't substitute for the failure-is-a-finding rule's actual test
     (`would a peer have learned from this?`). Default-off; opt-in once
     Goal 5's A/B verdict says the auto-stubs are worth the noise.
@@ -1451,10 +1451,10 @@ def _try_llm_path(
     # Tool allow-list reflects what the agent actually needs to run the
     # math-solving-protocol per `.claude/rules/`. Write is allowed so the
     # agent can create findings / questions / dead-end pages under
-    # docs/wiki/ + mb/ per wiki-attribution (author: agent). Scope is
+    # knowledge/wiki/ + mb/ per wiki-attribution (author: agent). Scope is
     # enforced by --add-dir (cwd is cb worktree; we add the sibling mb so
     # those writes land too). The prompt instructs the agent to restrict
-    # writes to docs/wiki/* and mb/* paths; the 7.6 git-status audit
+    # writes to knowledge/wiki/* and mb/* paths; the 7.6 git-status audit
     # captures every actual write for human review.
     allowed_tools = [
         "Read",
@@ -1880,7 +1880,7 @@ _MAX_WIKI_WRITE_PATHS_IN_NOTES = 5
 
 
 def _snapshot_wiki_mb_paths(repo_root: Path) -> set[str]:
-    """Return uncommitted paths under `docs/wiki/` + `mb/` per `git status`.
+    """Return uncommitted paths under `knowledge/wiki/` + `mb/` per `git status`.
 
     Per Goal 7.6 the wiki-write audit is "single source of truth = git" —
     no separate audit file. Snapshot at cycle start and end; the delta is
@@ -1894,10 +1894,10 @@ def _snapshot_wiki_mb_paths(repo_root: Path) -> set[str]:
     try:
         # `--untracked-files=all` is required: the default `normal` mode
         # collapses untracked files under a previously-empty directory into a
-        # single entry "docs/wiki/" instead of listing each file. The audit
+        # single entry "knowledge/wiki/" instead of listing each file. The audit
         # needs the individual paths.
         proc = subprocess.run(
-            ["git", "status", "--porcelain", "--untracked-files=all", "--", "docs/wiki/", "mb/"],
+            ["git", "status", "--porcelain", "--untracked-files=all", "--", "knowledge/wiki/", "mb/"],
             capture_output=True,
             text=True,
             cwd=repo_root,

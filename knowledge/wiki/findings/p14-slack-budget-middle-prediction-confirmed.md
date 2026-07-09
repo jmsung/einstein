@@ -2,15 +2,15 @@
 type: finding
 author: agent
 drafted: 2026-06-01
-question_origin: docs/wiki/findings/p14-mpmath-slack-budget-analysis.md
+question_origin: knowledge/wiki/findings/p14-mpmath-slack-budget-analysis.md
 status: partially-answered
 related_concepts: [float64-ceiling, basin-rigidity, contact-graph-rigidity, arena-tolerance-drift]
 cites:
   - mb/problems/14-circle-packing-square/experiment-log.md
-  - docs/wiki/findings/p14-mpmath-slack-budget-analysis.md
-  - docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
-  - docs/wiki/techniques/mpmath-ulp-polish.md
-  - docs/wiki/concepts/contact-graph-rigidity.md
+  - knowledge/wiki/findings/p14-mpmath-slack-budget-analysis.md
+  - knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
+  - knowledge/wiki/techniques/mpmath-ulp-polish.md
+  - knowledge/wiki/concepts/contact-graph-rigidity.md
 ---
 
 # Cycle-53 result lands in the slack-budget finding's middle prediction
@@ -75,7 +75,7 @@ remains undecided between:
 
 A 5-minute test — round AE's published n=26 coordinates to float64 and
 call `evaluate_strict` — discriminates (2a) from (2b). Filed as
-`docs/wiki/questions/2026-06-01-p14-ae-reround-strict-test.md` for the
+`knowledge/wiki/questions/2026-06-01-p14-ae-reround-strict-test.md` for the
 next cycle / wiring path.
 
 ## What this rules out

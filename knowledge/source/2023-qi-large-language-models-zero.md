@@ -31,7 +31,7 @@ Construct background↔hypothesis pairs from PubMed (10k papers, 2500 train + 20
 On the unseen set, zero-shot beats 5-shot for the largest models (Llama-2-70B-chat zero-shot Avg 2.04; few-shot retrieves higher BLEU/ROUGE but *lowers* novelty from 1.86→1.43). SFT-WizardLM-13B reaches BLEU 19.7 / ROUGE 27.6, beating gpt-3.5-turbo on overlap but with novelty only 0.97. Domain-adapted PMC-LLaMA scores high on word overlap (BLEU 22.9) yet low on ChatGPT-judged quality (Avg 1.41), exposing a word-overlap vs. semantic-quality gap. ChatGPT scores correlate strongly with human ratings.
 
 ## Why it matters here
-General background; no direct arena tie. The closest analogue is the einstein agent's council-dispatch / self-improvement-loop architecture — this paper validates the "personas write questions, critic refines" pattern and supplies an evaluation rubric (novelty/relevance/significance/verifiability) that could be adapted to score persona-generated questions in `docs/wiki/questions/`.
+General background; no direct arena tie. The closest analogue is the einstein agent's council-dispatch / self-improvement-loop architecture — this paper validates the "personas write questions, critic refines" pattern and supplies an evaluation rubric (novelty/relevance/significance/verifiability) that could be adapted to score persona-generated questions in `knowledge/wiki/questions/`.
 
 ## Open questions / connections
 - Does the "uncertainty helps novelty" finding transfer to math-hypothesis generation (where verifiability is mechanical, not literature-anchored)?

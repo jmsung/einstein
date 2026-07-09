@@ -34,7 +34,7 @@ def _minimal_kwargs(**overrides) -> dict:
     base = {
         "id": "test-prop-001",
         "type": ProposalType.NEW_QUESTION.value,
-        "target_path": "docs/wiki/questions/2026-05-25-test-question.md",
+        "target_path": "knowledge/wiki/questions/2026-05-25-test-question.md",
         "proposed_diff": "---\ntype: question\n---\n\nbody\n",
         "evidence_cycles": [49, 50, 51],
         "expected_metric_delta": {"top3_per_cycle": 0.05},

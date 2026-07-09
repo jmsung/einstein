@@ -165,7 +165,7 @@ def test_apply_code_edit_rejects_wrong_type(tmp_path: Path) -> None:
     p = Proposal(
         id="not-code-edit",
         type=ProposalType.NEW_QUESTION.value,
-        target_path="docs/wiki/questions/2026-05-31-x.md",
+        target_path="knowledge/wiki/questions/2026-05-31-x.md",
         proposed_diff="x\n",
         confidence="low",
         requires_shadow=False,

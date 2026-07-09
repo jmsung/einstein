@@ -35,7 +35,7 @@ General background; no direct arena tie — this is NLP scaling, not math optimi
 
 ## Open questions / connections
 - Does top-$k$ expert routing have any structural analogue in optimizer ensembles (e.g., gated dispatch among basin-hoppers / CMA-ES / SLSQP per problem class)?
-- Filtered-data-beats-bulk mirrors the wiki's `docs/source/` distillation discipline — quantitative evidence that curation > volume.
+- Filtered-data-beats-bulk mirrors the wiki's `knowledge/source/` distillation discipline — quantitative evidence that curation > volume.
 - Extends Shazeer 2017 (sparsely-gated MoE), GShard (Lepikhin 2021), Switch-C (Fedus 2021); leaves open whether MoE works for non-language modalities and reasoning-heavy tasks.
 
 ## Key terms

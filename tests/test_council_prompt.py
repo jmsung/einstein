@@ -57,9 +57,9 @@ def test_includes_persona_fields() -> None:
 
 def test_with_provided_hits_lists_them() -> None:
     hits = [
-        _hit("docs/source/2016-viazovska-sphere-packing-d8.md", 0.92, "magic function for E8"),
-        _hit("docs/source/2017-cohn-viazovska-leech-24.md", 0.88, "Leech lattice density"),
-        _hit("docs/source/2024-cohn-formal-d8-verification.md", 0.81, "formal verification of d=8"),
+        _hit("knowledge/source/2016-viazovska-sphere-packing-d8.md", 0.92, "magic function for E8"),
+        _hit("knowledge/source/2017-cohn-viazovska-leech-24.md", 0.88, "Leech lattice density"),
+        _hit("knowledge/source/2024-cohn-formal-d8-verification.md", 0.81, "formal verification of d=8"),
     ]
     out = build_enriched_prompt(
         _viazovska(), problem_id=6, problem_category="sphere_packing", hits=hits

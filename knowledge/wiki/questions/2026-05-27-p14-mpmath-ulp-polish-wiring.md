@@ -5,14 +5,14 @@ drafted: 2026-05-27
 asked_by: autonomous_loop (cycle 52 attempt 2)
 related_problems: [14]
 status: answered
-answer_finding: docs/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
+answer_finding: knowledge/wiki/findings/mpmath-ulp-polish-dual-gate-p14.md
 related_concepts: [float64-ceiling, basin-rigidity, mpmath-precision]
 cites:
   - src/einstein/optimizer_manifest.yaml
   - scripts/circle_packing_square/slsqp_polish.py
-  - docs/wiki/techniques/mpmath-ulp-polish.md
-  - docs/wiki/findings/p14-manifest-wired-slsqp-polish.md
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/techniques/mpmath-ulp-polish.md
+  - knowledge/wiki/findings/p14-manifest-wired-slsqp-polish.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
 ---
 
 # Wire an mpmath-ulp-polish optimizer block into the P14 manifest
@@ -20,7 +20,7 @@ cites:
 ## The question
 
 Now that `slsqp_polish` is the strict-tol-safe default for P14
-(`docs/wiki/findings/p14-manifest-wired-slsqp-polish.md`) and reproducibly lands
+(`knowledge/wiki/findings/p14-manifest-wired-slsqp-polish.md`) and reproducibly lands
 `score=2.6359830849175245`, the next door is **higher-precision arithmetic on the
 same basin**. AlphaEvolve's rank-#1 `2.6359830849176` sits ~8e-14 above our floor —
 that is sub-float64-ulp territory.
@@ -31,7 +31,7 @@ What is the minimal change to wire an `mpmath_polish` optimizer block into
 1. Reads the canonical SLSQP-floor warm-start (from the in-repo
    `scripts/circle_packing_square/seeds/p14_canonical.json` or the latest
    `slsqp_polish_result.json`),
-2. Runs the technique documented in `docs/wiki/techniques/mpmath-ulp-polish.md`
+2. Runs the technique documented in `knowledge/wiki/techniques/mpmath-ulp-polish.md`
    (typical dps 50–80; per `triple-verify.md` P14 is in the "float-precision-critical"
    family),
 3. Emits `{"score": float, "payload": {"circles": [[cx, cy, r] × 26]}}` to
@@ -43,7 +43,7 @@ What is the minimal change to wire an `mpmath_polish` optimizer block into
 
 - Cycle 49 of the autonomous loop picked `mpmath-ulp-polish` as the *novel* strategy
   for P14 but found it unwired — recorded as
-  `docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md`. The SLSQP
+  `knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md`. The SLSQP
   wiring (cycles 50–52, finding `p14-manifest-wired-slsqp-polish.md`) resolved the
   default-strict-tol problem but did NOT add mpmath as a separate block.
 - Without an mpmath block, the autonomous loop can never explore the sub-ulp

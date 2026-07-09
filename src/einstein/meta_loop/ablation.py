@@ -3,7 +3,7 @@
 The publishable experiment: does the *curated knowledge base* actually help, or
 would web search (or nothing) do as well? Three arms, cold-start, N seeds:
 
-- **A — curated wiki**: may read `docs/wiki/` (our distilled KB); no web.
+- **A — curated wiki**: may read `knowledge/wiki/` (our distilled KB); no web.
 - **B — web search (firewalled)**: may web-search, but firewalled from the
   literal answer key — the arena leaderboard, this repo, and any solution dump;
   no wiki.
@@ -94,7 +94,7 @@ FIREWALL_DENY_SUBSTRINGS = (
 FIREWALL_DENY_PATH_MARKERS = (
     "/mb/problems/",
     "/results/",
-    "docs/wiki/problems/",  # problem pages carry SOTA scores
+    "knowledge/wiki/problems/",  # problem pages carry SOTA scores
 )
 
 
@@ -144,10 +144,10 @@ def firewall_verified(probe_urls: list[str]) -> bool:
 ANSWER_KEY_PROBES = (
     "https://einsteinarena.com/problems/difference-bases",
     "https://einsteinarena.com/leaderboard",
-    "https://github.com/jmsung/einstein/blob/main/docs/wiki/problems/19-difference-bases.md",
+    "https://github.com/jmsung/einstein/blob/main/knowledge/wiki/problems/19-difference-bases.md",
     "https://raw.githubusercontent.com/jmsung/einstein/main/README.md",
     "/Users/x/projects/einstein/mb/problems/19-difference-bases/solutions/solution-best.json",
-    "docs/wiki/problems/2-first-autocorrelation.md",
+    "knowledge/wiki/problems/2-first-autocorrelation.md",
     # schemeless host forms — a web-search snippet may produce a bare host
     "einsteinarena.com/problems/difference-bases",
     "www.einsteinarena.com/leaderboard",
@@ -225,7 +225,7 @@ def dead_ends_avoided(attempted_techniques: set[str], known_dead_ends: set[str])
 
     The curated-wiki arm should avoid more (it has the dead-end findings); the
     model-only arm re-grinds them. This is the metric that most directly tests
-    'does the knowledge base help' — measured against `docs/wiki/findings/`.
+    'does the knowledge base help' — measured against `knowledge/wiki/findings/`.
     """
     return len(known_dead_ends - attempted_techniques)
 

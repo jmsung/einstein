@@ -172,7 +172,7 @@ def _format_hits(hits: list[Hit]) -> list[str]:
 
 
 def _rel(path: str) -> str:
-    """Make a docs/source/foo path into a relative link from mb/problems/<id>-<slug>/."""
+    """Make a knowledge/source/foo path into a relative link from mb/problems/<id>-<slug>/."""
     # mb/problems/<id>-<slug>/X.md → cb/<path> means ../../../cb/<path>
     return f"../../../cb/{path}"
 

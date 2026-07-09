@@ -3,7 +3,7 @@
 #
 # Runs the cycle-end housekeeping required by .claude/rules/cycle-discipline.md:
 #
-#   1. refresh_qmd.sh             — re-index docs/wiki/ + docs/source/ in qmd
+#   1. refresh_qmd.sh             — re-index knowledge/wiki/ + knowledge/source/ in qmd
 #   2. wiki_graph.py --file-questions
 #                                 — gap detection: auto-file top-3 missing-
 #                                   connection questions for next cycle

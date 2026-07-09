@@ -153,7 +153,7 @@ def test_run_writes_proposals_via_stub(fake_repo: dict[str, Path]) -> None:
         return [
             {
                 "type": ProposalType.NEW_QUESTION.value,
-                "target_path": "docs/wiki/questions/2026-05-25-test-q.md",
+                "target_path": "knowledge/wiki/questions/2026-05-25-test-q.md",
                 "proposed_diff": (
                     "---\ntype: question\nauthor: agent\n"
                     "drafted: 2026-05-25\nstatus: open\n---\n\n"
@@ -193,7 +193,7 @@ def test_run_rejects_malformed_proposals(fake_repo: dict[str, Path]) -> None:
             # Valid
             {
                 "type": ProposalType.NEW_QUESTION.value,
-                "target_path": "docs/wiki/questions/2026-05-25-ok.md",
+                "target_path": "knowledge/wiki/questions/2026-05-25-ok.md",
                 "proposed_diff": "---\nbody\n---\n",
                 "evidence_cycles": [49],
                 "predicted_regressions": ["none"],
@@ -250,7 +250,7 @@ def test_default_regressions_backfilled_when_missing(fake_repo: dict[str, Path])
         return [
             {
                 "type": ProposalType.NEW_QUESTION.value,
-                "target_path": "docs/wiki/questions/2026-05-25-no-reg.md",
+                "target_path": "knowledge/wiki/questions/2026-05-25-no-reg.md",
                 "proposed_diff": "---\nbody\n---\n",
                 "evidence_cycles": [49],
                 "confidence": "low",
@@ -270,7 +270,7 @@ def test_default_proposer_id_tagged_on_llm_path(fake_repo: dict[str, Path]) -> N
         return [
             {
                 "type": ProposalType.NEW_QUESTION.value,
-                "target_path": "docs/wiki/questions/2026-05-25-prov.md",
+                "target_path": "knowledge/wiki/questions/2026-05-25-prov.md",
                 "proposed_diff": "---\nbody\n---\n",
                 "evidence_cycles": [49],
                 "predicted_regressions": ["none"],
@@ -290,7 +290,7 @@ def test_explicit_proposer_id_survives(fake_repo: dict[str, Path]) -> None:
         return [
             {
                 "type": ProposalType.NEW_QUESTION.value,
-                "target_path": "docs/wiki/questions/2026-05-25-bandit.md",
+                "target_path": "knowledge/wiki/questions/2026-05-25-bandit.md",
                 "proposed_diff": "---\nbody\n---\n",
                 "evidence_cycles": [49],
                 "predicted_regressions": ["none"],

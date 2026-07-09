@@ -175,7 +175,7 @@ Both are built from the **same commit** by `scripts/build_ablation_repos.sh`
 (§10). The knowledge layer is *removed from disk* so there is nothing to monitor
 and nothing to leak:
 
-- `rm -rf docs/wiki/ docs/source/ docs/agent/`  (the pre-built knowledge + answers)
+- `rm -rf knowledge/wiki/ knowledge/source/ docs/agent/`  (the pre-built knowledge + answers)
 - strip `.claude/rules/` to the **generic** subset only — remove
   `wiki-first-lookup.md`, `council-dispatch.md`, `self-improvement-loop.md`,
   `wall-hit-escalation.md`, `cycle-discipline.md`, `wiki-attribution.md`,

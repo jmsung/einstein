@@ -14,7 +14,7 @@ Plus `convergence_detect()` — the helper that decides whether to keep
 attempting or stop based on score-progress and gap-surfacing history.
 
 Categories are inferred from problem_id via a static mapping derived
-from `docs/wiki/problems/_inventory.md`. The library file may use
+from `knowledge/wiki/problems/_inventory.md`. The library file may use
 slash-separated multi-categories like "packing / kissing"; matching is
 substring-based to handle this.
 
@@ -38,7 +38,7 @@ log = logging.getLogger("strategy_picker")
 
 
 # ---------------- problem → category ----------------
-# Derived from docs/wiki/problems/_inventory.md "Problem-family clustering".
+# Derived from knowledge/wiki/problems/_inventory.md "Problem-family clustering".
 
 _PROBLEM_CATEGORY: dict[int, str] = {
     # Autocorrelation family

@@ -9,7 +9,7 @@ related_concepts: [float64-ceiling, basin-rigidity, arena-tolerance-drift]
 cites:
   - src/einstein/optimizer_manifest.yaml
   - scripts/circle_packing_square/newton_max.py
-  - docs/wiki/findings/p14-manifest-wired-slsqp-polish.md
+  - knowledge/wiki/findings/p14-manifest-wired-slsqp-polish.md
 ---
 
 # Should `newton_max` be wired as a strict-tol alternate code path for P14, or removed from the manifest?

@@ -24,7 +24,7 @@ work is not the source of the uplift — an honest, publishable negative result.
 
 | Arm | Knowledge access | Tests |
 |---|---|---|
-| **A — curated wiki** | `docs/wiki/` only; no web | the curation hypothesis |
+| **A — curated wiki** | `knowledge/wiki/` only; no web | the curation hypothesis |
 | **B — web search (firewalled)** | web only; no wiki | does generic retrieval suffice? |
 | **C — model-only** | neither; training only | the floor — what the model already knows |
 
@@ -40,7 +40,7 @@ The result is meaningless if arm B can just read the leaderboard or this repo.
 - this repo (`jmsung/einstein`, `raw.githubusercontent.com/...`) — the wiki
   carries SOTA scores and solutions;
 - solution dumps (`/solutions/`, `solution-best`, `/results/`, `/mb/problems/`);
-- problem pages (`docs/wiki/problems/...`) — they print `score_current`.
+- problem pages (`knowledge/wiki/problems/...`) — they print `score_current`.
 
 `ablation.ANSWER_KEY_PROBES` is the canonical block-list the test suite asserts
 on; `firewall_verified(probes)` must return True before any arm-B run starts.
@@ -64,7 +64,7 @@ General references (arxiv, wikipedia, mathoverflow) stay allowed — the arm may
 Per run (local, no leaderboard):
 
 - **climb-rate** — verified improvement per cycle (`ablation.climb_rate`);
-- **dead-ends-avoided** — known dead-ends (from `docs/wiki/findings/`) the arm
+- **dead-ends-avoided** — known dead-ends (from `knowledge/wiki/findings/`) the arm
   did *not* re-run (`dead_ends_avoided`) — the metric most directly testing the
   KB;
 - **cycles-to-X%-of-floor** — cycles to close X% of the start→floor gap

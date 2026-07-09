@@ -11,8 +11,8 @@ cites:
   - scripts/circle_packing_square/seeds/p14_canonical.json
   - tests/circle_packing_square/test_slsqp_polish_dispatch.py
   - results/circle_packing_square/slsqp_polish_result.json
-  - docs/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
-  - docs/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
+  - knowledge/wiki/questions/2026-05-24-p14-strict-tol-manifest-wiring.md
+  - knowledge/wiki/findings/dead-end-newton-max-strict-tol-lockout-p14.md
 ---
 
 # P14 strict-tol wire-fix lands — autonomous loop now reproduces the float64 ceiling

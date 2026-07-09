@@ -12,7 +12,7 @@ cites:
   - .claude/rules/axioms.md
   - src/einstein/triple_verify/core.py
   - src/einstein/auto_submit.py
-  - docs/wiki/findings/triple-verify-wiring-design.md
+  - knowledge/wiki/findings/triple-verify-wiring-design.md
 ---
 
 # Triple-verify — the per-problem 3-way score check (axiom A1, wired)

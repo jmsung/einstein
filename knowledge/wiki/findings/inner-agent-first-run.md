@@ -8,7 +8,7 @@ related_problems: [14]
 related_concepts: [meta-learning-automation]
 cites:
   - docs/agent/inner-agent-readiness.md
-  - docs/wiki/findings/inner-agent-cited-sources-parse-fallback.md
+  - knowledge/wiki/findings/inner-agent-cited-sources-parse-fallback.md
   - docs/tools/inner_agent_telemetry.py
   - docs/tools/claude_headless.py
   - scripts/autonomous_loop.py

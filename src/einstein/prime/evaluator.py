@@ -32,8 +32,8 @@ def evaluate(
             the arena verifier's empirical tolerance band: every leaderboard
             solution sits at exact maxC ≈ 1+1e-4, so the strict ``1e-12`` gate
             would zero them all. Pass ``1e-12`` for the strict zero-margin /
-            P17-class check. See docs/wiki/concepts/arena-tolerance-drift.md
-            and docs/wiki/findings/arena-proximity-guard.md.
+            P17-class check. See knowledge/wiki/concepts/arena-tolerance-drift.md
+            and knowledge/wiki/findings/arena-proximity-guard.md.
 
     Returns:
         Score S(f) = -sum f(k)*log(k)/k, or 0.0 if constraint violated.

@@ -28,8 +28,8 @@ OUT_DIR="${2:-$REPO_ROOT/ablation-build}"
 # --- the knowledge layer to remove from each clean-room checkout (pre-reg §7) ---
 # Directories that are the pre-built knowledge base + stored answers.
 KNOWLEDGE_DIRS=(
-  "docs/wiki"
-  "docs/source"
+  "knowledge/wiki"
+  "knowledge/source"
   "docs/agent"
 )
 # .claude/rules/ is stripped to the GENERIC subset only. These four (+ README

@@ -35,7 +35,7 @@ General background; no direct arena tie. Relevant only as design reference for t
 
 ## Open questions / connections
 - Does SOP-style structured handoff between mathematician personas (PRD-analog → architecture-analog → execution) outperform the current free-form "each persona writes 2–3 questions" council dispatch? Worth testing on one arena problem.
-- The recursive constraint-prompt rewriting in Appendix A is a concrete implementation of "agent rewrites its own rules from cycle feedback" — could inspire a `/agent-reflect` step that proposes edits to `docs/wiki/personas/*.md` from cycle-log outcomes.
+- The recursive constraint-prompt rewriting in Appendix A is a concrete implementation of "agent rewrites its own rules from cycle feedback" — could inspire a `/agent-reflect` step that proposes edits to `knowledge/wiki/personas/*.md` from cycle-log outcomes.
 - Extends NLSOM (Zhuge 2023) and ChatDev (Qian 2023); leaves open whether SOPs help for *research / proof* tasks (vs the well-scoped software-dev SOP that already exists in industry).
 
 ## Key terms

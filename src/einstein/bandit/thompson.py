@@ -9,7 +9,7 @@ an unpulled arm). `pick()` draws one θ per masked arm and returns the argmax
 exactly right for the library's sparse, warm-started counts.
 
 Why Beta-Bernoulli (not UCB / ε-greedy): see
-`docs/wiki/findings/beta-bernoulli-skill-bandit-posterior.md`.
+`knowledge/wiki/findings/beta-bernoulli-skill-bandit-posterior.md`.
 
 Design contract (from the branch file):
   - `ThompsonSampler.pick(category, *, rng) -> PickResult | None`

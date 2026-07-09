@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """llm_distill.py — Claude Code-headless distillation of extracted papers.
 
-The wiki contract says `docs/source/*.md` should hold LLM-distilled summaries,
+The wiki contract says `knowledge/source/*.md` should hold LLM-distilled summaries,
 not raw extractions. This module shells out to `claude -p` (Claude Code's
 headless mode) per paper to produce a Karpathy-llm-wiki-style structured
 summary: title, one-line, key claim, method, why-it-matters, connections,
@@ -21,7 +21,7 @@ oversized source/ entries.
 
 Usage:
     uv run python docs/tools/llm_distill.py --input extracted.md --slug 2024-foo
-    uv run python docs/tools/llm_distill.py --shrink docs/source/2007-saliola.md
+    uv run python docs/tools/llm_distill.py --shrink knowledge/source/2007-saliola.md
 """
 
 from __future__ import annotations
@@ -289,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument("--input", type=Path, help="Path to an extracted markdown file to distill.")
-    g.add_argument("--shrink", type=Path, help="Shrink one docs/source/<slug>.md in place.")
+    g.add_argument("--shrink", type=Path, help="Shrink one knowledge/source/<slug>.md in place.")
     g.add_argument("--shrink-all", type=Path, help="Shrink every *.md in the given directory.")
     p.add_argument(
         "--slug", type=str, help="Filename stem for --input output (required with --input)."
@@ -297,7 +297,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--out-dir",
         type=Path,
-        default=Path("docs/source"),
+        default=Path("knowledge/source"),
         help="Destination dir for --input mode.",
     )
     p.add_argument(

@@ -7,7 +7,7 @@ asked_by: autonomous_loop_p14_cycle89
 related_problems: [14, 5, 11]
 related_concepts: [float64-ceiling, mpmath-ulp-polish, basin-rigidity]
 cites:
-  - docs/wiki/questions/2026-06-01-p14-ae-tied-seed-mpmath-polish.md
+  - knowledge/wiki/questions/2026-06-01-p14-ae-tied-seed-mpmath-polish.md
   - src/einstein/optimizer_manifest.yaml
   - src/einstein/optimizer_dispatch.py
 ---

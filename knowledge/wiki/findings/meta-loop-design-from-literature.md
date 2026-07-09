@@ -23,7 +23,7 @@ cites:
 
 The meta-loop being scaffolded on `js/feat/meta-loop` sits on top of `scripts/autonomous_loop.py`'s *inner* cycle loop. The seven ingested papers converge on a small set of architectural commitments that — taken together — predict what compounds and what doesn't:
 
-1. **Filesystem-as-feedback beats compressed summaries** (Meta-Harness, AHE). Raw traces, not scalar scores or LLM summaries, are the load-bearing input to the proposer. Our `cycle-log.md` + `docs/wiki/findings/` + `mb/logs/auto-submit.md` already are this layer; the meta-loop must *read raw*, not pre-digest.
+1. **Filesystem-as-feedback beats compressed summaries** (Meta-Harness, AHE). Raw traces, not scalar scores or LLM summaries, are the load-bearing input to the proposer. Our `cycle-log.md` + `knowledge/wiki/findings/` + `mb/logs/auto-submit.md` already are this layer; the meta-loop must *read raw*, not pre-digest.
 2. **Edit the mechanism, not the next candidate** (AEVO, AHE, HyperAgents). The compounding gain is in revising the procedure/skills/rules/notes — not in burning iterations on more inner attempts. Our proposal channel (`mb/proposals/`) targets rules / manifest / queue *because that's where the math says compounding lives*.
 3. **Falsifiable contracts with rollback are the safety surface** (AHE). Every edit ships a change-manifest naming evidence + predicted regressions; the next round verifies and auto-rolls back ineffective edits. Our 6-gate chain + applied/reverted directories must enforce this — the diff alone is not the contract.
 4. **Self-attribution is asymmetric** (AHE). Fixes are foreseeable; regressions are not (11% recall on AHE's data, 89% of regressions unforeseen). This empirically validates `triple-verify` as the regression-foresight gap-filler and motivates **shadow A/B** as the only honest way to greenlight non-trivial edits.
@@ -54,7 +54,7 @@ Mapped to this repo:
 
 | MetaHarness | einstein equivalent |
 |---|---|
-| Filesystem D | `docs/agent/cycle-log.md`, `docs/wiki/findings/`, `mb/logs/auto-submit.md`, `mb/logs/inner-agent-budget.md`, `mb/problems/<id>/experiment-log.md` |
+| Filesystem D | `docs/agent/cycle-log.md`, `knowledge/wiki/findings/`, `mb/logs/auto-submit.md`, `mb/logs/inner-agent-budget.md`, `mb/problems/<id>/experiment-log.md` |
 | Single-file harness candidate | A single typed proposal (rule edit, manifest tweak, queue reorder, new question) |
 | Population + Pareto frontier | `mb/proposals/{pending,applied,rejected,reverted}/` |
 | Validator + held-out evaluator | 6-gate chain + shadow A/B harness (Goal 5) |

@@ -43,7 +43,7 @@ markers = ["slow: slow tests (e.g. exact sympy verifier)"]
 [tool.ruff]
 line-length = 100
 target-version = "py313"
-extend-exclude = ["docs/raw", "docs/source", "results"]
+extend-exclude = ["knowledge/raw", "knowledge/source", "results"]
 
 [tool.ruff.lint]
 # Baseline: E (pycodestyle), F (pyflakes), I (isort). B and UP deferred to a follow-up

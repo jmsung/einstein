@@ -15,17 +15,17 @@ This rule is the structural enforcement of the four honesty checks (`docs/agent/
 ### During the cycle:
 
 1. **Author with attribution** — every new wiki page gets `author: agent | human | hybrid` frontmatter (per `wiki-attribution.md`).
-2. **File failure findings** — every abandoned approach immediately gets a `docs/wiki/findings/dead-end-<slug>.md` (per `failure-is-a-finding.md`).
+2. **File failure findings** — every abandoned approach immediately gets a `knowledge/wiki/findings/dead-end-<slug>.md` (per `failure-is-a-finding.md`).
 
 ### At cycle END (per `/worktree-done` or `/agent-reflect`):
 
 3. **Run `docs/tools/refresh_qmd.sh`** before any merge. The qmd index does NOT auto-detect new files; without refresh, the NEXT cycle can't query this cycle's findings — silently breaks the wiki-first discipline. Refusal: don't mark cycle complete if qmd is stale.
-4. **MANDATORY — Run `docs/tools/wiki_graph.py --file-questions`** to surface structural gaps (Types 1, 2, 4, 5 — see `docs/wiki/findings/finding-the-fertile-gaps.md`). Top-3 Type-2 candidates auto-file as `docs/wiki/questions/<date>-gap-<slug>.md`. The next cycle's council dispatch picks them up alongside persona questions. The gap-detector says *what to consider*; the cross-pollination-not-compute filter says *what to keep*. **Refusal**: don't mark cycle complete if gap-detector wasn't run — without diagnosis the self-improvement loop silently skips its weakest step (same gap gets re-learned next cycle).
+4. **MANDATORY — Run `docs/tools/wiki_graph.py --file-questions`** to surface structural gaps (Types 1, 2, 4, 5 — see `knowledge/wiki/findings/finding-the-fertile-gaps.md`). Top-3 Type-2 candidates auto-file as `knowledge/wiki/questions/<date>-gap-<slug>.md`. The next cycle's council dispatch picks them up alongside persona questions. The gap-detector says *what to consider*; the cross-pollination-not-compute filter says *what to keep*. **Refusal**: don't mark cycle complete if gap-detector wasn't run — without diagnosis the self-improvement loop silently skips its weakest step (same gap gets re-learned next cycle).
 4b. **Run `docs/tools/gap_search.py`** to auto-suggest source artifacts for every open question without an existing `## Suggested sources` section. Queries arxiv (math categories only) for the top 3 hits per question; appends them to the question file. Closes the gap→ingest chain — human still approves + `/wiki-ingest <arxiv-url>`, but the search burden is gone. Safe to re-run idempotently (skips already-enriched questions).
 5. **Append exactly one row** to `docs/agent/cycle-log.md` for the cycle. Schema in the file header. Failures and abandons count — note `outcome: blocked | no-change | new-finding-no-improvement` as appropriate.
 6. **Update `docs/agent/skill-library.md`** for every technique invoked during the cycle: increment `tried`; increment `top3` if the cycle reached top-3 on the problem; increment `finding` if the cycle produced any new wiki finding (positive OR dead-end).
 7. **Verify `author:` fields** on every wiki page touched/added in the cycle. The mix is the self-improvement signal.
-8. **Failure-finding obligation** — if any approach was abandoned during the cycle, `docs/wiki/findings/dead-end-<slug>.md` must exist for it. If not, block the worktree-done step.
+8. **Failure-finding obligation** — if any approach was abandoned during the cycle, `knowledge/wiki/findings/dead-end-<slug>.md` must exist for it. If not, block the worktree-done step.
 9. **Promotion check** — scan `docs/agent/skill-library.md` for findings whose `tried`/`finding` counts crossed 3 cross-problem citations. Propose each to `docs/agent/promotion-log.md` for human approval. Don't promote unilaterally; just surface the candidates.
 
 **Anti-patterns explicitly forbidden:**

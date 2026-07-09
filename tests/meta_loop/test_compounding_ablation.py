@@ -350,7 +350,7 @@ def fixture_repo(tmp_path):
     _git(["config", "user.email", "t@t"], repo)
     _git(["config", "user.name", "t"], repo)
     # knowledge layer (to be removed)
-    for d in ("docs/wiki", "docs/source", "docs/agent"):
+    for d in ("knowledge/wiki", "knowledge/source", "docs/agent"):
         (repo / d).mkdir(parents=True)
         (repo / d / "page.md").write_text("knowledge")
     # rules (mixed)
@@ -384,7 +384,7 @@ def test_build_script_strips_exactly_the_frozen_paths(fixture_repo):
     for arm in ("cold", "warm"):
         co = out / f"einstein-{arm}"
         # knowledge layer gone
-        for d in ("docs/wiki", "docs/source", "docs/agent"):
+        for d in ("knowledge/wiki", "knowledge/source", "docs/agent"):
             assert not (co / d).exists(), f"{arm}:{d} should be removed"
         # rules stripped to the keep-set
         for r in _REMOVED_RULES:

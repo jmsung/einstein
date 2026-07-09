@@ -31,7 +31,7 @@ Conceptual / position paper, not technical. Two implementation pathways are sket
 No theorems or numerical bounds. Establishes a vocabulary — "living software systems," translation-as-core-problem, prompt-as-program, context-as-first-class-input — and argues that prompt engineering is "AI leadership + problem decomposition," not word-choice tweaking. Argues hallucinations are managed by the same fact-checking processes used for human interns (e.g., supplying sources and demanding `[X]` citations in output), not by abolishing the agent.
 
 ## Why it matters here
-General background; no direct arena tie. Loosely relevant to how the autonomous-loop agent itself is architected — framing the council/self-improvement loop as a translation+context system, and reinforcing why prompts/conversations (questions in `docs/wiki/questions/`) are the durable artifact rather than transient code. No mathematical content for sphere packing, kissing numbers, autocorrelation, etc.
+General background; no direct arena tie. Loosely relevant to how the autonomous-loop agent itself is architected — framing the council/self-improvement loop as a translation+context system, and reinforcing why prompts/conversations (questions in `knowledge/wiki/questions/`) are the durable artifact rather than transient code. No mathematical content for sphere packing, kissing numbers, autocorrelation, etc.
 
 ## Open questions / connections
 - How to fact-check agent-authored wiki pages systematically (analogue of the source-citation prompt pattern) — ties to the [[wiki-attribution]] rule.

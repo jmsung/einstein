@@ -1,7 +1,7 @@
 """Warm self-pruning support-shrinking search for P2 (Goal 2b/2c of p2-record-breakthrough).
 
 Goal 1's cold-seed-on-fixed-window search dead-ended
-(`docs/wiki/findings/dead-end-p2-cold-seed-fixed-window.md`): cold smooth-bump seeds
+(`knowledge/wiki/findings/dead-end-p2-cold-seed-fixed-window.md`): cold smooth-bump seeds
 land +0.022 above arena #1 (can't reach even our own basin), and a pre-imposed
 contiguous window is strictly worse than full support. The gap is structural.
 

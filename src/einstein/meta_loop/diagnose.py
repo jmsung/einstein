@@ -14,7 +14,7 @@ Filesystem-as-feedback principle (MetaHarness, Lee et al. 2026):
     surfaces patterns — it does NOT replace the raw filesystem the agentic
     proposer (Goal 2) reads.
 
-See `docs/wiki/findings/meta-loop-design-from-literature.md`.
+See `knowledge/wiki/findings/meta-loop-design-from-literature.md`.
 """
 
 from __future__ import annotations
@@ -436,7 +436,7 @@ class DiagnosticReport:
         lines: list[str] = [REPORT_HEADER]
         lines.append(f"_Generated: {self.generated_at.strftime('%Y-%m-%dT%H:%M:%SZ')}_\n")
         lines.append(
-            "Read-only diagnostic — see `docs/wiki/findings/meta-loop-design-from-literature.md`.\n"
+            "Read-only diagnostic — see `knowledge/wiki/findings/meta-loop-design-from-literature.md`.\n"
         )
         lines.append("## Sources\n")
         lines.append(f"- cycle-log: `{self.cycle_log_path}`")

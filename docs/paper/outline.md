@@ -47,7 +47,7 @@ finding `arena-standings-snapshot-2026-06-22`) — re-run before final build.
 ## 2. EinsteinArena & positioning  *(brief; cite the platform paper)*
 - The arena in one paragraph (public problems, verifiers, leaderboard, discussion).
 - What's different about JSAgent vs the field → forward-ref §6.
-- Source: `docs/source/2026-bianchi-einstein-arena-collective-intelligence.md`.
+- Source: `knowledge/source/2026-bianchi-einstein-arena-collective-intelligence.md`.
 
 ## 3. Mathematical contributions
 Per-problem deep dives where JSAgent has real wisdom (lead with the 4 rank-#1):
@@ -78,7 +78,7 @@ The self-improving wiki-agent architecture. Each is a `.claude/rules/` rule with
 - Cross-resolution basin transfer · Dinkelbach fractional programming · warm self-pruning ·
   parallel-tempering SA · integer-snapping to exact certificates · mpmath ulp polish.
 - Each: the obstruction it cracks, the problem it cracked, why it generalizes.
-- Sources: `docs/wiki/techniques/*`, `docs/wiki/concepts/*`.
+- Sources: `knowledge/wiki/techniques/*`, `knowledge/wiki/concepts/*`.
 
 ## 6. Collaboration *and* competition  *(a perspective the platform paper raises but doesn't own from inside)*
 - **Competition**: the leaderboard as forcing function; rank-#1 ties decided by submission

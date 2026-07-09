@@ -6,7 +6,7 @@ Either human or agent can author wiki pages. The honesty layer is **mandatory fr
 
 **How to apply:**
 
-Every page in `docs/wiki/concepts/`, `docs/wiki/techniques/`, `docs/wiki/findings/`, `docs/wiki/personas/`, `docs/wiki/problems/`, `docs/wiki/questions/` MUST have frontmatter:
+Every page in `knowledge/wiki/concepts/`, `knowledge/wiki/techniques/`, `knowledge/wiki/findings/`, `knowledge/wiki/personas/`, `knowledge/wiki/problems/`, `knowledge/wiki/questions/` MUST have frontmatter:
 
 ```yaml
 ---
@@ -24,7 +24,7 @@ cites: [<paths>]            # mandatory if making non-trivial claims
 - `hybrid` — agent-drafted + human-edited, OR human-drafted + agent-extended substantively
 
 **Quality bar (same for all authors):**
-1. **Grounded** — claims trace to `docs/source/` or established literature, not "training said so"
+1. **Grounded** — claims trace to `knowledge/source/` or established literature, not "training said so"
 2. **Cited** — specific files / URLs / commit hashes, not "as discussed in some paper"
 3. **Verifiable** — code can be run, math can be checked, API can be queried
 4. **No filler** — every paragraph earns its place; if removing it doesn't lose information, remove it
@@ -35,13 +35,13 @@ cites: [<paths>]            # mandatory if making non-trivial claims
 - Human review for promotion: read the finding, read the proposed concept page, decide
 
 **Pages the agent may NOT write directly (without /wiki-learn or /wiki-query --file-back):**
-- `docs/wiki/home.md` — narrative front door, human-curated
-- `docs/wiki/personas/_synthesis.md` — meta-page, human-curated
+- `knowledge/wiki/home.md` — narrative front door, human-curated
+- `knowledge/wiki/personas/_synthesis.md` — meta-page, human-curated
 - `mb/notes/*` — personal jots, human-only
 - `mb/logs/ops.md` — private ops history, human-only
 
 The agent CAN write all other wiki pages directly with mandatory attribution. The honesty layer is the receipt.
 
-**Triggering pattern:** every docs/wiki/ file write goes through this attribution check. Frontmatter without `author:` is incomplete and should be flagged.
+**Triggering pattern:** every knowledge/wiki/ file write goes through this attribution check. Frontmatter without `author:` is incomplete and should be flagged.
 
-See also: [self-improvement-loop](self-improvement-loop.md), [docs/wiki/CLAUDE.md](../../docs/wiki/CLAUDE.md), [agent-stance](agent-stance.md) (honest about lack of info).
+See also: [self-improvement-loop](self-improvement-loop.md), [knowledge/wiki/CLAUDE.md](../../knowledge/wiki/CLAUDE.md), [agent-stance](agent-stance.md) (honest about lack of info).

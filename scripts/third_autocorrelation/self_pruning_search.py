@@ -1,6 +1,6 @@
 """Warm self-pruning support-shrinking search for P4 (js/feat/p4-warm-pruning-transfer).
 
-P2's record operator (docs/wiki/findings/p2-warm-self-pruning-beats-record.md)
+P2's record operator (knowledge/wiki/findings/p2-warm-self-pruning-beats-record.md)
 ported to the signed P4 objective. P4's honest-zero verdict predates the P2
 record, so warm self-pruning is the prescribed untried operator (wall-hit
 floor-claim rule).

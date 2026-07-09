@@ -17,14 +17,14 @@ qmd reports semantic similarity 0.70 between these two pages, but there is no ex
 
 ## Why it matters
 
-Per `docs/wiki/findings/finding-the-fertile-gaps.md`: pages with high semantic similarity but no explicit link likely share an underlying concept that hasn't been articulated. Either:
+Per `knowledge/wiki/findings/finding-the-fertile-gaps.md`: pages with high semantic similarity but no explicit link likely share an underlying concept that hasn't been articulated. Either:
 
 1. The connection is real and a bridge page should be authored, OR
 2. The similarity is superficial (qmd false-positive) and we should note that.
 
 ## Next step
 
-Read both pages. If a structural connection exists, file as `docs/wiki/findings/<bridge-slug>.md`. If not, close this question with `status: superseded` and a one-line explanation.
+Read both pages. If a structural connection exists, file as `knowledge/wiki/findings/<bridge-slug>.md`. If not, close this question with `status: superseded` and a one-line explanation.
 
 ## Suggested sources
 

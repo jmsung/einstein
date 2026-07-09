@@ -27,7 +27,7 @@ If any holds, the next action is the escalation — NOT another run.
 ## The escalation (mandatory, in order)
 
 1. **Name the obstruction** as a one-line question — write it to
-   `docs/wiki/questions/` ([ask-the-question-first](ask-the-question-first.md)).
+   `knowledge/wiki/questions/` ([ask-the-question-first](ask-the-question-first.md)).
 2. **Check accumulated wisdom FIRST** — before any new idea:
    - `grep` / read `docs/agent/wall-ledger.md` for this obstruction class. **If a
      past wall matches, jump straight to its recorded resolving move.** This is the
@@ -62,7 +62,7 @@ record attempt, run this check — it is a *refusing* gate, like the escalation 
    converging to the same score is evidence of a **sharp shared basin**, not a proof of
    global optimality. Same-method searchers share parameterizations and operators, so
    they fall into the same basin — the tie measures the basin's attractor, not the
-   absence of other basins. (Concept: [n-agent-tie-not-global-min](../../docs/wiki/concepts/n-agent-tie-not-global-min.md).)
+   absence of other basins. (Concept: [n-agent-tie-not-global-min](../../knowledge/wiki/concepts/n-agent-tie-not-global-min.md).)
 2. **Is there a search operator no one in the tie has tried?** A different
    parameterization (`exp(v)`→`v²`), a topology move (support shrink/grow, symmetry
    break), a different regime (warm vs cold). **If yes, the floor is unproven — the

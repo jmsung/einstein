@@ -12,7 +12,7 @@ from einstein.research_synthesis.synthesizer import _RunnerResult
 def _sample_hits() -> tuple[list[Hit], list[Hit]]:
     src = [
         Hit(
-            path="docs/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
+            path="knowledge/source/2026-lee-meta-harness-end-to-end-optimization-model.md",
             score=0.88,
             snippet="filesystem-as-feedback",
             collection="einstein-wiki-source",
@@ -20,7 +20,7 @@ def _sample_hits() -> tuple[list[Hit], list[Hit]]:
     ]
     wiki = [
         Hit(
-            path="docs/wiki/concepts/equioscillation.md",
+            path="knowledge/wiki/concepts/equioscillation.md",
             score=0.71,
             snippet="Chebyshev criterion",
             collection="einstein-wiki",
@@ -59,7 +59,7 @@ def test_happy_path_returns_synthesis() -> None:
         "queries": ["circle packing"],
         "top_sources": [
             {
-                "path": "docs/source/X.md",
+                "path": "knowledge/source/X.md",
                 "score": 0.5,
                 "snippet": "s",
                 "collection": "einstein-wiki-source",
@@ -70,13 +70,13 @@ def test_happy_path_returns_synthesis() -> None:
             {
                 "name": "P1",
                 "description": "d",
-                "supporting_sources": ["docs/source/X.md"],
+                "supporting_sources": ["knowledge/source/X.md"],
             }
         ],
         "proposed_approaches": [
             {
                 "description": "try Y",
-                "cited_sources": ["docs/source/X.md"],
+                "cited_sources": ["knowledge/source/X.md"],
                 "rationale": "because",
             }
         ],

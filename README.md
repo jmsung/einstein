@@ -39,7 +39,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 
 ## Approach
 
-JSAgent is a **self-improving** agent: it doesn't just solve problems, it *learns across them*. Every attempt — success or dead-end — is distilled into a persistent knowledge base that the next attempt queries first, so wisdom **compounds** rather than resetting each session. That is the meta-learning loop. This branch adds the **measurement** that makes "self-improving" a claim you can check rather than a slogan — see [`docs/wiki/harness.md`](docs/wiki/harness.md) for the full system.
+JSAgent is a **self-improving** agent: it doesn't just solve problems, it *learns across them*. Every attempt — success or dead-end — is distilled into a persistent knowledge base that the next attempt queries first, so wisdom **compounds** rather than resetting each session. That is the meta-learning loop. This branch adds the **measurement** that makes "self-improving" a claim you can check rather than a slogan — see [`knowledge/wiki/harness.md`](knowledge/wiki/harness.md) for the full system.
 
 Three ideas fire on a new problem, in order; a fourth measures whether the loop as a whole is improving.
 
@@ -51,19 +51,19 @@ Three ideas fire on a new problem, in order; a fourth measures whether the loop 
 
 Every score is **triple-verified** before it's trusted: a fast evaluator, an exact independent reimplementation, and a cross-check against an analytical bound or a different method. If any two disagree, the score is fake.
 
-**4. The loop measures whether it's actually improving.** A self-improving agent that can't tell *plateaued-because-solved* (at a certified floor) from *plateaued-because-stuck* (open headroom) is just busy. So the harness tracks a per-problem **best-verified-score-vs-cycle** trajectory and classifies each problem — *improving* / *solved-at-floor* (has a proof certificate) / *stuck* / *unknown* — surfaced on the dashboard as a badge + sparkline. Each cycle persists its actual solution artifact for inspection. On *stuck* problems with genuine headroom, an **AlphaEvolve-style engine** climbs: champion → mutate-K → triple-verify → promote the best mutant *iff strictly better*. And a 3-arm ablation (curated wiki vs firewalled web search vs model-only) tests the core thesis — does the knowledge base actually help? See [`docs/wiki/harness.md`](docs/wiki/harness.md) for the full system description.
+**4. The loop measures whether it's actually improving.** A self-improving agent that can't tell *plateaued-because-solved* (at a certified floor) from *plateaued-because-stuck* (open headroom) is just busy. So the harness tracks a per-problem **best-verified-score-vs-cycle** trajectory and classifies each problem — *improving* / *solved-at-floor* (has a proof certificate) / *stuck* / *unknown* — surfaced on the dashboard as a badge + sparkline. Each cycle persists its actual solution artifact for inspection. On *stuck* problems with genuine headroom, an **AlphaEvolve-style engine** climbs: champion → mutate-K → triple-verify → promote the best mutant *iff strictly better*. And a 3-arm ablation (curated wiki vs firewalled web search vs model-only) tests the core thesis — does the knowledge base actually help? See [`knowledge/wiki/harness.md`](knowledge/wiki/harness.md) for the full system description.
 
 ## The knowledge base
 
 The math wisdom is the goal, not the arena rank. The wiki is the publication channel.
 
-- **[`docs/wiki/home.md`](docs/wiki/home.md)** — narrative front door
-- **[`docs/wiki/problems/_inventory.md`](docs/wiki/problems/_inventory.md)** — concept-coverage compass across all 23 arena problems
-- **[`docs/wiki/personas/_synthesis.md`](docs/wiki/personas/_synthesis.md)** — the 12 stances drawn from how the great mathematicians actually work
-- **[`docs/wiki/timeline.md`](docs/wiki/timeline.md)** — dated breakthroughs and rigorous negative results
-- **[`docs/wiki/concepts/`](docs/wiki/concepts/)** & **[`techniques/`](docs/wiki/techniques/)** — durable mental models and reusable methods
-- **[`docs/wiki/findings/`](docs/wiki/findings/)** — what worked, what didn't (and the *why*) across cycles
-- **[`docs/wiki/harness.md`](docs/wiki/harness.md)** — the self-improving harness, as a system (the paper's system section)
+- **[`knowledge/wiki/home.md`](knowledge/wiki/home.md)** — narrative front door
+- **[`knowledge/wiki/problems/_inventory.md`](knowledge/wiki/problems/_inventory.md)** — concept-coverage compass across all 23 arena problems
+- **[`knowledge/wiki/personas/_synthesis.md`](knowledge/wiki/personas/_synthesis.md)** — the 12 stances drawn from how the great mathematicians actually work
+- **[`knowledge/wiki/timeline.md`](knowledge/wiki/timeline.md)** — dated breakthroughs and rigorous negative results
+- **[`knowledge/wiki/concepts/`](knowledge/wiki/concepts/)** & **[`techniques/`](knowledge/wiki/techniques/)** — durable mental models and reusable methods
+- **[`knowledge/wiki/findings/`](knowledge/wiki/findings/)** — what worked, what didn't (and the *why*) across cycles
+- **[`knowledge/wiki/harness.md`](knowledge/wiki/harness.md)** — the self-improving harness, as a system (the paper's system section)
 
 ## Setup
 
@@ -77,7 +77,7 @@ uv run ruff check .                    # lint manually
 uv run python scripts/<problem>/...    # run a per-problem entry point
 ```
 
-Compute is routed per workload — local workstation for sequential / float32 / multistart; Modal A100/H100 for sustained float64 GPU parallel. See [`docs/wiki/techniques/compute-router.md`](docs/wiki/techniques/compute-router.md).
+Compute is routed per workload — local workstation for sequential / float32 / multistart; Modal A100/H100 for sustained float64 GPU parallel. See [`knowledge/wiki/techniques/compute-router.md`](knowledge/wiki/techniques/compute-router.md).
 
 ## Citation
 

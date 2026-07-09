@@ -8,9 +8,9 @@ Two-step pipeline (human-gated between):
        gap_search.search_arxiv and writes the top-N hits with
        `approved: null` flags.
 
-    2. apply:    seed-candidates.json   →  docs/source/<slug>.md
+    2. apply:    seed-candidates.json   →  knowledge/source/<slug>.md
        For each candidate with `approved: true`, downloads the PDF
-       to docs/raw/papers/<slug>.pdf, runs pdf_to_md to extract
+       to knowledge/raw/papers/<slug>.pdf, runs pdf_to_md to extract
        markdown, and writes the source/ entry with proper
        frontmatter (author: agent, cites, ingested_for_concept).
 
@@ -115,7 +115,7 @@ def _build_source_frontmatter(*, candidate: dict, concept: str | None = None,
                               problem_refs: list[int] | None = None,
                               topic: str | None = None,
                               source_type: str = "arxiv") -> dict:
-    """Construct the YAML frontmatter dict for a docs/source/ entry.
+    """Construct the YAML frontmatter dict for a knowledge/source/ entry.
 
     Two modes:
       - concept-bound: `concept` + `problem_refs` set. Frontmatter cites the
@@ -154,7 +154,7 @@ def _build_source_frontmatter(*, candidate: dict, concept: str | None = None,
 def _frontmatter_to_yaml(fm: dict) -> str:
     """Tiny YAML serializer for our flat frontmatter dicts (no nesting).
 
-    Matches existing docs/source/ style: URLs + DOI strings stay unquoted
+    Matches existing knowledge/source/ style: URLs + DOI strings stay unquoted
     (a bare `:` is fine in YAML unless followed by space); titles with
     `: ` get quoted; leading/trailing whitespace forces quoting.
     """
@@ -266,7 +266,7 @@ S2_REFERENCES_FIELDS = "externalIds,title,abstract,year,authors"
 
 
 def _collect_arxiv_ids(source_dir: Path) -> list[str]:
-    """Scan docs/source/*.md frontmatter for arxiv ids — version-stripped."""
+    """Scan knowledge/source/*.md frontmatter for arxiv ids — version-stripped."""
     ids: set[str] = set()
     if not source_dir.is_dir():
         return []
@@ -440,7 +440,7 @@ def _arxiv_id_stem(abs_url: str) -> str:
 
 
 def _existing_source_urls(source_dir: Path) -> set[str]:
-    """Scan docs/source/*.md frontmatter for arxiv ids already ingested."""
+    """Scan knowledge/source/*.md frontmatter for arxiv ids already ingested."""
     seen: set[str] = set()
     if not source_dir.is_dir():
         return seen
@@ -497,7 +497,7 @@ def author_sweep(
         log.warning("no authors loaded from %s", authors_yaml)
         return
 
-    src_dir = source_dir if source_dir is not None else (_REPO / "docs" / "source")
+    src_dir = source_dir if source_dir is not None else (_REPO / "knowledge" / "source")
     seen = _existing_source_urls(src_dir)
     log.info("author-sweep: %d known source URLs to dedup against", len(seen))
 
@@ -691,7 +691,7 @@ def problem_sweep(
     if not vocab:
         log.warning("problem-sweep: empty vocab (%s); queries will be empty", vocab_p)
 
-    src_dir = source_dir if source_dir is not None else (_REPO / "docs" / "source")
+    src_dir = source_dir if source_dir is not None else (_REPO / "knowledge" / "source")
     seen = _existing_source_urls(src_dir)
     log.info("problem-sweep: %d known source URLs to dedup against", len(seen))
 
@@ -853,7 +853,7 @@ def category_sweep(
     if not all_phrases:
         log.warning("category-sweep: empty vocab (%s); cannot score relevance", vocab_p)
 
-    src_dir = source_dir if source_dir is not None else (_REPO / "docs" / "source")
+    src_dir = source_dir if source_dir is not None else (_REPO / "knowledge" / "source")
     seen = _existing_source_urls(src_dir)
     log.info("category-sweep: %d known source URLs to dedup against", len(seen))
 
@@ -1149,7 +1149,7 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
     """
     docs = (docs_root or (_REPO / "docs")).resolve()
     source_dir = docs / "source"
-    raw_dir = docs / "raw"  # FLAT per docs/wiki/CLAUDE.md contract
+    raw_dir = docs / "raw"  # FLAT per knowledge/wiki/CLAUDE.md contract
     raw_dir.mkdir(parents=True, exist_ok=True)
     source_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1326,7 +1326,7 @@ def apply(*, candidates_json: Path, docs_root: Path | None = None,
         written.append(w["source_path"])
 
     # Clean up the temp body dir. We hard-remove it (including any
-    # leftover files from interrupted runs) so docs/source/_pdf_to_md_tmp
+    # leftover files from interrupted runs) so knowledge/source/_pdf_to_md_tmp
     # never accumulates as a stale subdirectory.
     if body_temp.is_dir():
         for stray in body_temp.glob("*"):
@@ -1388,10 +1388,10 @@ def main(argv: list[str] | None = None) -> int:
                                  "bibliography expansion (8.3).")
 
     p_problem = sub.add_parser("problem-sweep",
-                               help="Per-problem arxiv sweep: walks docs/wiki/problems/ "
+                               help="Per-problem arxiv sweep: walks knowledge/wiki/problems/ "
                                     "frontmatter and queries arxiv per active problem.")
     p_problem.add_argument("--problems-dir", type=Path,
-                           default=_REPO / "docs" / "wiki" / "problems")
+                           default=_REPO / "knowledge" / "wiki" / "problems")
     p_problem.add_argument("--out", type=Path, required=True)
     p_problem.add_argument("--top-n", type=int, default=10)
     p_problem.add_argument("--vocab", type=Path, default=None,
@@ -1446,7 +1446,7 @@ def main(argv: list[str] | None = None) -> int:
             auto_approve_threshold=args.auto_approve_above,
         )
     elif args.cmd == "citation-crawl":
-        src = args.source_dir if args.source_dir is not None else (_REPO / "docs" / "source")
+        src = args.source_dir if args.source_dir is not None else (_REPO / "knowledge" / "source")
         if args.arxiv_ids:
             arxiv_ids = [s.strip() for s in args.arxiv_ids.split(",") if s.strip()]
             log.info("citation-crawl: %d arxiv ids from --arxiv-ids", len(arxiv_ids))

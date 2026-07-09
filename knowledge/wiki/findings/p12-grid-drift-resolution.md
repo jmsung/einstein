@@ -11,7 +11,7 @@ cites:
   - ./dead-end-p12-grid-sampling-drift.md
   - src/einstein/flat_poly/evaluator.py
   - src/einstein/triple_verify/problems/p12_flat_poly.py
-  - docs/wiki/questions/2026-06-04-p12-headroom-razborov-grid-drift-bound.md
+  - knowledge/wiki/questions/2026-06-04-p12-headroom-razborov-grid-drift-bound.md
 ---
 
 # P12 grid-drift resolution: certify the continuous sup, not the grid max

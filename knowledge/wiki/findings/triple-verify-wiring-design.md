@@ -11,7 +11,7 @@ cites:
   - src/einstein/auto_submit.py
   - scripts/autonomous_loop.py
   - scripts/verify_seed.py
-  - docs/wiki/findings/verify-seed-dispatch-pattern.md
+  - knowledge/wiki/findings/verify-seed-dispatch-pattern.md
 ---
 
 # Triple-verify wiring design — turning gate 2 from a hardcoded `False` into a real per-problem verdict

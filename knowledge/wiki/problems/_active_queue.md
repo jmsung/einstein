@@ -3,7 +3,7 @@ type: queue
 author: hybrid
 drafted: 2026-05-28
 updated: 2026-06-04
-cites: [docs/wiki/problems/_inventory.md, mb/logs/leaderboard-audit-2026-06.md]
+cites: [knowledge/wiki/problems/_inventory.md, mb/logs/leaderboard-audit-2026-06.md]
 ---
 
 # Active problem queue

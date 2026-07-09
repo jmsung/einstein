@@ -22,7 +22,7 @@ Sibling question to `2026-05-27-autonomous-loop-skip-retired-problems.md` (retir
 
 P22 (kissing-d12, n=841) on 2026-05-27, cycle_id=0:
 
-- `docs/wiki/problems/22-kissing-d12.md` declares `status: rank-3`, tier A; current score 2.0014030891913.
+- `knowledge/wiki/problems/22-kissing-d12.md` declares `status: rank-3`, tier A; current score 2.0014030891913.
 - `findings/structural-cap-at-score-2-meta.md` proves score < 2.0 ⇔ κ(12) ≥ 841, contradicting the empirical 8-way cap κ(12) = 840 (Coxeter–Todd 756, P₁₂ₐ 840, SDP cluster 840, Leech cross-section 756). Rank-1 mathematically infeasible.
 - `findings/hinge-overlap-rank3-squeeze.md` recipe is already optimally tuned (δ=1e-4 lands mid-window between silver and bronze; sub-ulp polish is the only headroom).
 - `optimizer_manifest.yaml` has only a **stub_no_op** entry (recon.py --dry-run, no result-file emitter). Dispatch returns `result_file missing` — silent no-op.

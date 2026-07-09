@@ -150,7 +150,7 @@ def test_full_run_writes_markdown(mb_layout: Path) -> None:
         "queries": ["P14 circle packing square"],
         "top_sources": [
             {
-                "path": "docs/source/X.md",
+                "path": "knowledge/source/X.md",
                 "score": 0.7,
                 "snippet": "s",
                 "collection": "einstein-wiki-source",
@@ -161,13 +161,13 @@ def test_full_run_writes_markdown(mb_layout: Path) -> None:
             {
                 "name": "P14-specific pattern",
                 "description": "d",
-                "supporting_sources": ["docs/source/X.md"],
+                "supporting_sources": ["knowledge/source/X.md"],
             }
         ],
         "proposed_approaches": [
             {
                 "description": "approach 1",
-                "cited_sources": ["docs/source/X.md"],
+                "cited_sources": ["knowledge/source/X.md"],
                 "rationale": "because",
             }
         ],

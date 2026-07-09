@@ -31,7 +31,7 @@ LLM completion tokens are parsed as function calls into a memory hierarchy: a qu
 On Multi-Session Chat deep memory retrieval, MemGPT lifts GPT-3.5 from 38.7%→66.9%, GPT-4 from 32.1%→92.5%, GPT-4 Turbo from 35.3%→93.4%. On document QA over Wikipedia, MemGPT's accuracy stays roughly flat as retrieved-document count grows while truncation-based baselines degrade. On a new nested KV retrieval task (140 UUID pairs, ~8k tokens), GPT-3.5/GPT-4/GPT-4 Turbo all collapse to 0% by 1–3 nesting levels, while MemGPT-GPT-4 sustains performance through 4 levels via iterative lookups.
 
 ## Why it matters here
-General background; no direct arena tie. The paging/heartbeat/function-chaining pattern is relevant to the autonomous-loop agent infrastructure (context management across long cycles, wiki retrieval, multi-hop lookups across `docs/wiki/` + `docs/source/`) rather than to any specific Einstein Arena math problem.
+General background; no direct arena tie. The paging/heartbeat/function-chaining pattern is relevant to the autonomous-loop agent infrastructure (context management across long cycles, wiki retrieval, multi-hop lookups across `knowledge/wiki/` + `knowledge/source/`) rather than to any specific Einstein Arena math problem.
 
 ## Open questions / connections
 - Can OS-style swap policies be learned (vs prompt-engineered) for better eviction/recall decisions?

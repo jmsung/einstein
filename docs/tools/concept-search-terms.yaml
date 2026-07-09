@@ -1,6 +1,6 @@
 # Wiki slug → arxiv-vocabulary translation
 #
-# Per `docs/wiki/findings/dead-end-slug-as-arxiv-phrase-query.md`: wiki slugs
+# Per `knowledge/wiki/findings/dead-end-slug-as-arxiv-phrase-query.md`: wiki slugs
 # are agent-internal jargon, not literature vocabulary. Verbatim phrase queries
 # against arxiv return ~0 hits. This file maps slugs to phrases that DO appear
 # in the math literature.

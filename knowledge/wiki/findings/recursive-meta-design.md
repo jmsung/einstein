@@ -221,7 +221,7 @@ These are deliberately surfaced here so G6 has them on day one (per
    Park for a future branch — the per-edit gate is the floor.
 
 These are filed alongside this finding via the standard
-`docs/wiki/questions/<date>-<slug>.md` route as part of G0's git commit, so
+`knowledge/wiki/questions/<date>-<slug>.md` route as part of G0's git commit, so
 they're on the same surface the next council dispatch inherits.
 
 ## See also

@@ -114,7 +114,7 @@ scripts/build_ablation_repos.sh HEAD ./ablation-build
 #   each prints + writes AIR_GAP_MANIFEST.txt and self-verifies the strip
 ```
 
-The clean-room physically lacks `docs/wiki|source|agent`, the knowledge
+The clean-room physically lacks `knowledge/wiki|source|agent`, the knowledge
 `.claude/rules/`, and every solution dump — so a session cannot read an answer
 key, and the session tool-set omits all web/retrieval tools. The air-gap is
 structural, not policed.

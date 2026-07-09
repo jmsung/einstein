@@ -2,7 +2,7 @@
 # Stop hook — capture gate for the einstein self-improvement loop.
 #
 # Blocks a "clean" session/cycle end unless this cycle produced (a) a new
-# docs/agent/cycle-log.md row AND (b) ≥1 new/edited docs/wiki/findings|concepts
+# docs/agent/cycle-log.md row AND (b) ≥1 new/edited knowledge/wiki/findings|concepts
 # page with valid attribution frontmatter + ≥1 cite. This makes the
 # `cycle-discipline` + `failure-is-a-finding` rules deterministic instead of
 # discretionary (design: docs/agent/meta-learning-automation.md, Gap 2 / Phase 0).

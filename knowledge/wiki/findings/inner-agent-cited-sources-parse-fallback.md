@@ -28,9 +28,9 @@ real-world failure modes before the Phase-3 scheduler. New per-cycle telemetry
 
 The dominant failure mode is a **schema-validation fallback**, not a model or
 compute problem. The inner agent, following the math-solving protocol, reads
-prior `docs/wiki/findings/` pages and honestly lists them in the response's
+prior `knowledge/wiki/findings/` pages and honestly lists them in the response's
 `cited_sources` field. But `inner_agent_output.parse_response` required *every*
-`cited_sources` entry to start with `docs/source/` — so one findings-path entry
+`cited_sources` entry to start with `knowledge/source/` — so one findings-path entry
 raised `InnerAgentOutputError`, which `_try_llm_path` catches as a parse failure
 and **falls back to the mechanical path**, discarding an otherwise-valid LLM
 cycle (correct strategy, score, notes).
@@ -40,15 +40,15 @@ findings page, confirming it's a recurring behavioral mismatch (the agent
 reliably cites findings/concepts it actually read), not a one-off:
 
 ```
-cycle 1: cited_sources[0] = docs/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md   → fallback
-cycle 2: cited_sources[0] = docs/wiki/findings/p14-strict-tol-wire-fix-...md         → fallback
+cycle 1: cited_sources[0] = knowledge/wiki/findings/p14-ae-tied-seed-at-f64-ceiling.md   → fallback
+cycle 2: cited_sources[0] = knowledge/wiki/findings/p14-strict-tol-wire-fix-...md         → fallback
 cycles 3-5: valid/empty cited_sources                                                → LLM path
 ```
 
 ## Why it failed (the obstruction)
 
 `cited_sources` is an **optional, informational** field (defaults to `[]`,
-added in research-synthesis G4) whose only consumer is the docs/source/-only
+added in research-synthesis G4) whose only consumer is the knowledge/source/-only
 promotion-candidate detector. Yet it was validated as *strictly* as the
 load-bearing path fields (`dead_end_finding`, `new_questions`, `wiki_writes`).
 A single stray entry in a non-load-bearing field had the power to void a whole
@@ -71,7 +71,7 @@ failed — the loop was *safe* but *unreliable*, paying for a fallback on 40% of
 cycles. R4/R5 passed comfortably; the LLM path is cheap (~7k tokens, ~40s).
 
 **Why post-fix is "expected", not measured here:** both pre-fix fallbacks had
-the identical, deterministic cause (a `docs/wiki/findings/...` entry in
+the identical, deterministic cause (a `knowledge/wiki/findings/...` entry in
 `cited_sources`), which the fix removes — the parser no longer raises on it
 (unit-tested in `test_inner_agent_output.py`), so `_try_llm_path` cannot take
 the parse-error fallback for this reason. The authoritative post-fix *live*
@@ -84,7 +84,7 @@ avoid burning ~30 min/cycle of redundant compute on a frozen problem.
 
 `inner_agent_output`: a new `_filter_path_list` used for `cited_sources` only —
 a non-list is still a hard error (structurally malformed field), but individual
-entries that aren't `docs/source/` strings are **dropped with a warning**
+entries that aren't `knowledge/source/` strings are **dropped with a warning**
 instead of raising. Load-bearing path fields stay strict. Result: a stray
 citation degrades to "fewer cited sources," never a fallback.
 
@@ -101,7 +101,7 @@ citation degrades to "fewer cited sources," never a fallback.
 
 ## What might still work next
 
-- Tighten the prompt to tell the agent `cited_sources` is `docs/source/`-only
+- Tighten the prompt to tell the agent `cited_sources` is `knowledge/source/`-only
   (belt-and-suspenders; the parser fix is the durable layer).
 - Goal 3 will replace the `len(text)//4` token *estimate* with exact
   `--output-format json` envelope counts so R5 / `$/cycle` are exact.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """distill_paper.py — structural distillation of opendataloader-pdf output.
 
-The wiki contract says `docs/source/*.md` should hold "1:1 LLM-distilled"
+The wiki contract says `knowledge/source/*.md` should hold "1:1 LLM-distilled"
 summaries, not raw extractions. opendataloader-pdf gives us the full text
 of a paper (often 500–3000 lines); this module extracts a focused
 **curated summary** suitable for qmd vector search: title, authors,
@@ -18,8 +18,8 @@ entry before writing. Also exposed as a standalone CLI that can
 retroactively shrink already-ingested oversized source/ entries.
 
 Usage:
-    uv run python docs/tools/distill_paper.py --shrink docs/source/2007-foo.md
-    uv run python docs/tools/distill_paper.py --shrink-all docs/source/
+    uv run python docs/tools/distill_paper.py --shrink knowledge/source/2007-foo.md
+    uv run python docs/tools/distill_paper.py --shrink-all knowledge/source/
 """
 from __future__ import annotations
 
@@ -92,7 +92,7 @@ def distill(extracted_md: str, metadata: dict, *,
             abstract_max_chars: int = 4000,
             intro_max_chars: int = 1500,
             conclusion_max_chars: int = 2500) -> str:
-    """Produce a curated summary suitable for docs/source/<slug>.md body.
+    """Produce a curated summary suitable for knowledge/source/<slug>.md body.
 
     Strategy:
       1. Header block from `metadata` (title / authors / year / arxiv URL).

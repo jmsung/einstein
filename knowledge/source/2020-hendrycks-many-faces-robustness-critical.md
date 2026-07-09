@@ -31,7 +31,7 @@ Constructs four controlled OOD test sets that isolate single shift axes (renditi
 DeepAugment alone: ImageNet-R 57.8% err (baseline 63.9%), ImageNet-C mCE 60.4 (baseline 76.7). +AugMix: ImageNet-R 53.2%, mCE 53.6 — beats ResNeXt-101 WSL (mCE 51.7, but 1000× data). Synthetic ImageNet-C blur corruptions correlate with Real Blurry Images rankings, refuting the "synthetic ≠ natural" dichotomy. On SVSF country shift (US→France), all methods roughly double in error; no augmentation helps. On DFR, OOD mAP tracks IID mAP almost exactly — interventions don't close the gap. Larger models help ImageNet-R/C/A; self-attention helps C/A but hurts R.
 
 ## Why it matters here
-General background; no direct arena tie. The math-optimization problems on Einstein Arena (sphere packing, autocorrelation, kissing numbers) don't involve image-classification distribution shift. The only oblique relevance is the meta-lesson that no single intervention is universal — analogous to the wiki's [compute-router](docs/wiki/techniques/compute-router.md) and council-dispatch stance that different problem classes need different methods.
+General background; no direct arena tie. The math-optimization problems on Einstein Arena (sphere packing, autocorrelation, kissing numbers) don't involve image-classification distribution shift. The only oblique relevance is the meta-lesson that no single intervention is universal — analogous to the wiki's [compute-router](knowledge/wiki/techniques/compute-router.md) and council-dispatch stance that different problem classes need different methods.
 
 ## Open questions / connections
 - Whether the texture-bias hypothesis explains augmentation gains, given augmentation fails on geographic/architectural shifts.

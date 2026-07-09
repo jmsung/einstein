@@ -129,7 +129,7 @@ Citation block (immutable — promotion gate verifies this):
 - gap: <canonical form, e.g. "P12 algebraic-construction unwired">
 - evidence_cycles: [49, 50, 51, ...]
 - problem_ids: ["P14", "P12", ...]
-- originating_question: docs/wiki/questions/<date>-<slug>.md
+- originating_question: knowledge/wiki/questions/<date>-<slug>.md
 """
 def main():
     # TODO(autosynth): implement <one-line spec from the gap question>
@@ -381,7 +381,7 @@ extraction → proposal), shadow A/B (verify before promote).
 │   1. write scripts/<slug>.py                                             │
 │   2. wire optimizer_manifest.yaml under cited problems                   │
 │   3. append skill-library.md row (categories from strategy_picker map)   │
-│   4. write docs/wiki/techniques/<slug>.md stub                           │
+│   4. write knowledge/wiki/techniques/<slug>.md stub                           │
 │                  │                                  │                    │
 │                  ▼                                  ▼                    │
 │        EINSTEIN_SHADOW_ARM=A             EINSTEIN_SHADOW_ARM=B           │
@@ -510,7 +510,7 @@ slug was wired into the manifest but NOT into the skill-library, so the
 Thompson bandit (which indexes the skill-library, not the manifest)
 never sampled it. Diagnosis: the original `_apply_code_edit_graduation`
 only wired the manifest. **Fix:** commit `675b839` adds the
-skill-library row + a `docs/wiki/techniques/<slug>.md` stub at
+skill-library row + a `knowledge/wiki/techniques/<slug>.md` stub at
 graduation time (per the "Shadow A/B contract (Goal 4)" section's
 4-part graduation list).
 

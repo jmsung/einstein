@@ -34,7 +34,7 @@ def _new_question(pid: str = "test-q-001", target: str | None = None) -> Proposa
     return Proposal(
         id=pid,
         type=ProposalType.NEW_QUESTION.value,
-        target_path=target or "docs/wiki/questions/2026-05-25-test-q.md",
+        target_path=target or "knowledge/wiki/questions/2026-05-25-test-q.md",
         proposed_diff="---\ntype: question\nauthor: agent\n---\n\nbody\n",
         evidence_cycles=[],
         predicted_regressions=["none"],
@@ -216,9 +216,9 @@ def test_review_pending_applies_decisions_list(tmp_path: Path, fake_git) -> None
     repo.mkdir()
     store = ProposalStore(tmp_path / "proposals")
 
-    p1 = _new_question(pid="q-001", target="docs/wiki/questions/2026-05-25-a.md")
-    p2 = _new_question(pid="q-002", target="docs/wiki/questions/2026-05-25-b.md")
-    p3 = _new_question(pid="q-003", target="docs/wiki/questions/2026-05-25-c.md")
+    p1 = _new_question(pid="q-001", target="knowledge/wiki/questions/2026-05-25-a.md")
+    p2 = _new_question(pid="q-002", target="knowledge/wiki/questions/2026-05-25-b.md")
+    p3 = _new_question(pid="q-003", target="knowledge/wiki/questions/2026-05-25-c.md")
     for p in (p1, p2, p3):
         store.write_pending(p)
 

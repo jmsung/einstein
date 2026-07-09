@@ -47,7 +47,7 @@ def evaluate(data: dict) -> float:
 # The arena score `max_k |p(z_k)|/√71` is a *grid maximum* over N=1e6 roots of
 # unity, which underestimates the true `sup_{|z|=1} |p(z)|/√71` because the peak
 # rarely lands on a node. That grid-vs-continuum gap is the ~7e-10 local↔arena
-# drift (docs/wiki/findings/dead-end-p12-grid-sampling-drift.md). Both the 1M
+# drift (knowledge/wiki/findings/dead-end-p12-grid-sampling-drift.md). Both the 1M
 # grid (1.2809320520721) and arena (1.2809320527988) sit *below* the certified
 # continuous sup (1.2809320528750).
 #

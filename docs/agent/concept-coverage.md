@@ -7,7 +7,7 @@ source: docs/tools/concept_inventory.py
 
 # Concept coverage report
 
-Programmatic view of concept/technique/finding references across `docs/wiki/problems/*.md` frontmatter, classified by wiki + source/ coverage. Drives `docs/tools/seed_ingest.py`.
+Programmatic view of concept/technique/finding references across `knowledge/wiki/problems/*.md` frontmatter, classified by wiki + source/ coverage. Drives `docs/tools/seed_ingest.py`.
 
 ## Summary
 

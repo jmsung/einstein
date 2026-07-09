@@ -6,7 +6,7 @@ categories (or the problem category if the persona has no triggers). The
 question-not-solution rule from .claude/rules/council-dispatch.md is enforced
 in the task block, and each question is required to cite ≥1 specific path.
 
-Anchored in docs/wiki/findings/research-synthesis-design.md Patterns C
+Anchored in knowledge/wiki/findings/research-synthesis-design.md Patterns C
 (citation provenance as signal) and D (pre-cycle synthesis as distinct step).
 """
 

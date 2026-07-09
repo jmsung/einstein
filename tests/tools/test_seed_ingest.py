@@ -2,7 +2,7 @@
 
 Two-step pipeline:
   propose:  coverage.json + arxiv  →  candidates.json (approved: null)
-  apply:    candidates.json + Internet + pdf_to_md  →  docs/source/*.md
+  apply:    candidates.json + Internet + pdf_to_md  →  knowledge/source/*.md
 
 Tests cover (a) pure helpers (slug, frontmatter, abs→pdf url),
 (b) propose with mocked arxiv, (c) apply with mocked download + pdf_to_md,

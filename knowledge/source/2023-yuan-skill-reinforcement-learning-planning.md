@@ -36,7 +36,7 @@ General background; no direct arena tie. The paper is about hierarchical RL + LL
 ## Open questions / connections
 - Can the "fine-grained basic skills + dependency graph" pattern be ported to a numerical-optimizer agent (techniques as nodes, preconditions as edges)? Speculative — needs a different cost model than item inventories.
 - Plan4MC still needs human correction on ~11% of LLM-generated graph nodes — what does an automated verifier for graph correctness look like?
-- Relates to Go-Explore (Ecoffet et al.) for exploration bootstrapping and to LLM-as-planner work (SayCan, Voyager, DEPS); does not relate to any cited paper in `docs/wiki/`.
+- Relates to Go-Explore (Ecoffet et al.) for exploration bootstrapping and to LLM-as-planner work (SayCan, Voyager, DEPS); does not relate to any cited paper in `knowledge/wiki/`.
 
 ## Key terms
 hierarchical reinforcement learning, Minecraft, MineDojo, MineCLIP, skill graph, LLM planning, Plan4MC, Finding-skill, Go-Explore, PPO, self-imitation learning, depth-first search planning, intrinsic reward, open-world agents
