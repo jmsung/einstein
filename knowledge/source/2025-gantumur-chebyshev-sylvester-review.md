@@ -26,5 +26,5 @@ arithmetic function in the convolution identities" — i.e., exactly P7's move. 
 iterative refinement procedure"** — a 19th-century algorithm for IMPROVING a finite
 weight set. That is a historical support/coefficient-optimization loop: potentially a
 principled alternative (or complement) to our colgen pricing for choosing the 2000-key
-support, and directly relevant to the c* question (docs/wiki/questions/
+support, and directly relevant to the c* question (knowledge/wiki/questions/
 2026-07-04-p7-optimal-2000-key-constant.md).
