@@ -8,8 +8,8 @@ Run at the end of every problem cycle (typically inside `/worktree-done` distill
 
 1. One row appended to `docs/agent/cycle-log.md`
 2. Updated `docs/agent/skill-library.md` citation counts
-3. Any new `docs/wiki/findings/` (positive or dead-end) authored
-4. Any new `docs/wiki/concepts/` (if a finding is invoked across 3+ problems)
+3. Any new `knowledge/wiki/findings/` (positive or dead-end) authored
+4. Any new `knowledge/wiki/concepts/` (if a finding is invoked across 3+ problems)
 5. Wiki questions closed (status: open → answered, with `answer_finding:`)
 
 ## Procedure
@@ -24,9 +24,9 @@ Run at the end of every problem cycle (typically inside `/worktree-done` distill
    - **What wiki page should NOW exist?** (post-hoc finding/concept proposal)
 
 3. **Author wiki entries**:
-   - For each "what failed + why" answer → `docs/wiki/findings/dead-end-<slug>.md` (per failure-is-a-finding rule)
-   - For each generalizable insight → `docs/wiki/findings/<slug>.md` or, if cited 3+ times, `docs/wiki/concepts/<slug>.md`
-   - For each unanswered question → `docs/wiki/questions/<YYYY-MM-DD>-<slug>.md` (status: open)
+   - For each "what failed + why" answer → `knowledge/wiki/findings/dead-end-<slug>.md` (per failure-is-a-finding rule)
+   - For each generalizable insight → `knowledge/wiki/findings/<slug>.md` or, if cited 3+ times, `knowledge/wiki/concepts/<slug>.md`
+   - For each unanswered question → `knowledge/wiki/questions/<YYYY-MM-DD>-<slug>.md` (status: open)
 
 4. **Update tracking**:
    - Append cycle row to `docs/agent/cycle-log.md` (per cycle-discipline rule)
