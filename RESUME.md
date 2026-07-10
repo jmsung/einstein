@@ -53,7 +53,7 @@ slower). For full speed, leave it alone while it runs.
   cold vs warm + warm−cold Δ with bootstrap CIs. Question: does warm fatten the UPPER tail?
 - Test 3 (headroom transfer): `results/transfer-xhard/solve-rate-delta.json` +
   `transfer-records.json` — warm−cold on circles-60/80 (true Packomania optima).
-- Both feed the paper's §7 "what would settle it" (docs/paper-ablation-integration branch).
+- Both feed the (private) methodology paper's "what would settle it" ablation section.
 
 ## Expected scale
 Test 1 ~7–13h (120 cells; haiku often finishes before the 400s cap). Test 3 ~4–6h (Sonnet).

@@ -20,11 +20,11 @@ All commands below were run on 2026-06-23 and their outputs recorded verbatim.
 | Per-problem optimizer code | `scripts/<problem>/`, `src/einstein/<problem>/` | search + evaluators |
 | Committed construction seeds | `scripts/<problem>/seeds/best.json[.gz]` | in-repo, deterministic, no dependence on private data |
 | Standings sweep | `scripts/leaderboard_standings.py` | hits the arena's public endpoints; no API key |
-| The paper | `docs/paper/main.tex`, `refs.bib` | build with `tectonic main.tex` |
 
 **Not public in this repo:** downloaded competitor SOTA files and run outputs under `results/`
-(gitignored), and the private memory-bank `mb/` (tracking, logs, some solution backups). The
-*seeds above* are the in-repo, self-contained constructions; they do not depend on those trees.
+(gitignored); the private memory-bank `mb/` (tracking, logs, some solution backups); and the
+methodology paper (personal — kept in private `mb/paper/`). The *seeds above* are the in-repo,
+self-contained constructions; they do not depend on those trees.
 
 ---
 

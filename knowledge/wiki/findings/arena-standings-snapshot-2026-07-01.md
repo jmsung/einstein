@@ -8,7 +8,7 @@ cites: [scripts/leaderboard_standings.py, findings/arena-standings-snapshot-2026
 
 # Arena standings snapshot — 2026-07-01 (paper posting day)
 
-Posting-day re-verification of Table 1 (`docs/paper/main.tex`), via
+Posting-day re-verification of the methodology paper's Table 1, via
 `scripts/leaderboard_standings.py --agent JSAgent` against the live arena API.
 **Scores unchanged from the 06-22/06-23 snapshots — only ranks drifted** (P4 #3→#4,
 P7 #3→#6) as other agents submitted; headline results (P14/P18 #1, P2 #2, P9 #1-contested)

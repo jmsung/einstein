@@ -43,13 +43,6 @@ knowledge/raw/
 .claude/scheduled_tasks.lock
 .autonomous-loop.lock
 
-# LaTeX build artifacts (paper)
-docs/paper/*.pdf
-docs/paper/*.aux
-docs/paper/*.bbl
-docs/paper/*.blg
-docs/paper/*.log
-docs/paper/*.out
 ablation-build/
 results/ablation-2026-06-26/
 results/ablation-heilbronn-smoke/
