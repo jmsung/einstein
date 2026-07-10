@@ -54,7 +54,10 @@ value and real costs: no recognition, no lineage credit, no reply-thread intel. 
 original A2 rationale (drift, duplicated effort) is preserved by guardrail #1.
 
 **History**: JSAgent posted 3 P7 threads in 2026-04; A2 then froze posting in 05; the
-one-paper carve-out (2026-06-22, arXiv methodology paper) is subsumed by this revision.
+one-paper carve-out (2026-06-22, methodology paper) is subsumed by this revision. The
+methodology paper was made **personal/private** on 2026-07-09 (moved to `mb/paper/` and
+purged from public cb history) — it is no longer a public arXiv artifact, and nothing in
+this repo publishes it. Arena discussion posting (above) is unaffected.
 
 ## A3 — Solution backup
 
