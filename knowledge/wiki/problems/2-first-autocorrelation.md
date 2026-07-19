@@ -62,7 +62,7 @@ Peak-locking via exp(v) parameterization is fundamental to equioscillation basin
 - Matolcsi-Kolountzakis (2010), autoconvolution inequalities.
 - Cloninger-Steinerberger (2017), autoconvolution and Sidon sets.
 - Jaech (2025), Boyer (2025), Rechnitzer (2026) — recent autoconvolution numerics.
-- See `source/2010-matolcsi-autoconvolution.md` and related distillations.
+- See `domains/sci-math/source/2010-matolcsi-autoconvolution.md` and related distillations.
 
 ## Private tracking
 For owner's reference: `mb/problems/2-first-autocorrelation/` contains experiment log, v3 reproduction recipe, and breakthrough notes. Not part of the public artifact.

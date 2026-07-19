@@ -5,8 +5,8 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - ../../source/jmsung-einstein.md
-  - ../../source/jmsung-einstein-codebase.md
+  - ../../domains/ai-agents/source/jmsung-einstein.md
+  - ../../domains/ai-agents/source/jmsung-einstein-codebase.md
 ---
 
 # GPU & Modal Cloud Compute

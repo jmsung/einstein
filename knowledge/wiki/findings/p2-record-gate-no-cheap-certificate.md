@@ -14,8 +14,8 @@ cites:
   - ../findings/p2-lower-bound-research-state.md
   - ../findings/dead-end-p2-lasserre-l2-weaker-than-cs.md
   - ../findings/dead-end-p2-compact-support-basin-floor.md
-  - ../../source/2010-matolcsi-autoconvolution.md
-  - ../../source/2017-cloninger-autoconvolution-sidon.md
+  - ../../domains/sci-math/source/2010-matolcsi-autoconvolution.md
+  - ../../domains/sci-math/source/2017-cloninger-autoconvolution-sidon.md
 ---
 
 # P2 record-gate: no cheap dual certificate can adjudicate the arena floor

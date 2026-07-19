@@ -7,12 +7,12 @@ related_techniques: [memetic-tabu-search.md, basin-hopping-multistart.md]
 related_findings: []
 related_personas: []
 cites:
-  - ../../source/2023-romera-paredes-funsearch.md
-  - ../../source/2023-wang-voyager-open-ended-embodied-agent.md
+  - ../../domains/ai-reasoning/source/2023-romera-paredes-funsearch.md
+  - ../../domains/ai-agents/source/2023-wang-voyager-open-ended-embodied-agent.md
   - ../../source/2023-zhao-expel-llm-agents-experiential.md
-  - ../../source/2022-fawzi-alphatensor.md
-  - ../../source/2025-novikov-alphaevolve.md
-  - ../../source/2023-jimenez-swe-bench-can-language-models.md
+  - ../../domains/ai-reasoning/source/2022-fawzi-alphatensor.md
+  - ../../domains/ai-agents/source/2025-novikov-alphaevolve.md
+  - ../../domains/ai-agents/source/2023-jimenez-swe-bench-can-language-models.md
   - ../../source/2024-chan-mle-bench-evaluating-machine-learning.md
 ---
 
@@ -33,15 +33,15 @@ generator → candidate → evaluator → result ─┐
 ```
 
 - **Generator**: LLM or program-synthesis model emitting code, a configuration, or a chain-of-thought.
-- **Evaluator**: deterministic check — unit tests (SWE-bench, [`source/2023-jimenez-swe-bench-can-language-models.md`](../../source/2023-jimenez-swe-bench-can-language-models.md)), Kaggle leaderboard scoring ([MLE-bench](../../source/2024-chan-mle-bench-evaluating-machine-learning.md)), Minecraft game state ([Voyager](../../source/2023-wang-voyager-open-ended-embodied-agent.md)), arena verifier (this repo).
-- **Memory**: structured store the controller and generator can both read — Voyager's skill library, ExpeL's insight buffer ([`source/2023-zhao-expel-llm-agents-experiential.md`](../../source/2023-zhao-expel-llm-agents-experiential.md)), FunSearch's program database ([`source/2023-romera-paredes-funsearch.md`](../../source/2023-romera-paredes-funsearch.md)), AlphaEvolve's evolutionary database ([`source/2025-novikov-alphaevolve.md`](../../source/2025-novikov-alphaevolve.md)), this repo's `knowledge/wiki/`.
+- **Evaluator**: deterministic check — unit tests (SWE-bench, [`domains/ai-agents/source/2023-jimenez-swe-bench-can-language-models.md`](../../domains/ai-agents/source/2023-jimenez-swe-bench-can-language-models.md)), Kaggle leaderboard scoring ([MLE-bench](../../source/2024-chan-mle-bench-evaluating-machine-learning.md)), Minecraft game state ([Voyager](../../domains/ai-agents/source/2023-wang-voyager-open-ended-embodied-agent.md)), arena verifier (this repo).
+- **Memory**: structured store the controller and generator can both read — Voyager's skill library, ExpeL's insight buffer ([`source/2023-zhao-expel-llm-agents-experiential.md`](../../source/2023-zhao-expel-llm-agents-experiential.md)), FunSearch's program database ([`domains/ai-reasoning/source/2023-romera-paredes-funsearch.md`](../../domains/ai-reasoning/source/2023-romera-paredes-funsearch.md)), AlphaEvolve's evolutionary database ([`domains/ai-agents/source/2025-novikov-alphaevolve.md`](../../domains/ai-agents/source/2025-novikov-alphaevolve.md)), this repo's `knowledge/wiki/`.
 - **Controller**: picks the next prompt / strategy — curriculum (Voyager), evolutionary selection (FunSearch, AlphaEvolve), strategy picker with 1+1 rule (this repo's [`docs/tools/strategy_picker.py`](../../tools/strategy_picker.py)).
 
 ## When it applies
 
 Any task where **one-shot LLM performance is well below ceiling** but **the answer can be cheaply verified**:
 
-- **Math discovery** — extremal bounds, constructions, optimization-arena problems. FunSearch found new cap-set lower bounds; AlphaTensor ([`source/2022-fawzi-alphatensor.md`](../../source/2022-fawzi-alphatensor.md)) found faster $4\times 4$ matrix-mult algorithms; AlphaEvolve discovered new algorithms across several domains. This repo's autonomous loop fits the same shape.
+- **Math discovery** — extremal bounds, constructions, optimization-arena problems. FunSearch found new cap-set lower bounds; AlphaTensor ([`domains/ai-reasoning/source/2022-fawzi-alphatensor.md`](../../domains/ai-reasoning/source/2022-fawzi-alphatensor.md)) found faster $4\times 4$ matrix-mult algorithms; AlphaEvolve discovered new algorithms across several domains. This repo's autonomous loop fits the same shape.
 - **Software engineering** — Claude 2 + BM25 retrieval solves only $1.96\%$ of SWE-bench tasks unaided; modern harnesses (Aider, SWE-agent, Devin, Cursor) push this dramatically higher by adding retrieval, planning, and tool use — same model, different scaffold.
 - **ML engineering** — o1-preview with the AIDE scaffold earns a Kaggle bronze medal in $16.9\%$ of MLE-bench competitions at pass@1; the scaffold contribution is at least as large as the base model.
 - **Open-ended exploration** — Voyager's automatic curriculum + skill library + iterative prompting achieves $3.3\times$ more unique items and $15.3\times$ faster tech-tree unlocks vs ReAct / Reflexion / AutoGPT in Minecraft, and zero-shot transfers to a new world.
@@ -84,4 +84,4 @@ Two anti-patterns the design explicitly avoids:
 
 - Concepts: [arena-platform](arena-platform.md), [probabilistic-method](probabilistic-method.md) (multistart is the probabilistic instantiation of the search loop), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md).
 - Rules: [self-improvement-loop](../../.claude/rules/self-improvement-loop.md), [cycle-discipline](../../.claude/rules/cycle-discipline.md), [council-dispatch](../../.claude/rules/council-dispatch.md), [failure-is-a-finding](../../.claude/rules/failure-is-a-finding.md).
-- Sources: [Voyager](../../source/2023-wang-voyager-open-ended-embodied-agent.md), [ExpeL](../../source/2023-zhao-expel-llm-agents-experiential.md), [FunSearch](../../source/2023-romera-paredes-funsearch.md), [AlphaTensor](../../source/2022-fawzi-alphatensor.md), [AlphaEvolve](../../source/2025-novikov-alphaevolve.md), [SWE-bench](../../source/2023-jimenez-swe-bench-can-language-models.md), [MLE-bench](../../source/2024-chan-mle-bench-evaluating-machine-learning.md).
+- Sources: [Voyager](../../domains/ai-agents/source/2023-wang-voyager-open-ended-embodied-agent.md), [ExpeL](../../source/2023-zhao-expel-llm-agents-experiential.md), [FunSearch](../../domains/ai-reasoning/source/2023-romera-paredes-funsearch.md), [AlphaTensor](../../domains/ai-reasoning/source/2022-fawzi-alphatensor.md), [AlphaEvolve](../../domains/ai-agents/source/2025-novikov-alphaevolve.md), [SWE-bench](../../domains/ai-agents/source/2023-jimenez-swe-bench-can-language-models.md), [MLE-bench](../../source/2024-chan-mle-bench-evaluating-machine-learning.md).

@@ -12,7 +12,7 @@ related_findings: [p2-lower-bound-research-state.md, dead-end-p2-lasserre-l2-wea
 cites:
   - ../findings/p2-lower-bound-research-state.md
   - ../findings/dead-end-p2-lasserre-l2-weaker-than-cs.md
-  - ../../source/2017-cloninger-autoconvolution-sidon.md
+  - ../../domains/sci-math/source/2017-cloninger-autoconvolution-sidon.md
 ---
 
 # Can a Lasserre / SOS hierarchy improve the $C_1 \ge 1.28$ lower bound?

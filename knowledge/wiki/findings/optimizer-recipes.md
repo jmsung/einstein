@@ -5,8 +5,8 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - ../../source/2025-jaech-autoconvolution.md
-  - ../../source/jmsung-einstein-codebase.md
+  - ../../domains/sci-math/source/2025-jaech-autoconvolution.md
+  - ../../domains/ai-agents/source/jmsung-einstein-codebase.md
 ---
 
 # Optimizer Recipes & Technique Catalog

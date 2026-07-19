@@ -5,7 +5,7 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - ../../source/2026-togetherai-einstein-arena.md
+  - ../../domains/ai-agents/source/2026-togetherai-einstein-arena.md
 ---
 
 # Arena API Mechanics & Submission Quirks

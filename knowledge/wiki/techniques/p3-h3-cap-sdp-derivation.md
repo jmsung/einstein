@@ -8,9 +8,9 @@ related_problems: [P3]
 related_concepts: [autocorrelation-inequality.md, lp-duality.md]
 related_findings: [p3-closed-form-baseline-landscape.md, dead-end-p3-jaech-cascade-extended.md, dead-end-p3-sdp-upper-bound-trivial.md]
 cites:
-  - ../../source/2026-rechnitzer-autoconvolution-digits.md
-  - ../../source/2017-cloninger-autoconvolution-sidon.md
-  - ../../source/2010-matolcsi-autoconvolution.md
+  - ../../domains/sci-math/source/2026-rechnitzer-autoconvolution-digits.md
+  - ../../domains/sci-math/source/2017-cloninger-autoconvolution-sidon.md
+  - ../../domains/sci-math/source/2010-matolcsi-autoconvolution.md
 ---
 
 # H3-cap derivation: rigorous upper bound for the arena P3 quantity via Fourier + SOS-SDP

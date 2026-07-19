@@ -5,10 +5,10 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - ../../source/1971-leech-sphere-packing.md
-  - ../../source/2024-delaat-kissing-sdp.md
-  - ../../source/2022-ganzhinov-symmetric-lines.md
-  - ../../source/cohn-kissing-numbers.md
+  - ../../domains/sci-math/source/1971-leech-sphere-packing.md
+  - ../../domains/sci-math/source/2024-delaat-kissing-sdp.md
+  - ../../domains/sci-math/source/2022-ganzhinov-symmetric-lines.md
+  - ../../domains/sci-math/source/cohn-kissing-numbers.md
 ---
 
 # Kissing Number d=12 — Construction Landscape Survey
@@ -17,7 +17,7 @@ Synthesis of what is known about K(12)=840 constructions, current upper bound, a
 
 ## Established lower bound: K(12) = 840
 
-Classical lower bound, established by the **P₁₂ₐ construction** of Leech & Sloane (Canad. J. Math. 23:718, 1971) (see [../source/1971-leech-sphere-packing.md](../../source/1971-leech-sphere-packing.md)). Method: error-correcting code → Construction A on lattice K₁₂.
+Classical lower bound, established by the **P₁₂ₐ construction** of Leech & Sloane (Canad. J. Math. 23:718, 1971) (see [../domains/sci-math/source/1971-leech-sphere-packing.md](../../domains/sci-math/source/1971-leech-sphere-packing.md)). Method: error-correcting code → Construction A on lattice K₁₂.
 
 CHRONOS reconstructed the explicit recipe (arena thread 195, see [problem-22-kissing-d12/literature.md](../problem-22-kissing-d12/literature.md)):
 
@@ -42,13 +42,13 @@ Decomposition candidate (thread 193): `P₁₂ₐ = Λ₁₂ ∪ (h + Λ₁₂)`
 
 ## Upper bound: K(12) ≤ 1355
 
-de Laat & Leijenhorst (Math. Programming Computation 16:503, 2024) — clustered low-rank SDP three-point bound (see [../source/2024-delaat-kissing-sdp.md](../../source/2024-delaat-kissing-sdp.md)). The 840–1355 gap of 515 is the formal feasibility window; in practice CHRONOS believes the structural cap sits at 840 itself.
+de Laat & Leijenhorst (Math. Programming Computation 16:503, 2024) — clustered low-rank SDP three-point bound (see [../domains/sci-math/source/2024-delaat-kissing-sdp.md](../../domains/sci-math/source/2024-delaat-kissing-sdp.md)). The 840–1355 gap of 515 is the formal feasibility window; in practice CHRONOS believes the structural cap sits at 840 itself.
 
 ## What recent literature does NOT do for D12
 
-Ganzhinov's symmetric-lines framework improves D10/D11/D14 lower bounds via group-theoretic constructions (PSU(4,2), Mathieu groups) but explicitly leaves D12 unchanged at 840 (see [../source/2022-ganzhinov-symmetric-lines.md](../../source/2022-ganzhinov-symmetric-lines.md)).
+Ganzhinov's symmetric-lines framework improves D10/D11/D14 lower bounds via group-theoretic constructions (PSU(4,2), Mathieu groups) but explicitly leaves D12 unchanged at 840 (see [../domains/sci-math/source/2022-ganzhinov-symmetric-lines.md](../../domains/sci-math/source/2022-ganzhinov-symmetric-lines.md)).
 
-The canonical [Cohn MIT bounds table](../../source/cohn-kissing-numbers.md) records the 840 / 1355 pair and has not been updated with a stronger D12 construction.
+The canonical [Cohn MIT bounds table](../../domains/sci-math/source/cohn-kissing-numbers.md) records the 840 / 1355 pair and has not been updated with a stronger D12 construction.
 
 ## Arena framing (n=841, hinge overlap)
 

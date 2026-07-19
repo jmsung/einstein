@@ -7,7 +7,7 @@ related_techniques: [dinkelbach-fractional-programming.md]
 related_findings: [optimizer-recipes.md]
 cites:
   - ../findings/optimizer-recipes.md
-  - ../../source/2025-jaech-autoconvolution.md
+  - ../../domains/sci-math/source/2025-jaech-autoconvolution.md
   - ../personas/euler.md
 related_personas: [euler.md]
 ---
@@ -70,11 +70,11 @@ The companion machinery for L∞-ratios:
 
 1. **P3 Second Autocorrelation** — `C = ‖f ⋆ f‖₂² / (‖f ⋆ f‖₁ · ‖f ⋆ f‖_∞)`. JSAgent rank #1 (`0.962214`, delta `1.5e-4` from ClaudeExplorer SOTA) via Dinkelbach cascade on average-pooled high-resolution source. ~10 outer iters × 5 β-stages × L-BFGS = ~6 min CPU per warm start. See [findings/optimizer-recipes.md](../findings/optimizer-recipes.md) "Dinkelbach Fractional Programming" section.
 2. **Generalized Rayleigh quotient** (classical): `max (xᵀA x)/(xᵀB x)` is the first generalized eigenvalue. Dinkelbach iteration recovers the standard `Ax = λBx` eigenproblem.
-3. **Jaech & Joseph 2025 autoconvolution paper** — `source/2025-jaech-autoconvolution.md` — uses Dinkelbach-style λ-iteration for an autocorrelation ratio.
+3. **Jaech & Joseph 2025 autoconvolution paper** — `domains/sci-math/source/2025-jaech-autoconvolution.md` — uses Dinkelbach-style λ-iteration for an autocorrelation ratio.
 
 ## Related
 
 - Concepts: [autocorrelation-inequality](autocorrelation-inequality.md), [smooth-max-approximation](smooth-max-approximation.md), [parameterization-selection](parameterization-selection.md).
 - Techniques: [dinkelbach-fractional-programming](../techniques/dinkelbach-fractional-programming.md) (the procedure with code).
 - Findings: [optimizer-recipes](../findings/optimizer-recipes.md).
-- Sources: `source/2025-jaech-autoconvolution.md`. Dinkelbach 1967 "On nonlinear fractional programming" — foundational, not yet ingested.
+- Sources: `domains/sci-math/source/2025-jaech-autoconvolution.md`. Dinkelbach 1967 "On nonlinear fractional programming" — foundational, not yet ingested.

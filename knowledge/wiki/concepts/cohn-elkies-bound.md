@@ -11,8 +11,8 @@ cites:
   - sphere-packing.md
   - kissing-number.md
   - modular-forms-magic-function.md
-  - ../../source/2024-delaat-kissing-sdp.md
-  - ../../source/2024-cohn-li-kissing.md
+  - ../../domains/sci-math/source/2024-delaat-kissing-sdp.md
+  - ../../domains/sci-math/source/2024-cohn-li-kissing.md
 ---
 
 # Cohn–Elkies LP bound (and the magic-function dual certificate)
@@ -82,7 +82,7 @@ For non-special dimensions:
 When the council dispatches with category `kissing_number` or `sphere_packing`:
 
 1. **Cohn persona** ([personas/cohn.md](../personas/cohn.md)) explicitly asks: *"compute the LP bound. What's the gap?"* — first action.
-2. Use existing implementations: de Laat–Leijenhorst's clustered SDP (2024, [source/2024-delaat-kissing-sdp.md](../../source/2024-delaat-kissing-sdp.md)) is the SOTA computational machinery. For `d ≤ 24`, results are tractable on the workstation via SDPA-GMP.
+2. Use existing implementations: de Laat–Leijenhorst's clustered SDP (2024, [domains/sci-math/source/2024-delaat-kissing-sdp.md](../../domains/sci-math/source/2024-delaat-kissing-sdp.md)) is the SOTA computational machinery. For `d ≤ 24`, results are tractable on the workstation via SDPA-GMP.
 3. Compare LP bound to current arena SOTA. The gap tells you how hard the problem really is:
    - **Tight gap** → SOTA is provably optimal; pivot to a different problem.
    - **Wide gap** → room exists; LP bound is loose but the magic-function approach might exist.
@@ -111,6 +111,6 @@ For arena play specifically:
 ## See also
 
 - [`personas/cohn.md`](../personas/cohn.md), [`personas/viazovska.md`](../personas/viazovska.md), [`personas/conway.md`](../personas/conway.md) — the personas embodying this concept
-- [`source/2024-delaat-kissing-sdp.md`](../../source/2024-delaat-kissing-sdp.md) — modern SDP machinery
-- [`source/2024-cohn-li-kissing.md`](../../source/2024-cohn-li-kissing.md) — sign-flip improvements for `d ∈ [17, 21]`
+- [`domains/sci-math/source/2024-delaat-kissing-sdp.md`](../../domains/sci-math/source/2024-delaat-kissing-sdp.md) — modern SDP machinery
+- [`domains/sci-math/source/2024-cohn-li-kissing.md`](../../domains/sci-math/source/2024-cohn-li-kissing.md) — sign-flip improvements for `d ∈ [17, 21]`
 - [`findings/p22-d12-construction-survey.md`](../findings/p22-d12-construction-survey.md) — concrete P22 deployment of the LP bound

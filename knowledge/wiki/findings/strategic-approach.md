@@ -5,12 +5,12 @@ drafted: 2026-05-02
 level: 1
 source_type: agent_analysis
 cites:
-  - ../../source/2025-jaech-autoconvolution.md
-  - ../../source/2025-novikov-alphaevolve.md
-  - ../../source/2022-fawzi-alphatensor.md
-  - ../../source/2023-romera-paredes-funsearch.md
-  - ../../source/2025-ellenberg-generative-math.md
-  - ../../source/2025-georgiev-math-exploration.md
+  - ../../domains/sci-math/source/2025-jaech-autoconvolution.md
+  - ../../domains/ai-agents/source/2025-novikov-alphaevolve.md
+  - ../../domains/ai-reasoning/source/2022-fawzi-alphatensor.md
+  - ../../domains/ai-reasoning/source/2023-romera-paredes-funsearch.md
+  - ../../domains/sci-math/source/2025-ellenberg-generative-math.md
+  - ../../domains/sci-math/source/2025-georgiev-math-exploration.md
 ---
 
 # Strategic Approach — First Principles

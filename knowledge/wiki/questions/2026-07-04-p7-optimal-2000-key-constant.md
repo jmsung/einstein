@@ -48,9 +48,9 @@ modulus set grows; sieve-theoretic lower-bound constants literature.
 
 ## Ingested sources (2026-07-04)
 
-- [2020-wilson-chebyshev-coefficients](../../source/2020-wilson-chebyshev-coefficients.md) — FULL read; P7's frame verbatim; confirms sparse-set optimum unstudied; compensating-mass construction pattern.
-- [2025-gantumur-chebyshev-sylvester-review](../../source/2025-gantumur-chebyshev-sylvester-review.md) — abstract; DEEP-READ pending (Sylvester's iterative refinement = historical support-optimization loop).
-- [2013-faber-kadiri-psi-bounds](../../source/2013-faber-kadiri-psi-bounds.md), [2012-vindas-beurling-chebyshev](../../source/2012-vindas-beurling-chebyshev.md) — abstract; secondary.
+- [2020-wilson-chebyshev-coefficients](../../domains/sci-math/source/2020-wilson-chebyshev-coefficients.md) — FULL read; P7's frame verbatim; confirms sparse-set optimum unstudied; compensating-mass construction pattern.
+- [2025-gantumur-chebyshev-sylvester-review](../../domains/sci-math/source/2025-gantumur-chebyshev-sylvester-review.md) — abstract; DEEP-READ pending (Sylvester's iterative refinement = historical support-optimization loop).
+- [2013-faber-kadiri-psi-bounds](../../domains/sci-math/source/2013-faber-kadiri-psi-bounds.md), [2012-vindas-beurling-chebyshev](../../domains/sci-math/source/2012-vindas-beurling-chebyshev.md) — abstract; secondary.
 
 ## Suggested sources (literature pass 2026-07-04, web-approved)
 
@@ -92,4 +92,4 @@ Diamond–Erdős compensating-mass) beats it — that remains the open lever.
 
 
 ## Part (c) — certified bound arrived (2026-07-06, external)
-Russell/CHRONOS certified S*(4800)≤0.99637, S*(12000)≤0.99749 (weak-duality dyadic-dual certificates; DOI 10.5281/zenodo.21221207; distilled `source/2026-russell-pnt-ceiling-certificates.md`). c-floors: c(4800)≥0.0391, c(12000)≥0.0294. NOT yet at our board reach (K=48000 didn't converge). Open sub-goal: extend the certificate to reach 64000 to price our own leader.
+Russell/CHRONOS certified S*(4800)≤0.99637, S*(12000)≤0.99749 (weak-duality dyadic-dual certificates; DOI 10.5281/zenodo.21221207; distilled `domains/sci-math/source/2026-russell-pnt-ceiling-certificates.md`). c-floors: c(4800)≥0.0391, c(12000)≥0.0294. NOT yet at our board reach (K=48000 didn't converge). Open sub-goal: extend the certificate to reach 64000 to price our own leader.

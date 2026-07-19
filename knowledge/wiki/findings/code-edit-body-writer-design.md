@@ -8,12 +8,12 @@ related_concepts: []
 related_techniques: []
 related_personas: []
 cites:
-  - ../../source/2026-ma-skillclaw-let-skills-evolve.md
+  - ../../domains/ai-agents/source/2026-ma-skillclaw-let-skills-evolve.md
   - ../../source/2026-sherwood-alphazero-coding-agents.md
-  - ../../source/2026-lee-meta-harness-end-to-end-optimization-model.md
+  - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
   - ../../source/2026-lin-agentic-harness-engineering-ahe.md
   - ../../source/2026-ning-code-as-agent-harness.md
-  - ../../source/2025-zhang-darwin-godel-machine-open-ended.md
+  - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
   - tool-autosynthesis-design.md
   - meta-loop-design-from-literature.md
 ---
@@ -37,7 +37,7 @@ and that delta is absorbed by the gate chain, not by trusting the LLM.
 
 ## Why now, not in Phase 1
 
-SkillClaw ([2026-ma-skillclaw-let-skills-evolve.md](../../source/2026-ma-skillclaw-let-skills-evolve.md))
+SkillClaw ([2026-ma-skillclaw-let-skills-evolve.md](../../domains/ai-agents/source/2026-ma-skillclaw-let-skills-evolve.md))
 is the anchor: skill bodies evolve **from grouped session evidence**, under a
 validator gate, with a mandatory `v<N>.md` + `v<N>_evidence.md` ledger and
 *conservative editing* ("preserve API contracts/endpoints; do not bloat with

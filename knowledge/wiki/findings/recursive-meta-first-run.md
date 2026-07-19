@@ -11,8 +11,8 @@ cites:
   - recursive-meta-design.md
   - meta-loop-design-from-literature.md
   - meta-loop-swap-surface.md
-  - ../../source/2026-zhang-hyperagents.md
-  - ../../source/2025-zhang-darwin-godel-machine-open-ended.md
+  - ../../domains/ai-agents/source/2026-zhang-hyperagents.md
+  - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
 ---
 
 # Recursive meta-loop first run — scaffold + synthetic dogfood

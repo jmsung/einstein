@@ -49,7 +49,7 @@ For P22 specifically (per [`findings/p22-d12-construction-survey.md`](p22-d12-co
 
 - **8-way structural cap**: lattice K₁₂ (756) → P₁₂ₐ Construction A (840) → SDP cluster bound at 840 → Leech cross-section (756) — all four pathways converge at 840 from above and below.
 - **First-order link-tangent test** ([`techniques/first-order-link-tangent-test.md`](../techniques/first-order-link-tangent-test.md)): for any candidate filler position `v ∈ S^{d-2}`, `min S(u) ≈ 8.02` over the 60°-link tangent, vs threshold 1.155 for hinge-overlap improvability. This is a 6.8x margin — a strict local-minimum proof.
-- **De Laat–Leijenhorst 2024** ([source/2024-delaat-kissing-sdp.md](../source/2024-delaat-kissing-sdp.md)): proves κ(12) ≤ 1355 formally; CHRONOS believes the structural cap sits at 840 itself.
+- **De Laat–Leijenhorst 2024** ([domains/sci-math/source/2024-delaat-kissing-sdp.md](../domains/sci-math/source/2024-delaat-kissing-sdp.md)): proves κ(12) ≤ 1355 formally; CHRONOS believes the structural cap sits at 840 itself.
 
 For P23 ([`findings/hinge-overlap-rank3-squeeze.md`](hinge-overlap-rank3-squeeze.md)):
 

@@ -28,7 +28,7 @@ The plan: the agent solves problems, fails, reflects, writes back to this wiki, 
 | [`findings/`](findings/) | specific Q→A pages with cites |
 | [`problems/`](problems/) | one short index page per arena problem + the inventory matrix |
 | [`questions/`](questions/) | open math questions awaiting research |
-| [`../source/`](../source/) | distilled summaries of papers, repos, blogs (1:1 with the gitignored `../raw/`) — see [`../source/INDEX.md`](../source/INDEX.md) for the browsable manifest of the **197-paper corpus** |
+| [`../source/`](../source/) | distilled summaries of papers, repos, blogs (1:1 with the gitignored `../raw/`) — see [`../domains/sci-math/source/INDEX.md`](../domains/sci-math/source/INDEX.md) for the browsable manifest of the **197-paper corpus** |
 | [`../.claude/rules/`](../.claude/rules/) | behavioral rules — the agent's policy layer |
 | [`../tools/`](../tools/) | autonomous-loop tooling — see [`../tools/README.md`](../tools/README.md) for the full index (concept_inventory, seed_ingest, pdf_to_md, calibrate, monitor, wiki_lint, strategy_picker, autonomous_loop) |
 
@@ -80,4 +80,4 @@ The wiki, the rules, the agent code, and the cycle log together form a **legible
 
 ## Status
 
-Live as of 2026-05-23. Started 2026-05-02 from a private memory bank, scaled to a 197-paper source/ corpus + 180-page synthesis layer + autonomous orchestrator under `scripts/autonomous_loop.py` driving 22 cycles to date. The autonomous loop runs under `/loop` or cron via `docs/tools/cycle_runner.sh`; per-device compute calibrations live at `docs/agent/calibrations/<device-key>.json`. Conventions are still tightening — `docs/tools/wiki_lint.py` surfaces drift; `knowledge/source/INDEX.md` is the live paper manifest.
+Live as of 2026-05-23. Started 2026-05-02 from a private memory bank, scaled to a 197-paper source/ corpus + 180-page synthesis layer + autonomous orchestrator under `scripts/autonomous_loop.py` driving 22 cycles to date. The autonomous loop runs under `/loop` or cron via `docs/tools/cycle_runner.sh`; per-device compute calibrations live at `docs/agent/calibrations/<device-key>.json`. Conventions are still tightening — `docs/tools/wiki_lint.py` surfaces drift; `knowledge/domains/sci-math/source/INDEX.md` is the live paper manifest.

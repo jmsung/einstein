@@ -8,10 +8,10 @@ answer_question: ../questions/2026-06-04-p3-arena-resolution-cap-2M.md
 related_concepts: [autocorrelation-inequality, kolountzakis-matolcsi-bound]
 related_problems: [3]
 cites:
-  - ../../source/2025-jaech-autoconvolution.md
-  - ../../source/2025-boyer-autoconvolution.md
-  - ../../source/2022-white-almost-tight-autoconvolution-inequality.md
-  - ../../source/2019-barnard-three-convolution-inequalities-real.md
+  - ../../domains/sci-math/source/2025-jaech-autoconvolution.md
+  - ../../domains/sci-math/source/2025-boyer-autoconvolution.md
+  - ../../domains/sci-math/source/2022-white-almost-tight-autoconvolution-inequality.md
+  - ../../domains/sci-math/source/2019-barnard-three-convolution-inequalities-real.md
   - p3-closed-form-baseline-landscape.md
   - dead-end-p3-jaech-cascade-extended.md
   - https://arxiv.org/abs/2508.02803

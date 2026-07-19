@@ -9,7 +9,7 @@ related_personas: [gauss.md, euler.md, ramanujan.md]
 cites:
   - sidon-sets.md
   - parameterization-selection.md
-  - ../../source/2020-balister-flat-littlewood.md
+  - ../../domains/sci-math/source/2020-balister-flat-littlewood.md
 ---
 
 # Rudin–Shapiro polynomials
@@ -54,7 +54,7 @@ The construction is GAUSS-style (recursive arithmetic with sign-flip rules) — 
 
 Erdős asked (1957): is there a constant `c < √2` such that every degree-n ±1 polynomial has sup-norm at least `c · √(n+1)`? Equivalently: can we beat Rudin–Shapiro asymptotically?
 
-Modern bounds (per [`source/2020-balister-flat-littlewood.md`](../../source/2020-balister-flat-littlewood.md)):
+Modern bounds (per [`domains/sci-math/source/2020-balister-flat-littlewood.md`](../../domains/sci-math/source/2020-balister-flat-littlewood.md)):
 
 - **Lower bound** (Erdős): `‖P‖_∞ / √(n+1) ≥ 1` for any non-constant `±1` polynomial.
 - **Upper bound** (Balister–Bollobás–Morris–Sahasrabudhe–Tiba 2020): proves *flat* `±1` polynomials exist asymptotically, ratio approaching `1` (resolving Erdős #26). But the construction is non-explicit — uses probabilistic + structural arguments.
@@ -91,6 +91,6 @@ When the council dispatches with category `flat_polynomials`, `±1_combinatorics
 - [`techniques/memetic-tabu-search.md`](../techniques/memetic-tabu-search.md) — the technique that found P12 SOTA
 - [`personas/gauss.md`](../personas/gauss.md), [`personas/euler.md`](../personas/euler.md), [`personas/ramanujan.md`](../personas/ramanujan.md) — personas that reach for ±1 constructions
 - [`findings/discrete-optimization.md`](../findings/discrete-optimization.md) — broader pattern for ±1 / discrete-combinatorial extremals
-- [`source/2020-balister-flat-littlewood.md`](../../source/2020-balister-flat-littlewood.md) — Annals 2020 proof of flat Littlewood existence (resolves Erdős #26)
+- [`domains/sci-math/source/2020-balister-flat-littlewood.md`](../../domains/sci-math/source/2020-balister-flat-littlewood.md) — Annals 2020 proof of flat Littlewood existence (resolves Erdős #26)
 
 *Last updated: 2026-05-02*
