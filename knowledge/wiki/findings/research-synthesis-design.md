@@ -17,7 +17,7 @@ cites:
   - ../../domains/ai-agents/source/2025-zhao-sirius-self-improving-multi-agent-systems.md
   - ../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md
   - ../../domains/ai-agents/source/2024-baek-researchagent-iterative-research-idea.md
-  - ../../domains/ai-agents/domains/ai-agents/source/2026-zhang-hyperagents.md
+  - ../../domains/ai-agents/source/2026-zhang-hyperagents.md
   - ../../domains/ai-retrieval/source/2024-ajith-litsearch-retrieval-benchmark-scientific.md
   - ../../domains/ai-retrieval/source/2024-press-citeme-can-language-models.md
   - ../../domains/ai-nlp/source/2024-wang-autosurvey-large-language-models.md
@@ -91,7 +91,7 @@ without bolting on a parallel system?**
   *outside* the seed paper's context — i.e., the cross-pollination move.
   Independently contributes gains beyond reference-graph retrieval alone.
 
-- **Hyperagents / DGM-H** ([`2026-zhang-hyperagents.md`](../../domains/ai-agents/domains/ai-agents/source/2026-zhang-hyperagents.md))
+- **Hyperagents / DGM-H** ([`2026-zhang-hyperagents.md`](../../domains/ai-agents/source/2026-zhang-hyperagents.md))
   makes the *meta-modification procedure itself* editable inside the agent's
   own program and runs an archive-based evolutionary loop. Emergent moves
   include persistent JSON memory, performance trackers, and rediscovery of

@@ -13,7 +13,7 @@ cites:
   - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
   - ../../domains/ai-agents/source/2026-ma-skillclaw-let-skills-evolve.md
   - ../../domains/ai-agents/source/2026-xia-skillrl-evolving-agents-recursive.md
-  - ../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
+  - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
   - meta-loop-design-from-literature.md
   - meta-loop-swap-surface.md
   - recursive-meta-design.md
@@ -54,7 +54,7 @@ einstein meta-loop. The implementation lives across G1–G6 on this branch.
 | | `rule_edit` | `code_edit` | `meta_self_edit` |
 |---|---|---|---|
 | Touches | `.claude/rules/*.md` | `scripts/proposed/*.py` → `scripts/*.py` | `scripts/meta_loop.py` |
-| Worst case | bad guidance → 1 bad cycle, dead-end filed | broken optimizer dispatched against a problem → wasted cycle, false score | proposer/gate weakens itself ([2025-zhang-darwin-godel-machine-open-ended.md](../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md): node-114 Goodhart) |
+| Worst case | bad guidance → 1 bad cycle, dead-end filed | broken optimizer dispatched against a problem → wasted cycle, false score | proposer/gate weakens itself ([2025-zhang-darwin-godel-machine-open-ended.md](../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md): node-114 Goodhart) |
 | Sandbox before live | n/a (markdown) | **ruff + import + colocated tests** | n/a (uses shadow A/B) |
 | Recurrence floor | ≥ 3 cycles | ≥ 3 cycles, ≥ 2 problems | ≥ 10 cycles |
 | Auto-promote? | No (gate chain) | No (validator + shadow + human) | No (queue for human review) |

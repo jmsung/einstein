@@ -13,7 +13,7 @@ cites:
   - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
   - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
   - ../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md
-  - ../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
+  - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
   - tool-autosynthesis-design.md
   - meta-loop-design-from-literature.md
 ---
