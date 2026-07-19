@@ -9,11 +9,11 @@ related_techniques: []
 related_personas: []
 cites:
   - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
-  - ../../source/2026-ning-code-as-agent-harness.md
-  - ../../source/2026-lin-agentic-harness-engineering-ahe.md
+  - ../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md
+  - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
   - ../../domains/ai-agents/source/2026-ma-skillclaw-let-skills-evolve.md
   - ../../domains/ai-agents/source/2026-xia-skillrl-evolving-agents-recursive.md
-  - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
+  - ../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
   - meta-loop-design-from-literature.md
   - meta-loop-swap-surface.md
   - recursive-meta-design.md
@@ -36,7 +36,7 @@ optimizer script** when the inner agent repeatedly hits the same tool gap
 - **Drafts land in `scripts/proposed/<tool>.py`, not `scripts/`.** Promotion
   = mv + manifest wire + tests + shadow A/B. The two-directory pattern
   matches Lin AHE's "file-level edits with git-versioned rollback"
-  ([2026-lin-agentic-harness-engineering-ahe.md](../../source/2026-lin-agentic-harness-engineering-ahe.md):
+  ([2026-lin-agentic-harness-engineering-ahe.md](../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md):
   Section 3).
 - **Mandatory sandbox validator** before any shadow run (ruff + import +
   colocated tests; NEVER dispatches to a live problem).
@@ -54,7 +54,7 @@ einstein meta-loop. The implementation lives across G1–G6 on this branch.
 | | `rule_edit` | `code_edit` | `meta_self_edit` |
 |---|---|---|---|
 | Touches | `.claude/rules/*.md` | `scripts/proposed/*.py` → `scripts/*.py` | `scripts/meta_loop.py` |
-| Worst case | bad guidance → 1 bad cycle, dead-end filed | broken optimizer dispatched against a problem → wasted cycle, false score | proposer/gate weakens itself ([2025-zhang-darwin-godel-machine-open-ended.md](../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md): node-114 Goodhart) |
+| Worst case | bad guidance → 1 bad cycle, dead-end filed | broken optimizer dispatched against a problem → wasted cycle, false score | proposer/gate weakens itself ([2025-zhang-darwin-godel-machine-open-ended.md](../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md): node-114 Goodhart) |
 | Sandbox before live | n/a (markdown) | **ruff + import + colocated tests** | n/a (uses shadow A/B) |
 | Recurrence floor | ≥ 3 cycles | ≥ 3 cycles, ≥ 2 problems | ≥ 10 cycles |
 | Auto-promote? | No (gate chain) | No (validator + shadow + human) | No (queue for human review) |
@@ -197,7 +197,7 @@ research-synthesis G6 wiring (see
 
 The "import in subprocess, never in-process" choice is from Ning et al.'s
 code-as-harness survey
-([2026-ning-code-as-agent-harness.md](../../source/2026-ning-code-as-agent-harness.md):
+([2026-ning-code-as-agent-harness.md](../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md):
 "transactional shared program state"): in-process import pollutes the
 parent's `sys.modules` and a malformed proposed tool could break the
 validator itself, not just fail it. Subprocess isolation is a hard

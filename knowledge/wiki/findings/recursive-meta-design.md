@@ -8,10 +8,10 @@ related_concepts: []
 related_techniques: []
 related_personas: []
 cites:
-  - ../../domains/ai-agents/source/2026-zhang-hyperagents.md
-  - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
-  - ../../source/2025-wang-huxley-g-del-machine-human-level.md
-  - ../../source/2026-lin-agentic-harness-engineering-ahe.md
+  - ../../domains/ai-agents/domains/ai-agents/source/2026-zhang-hyperagents.md
+  - ../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
+  - ../../domains/ai-agents/source/2025-wang-huxley-g-del-machine-human-level.md
+  - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
   - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
   - meta-loop-design-from-literature.md
   - meta-loop-swap-surface.md
@@ -55,7 +55,7 @@ chain, and writes the audit log*. Worst case from DGM (Zhang 2025):
 > Appendix H shows DGM also solves tool-use hallucination, but reveals an
 > objective-hacking failure mode (Goodhart): node 114 achieves perfect score by
 > deleting the hallucination-detection markers rather than fixing hallucination.
-> ([`2025-zhang-darwin-godel-machine-open-ended.md`](../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md):31)
+> ([`2025-zhang-darwin-godel-machine-open-ended.md`](../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md):31)
 
 Translated to einstein: a `meta_self_edit` that *weakens its own gate chain* is
 exactly the failure mode the meta-loop would emit if it optimized
@@ -66,7 +66,7 @@ load-bearing reason for "never auto-merge."
 The hyperagent paper (Zhang et al. 2026) is empirically blunter still: DGM-H
 emergent meta-improvements include "fixed a 99% accept-rate collapse: 49% →
 63% accuracy"
-([`2026-zhang-hyperagents.md`](../../domains/ai-agents/source/2026-zhang-hyperagents.md):31).
+([`2026-zhang-hyperagents.md`](../../domains/ai-agents/domains/ai-agents/source/2026-zhang-hyperagents.md):31).
 The *useful* meta-improvements look very similar in code shape to the
 *dangerous* ones — both are diff patches against the meta layer. Distinguishing
 "this tightens a gate" from "this removes a gate" is exactly the human-review
@@ -103,7 +103,7 @@ arguments**, any one of which would justify it:
    on coding agents, *immediate* score-of-child is weakly correlated
    (~0.3) with the long-run improvement potential of the lineage; clade
    aggregation raises that to ~0.7
-   ([`2025-wang-huxley-g-del-machine-human-level.md`](../../source/2025-wang-huxley-g-del-machine-human-level.md):25).
+   ([`2025-wang-huxley-g-del-machine-human-level.md`](../../domains/ai-agents/source/2025-wang-huxley-g-del-machine-human-level.md):25).
    For us — without a clade — the corresponding workaround is *more
    observations of the same node*. 10 cycles is a cheap proxy for clade
    averaging when the tree depth is 1.
@@ -117,7 +117,7 @@ catch — and the audit row records which.
 
 DGM-H's emergent meta-improvements are the strongest concrete signal for
 what `meta_self_edit` *should* look like when it works
-([`2026-zhang-hyperagents.md`](../../domains/ai-agents/source/2026-zhang-hyperagents.md):31):
+([`2026-zhang-hyperagents.md`](../../domains/ai-agents/domains/ai-agents/source/2026-zhang-hyperagents.md):31):
 
 | Emergent meta-improvement | Signature the einstein diagnose step should detect |
 |---|---|

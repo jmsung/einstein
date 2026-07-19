@@ -8,7 +8,7 @@ related_problems: []
 related_concepts: []
 cites:
   - ../findings/recursive-meta-design.md
-  - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
+  - ../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
   - ../../../tests/meta_loop/test_recursive_meta_shadow.py
 ---
 
@@ -68,5 +68,5 @@ shadow-run output).
 ## See also
 
 - [`findings/recursive-meta-design.md`](../findings/recursive-meta-design.md)
-- [`domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md`](../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md):31
+- [`domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md`](../../domains/ai-agents/domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md):31
   — DGM Appendix H node 114

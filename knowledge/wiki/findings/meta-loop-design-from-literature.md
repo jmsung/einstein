@@ -9,12 +9,12 @@ related_techniques: []
 related_personas: []
 cites:
   - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
-  - ../../domains/ai-agents/source/2026-zhang-hyperagents.md
-  - ../../source/2026-lin-agentic-harness-engineering-ahe.md
-  - ../../source/2026-ning-code-as-agent-harness.md
+  - ../../domains/ai-agents/domains/ai-agents/source/2026-zhang-hyperagents.md
+  - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
+  - ../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md
   - ../../domains/ai-agents/source/2025-zhao-sirius-self-improving-multi-agent-systems.md
-  - ../../source/2026-zhang-aevo-agentic-evolution.md
-  - ../../source/2026-zou-recursive-multi-agent-systems.md
+  - ../../domains/ai-agents/source/2026-zhang-aevo-agentic-evolution.md
+  - ../../domains/ai-agents/source/2026-yang-recursive-multi-agent-systems.md
 ---
 
 # Meta-loop design from literature — what 7 recent papers say about building a self-improving outer loop
