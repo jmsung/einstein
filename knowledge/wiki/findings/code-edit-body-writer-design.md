@@ -9,10 +9,10 @@ related_techniques: []
 related_personas: []
 cites:
   - ../../domains/ai-agents/source/2026-ma-skillclaw-let-skills-evolve.md
-  - ../../source/2026-sherwood-alphazero-coding-agents.md
+  - ../../domains/ai-agents/source/2026-sherwood-alphazero-coding-agents.md
   - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
-  - ../../source/2026-lin-agentic-harness-engineering-ahe.md
-  - ../../source/2026-ning-code-as-agent-harness.md
+  - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
+  - ../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md
   - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
   - tool-autosynthesis-design.md
   - meta-loop-design-from-literature.md
@@ -69,7 +69,7 @@ computes a *wrong* score. Three gates catch the three sub-cases:
 | Runs but is a `NotImplementedError` stub anyway | **smoke-dispatch** (Goal 4) — the only validator change |
 | Runs, produces a number, but the number is wrong | shadow A/B (no finding produced) → triple-verify in the inner loop before any submission (axioms A1) |
 
-The AlphaZero-coding-agents result ([2026-sherwood-alphazero-coding-agents.md](../../source/2026-sherwood-alphazero-coding-agents.md))
+The AlphaZero-coding-agents result ([2026-sherwood-alphazero-coding-agents.md](../../domains/ai-agents/source/2026-sherwood-alphazero-coding-agents.md))
 is the capability prior: by April 2026 a frontier agent reliably implements a
 non-trivial pipeline end-to-end under a hard verification anchor (the Pons
 solver). The lesson imported here is *not* "trust the generated code" — it is

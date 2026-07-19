@@ -13,10 +13,10 @@ related_findings:
 related_personas: []
 cites:
   - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
-  - ../../source/2026-lin-agentic-harness-engineering-ahe.md
+  - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
   - ../../domains/ai-agents/source/2025-zhao-sirius-self-improving-multi-agent-systems.md
-  - ../../source/2026-ning-code-as-agent-harness.md
-  - ../../source/2024-baek-researchagent-iterative-research-idea.md
+  - ../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md
+  - ../../domains/ai-agents/source/2024-baek-researchagent-iterative-research-idea.md
   - ../../domains/ai-agents/source/2026-zhang-hyperagents.md
   - ../../domains/ai-retrieval/source/2024-ajith-litsearch-retrieval-benchmark-scientific.md
   - ../../domains/ai-retrieval/source/2024-press-citeme-can-language-models.md
@@ -59,7 +59,7 @@ without bolting on a parallel system?**
   scores+LLM-summary by 34.9 → 50.0 median accuracy. **Implication: the memory
   layer must hand the next attempt the raw artifact, not a compressed summary.**
 
-- **AHE** ([`2026-lin-agentic-harness-engineering-ahe.md`](../../source/2026-lin-agentic-harness-engineering-ahe.md))
+- **AHE** ([`2026-lin-agentic-harness-engineering-ahe.md`](../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md))
   decouples a harness into seven file-mounted components and pairs every edit
   with a *change-manifest entry naming evidence, root cause, fix, predicted
   fixes, predicted regressions*. Ten iterations lift TerminalBench-2 from 69.7
@@ -75,7 +75,7 @@ without bolting on a parallel system?**
   credit needed — is enough for SFT to lift PubMedQA / College Chemistry by
   1–10 points over CoMM, STaR, TextGrad.
 
-- **Code-as-Agent-Harness survey** ([`2026-ning-code-as-agent-harness.md`](../../source/2026-ning-code-as-agent-harness.md))
+- **Code-as-Agent-Harness survey** ([`2026-ning-code-as-agent-harness.md`](../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md))
   reframes ~480 references around the claim that **agent-initiated code
   artifacts** (regression tests, temporary tools, DSL programs, intermediate
   states, reusable skills) are the operational substrate. The survey's open
@@ -83,7 +83,7 @@ without bolting on a parallel system?**
   "semantic verification under incomplete feedback" — both of which the
   einstein triple-verify axiom is a direct response to.
 
-- **ResearchAgent** ([`2024-baek-researchagent-iterative-research-idea.md`](../../source/2024-baek-researchagent-iterative-research-idea.md))
+- **ResearchAgent** ([`2024-baek-researchagent-iterative-research-idea.md`](../../domains/ai-agents/source/2024-baek-researchagent-iterative-research-idea.md))
   augments idea-generation with (a) citation-graph–retrieved related papers
   and (b) a sparse **entity co-occurrence matrix** built by entity-linking
   across post-2023 papers, with top-$k$ retrieval $\arg\max_I \sum_{e_j}

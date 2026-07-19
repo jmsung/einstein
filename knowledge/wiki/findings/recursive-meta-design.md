@@ -10,8 +10,8 @@ related_personas: []
 cites:
   - ../../domains/ai-agents/source/2026-zhang-hyperagents.md
   - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
-  - ../../source/2025-wang-huxley-g-del-machine-human-level.md
-  - ../../source/2026-lin-agentic-harness-engineering-ahe.md
+  - ../../domains/ai-agents/source/2025-wang-huxley-g-del-machine-human-level.md
+  - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
   - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
   - meta-loop-design-from-literature.md
   - meta-loop-swap-surface.md
@@ -103,7 +103,7 @@ arguments**, any one of which would justify it:
    on coding agents, *immediate* score-of-child is weakly correlated
    (~0.3) with the long-run improvement potential of the lineage; clade
    aggregation raises that to ~0.7
-   ([`2025-wang-huxley-g-del-machine-human-level.md`](../../source/2025-wang-huxley-g-del-machine-human-level.md):25).
+   ([`2025-wang-huxley-g-del-machine-human-level.md`](../../domains/ai-agents/source/2025-wang-huxley-g-del-machine-human-level.md):25).
    For us — without a clade — the corresponding workaround is *more
    observations of the same node*. 10 cycles is a cheap proxy for clade
    averaging when the tree depth is 1.

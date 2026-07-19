@@ -8,15 +8,15 @@ related_problems: []
 related_findings:
   - research-synthesis-design
 cites:
-  - ../../source/2026-lin-agentic-harness-engineering-ahe.md
-  - ../../source/2026-ning-code-as-agent-harness.md
+  - ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
+  - ../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md
 ---
 
 # What structural signal would surface a regression before commit in a self-evolving harness?
 
 ## Question
 
-AHE ([`source/2026-lin-agentic-harness-engineering-ahe.md`](../../source/2026-lin-agentic-harness-engineering-ahe.md))
+AHE ([`domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md`](../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md))
 reports a sharp asymmetry in self-attribution by a strong evolve agent: **fixes
 are foreseeable, regressions are not**. Across ten iterations:
 
@@ -25,7 +25,7 @@ are foreseeable, regressions are not**. Across ten iterations:
 - 40 regressions occurred unforeseen vs 5 foreseen.
 
 The Code-as-Agent-Harness survey
-([`source/2026-ning-code-as-agent-harness.md`](../../source/2026-ning-code-as-agent-harness.md))
+([`domains/ai-agents/source/2026-ning-code-as-agent-harness.md`](../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md))
 names "regression-free self-evolving harnesses" as an explicit open problem.
 
 Concretely: an outer-loop agent edits a file-mounted harness component
