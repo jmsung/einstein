@@ -8,7 +8,7 @@ related_concepts: [autocorrelation-inequality.md, parameterization-selection.md]
 related_findings: [optimizer-recipes.md]
 cites:
   - ../../mb/problems/3-autocorrelation/strategy.md
-  - ../../source/2025-jaech-autoconvolution.md
+  - ../../domains/sci-math/source/2025-jaech-autoconvolution.md
 ---
 
 # Dead end: extending Jaech's Adam + upsampling cascade past n=50k does not break the from-scratch ceiling on P3

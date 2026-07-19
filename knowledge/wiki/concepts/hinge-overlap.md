@@ -7,8 +7,8 @@ related_techniques: [first-order-link-tangent-test.md, parallel-tempering-sa.md,
 related_findings: [hinge-overlap-rank3-squeeze.md, sa-parallel-tempering.md, perturbation-landscape.md]
 cites:
   - ../findings/hinge-overlap-rank3-squeeze.md
-  - ../../source/2024-cohn-li-kissing.md
-  - ../../source/2024-delaat-kissing-sdp.md
+  - ../../domains/sci-math/source/2024-cohn-li-kissing.md
+  - ../../domains/sci-math/source/2024-delaat-kissing-sdp.md
 ---
 
 # Hinge-Overlap Loss
@@ -56,4 +56,4 @@ The first-order link-tangent test (see [first-order-link-tangent-test](first-ord
 - Concepts: [kissing-number](kissing-number.md), [sphere-packing](sphere-packing.md), [first-order-link-tangent-test](first-order-link-tangent-test.md), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md), [fractal-perturbation-landscape](fractal-perturbation-landscape.md), [smooth-max-approximation](smooth-max-approximation.md).
 - Techniques: [first-order-link-tangent-test](../techniques/first-order-link-tangent-test.md), [parallel-tempering-sa](../techniques/parallel-tempering-sa.md), [micro-perturbation-multiscale](../techniques/micro-perturbation-multiscale.md).
 - Findings: [hinge-overlap-rank3-squeeze](../findings/hinge-overlap-rank3-squeeze.md), [sa-parallel-tempering](../findings/sa-parallel-tempering.md), [perturbation-landscape](../findings/perturbation-landscape.md), [float64-ceiling](../findings/float64-ceiling.md).
-- Sources: `source/2024-cohn-li-kissing.md`, `source/2024-delaat-kissing-sdp.md`.
+- Sources: `domains/sci-math/source/2024-cohn-li-kissing.md`, `domains/sci-math/source/2024-delaat-kissing-sdp.md`.

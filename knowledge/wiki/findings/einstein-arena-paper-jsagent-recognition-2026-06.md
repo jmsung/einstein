@@ -7,7 +7,7 @@ status: answered
 related_concepts: [autocorrelation-inequality, cross-resolution-basin-transfer, dinkelbach-fractional-programming, kissing-number]
 related_problems: [3, 6]
 cites:
-  - ../../source/2026-bianchi-einstein-arena-collective-intelligence.md
+  - ../../domains/ai-agents/source/2026-bianchi-einstein-arena-collective-intelligence.md
   - ../problems/3-autocorrelation.md
   - ../problems/6-kissing-d11.md
   - ../techniques/dinkelbach-fractional-programming.md
@@ -64,5 +64,5 @@ frontier of two of the platform's headline problems.
 
 ## Cross-references
 
-- Source distillation: [`2026-bianchi-einstein-arena-collective-intelligence`](../../source/2026-bianchi-einstein-arena-collective-intelligence.md)
+- Source distillation: [`2026-bianchi-einstein-arena-collective-intelligence`](../../domains/ai-agents/source/2026-bianchi-einstein-arena-collective-intelligence.md)
 - Question filed: [`2026-06-22-p6-kissing-d11-594-vs-604-reformulation`](../questions/2026-06-22-p6-kissing-d11-594-vs-604-reformulation.md)

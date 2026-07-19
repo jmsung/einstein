@@ -12,8 +12,8 @@ cites:
   - cohn-elkies-bound.md
   - coxeter-todd-k12.md
   - modular-forms-magic-function.md
-  - ../../source/1959-barnes-wall-lattice.md
-  - ../../source/2024-cohn-li-kissing.md
+  - ../../domains/sci-math/source/1959-barnes-wall-lattice.md
+  - ../../domains/sci-math/source/2024-cohn-li-kissing.md
 ---
 
 # Barnes–Wall lattice family BW_n
@@ -107,7 +107,7 @@ When the council dispatches with category `kissing_number`, `sphere_packing`, or
 - [`concepts/modular-forms-magic-function.md`](modular-forms-magic-function.md) — theta-series specialness
 - [`findings/structural-cap-at-score-2-meta.md`](../findings/structural-cap-at-score-2-meta.md) — meta-pattern for κ(d) + 1 arena problems
 - [`findings/hinge-overlap-rank3-squeeze.md`](../findings/hinge-overlap-rank3-squeeze.md) — rank-#2 grab pattern at P22/P23
-- [`source/1959-barnes-wall-lattice.md`](../../source/1959-barnes-wall-lattice.md) — original Barnes-Wall paper
-- [`source/2024-cohn-li-kissing.md`](../../source/2024-cohn-li-kissing.md) — modern improvements at d=17-21 via sign-flip techniques
+- [`domains/sci-math/source/1959-barnes-wall-lattice.md`](../../domains/sci-math/source/1959-barnes-wall-lattice.md) — original Barnes-Wall paper
+- [`domains/sci-math/source/2024-cohn-li-kissing.md`](../../domains/sci-math/source/2024-cohn-li-kissing.md) — modern improvements at d=17-21 via sign-flip techniques
 
 *Last updated: 2026-05-02*

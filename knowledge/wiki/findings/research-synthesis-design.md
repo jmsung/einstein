@@ -12,15 +12,15 @@ related_findings:
   - cross-pollination-not-compute
 related_personas: []
 cites:
-  - ../../source/2026-lee-meta-harness-end-to-end-optimization-model.md
+  - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
   - ../../source/2026-lin-agentic-harness-engineering-ahe.md
-  - ../../source/2025-zhao-sirius-self-improving-multi-agent-systems.md
+  - ../../domains/ai-agents/source/2025-zhao-sirius-self-improving-multi-agent-systems.md
   - ../../source/2026-ning-code-as-agent-harness.md
   - ../../source/2024-baek-researchagent-iterative-research-idea.md
-  - ../../source/2026-zhang-hyperagents.md
-  - ../../source/2024-ajith-litsearch-retrieval-benchmark-scientific.md
-  - ../../source/2024-press-citeme-can-language-models.md
-  - ../../source/2024-wang-autosurvey-large-language-models.md
+  - ../../domains/ai-agents/source/2026-zhang-hyperagents.md
+  - ../../domains/ai-retrieval/source/2024-ajith-litsearch-retrieval-benchmark-scientific.md
+  - ../../domains/ai-retrieval/source/2024-press-citeme-can-language-models.md
+  - ../../domains/ai-nlp/source/2024-wang-autosurvey-large-language-models.md
   - ../concepts/agentic-harness.md
 ---
 
@@ -52,7 +52,7 @@ without bolting on a parallel system?**
 
 ## What each source shows
 
-- **Meta-Harness** ([`2026-lee-meta-harness-end-to-end-optimization-model.md`](../../source/2026-lee-meta-harness-end-to-end-optimization-model.md))
+- **Meta-Harness** ([`2026-lee-meta-harness-end-to-end-optimization-model.md`](../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md))
   runs a coding-agent proposer over the *entire filesystem of prior candidates'
   code + traces* (~10 MTok/iter, ~3 orders of magnitude beyond compressed
   baselines). The decisive ablation: raw execution traces beat
@@ -67,7 +67,7 @@ without bolting on a parallel system?**
   foreseeable (precision/recall both high), regressions are not (cumulative
   precision 11.6%, recall 11.1%, 40 unforeseen vs 5 foreseen).
 
-- **SiriuS** ([`2025-zhao-sirius-self-improving-multi-agent-systems.md`](../../source/2025-zhao-sirius-self-improving-multi-agent-systems.md))
+- **SiriuS** ([`2025-zhao-sirius-self-improving-multi-agent-systems.md`](../../domains/ai-agents/source/2025-zhao-sirius-self-improving-multi-agent-systems.md))
   retains trajectories whose outcome reward $R > \epsilon$ into a per-agent
   experience library and, for failed trajectories, has an external feedback
   agent regenerate the answer + *rephrase it to look like a first-pass
@@ -91,7 +91,7 @@ without bolting on a parallel system?**
   *outside* the seed paper's context — i.e., the cross-pollination move.
   Independently contributes gains beyond reference-graph retrieval alone.
 
-- **Hyperagents / DGM-H** ([`2026-zhang-hyperagents.md`](../../source/2026-zhang-hyperagents.md))
+- **Hyperagents / DGM-H** ([`2026-zhang-hyperagents.md`](../../domains/ai-agents/source/2026-zhang-hyperagents.md))
   makes the *meta-modification procedure itself* editable inside the agent's
   own program and runs an archive-based evolutionary loop. Emergent moves
   include persistent JSON memory, performance trackers, and rediscovery of
@@ -99,19 +99,19 @@ without bolting on a parallel system?**
   robotics to Olympiad math grading: "BetterGrader" beats ProofAutoGrader by
   +4.06% by recovering Almost/Partial labels.
 
-- **LitSearch** ([`2024-ajith-litsearch-retrieval-benchmark-scientific.md`](../../source/2024-ajith-litsearch-retrieval-benchmark-scientific.md))
+- **LitSearch** ([`2024-ajith-litsearch-retrieval-benchmark-scientific.md`](../../domains/ai-retrieval/source/2024-ajith-litsearch-retrieval-benchmark-scientific.md))
   benchmarks 597 realistic scientific-literature queries: GritLM-7B (dense)
   beats BM25 by 24.8 R@5; GPT-4o reranking adds 4.4%; commercial Scholar /
   Elicit trail by up to 32 points. **Lex-only retrieval over the wiki is
   measurably weaker** — load-bearing for Goal 1's qmd vector-embed fix.
 
-- **CiteME** ([`2024-press-citeme-can-language-models.md`](../../source/2024-press-citeme-can-language-models.md))
+- **CiteME** ([`2024-press-citeme-can-language-models.md`](../../domains/ai-retrieval/source/2024-press-citeme-can-language-models.md))
   asks whether language models *cite accurately*. The answer matters: a
   citation provenance field that the model fabricates is worse than none, so
   the schema needs to be machine-verifiable against actual `knowledge/source/*.md`
   filenames, not free-text references.
 
-- **AutoSurvey** ([`2024-wang-autosurvey-large-language-models.md`](../../source/2024-wang-autosurvey-large-language-models.md))
+- **AutoSurvey** ([`2024-wang-autosurvey-large-language-models.md`](../../domains/ai-nlp/source/2024-wang-autosurvey-large-language-models.md))
   uses a retrieve → outline → parallel-draft → refine → multi-judge pipeline.
   Multi-LLM-as-judge agreement with humans $\rho \approx 0.54$ — a calibration
   point for any automated wiki-quality scorer.

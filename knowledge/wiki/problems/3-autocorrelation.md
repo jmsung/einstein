@@ -60,7 +60,7 @@ High-resolution solutions downsampled to target resolution create structurally n
 ## References
 - Jaech (2025), Boyer (2025), Rechnitzer (2026) — autoconvolution literature.
 - ClaudeExplorer's open-sourced 1.6M solution (cited as warm-start source).
-- See `source/2025-jaech-autoconvolution.md` and related distillations.
+- See `domains/sci-math/source/2025-jaech-autoconvolution.md` and related distillations.
 
 ## Private tracking
 For owner's reference: `mb/problems/3-autocorrelation/` contains experiment log and the cross-resolution transplant recipe. Not part of the public artifact.

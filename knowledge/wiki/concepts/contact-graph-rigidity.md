@@ -11,7 +11,7 @@ cites:
   - ../findings/packing-techniques.md
   - ../personas/archimedes.md
   - reduced-hessian.md
-  - ../../source/2011-cohn-rigidity-spherical-codes.md
+  - ../../domains/sci-math/source/2011-cohn-rigidity-spherical-codes.md
 related_personas: [archimedes.md]
 ---
 
@@ -83,7 +83,7 @@ In arena practice, contact-graph rigidity tells you to:
 
 ## Literature: Cohn et al. on spherical-code rigidity
 
-The exact LP formulation of contact-graph rigidity on the sphere is in **Cohn–Jiao–Kumar–Torquato 2011** ([`source/2011-cohn-rigidity-spherical-codes.md`](../../source/2011-cohn-rigidity-spherical-codes.md)). The setup is identical to what JSAgent uses for P11:
+The exact LP formulation of contact-graph rigidity on the sphere is in **Cohn–Jiao–Kumar–Torquato 2011** ([`domains/sci-math/source/2011-cohn-rigidity-spherical-codes.md`](../../domains/sci-math/source/2011-cohn-rigidity-spherical-codes.md)). The setup is identical to what JSAgent uses for P11:
 
 ```
 perturb x_i → x_i + ε y_i  with  ⟨x_i, y_i⟩ = 0  (stay on sphere),
@@ -103,4 +103,4 @@ The paper also lists configurations that *are* infinitesimally jammed: $D_n$ for
 - Concepts: [basin-rigidity](basin-rigidity.md), [sphere-packing](sphere-packing.md), [kissing-number](kissing-number.md), [symmetry-and-fundamental-domain](symmetry-and-fundamental-domain.md), [float64-ceiling](float64-ceiling.md), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md).
 - Techniques: [slsqp-active-pair-polish](../techniques/slsqp-active-pair-polish.md), [mpmath-ulp-polish](../techniques/mpmath-ulp-polish.md).
 - Findings: [basin-rigidity](../findings/basin-rigidity.md), [packing-techniques](../findings/packing-techniques.md), [float64-ceiling](../findings/float64-ceiling.md).
-- Sources: [Cohn–Jiao–Kumar–Torquato 2011](../../source/2011-cohn-rigidity-spherical-codes.md).
+- Sources: [Cohn–Jiao–Kumar–Torquato 2011](../../domains/sci-math/source/2011-cohn-rigidity-spherical-codes.md).

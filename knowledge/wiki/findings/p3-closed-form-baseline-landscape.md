@@ -8,8 +8,8 @@ related_concepts: [autocorrelation-inequality.md, parameterization-selection.md]
 related_findings: [optimizer-recipes.md, dead-end-p3-jaech-cascade-extended.md]
 cites:
   - ../../mb/problems/3-autocorrelation/strategy.md
-  - ../../source/2026-rechnitzer-autoconvolution-digits.md
-  - ../../source/2025-jaech-autoconvolution.md
+  - ../../domains/sci-math/source/2026-rechnitzer-autoconvolution-digits.md
+  - ../../domains/sci-math/source/2025-jaech-autoconvolution.md
 ---
 
 # P3 closed-form baseline: where simple constructions fall vs. the empirical ceiling and the trivial bound

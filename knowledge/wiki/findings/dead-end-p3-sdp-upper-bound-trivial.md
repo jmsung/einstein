@@ -9,7 +9,7 @@ related_problems: [3]
 related_findings: [p3-constant-literature-frontier-2026-06.md, p3-closed-form-baseline-landscape.md]
 cites:
   - ../techniques/p3-h3-cap-sdp-derivation.md
-  - ../../source/2022-white-almost-tight-autoconvolution-inequality.md
+  - ../../domains/sci-math/source/2022-white-almost-tight-autoconvolution-inequality.md
   - scripts/autocorrelation/h3_cap_sdp_v4.py
   - scripts/autocorrelation/h3_cap_lasserre.py
 ---

@@ -65,5 +65,5 @@ for t in range(50):
 - `wiki/findings/equioscillation-escape.md` (#94 parameterization companion to larger-n cascade).
 - `wiki/findings/lp-solver-scaling.md` (#47, #57 — when LP is the wrong tool).
 - knowledge.yaml strategy `dinkelbach`.
-- Source: Jaech & Joseph 2025, autoconvolution paper (`source/2025-jaech-autoconvolution.md`).
+- Source: Jaech & Joseph 2025, autoconvolution paper (`domains/sci-math/source/2025-jaech-autoconvolution.md`).
 - `mb/problems/2-first-autocorrelation/strategy.md`, `mb/problems/3-second-autocorrelation/strategy.md`.

@@ -8,12 +8,12 @@ related_concepts: []
 related_techniques: []
 related_personas: []
 cites:
-  - ../../source/2026-lee-meta-harness-end-to-end-optimization-model.md
+  - ../../domains/ai-agents/source/2026-lee-meta-harness-end-to-end-optimization-model.md
   - ../../source/2026-ning-code-as-agent-harness.md
   - ../../source/2026-lin-agentic-harness-engineering-ahe.md
-  - ../../source/2026-ma-skillclaw-let-skills-evolve.md
-  - ../../source/2026-xia-skillrl-evolving-agents-recursive.md
-  - ../../source/2025-zhang-darwin-godel-machine-open-ended.md
+  - ../../domains/ai-agents/source/2026-ma-skillclaw-let-skills-evolve.md
+  - ../../domains/ai-agents/source/2026-xia-skillrl-evolving-agents-recursive.md
+  - ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
   - meta-loop-design-from-literature.md
   - meta-loop-swap-surface.md
   - recursive-meta-design.md
@@ -54,7 +54,7 @@ einstein meta-loop. The implementation lives across G1–G6 on this branch.
 | | `rule_edit` | `code_edit` | `meta_self_edit` |
 |---|---|---|---|
 | Touches | `.claude/rules/*.md` | `scripts/proposed/*.py` → `scripts/*.py` | `scripts/meta_loop.py` |
-| Worst case | bad guidance → 1 bad cycle, dead-end filed | broken optimizer dispatched against a problem → wasted cycle, false score | proposer/gate weakens itself ([2025-zhang-darwin-godel-machine-open-ended.md](../../source/2025-zhang-darwin-godel-machine-open-ended.md): node-114 Goodhart) |
+| Worst case | bad guidance → 1 bad cycle, dead-end filed | broken optimizer dispatched against a problem → wasted cycle, false score | proposer/gate weakens itself ([2025-zhang-darwin-godel-machine-open-ended.md](../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md): node-114 Goodhart) |
 | Sandbox before live | n/a (markdown) | **ruff + import + colocated tests** | n/a (uses shadow A/B) |
 | Recurrence floor | ≥ 3 cycles | ≥ 3 cycles, ≥ 2 problems | ≥ 10 cycles |
 | Auto-promote? | No (gate chain) | No (validator + shadow + human) | No (queue for human review) |
@@ -138,7 +138,7 @@ def main():
 
 The "TODO body + cite block" pattern follows Ma SkillClaw's "skip >
 speculative edit" guardrail
-([2026-ma-skillclaw-let-skills-evolve.md](../../source/2026-ma-skillclaw-let-skills-evolve.md)):
+([2026-ma-skillclaw-let-skills-evolve.md](../../domains/ai-agents/source/2026-ma-skillclaw-let-skills-evolve.md)):
 the proposer drafts the *contract* (signature, docstring, gap citation)
 and refuses to hallucinate the body. The shadow A/B's A-arm (treatment)
 then has the chance to flesh it out from inside a real cycle, or the
@@ -267,7 +267,7 @@ Why ≥ 3 cycles, ≥ 2 problems for the proposer to fire? Three converging
 arguments:
 
 1. **Cross-problem generalization is the signal** — Xia SkillRL
-   ([2026-xia-skillrl-evolving-agents-recursive.md](../../source/2026-xia-skillrl-evolving-agents-recursive.md))
+   ([2026-xia-skillrl-evolving-agents-recursive.md](../../domains/ai-agents/source/2026-xia-skillrl-evolving-agents-recursive.md))
    distills *recurring* failure categories into new skills; a single
    problem's failure is hill-climbing noise, two problems' shared failure
    is a missing rung in the manifest.

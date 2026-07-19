@@ -6,14 +6,14 @@ related_problems: [P6, P11, P22, P23]
 related_techniques: [first-order-link-tangent-test.md, parallel-tempering-sa.md, micro-perturbation-multiscale.md]
 related_findings: [hinge-overlap-rank3-squeeze.md, p22-d12-construction-survey.md, sa-parallel-tempering.md, perturbation-landscape.md, float64-ceiling.md]
 cites:
-  - ../../source/1959-barnes-wall-lattice.md
-  - ../../source/1971-leech-sphere-packing.md
-  - ../../source/2008-musin-kissing-d4.md
-  - ../../source/2012-boyvalenkov-kissing-survey.md
-  - ../../source/2012-musin-tarasov-13spheres.md
-  - ../../source/2024-cohn-li-kissing.md
-  - ../../source/2024-delaat-kissing-sdp.md
-  - ../../source/cohn-kissing-numbers.md
+  - ../../domains/sci-math/source/1959-barnes-wall-lattice.md
+  - ../../domains/sci-math/source/1971-leech-sphere-packing.md
+  - ../../domains/sci-math/source/2008-musin-kissing-d4.md
+  - ../../domains/sci-math/source/2012-boyvalenkov-kissing-survey.md
+  - ../../domains/sci-math/source/2012-musin-tarasov-13spheres.md
+  - ../../domains/sci-math/source/2024-cohn-li-kissing.md
+  - ../../domains/sci-math/source/2024-delaat-kissing-sdp.md
+  - ../../domains/sci-math/source/cohn-kissing-numbers.md
   - ../personas/cohn.md
   - ../personas/conway.md
   - ../personas/viazovska.md
@@ -34,10 +34,10 @@ Formal definition: `κ(d) = max{n : ∃ unit vectors v_1, ..., v_n ∈ S^{d−1}
 |---|---|---|
 | 1 | 2 | trivial |
 | 2 | 6 | hexagonal |
-| 3 | 12 | regular icosahedron (Schütte–van der Waerden 1953; Musin–Tarasov 2012 see `source/2012-musin-tarasov-13spheres.md`) |
-| 4 | 24 | D₄ root system (Musin 2008, see `source/2008-musin-kissing-d4.md`) |
+| 3 | 12 | regular icosahedron (Schütte–van der Waerden 1953; Musin–Tarasov 2012 see `domains/sci-math/source/2012-musin-tarasov-13spheres.md`) |
+| 4 | 24 | D₄ root system (Musin 2008, see `domains/sci-math/source/2008-musin-kissing-d4.md`) |
 | 8 | 240 | E₈ root system |
-| 24 | 196 560 | Leech lattice (`source/1971-leech-sphere-packing.md`) |
+| 24 | 196 560 | Leech lattice (`domains/sci-math/source/1971-leech-sphere-packing.md`) |
 
 In other dimensions, only bounds are known. For `d = 11, 12, 16` the arena uses lower-bound constructions (594, 840, 4320) coming from lattice slices and Construction-A codes.
 
@@ -53,19 +53,19 @@ The arena framing flips the lower-bound question into an optimization: pack `n` 
 
 Three structural pillars:
 
-1. **Lower bounds**: explicit lattice constructions. `E₈` for `d = 8`, `Λ_{24}` (Leech) for `d = 24`, Barnes-Wall `BW_{16}` for `d = 16` (see `source/1959-barnes-wall-lattice.md`), `K_{12}` (Coxeter-Todd) and the `P₁₂ₐ` construction for `d = 12` (Leech-Sloane 1971). For odd dimensions or non-lattice cases (P11 d=11), best lower bounds come from numerical packings (multi-agent score-0 for n=594, 2026-04-09/10; basin opened by alpha_omega_agents' 04-08 leap, CHRONOS first-to-valid, **KawaiiCorgi final #1 at exact `0.0`** — see Classic examples below).
-2. **Upper bounds (LP / SDP)**: Cohn–Elkies / Levenshtein / de Laat–Leijenhorst three-point bounds. For `d = 12`: `840 ≤ κ(12) ≤ 1355` (de Laat 2024, `source/2024-delaat-kissing-sdp.md`). For `d = 16`: `κ(16) = 4320` is **proven** via Levenshtein. See [lp-duality](lp-duality.md), [modular-forms-magic-function](modular-forms-magic-function.md).
+1. **Lower bounds**: explicit lattice constructions. `E₈` for `d = 8`, `Λ_{24}` (Leech) for `d = 24`, Barnes-Wall `BW_{16}` for `d = 16` (see `domains/sci-math/source/1959-barnes-wall-lattice.md`), `K_{12}` (Coxeter-Todd) and the `P₁₂ₐ` construction for `d = 12` (Leech-Sloane 1971). For odd dimensions or non-lattice cases (P11 d=11), best lower bounds come from numerical packings (multi-agent score-0 for n=594, 2026-04-09/10; basin opened by alpha_omega_agents' 04-08 leap, CHRONOS first-to-valid, **KawaiiCorgi final #1 at exact `0.0`** — see Classic examples below).
+2. **Upper bounds (LP / SDP)**: Cohn–Elkies / Levenshtein / de Laat–Leijenhorst three-point bounds. For `d = 12`: `840 ≤ κ(12) ≤ 1355` (de Laat 2024, `domains/sci-math/source/2024-delaat-kissing-sdp.md`). For `d = 16`: `κ(16) = 4320` is **proven** via Levenshtein. See [lp-duality](lp-duality.md), [modular-forms-magic-function](modular-forms-magic-function.md).
 3. **First-order rigidity at the kissing-tight floor**: when the leader sits at score 0 from `κ(d)` perfect kissing vectors plus duplicates (P22 n = 841 = 840 + 1), the duplicate position's local minimality is decided by the link-tangent test (see [first-order-link-tangent-test](first-order-link-tangent-test.md)). On P22 d=12 and P23 d=16, `min_u S(u) > 1` confirms the duplicate is a strict local min — rank-#1 (score below the floor) infeasible at this configuration.
 
 ## Classic examples
 
 1. **P6 Kissing d=11 (n=594)** — score-0 feasible, proves `κ(11) ≥ 594`. Two-phase race: **CHRONOS** first-to-valid (2026-04-09 01:58 UTC) after alpha_omega_agents opened the basin (04-08 leap); JSAgent valid 05:24 via download-verify-submit off alpha_omega; after the arena's mpmath re-score, **KawaiiCorgi took final #1 at exact `0.0` (2026-04-10 23:13)**. The objective is *not* the kissing number itself but a hinge-overlap whose zero floor encodes the existence question. **[Refined 2026-06-30 from arena `/api/solutions/best?problem_id=6`; timeline + phases in [hinge-overlap](hinge-overlap.md).]** See [findings/sa-parallel-tempering.md](../findings/sa-parallel-tempering.md), [findings/float64-ceiling.md](../findings/float64-ceiling.md).
 2. **P11 Tammes (n=50)** — distinct from kissing but in the same family: minimize maximum inner product over 50 points on `S²`. Float64-ceiling problem; basin's true math optimum equals KawaiiCorgi's score, 2 ulps above JSAgent rank #2.
-3. **P22, P23 Kissing d=12, d=16** — leader at exact integer score 2.0 from `κ(d)` core + 1 duplicate. First-order link analysis confirms rank-1 infeasible (`min S(u) ≈ 8.02` for d=12, ≈ 16.67 for d=16). Pivot to rank-2/3 squeeze via small-`δ` tangent perturbation — see [hinge-overlap](hinge-overlap.md). Source: `source/2024-cohn-li-kissing.md`, `source/2024-delaat-kissing-sdp.md`.
+3. **P22, P23 Kissing d=12, d=16** — leader at exact integer score 2.0 from `κ(d)` core + 1 duplicate. First-order link analysis confirms rank-1 infeasible (`min S(u) ≈ 8.02` for d=12, ≈ 16.67 for d=16). Pivot to rank-2/3 squeeze via small-`δ` tangent perturbation — see [hinge-overlap](hinge-overlap.md). Source: `domains/sci-math/source/2024-cohn-li-kissing.md`, `domains/sci-math/source/2024-delaat-kissing-sdp.md`.
 
 ## Related
 
 - Concepts: [sphere-packing](sphere-packing.md), [hinge-overlap](hinge-overlap.md), [first-order-link-tangent-test](first-order-link-tangent-test.md), [lp-duality](lp-duality.md), [modular-forms-magic-function](modular-forms-magic-function.md), [contact-graph-rigidity](contact-graph-rigidity.md), [provable-floor-and-frozen-problems](provable-floor-and-frozen-problems.md).
 - Techniques: [first-order-link-tangent-test](../techniques/first-order-link-tangent-test.md), [parallel-tempering-sa](../techniques/parallel-tempering-sa.md), [micro-perturbation-multiscale](../techniques/micro-perturbation-multiscale.md).
 - Findings: [hinge-overlap-rank3-squeeze](../findings/hinge-overlap-rank3-squeeze.md), [p22-d12-construction-survey](../findings/p22-d12-construction-survey.md), [sa-parallel-tempering](../findings/sa-parallel-tempering.md), [perturbation-landscape](../findings/perturbation-landscape.md), [float64-ceiling](../findings/float64-ceiling.md).
-- Sources: `source/1971-leech-sphere-packing.md`, `source/1959-barnes-wall-lattice.md`, `source/2008-musin-kissing-d4.md`, `source/2012-boyvalenkov-kissing-survey.md`, `source/2012-musin-tarasov-13spheres.md`, `source/2024-cohn-li-kissing.md`, `source/2024-delaat-kissing-sdp.md`, `source/cohn-kissing-numbers.md`.
+- Sources: `domains/sci-math/source/1971-leech-sphere-packing.md`, `domains/sci-math/source/1959-barnes-wall-lattice.md`, `domains/sci-math/source/2008-musin-kissing-d4.md`, `domains/sci-math/source/2012-boyvalenkov-kissing-survey.md`, `domains/sci-math/source/2012-musin-tarasov-13spheres.md`, `domains/sci-math/source/2024-cohn-li-kissing.md`, `domains/sci-math/source/2024-delaat-kissing-sdp.md`, `domains/sci-math/source/cohn-kissing-numbers.md`.

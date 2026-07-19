@@ -7,8 +7,8 @@ related_techniques: [first-order-link-tangent-test.md]
 related_findings: [hinge-overlap-rank3-squeeze.md]
 cites:
   - ../findings/hinge-overlap-rank3-squeeze.md
-  - ../../source/2024-cohn-li-kissing.md
-  - ../../source/2024-delaat-kissing-sdp.md
+  - ../../domains/sci-math/source/2024-cohn-li-kissing.md
+  - ../../domains/sci-math/source/2024-delaat-kissing-sdp.md
 ---
 
 # First-Order Link-Tangent Test (Concept)
@@ -70,4 +70,4 @@ This statement subsumes empirical "polish from SOTA and see if you escape" becau
 - Concepts: [kissing-number](kissing-number.md), [hinge-overlap](hinge-overlap.md), [contact-graph-rigidity](contact-graph-rigidity.md), [sphere-packing](sphere-packing.md).
 - Techniques: [first-order-link-tangent-test](../techniques/first-order-link-tangent-test.md) (procedure / code).
 - Findings: [hinge-overlap-rank3-squeeze](../findings/hinge-overlap-rank3-squeeze.md) (#99, #100), [p22-d12-construction-survey](../findings/p22-d12-construction-survey.md).
-- Sources: `source/2024-cohn-li-kissing.md`, `source/2024-delaat-kissing-sdp.md`.
+- Sources: `domains/sci-math/source/2024-cohn-li-kissing.md`, `domains/sci-math/source/2024-delaat-kissing-sdp.md`.

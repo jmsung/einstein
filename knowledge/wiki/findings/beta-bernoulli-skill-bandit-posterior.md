@@ -8,8 +8,8 @@ related_concepts: []
 related_techniques: []
 related_personas: []
 cites:
-  - ../../source/2019-slivkins-introduction-multi-armed-bandits.md
-  - ../../source/2019-feng-intrinsic-robustness-stochastic-bandits.md
+  - ../../domains/ai-ml/source/2019-slivkins-introduction-multi-armed-bandits.md
+  - ../../domains/ai-ml/source/2019-feng-intrinsic-robustness-stochastic-bandits.md
   - ../../agent/skill-library.md
 ---
 
@@ -54,9 +54,9 @@ Three properties of *our* setting pin the choice:
    posterior matching" and places stochastic K-armed regret at the optimal
    `Θ(√KT)` minimax with a logarithmic instance-dependent floor — the same
    landscape UCB achieves, but without a tuning constant
-   (`source/2019-slivkins-introduction-multi-armed-bandits.md`). Feng et al.
+   (`domains/ai-ml/source/2019-slivkins-introduction-multi-armed-bandits.md`). Feng et al.
    survey UCB, ε-greedy, and Thompson side by side as the three canonical
-   stochastic policies (`source/2019-feng-intrinsic-robustness-stochastic-bandits.md`).
+   stochastic policies (`domains/ai-ml/source/2019-feng-intrinsic-robustness-stochastic-bandits.md`).
 
 ## The connection the wiki already flagged
 

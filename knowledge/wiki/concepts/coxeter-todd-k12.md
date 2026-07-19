@@ -11,9 +11,9 @@ cites:
   - kissing-number.md
   - cohn-elkies-bound.md
   - modular-forms-magic-function.md
-  - ../../source/2024-cohn-li-kissing.md
-  - ../../source/2024-delaat-kissing-sdp.md
-  - ../../source/1971-leech-sphere-packing.md
+  - ../../domains/sci-math/source/2024-cohn-li-kissing.md
+  - ../../domains/sci-math/source/2024-delaat-kissing-sdp.md
+  - ../../domains/sci-math/source/1971-leech-sphere-packing.md
 ---
 
 # Coxeter–Todd lattice K₁₂
@@ -60,7 +60,7 @@ Standard properties:
 The leap from 756 to **840** — the empirical κ(12) — comes from extending `K₁₂` via:
 
 - **Deep-hole shift** (Conway–Sloane SPLAG): take `K₁₂ ∪ (h + K₁₂)` where `h` is a deep hole of `K₁₂`. Gives 648 + 192 = 840 unit vectors at minimum distance.
-- **Construction A from binary [12, 6, 4] code** (Leech–Sloane 1971, [source/1971-leech-sphere-packing.md](../source/1971-leech-sphere-packing.md)): direct construction giving 24 axis shifts + 816 = 16·51 half-integer patterns, total 840.
+- **Construction A from binary [12, 6, 4] code** (Leech–Sloane 1971, [domains/sci-math/source/1971-leech-sphere-packing.md](../domains/sci-math/source/1971-leech-sphere-packing.md)): direct construction giving 24 axis shifts + 816 = 16·51 half-integer patterns, total 840.
 
 Both decompositions hit 840; the de Laat–Leijenhorst 2024 SDP cluster bound proves κ(12) ≤ 1355, leaving a 515-gap to formal proof of κ(12) = 840 exactly. **The empirical cap is widely believed but not proven.**
 
@@ -100,7 +100,7 @@ For arena play:
 - [`concepts/cohn-elkies-bound.md`](cohn-elkies-bound.md) — LP bound machinery; loose at d=12
 - [`concepts/modular-forms-magic-function.md`](modular-forms-magic-function.md) — theta-series specialness; K₁₂ is in this family
 - [`findings/p22-d12-construction-survey.md`](../findings/p22-d12-construction-survey.md) — comprehensive P22 structural survey
-- [`source/1971-leech-sphere-packing.md`](../../source/1971-leech-sphere-packing.md) — Leech-Sloane 1971 P₁₂ₐ construction
-- [`source/2024-cohn-li-kissing.md`](../../source/2024-cohn-li-kissing.md), [`source/2024-delaat-kissing-sdp.md`](../../source/2024-delaat-kissing-sdp.md) — modern SDP machinery
+- [`domains/sci-math/source/1971-leech-sphere-packing.md`](../../domains/sci-math/source/1971-leech-sphere-packing.md) — Leech-Sloane 1971 P₁₂ₐ construction
+- [`domains/sci-math/source/2024-cohn-li-kissing.md`](../../domains/sci-math/source/2024-cohn-li-kissing.md), [`domains/sci-math/source/2024-delaat-kissing-sdp.md`](../../domains/sci-math/source/2024-delaat-kissing-sdp.md) — modern SDP machinery
 
 *Last updated: 2026-05-02*

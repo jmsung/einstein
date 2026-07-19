@@ -57,4 +57,4 @@ Local CPU. P7 N=3287 IPM: ~34 min. N=3350 with warm-start: 6 cutting-plane round
 - `wiki/findings/prime-number-theorem-lp.md`.
 - knowledge.yaml strategy `warm_start_cutting_plane`; pattern `lp-for-constrained-optimization`.
 - `mb/problems/7-prime-number-theorem/strategy.md`.
-- Tao's sieve theory LP formulation (`source/2015-tao-sieve-theory-notes.md`).
+- Tao's sieve theory LP formulation (`domains/sci-math/source/2015-tao-sieve-theory-notes.md`).

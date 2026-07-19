@@ -50,8 +50,8 @@ Nothing yet. This is a fresh question surfaced 2026-05-02 by:
 
 ## Next step
 
-1. Read source/2024-cohn-li-kissing.md (Cohn–Li 2024) for explicit K₁₂ structure description.
-2. Read source/2024-delaat-kissing-sdp.md for SDP cluster decomposition of d=12.
+1. Read domains/sci-math/source/2024-cohn-li-kissing.md (Cohn–Li 2024) for explicit K₁₂ structure description.
+2. Read domains/sci-math/source/2024-delaat-kissing-sdp.md for SDP cluster decomposition of d=12.
 3. Compute the Bose–Chowla Sidon set in `ℤ/840` (q=29) explicitly using the existing reproducer (`scripts/difference_bases/bose_chowla.py`).
 4. Compare the difference set to the contact-graph differences of the K₁₂ kissing configuration.
 5. If the differences match modulo automorphism: **H2 confirmed** — write a finding bridging P22 and P19.
@@ -62,7 +62,7 @@ Nothing yet. This is a fresh question surfaced 2026-05-02 by:
 
 - [`concepts/bose-chowla-construction.md`](../concepts/bose-chowla-construction.md) — the construction
 - [`concepts/kissing-number.md`](../concepts/kissing-number.md), [`concepts/cohn-elkies-bound.md`](../concepts/cohn-elkies-bound.md) — P22 / d=12 kissing context
-- [`source/2024-cohn-li-kissing.md`](../../source/2024-cohn-li-kissing.md), [`source/2024-delaat-kissing-sdp.md`](../../source/2024-delaat-kissing-sdp.md) — current d=12 references
+- [`domains/sci-math/source/2024-cohn-li-kissing.md`](../../domains/sci-math/source/2024-cohn-li-kissing.md), [`domains/sci-math/source/2024-delaat-kissing-sdp.md`](../../domains/sci-math/source/2024-delaat-kissing-sdp.md) — current d=12 references
 - [`personas/gauss.md`](../personas/gauss.md), [`personas/conway.md`](../personas/conway.md) — both reach for this kind of structural connection
 
 *Status: open as of 2026-05-02. To be picked up by next P22 or P19 cycle, or as a standalone investigation.*

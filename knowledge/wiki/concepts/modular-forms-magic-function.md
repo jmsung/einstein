@@ -6,14 +6,14 @@ related_problems: [P6, P9, P11, P22]
 related_techniques: []
 related_findings: []
 cites:
-  - ../../source/2017-goncalves-hermite-uncertainty.md
-  - ../../source/2019-cohn-uncertainty-d12.md
-  - ../../source/2024-cohn-li-kissing.md
-  - ../../source/1995-wiles-fermat.md
-  - ../../source/1990-ribet-level-lowering.md
-  - ../../source/1987-serre-mod-representations.md
-  - ../../source/2005-diamond-modular-forms.md
-  - ../../source/2026-angdinata-ramanujan-tau-primes.md
+  - ../../domains/sci-math/source/2017-goncalves-hermite-uncertainty.md
+  - ../../domains/sci-math/source/2019-cohn-uncertainty-d12.md
+  - ../../domains/sci-math/source/2024-cohn-li-kissing.md
+  - ../../domains/sci-math/source/1995-wiles-fermat.md
+  - ../../domains/sci-math/source/1990-ribet-level-lowering.md
+  - ../../domains/sci-math/source/1987-serre-mod-representations.md
+  - ../../domains/sci-math/source/2005-diamond-modular-forms.md
+  - ../../domains/sci-math/source/2026-angdinata-ramanujan-tau-primes.md
   - ../personas/atiyah.md
   - ../personas/cohn.md
   - ../personas/conway.md
@@ -49,7 +49,7 @@ For `d = 8` and `d = 24`, Viazovska / CKMRV constructed `f` as `(1 − ‖x‖²
 ## When it applies
 
 - Sphere packing in `d ∈ {8, 24}` — Viazovska / CKMRV proven optimal.
-- Uncertainty principles where the optimal bound matches a Hermite/Laguerre eigensystem (Cohn–Gonçalves 2019 for `d = 12`, see `source/2019-cohn-uncertainty-d12.md`).
+- Uncertainty principles where the optimal bound matches a Hermite/Laguerre eigensystem (Cohn–Gonçalves 2019 for `d = 12`, see `domains/sci-math/source/2019-cohn-uncertainty-d12.md`).
 - Whenever you need to *prove tight* an LP bound on `ℝᵈ` whose dual variable is a positivity-constrained Schwartz function — modular-form algebra is the only known way to construct provably-positive Fourier-self-dual functions in special dimensions.
 
 The arena does not require proving new magic functions. It requires:
@@ -70,17 +70,17 @@ for any feasible Schwartz `f`. Equality requires both `f` and `f̂` vanish on th
 
 In dimensions `d ∉ {8, 24}` (and `d ∉ {1, 2, 3}`), no such magic function is known; the LP gap is genuine. For `d = 12`, the de Laat clustered SDP gives `κ(12) ≤ 1355` — a *bound*, not a tight constant. Modular forms are necessary but not sufficient: they exist for every dimension, but the *positivity* required by Cohn–Elkies happens only in the magic dimensions.
 
-The general theory of modular forms (Wiles 1995 modularity for `Q`-elliptic curves, see `source/1995-wiles-fermat.md`; Ribet 1990 level-lowering, `source/1990-ribet-level-lowering.md`; Serre's conjecture on mod-`p` representations, `source/1987-serre-mod-representations.md`) is the algebraic background. Diamond's text `source/2005-diamond-modular-forms.md` is the canonical introduction.
+The general theory of modular forms (Wiles 1995 modularity for `Q`-elliptic curves, see `domains/sci-math/source/1995-wiles-fermat.md`; Ribet 1990 level-lowering, `domains/sci-math/source/1990-ribet-level-lowering.md`; Serre's conjecture on mod-`p` representations, `domains/sci-math/source/1987-serre-mod-representations.md`) is the algebraic background. Diamond's text `domains/sci-math/source/2005-diamond-modular-forms.md` is the canonical introduction.
 
 ## Classic examples
 
 1. **Viazovska 2016** — sphere packing in `d = 8` is `π⁴ / 384` (E₈ density), proven via magic function. Extended to `d = 24` (Leech) by CKMRV 2017.
-2. **Cohn–Gonçalves 2019, `d = 12` uncertainty** — `source/2019-cohn-uncertainty-d12.md`. Explicit Hermite/Laguerre construction matches the LP bound. Relevant to P9 Uncertainty Principle which tests Hermite/Laguerre eigensystems.
-3. **Gonçalves 2017, Hermite uncertainty** — `source/2017-goncalves-hermite-uncertainty.md`. Eigenfunctions of the Fourier transform with prescribed sign changes; foundational for the d=12 result.
+2. **Cohn–Gonçalves 2019, `d = 12` uncertainty** — `domains/sci-math/source/2019-cohn-uncertainty-d12.md`. Explicit Hermite/Laguerre construction matches the LP bound. Relevant to P9 Uncertainty Principle which tests Hermite/Laguerre eigensystems.
+3. **Gonçalves 2017, Hermite uncertainty** — `domains/sci-math/source/2017-goncalves-hermite-uncertainty.md`. Eigenfunctions of the Fourier transform with prescribed sign changes; foundational for the d=12 result.
 
 ## Related
 
 - Concepts: [lp-duality](lp-duality.md), [sphere-packing](sphere-packing.md), [kissing-number](kissing-number.md), [uncertainty-principle](uncertainty-principle.md).
 - Techniques: (none directly — modular forms are concept-side, no production technique uses them).
 - Findings: P6 strategy, P22 d=12 construction survey ([p22-d12-construction-survey](../findings/p22-d12-construction-survey.md)).
-- Sources: `source/2019-cohn-uncertainty-d12.md`, `source/2024-cohn-li-kissing.md`, `source/2017-goncalves-hermite-uncertainty.md`, `source/2005-diamond-modular-forms.md`, `source/1995-wiles-fermat.md`, `source/1990-ribet-level-lowering.md`, `source/1987-serre-mod-representations.md`, `source/2026-angdinata-ramanujan-tau-primes.md`.
+- Sources: `domains/sci-math/source/2019-cohn-uncertainty-d12.md`, `domains/sci-math/source/2024-cohn-li-kissing.md`, `domains/sci-math/source/2017-goncalves-hermite-uncertainty.md`, `domains/sci-math/source/2005-diamond-modular-forms.md`, `domains/sci-math/source/1995-wiles-fermat.md`, `domains/sci-math/source/1990-ribet-level-lowering.md`, `domains/sci-math/source/1987-serre-mod-representations.md`, `domains/sci-math/source/2026-angdinata-ramanujan-tau-primes.md`.

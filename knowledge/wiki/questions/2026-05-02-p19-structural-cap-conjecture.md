@@ -45,8 +45,8 @@ For sphere packings, the Cohn–Elkies bound is a Fourier-positive "magic functi
 - `wiki/concepts/lp-duality.md`
 - `wiki/concepts/provable-floor-and-frozen-problems.md`
 - `wiki/techniques/lp-cutting-plane-warmstart.md`
-- `source/2010-vinuesa-sidon-thesis.md`
-- `source/2007-gyarmati-sums-differences.md`
+- `domains/sci-math/source/2010-vinuesa-sidon-thesis.md`
+- `domains/sci-math/source/2007-gyarmati-sums-differences.md`
 
 ## Suggested sources
 

@@ -5,9 +5,9 @@ drafted: 2026-05-02
 level: 2
 source_type: agent_analysis
 cites:
-  - ../../source/2026-angdinata-ramanujan-tau-primes.md
-  - ../../source/2025-lichtman-linear-sieve.md
-  - ../../source/2015-tao-sieve-theory-notes.md
+  - ../../domains/sci-math/source/2026-angdinata-ramanujan-tau-primes.md
+  - ../../domains/sci-math/source/2025-lichtman-linear-sieve.md
+  - ../../domains/sci-math/source/2015-tao-sieve-theory-notes.md
 ---
 
 # Prime Number Theorem — LP Formulation Discovery

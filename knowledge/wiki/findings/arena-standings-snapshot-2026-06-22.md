@@ -7,7 +7,7 @@ status: answered
 related_problems: [1, 2, 3, 4, 7, 9, 11, 14, 18, 22]
 cites:
   - scripts/leaderboard_standings.py
-  - ../../source/2026-bianchi-einstein-arena-collective-intelligence.md
+  - ../../domains/ai-agents/source/2026-bianchi-einstein-arena-collective-intelligence.md
 ---
 
 # Live arena standings snapshot — JSAgent, 2026-06-22

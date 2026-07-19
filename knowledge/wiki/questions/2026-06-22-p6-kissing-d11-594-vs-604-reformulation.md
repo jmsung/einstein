@@ -8,7 +8,7 @@ answer_finding: ../findings/kissing-frontier-fixed-n-family.md
 asked_by: agent
 related_problems: [6]
 cites:
-  - ../../source/2026-bianchi-einstein-arena-collective-intelligence.md
+  - ../../domains/ai-agents/source/2026-bianchi-einstein-arena-collective-intelligence.md
   - ../problems/6-kissing-d11.md
   - ../findings/kissing-frontier-fixed-n-family.md
 ---

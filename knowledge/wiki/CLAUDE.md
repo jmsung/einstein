@@ -133,7 +133,7 @@ This is a deliberate departure from the jongmin-wiki "wiki pages NEVER created a
 | `findings/` | 47 pages | Q→A pages with cites — incl. 2 from this branch: `the workstation-utilization-strategy`, `dead-end-slug-as-arxiv-phrase-query` | Single-problem or council outputs |
 | `problems/` | 22 + `_inventory.md` | One short index per arena problem | Per-problem rollup |
 | `questions/` | 17+ pages | "Why does X work?" with status: open/answered/abandoned | Council dispatch + gap detect + gap_search auto-file |
-| `../source/` | 197+ papers | 1:1 distillations of ingested artifacts; see [`source/INDEX.md`](../source/INDEX.md) | `/wiki-ingest` (interactive) or `docs/tools/seed_ingest.py` (bulk) |
+| `../source/` | 197+ papers | 1:1 distillations of ingested artifacts; see [`domains/sci-math/source/INDEX.md`](../domains/sci-math/source/INDEX.md) | `/wiki-ingest` (interactive) or `docs/tools/seed_ingest.py` (bulk) |
 
 ## Search
 

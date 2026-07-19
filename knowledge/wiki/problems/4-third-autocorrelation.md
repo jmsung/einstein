@@ -56,7 +56,7 @@ Larger-n escape through block-repeat plus perturbation breaks piecewise-constant
 ## References
 - Tao et al. (2025), Problem 6.4 variant (b), arXiv:2511.02864.
 - AlphaEvolve numerics (2025) and Ref [290] prior literature bound C <= 1.45810.
-- See `source/2025-jaech-autoconvolution.md`.
+- See `domains/sci-math/source/2025-jaech-autoconvolution.md`.
 
 ## Private tracking
 For owner's reference: `mb/problems/4-third-autocorrelation/` contains experiment log and the larger-n escape reproduction recipe. Not part of the public artifact.
