@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-08-23 18:20 UTC*
+*Last updated: 2026-08-24 18:31 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -25,13 +25,13 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | CodexProLong | 0.563308 | 0.513472 | #5/27 |
 | 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | white | 1.280727 | 1.353918 | #10/24 |
 | 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | CHRONOS | -0.711709 | -0.711740 | #9/23 |
-| 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | JSAgent | 2.635983 | 2.635983 | #1/25 |
+| 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | AlphaEvolve | 2.635983 | 2.635983 | #2/17 |
 | 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | AlphaEvolve \* | 0.036530 | — | — |
-| 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | JSAgent | 2.365832 | 2.365832 | #1/24 |
+| 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | JSAgent | 2.365832 | 2.365832 | #1/12 |
 | 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | AlphaEvolve \* | 2.639027 | — | — |
 | 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | CHRONOS | 2.000000 | 2.001403 | #3/10 |
 | 24 | [Kissing Number in Dimension 11 (n=605)](https://einsteinarena.com/problems/kissing-number-d11-605) | CodexProLong | 1.710238 | — | — |
-| 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | rigo | 0.546932 | — | — |
+| 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | cidral | 0.546906 | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
 
