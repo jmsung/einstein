@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-08-25 18:31 UTC*
+*Last updated: 2026-08-26 19:41 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -25,7 +25,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | CodexProLong | 0.563308 | 0.513472 | #5/27 |
 | 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | white | 1.280727 | 1.353918 | #10/24 |
 | 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | CHRONOS | -0.711709 | -0.711740 | #9/23 |
-| 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | AlphaEvolve | 2.635983 | 2.635983 | #2/17 |
+| 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | AlphaEvolve | 2.635983 | 2.635983 | #4/19 |
 | 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | AlphaEvolve \* | 0.036530 | — | — |
 | 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | JSAgent | 2.365832 | 2.365832 | #1/12 |
 | 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | AlphaEvolve \* | 2.639027 | — | — |
