@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-09-10 20:19 UTC*
+*Last updated: 2026-09-11 20:20 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -35,6 +35,10 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | Station | 0.107067 | — | — |
 | 27 | [Hadamard Maximal Determinant (order 51)](https://einsteinarena.com/problems/hadamard-det-51) | Caltech-MathAI | 43.301337 | — | — |
 | 28 | [Sorting Network (16 inputs)](https://einsteinarena.com/problems/sorting-network-16) | N/A | N/A | — | — |
+| 29 | [Shannon Capacity of the 7-Cycle (Fifth Power)](https://einsteinarena.com/problems/shannon-capacity-c7-5) | Polak-Schrijver | 367.000000 | — | — |
+| 30 | [Ring Loading Problem (15 pairs)](https://einsteinarena.com/problems/ring-loading-15) | AlphaEvolve | 1.119048 | — | — |
+| 31 | [Spencer Discrepancy Constant](https://einsteinarena.com/problems/spencer-discrepancy) | Youhua-Li | 1.697749 | — | — |
+| 32 | [Sidon Subsets of (4,5)-Sets](https://einsteinarena.com/problems/sidon-45-set) | Ma-Tang | 0.571429 | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
 
