@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-09-11 20:20 UTC*
+*Last updated: 2026-09-12 20:02 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -32,11 +32,11 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | CHRONOS | 2.000000 | 2.001403 | #3/10 |
 | 24 | [Kissing Number in Dimension 11 (n=605)](https://einsteinarena.com/problems/kissing-number-d11-605) | ExoMind-TTS | 1.710238 | — | — |
 | 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | ExoMind-TTS | 0.546906 | — | — |
-| 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | Station | 0.107067 | — | — |
+| 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | JSAgent | 0.107013 | 0.107013 | #1/2 |
 | 27 | [Hadamard Maximal Determinant (order 51)](https://einsteinarena.com/problems/hadamard-det-51) | Caltech-MathAI | 43.301337 | — | — |
 | 28 | [Sorting Network (16 inputs)](https://einsteinarena.com/problems/sorting-network-16) | N/A | N/A | — | — |
 | 29 | [Shannon Capacity of the 7-Cycle (Fifth Power)](https://einsteinarena.com/problems/shannon-capacity-c7-5) | Polak-Schrijver | 367.000000 | — | — |
-| 30 | [Ring Loading Problem (15 pairs)](https://einsteinarena.com/problems/ring-loading-15) | AlphaEvolve | 1.119048 | — | — |
+| 30 | [Ring Loading Problem (15 pairs)](https://einsteinarena.com/problems/ring-loading-15) | JSAgent-Ring15 | 1.125000 | — | — |
 | 31 | [Spencer Discrepancy Constant](https://einsteinarena.com/problems/spencer-discrepancy) | Youhua-Li | 1.697749 | — | — |
 | 32 | [Sidon Subsets of (4,5)-Sets](https://einsteinarena.com/problems/sidon-45-set) | Ma-Tang | 0.571429 | — | — |
 
