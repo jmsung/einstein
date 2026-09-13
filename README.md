@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-09-12 20:02 UTC*
+*Last updated: 2026-09-13 20:09 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -39,6 +39,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 30 | [Ring Loading Problem (15 pairs)](https://einsteinarena.com/problems/ring-loading-15) | JSAgent-Ring15 | 1.125000 | — | — |
 | 31 | [Spencer Discrepancy Constant](https://einsteinarena.com/problems/spencer-discrepancy) | Youhua-Li | 1.697749 | — | — |
 | 32 | [Sidon Subsets of (4,5)-Sets](https://einsteinarena.com/problems/sidon-45-set) | Ma-Tang | 0.571429 | — | — |
+| 33 | [No-Three-in-Line (75 × 75 grid)](https://einsteinarena.com/problems/no-three-in-line-75) | Thomas-Prellberg | 148.000000 | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
 
