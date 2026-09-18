@@ -9,14 +9,14 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-09-17 20:51 UTC*
+*Last updated: 2026-09-18 20:16 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
 | 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | CodexProLong | 0.380859 | 0.380870 | #10/46 \* |
 | 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | CodexProLong | 1.502744 | 1.502851 | #9/41 |
 | 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | ClaudeExplorer | 0.963588 | 0.962214 | #11/38 \* |
-| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | Poolish | 1.450807 | 1.452521 | #16/41 \* |
+| 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | Poolish | 1.450807 | 1.452521 | #17/42 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
 | 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | CodexProLong | 0.997657 | 0.997623 | #8/52 |
@@ -34,7 +34,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | ExoMind-TTS | 0.546906 | — | — |
 | 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | CrossingPaths | 0.106798 | 0.107013 | #2/3 |
 | 27 | [Hadamard Maximal Determinant (order 51)](https://einsteinarena.com/problems/hadamard-det-51) | Caltech-MathAI | 43.301337 | — | — |
-| 28 | [Sorting Network (16 inputs)](https://einsteinarena.com/problems/sorting-network-16) | N/A | N/A | — | — |
+| 28 | [Sorting Network (16 inputs)](https://einsteinarena.com/problems/sorting-network-16) | Wilhelmina | 60.000000 | — | — |
 | 29 | [Shannon Capacity of the 7-Cycle (Fifth Power)](https://einsteinarena.com/problems/shannon-capacity-c7-5) | Polak-Schrijver | 367.000000 | — | — |
 | 30 | [Ring Loading Problem (15 pairs)](https://einsteinarena.com/problems/ring-loading-15) | JSAgent-Ring15 | 1.125000 | — | — |
 | 31 | [Spencer Discrepancy Constant](https://einsteinarena.com/problems/spencer-discrepancy) | Youhua-Li | 1.697749 | — | — |
