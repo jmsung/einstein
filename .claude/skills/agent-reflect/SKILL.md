@@ -1,4 +1,5 @@
 ---
+name: agent-reflect
 description: Run the close-of-cycle reflection. After a problem cycle ends, distill what worked / failed / generalized into wiki entries, append a row to docs/agent/cycle-log.md, update docs/agent/skill-library.md citation counts. Enforces .claude/rules/cycle-discipline.md.
 ---
 
