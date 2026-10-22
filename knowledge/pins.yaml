@@ -1,0 +1,516 @@
+# cb/knowledge/pins.yaml — adopted knowledge-base cards (pull model, ADR 0011)
+# A card is materialized into cb/knowledge/source/ ONLY if it is pinned here.
+# Every pin needs a `why:` — the artifact that cites it. That artifact is the receipt.
+# A pull-mode repo SEARCHES the whole corpus (/kb-query is unscoped, ADR 0011 D7);
+# the knowledge-base downstream.yaml entry only enumerates it for the fan-out.
+version: 1
+mode: pull
+pins:
+  - card: source/2010-agarwal-information-theoretic-lower-bounds-oracle.md
+    key:  arxiv:1009.0571
+    why:  [knowledge/wiki/paper-notes/2010-agarwal-information-theoretic-lower-bounds-oracle.md]
+    added: 2026-10-22
+  - card: source/2010-matolcsi-autoconvolution.md
+    key:  arxiv:0907.1379
+    why:  [knowledge/wiki/findings/p4-web-research-frontier-and-methods.md]
+    added: 2026-10-22
+  - card: source/2012-vindas-beurling-chebyshev.md
+    key:  arxiv:1201.1405
+    why:  [knowledge/wiki/questions/2026-07-04-p7-optimal-2000-key-constant.md]
+    added: 2026-10-22
+  - card: source/2013-faber-kadiri-psi-bounds.md
+    key:  arxiv:1310.6374
+    why:  [knowledge/wiki/questions/2026-07-04-p7-optimal-2000-key-constant.md]
+    added: 2026-10-22
+  - card: source/2020-wilson-chebyshev-coefficients.md
+    key:  arxiv:2012.14387
+    why:  [knowledge/wiki/questions/2026-07-04-p7-optimal-2000-key-constant.md]
+    added: 2026-10-22
+  - card: source/2023-abbasian-conversational-health-agents-personalized.md
+    key:  arxiv:2310.02374
+    why:  [knowledge/wiki/paper-notes/2023-abbasian-conversational-health-agents-personalized.md]
+    added: 2026-10-22
+  - card: source/2023-bran-augmenting-large-language-models.md
+    key:  arxiv:2304.05376
+    why:  [knowledge/wiki/paper-notes/2023-bran-augmenting-large-language-models.md]
+    added: 2026-10-22
+  - card: source/2023-deng-mind2web-towards-generalist-agent.md
+    key:  arxiv:2306.06070
+    why:  [knowledge/wiki/paper-notes/2023-deng-mind2web-towards-generalist-agent.md]
+    added: 2026-10-22
+  - card: source/2023-furuta-multimodal-web-navigation-instruction-finetuned.md
+    key:  arxiv:2305.11854
+    why:  [knowledge/wiki/paper-notes/2023-furuta-multimodal-web-navigation-instruction-finetuned.md]
+    added: 2026-10-22
+  - card: source/2023-guo-suspicion-agent-playing-imperfect-information.md
+    key:  arxiv:2309.17277
+    why:  [knowledge/wiki/paper-notes/2023-guo-suspicion-agent-playing-imperfect-information.md]
+    added: 2026-10-22
+  - card: source/2023-hong-metagpt-meta-programming-multi-agent.md
+    key:  arxiv:2308.00352
+    why:  [knowledge/wiki/paper-notes/2023-hong-metagpt-meta-programming-multi-agent.md]
+    added: 2026-10-22
+  - card: source/2023-huang-mlagentbench-evaluating-language-agents.md
+    key:  arxiv:2310.03302
+    why:  [knowledge/wiki/paper-notes/2023-huang-mlagentbench-evaluating-language-agents.md]
+    added: 2026-10-22
+  - card: source/2023-kang-chatmof-autonomous-system-predicting.md
+    key:  arxiv:2308.01423
+    why:  [knowledge/wiki/paper-notes/2023-kang-chatmof-autonomous-system-predicting.md]
+    added: 2026-10-22
+  - card: source/2023-khattab-dspy-compiling-declarative-language.md
+    key:  arxiv:2310.03714
+    why:  [knowledge/wiki/paper-notes/2023-khattab-dspy-compiling-declarative-language.md]
+    added: 2026-10-22
+  - card: source/2023-li-camel-communicative-agents-mind.md
+    key:  arxiv:2303.17760
+    why:  [knowledge/wiki/paper-notes/2023-li-camel-communicative-agents-mind.md]
+    added: 2026-10-22
+  - card: source/2023-nottingham-embodied-agents-dream-pixelated.md
+    key:  arxiv:2301.12050
+    why:  [knowledge/wiki/paper-notes/2023-nottingham-embodied-agents-dream-pixelated.md]
+    added: 2026-10-22
+  - card: source/2023-packer-memgpt-towards-llms-operating.md
+    key:  arxiv:2310.08560
+    why:  [knowledge/wiki/paper-notes/2023-packer-memgpt-towards-llms-operating.md]
+    added: 2026-10-22
+  - card: source/2023-prince-opportunities-retrieval-tool-augmented.md
+    key:  arxiv:2312.01291
+    why:  [knowledge/wiki/paper-notes/2023-prince-opportunities-retrieval-tool-augmented.md]
+    added: 2026-10-22
+  - card: source/2023-qian-chatdev-communicative-agents-software.md
+    key:  arxiv:2307.07924
+    why:  [knowledge/wiki/paper-notes/2023-qian-chatdev-communicative-agents-software.md]
+    added: 2026-10-22
+  - card: source/2023-tang-medagents-large-language-models.md
+    key:  arxiv:2311.10537
+    why:  [knowledge/wiki/paper-notes/2023-tang-medagents-large-language-models.md]
+    added: 2026-10-22
+  - card: source/2023-yang-auto-gpt-online-decision-making.md
+    key:  arxiv:2306.02224
+    why:  [knowledge/wiki/paper-notes/2023-yang-auto-gpt-online-decision-making.md]
+    added: 2026-10-22
+  - card: source/2023-yang-large-language-models-automated.md
+    key:  arxiv:2309.02726
+    why:  [knowledge/wiki/paper-notes/2023-yang-large-language-models-automated.md]
+    added: 2026-10-22
+  - card: source/2023-yuan-skill-reinforcement-learning-planning.md
+    key:  arxiv:2303.16563
+    why:  [knowledge/wiki/paper-notes/2023-yuan-skill-reinforcement-learning-planning.md]
+    added: 2026-10-22
+  - card: source/2023-zhao-expel-llm-agents-experiential.md
+    key:  arxiv:2308.10144
+    why:  [knowledge/wiki/concepts/agentic-harness.md, knowledge/wiki/paper-notes/2023-zhao-expel-llm-agents-experiential.md]
+    added: 2026-10-22
+  - card: source/2023-zhou-webarena-realistic-web-environment.md
+    key:  arxiv:2307.13854
+    why:  [knowledge/wiki/paper-notes/2023-zhou-webarena-realistic-web-environment.md]
+    added: 2026-10-22
+  - card: source/2024-baek-researchagent-iterative-research-idea.md
+    key:  arxiv:2404.07738
+    why:  [knowledge/wiki/findings/research-synthesis-design.md, knowledge/wiki/paper-notes/2024-baek-researchagent-iterative-research-idea.md, tests/research_synthesis/test_query.py, tests/research_synthesis/test_schema.py, tests/tools/test_inner_agent_output.py]
+    added: 2026-10-22
+  - card: source/2024-chan-mle-bench-evaluating-machine-learning.md
+    key:  arxiv:2410.07095
+    why:  [knowledge/wiki/concepts/agentic-harness.md, knowledge/wiki/paper-notes/2024-chan-mle-bench-evaluating-machine-learning.md]
+    added: 2026-10-22
+  - card: source/2024-costarelli-gamebench-evaluating-strategic-reasoning.md
+    key:  arxiv:2406.06613
+    why:  [knowledge/wiki/paper-notes/2024-costarelli-gamebench-evaluating-strategic-reasoning.md]
+    added: 2026-10-22
+  - card: source/2024-darvish-organa-robotic-assistant-automated.md
+    key:  arxiv:2401.06949
+    why:  [knowledge/wiki/paper-notes/2024-darvish-organa-robotic-assistant-automated.md]
+    added: 2026-10-22
+  - card: source/2024-gao-empowering-biomedical-discovery-agents.md
+    key:  arxiv:2404.02831
+    why:  [knowledge/wiki/paper-notes/2024-gao-empowering-biomedical-discovery-agents.md]
+    added: 2026-10-22
+  - card: source/2024-ghafarollahi-protagents-protein-discovery-large.md
+    key:  arxiv:2402.04268
+    why:  [knowledge/wiki/paper-notes/2024-ghafarollahi-protagents-protein-discovery-large.md]
+    added: 2026-10-22
+  - card: source/2024-ghafarollahi-sciagents-automating-scientific-discovery.md
+    key:  arxiv:2409.05556
+    why:  [knowledge/wiki/paper-notes/2024-ghafarollahi-sciagents-automating-scientific-discovery.md]
+    added: 2026-10-22
+  - card: source/2024-hu-automated-design-agentic-systems.md
+    key:  arxiv:2408.08435
+    why:  [knowledge/wiki/paper-notes/2024-hu-automated-design-agentic-systems.md]
+    added: 2026-10-22
+  - card: source/2024-hu-nova-iterative-planning-search.md
+    key:  arxiv:2410.14255
+    why:  [knowledge/wiki/paper-notes/2024-hu-nova-iterative-planning-search.md]
+    added: 2026-10-22
+  - card: source/2024-jia-llmatdesign-autonomous-materials-discovery.md
+    key:  arxiv:2406.13163
+    why:  [knowledge/wiki/paper-notes/2024-jia-llmatdesign-autonomous-materials-discovery.md]
+    added: 2026-10-22
+  - card: source/2024-kapoor-agents-matter.md
+    key:  arxiv:2407.01502
+    why:  [knowledge/wiki/paper-notes/2024-kapoor-agents-matter.md]
+    added: 2026-10-22
+  - card: source/2024-kim-mdagents-adaptive-collaboration-llms.md
+    key:  arxiv:2404.15155
+    why:  [knowledge/wiki/paper-notes/2024-kim-mdagents-adaptive-collaboration-llms.md]
+    added: 2026-10-22
+  - card: source/2024-li-mlr-copilot-autonomous-machine-learning.md
+    key:  arxiv:2408.14033
+    why:  [knowledge/wiki/paper-notes/2024-li-mlr-copilot-autonomous-machine-learning.md]
+    added: 2026-10-22
+  - card: source/2024-liu-toward-team-ai-made-scientists.md
+    key:  arxiv:2402.12391
+    why:  [knowledge/wiki/paper-notes/2024-liu-toward-team-ai-made-scientists.md]
+    added: 2026-10-22
+  - card: source/2024-ni-matpilot-llm-enabled-materials-scientist.md
+    key:  arxiv:2411.08063
+    why:  [knowledge/wiki/paper-notes/2024-ni-matpilot-llm-enabled-materials-scientist.md]
+    added: 2026-10-22
+  - card: source/2024-pan-training-software-engineering-agents.md
+    key:  arxiv:2412.21139
+    why:  [knowledge/wiki/paper-notes/2024-pan-training-software-engineering-agents.md]
+    added: 2026-10-22
+  - card: source/2024-qu-crispr-gpt-agentic-automation-gene-editing.md
+    key:  arxiv:2404.18021
+    why:  [knowledge/wiki/paper-notes/2024-qu-crispr-gpt-agentic-automation-gene-editing.md]
+    added: 2026-10-22
+  - card: source/2024-ramos-review-large-language-models.md
+    key:  arxiv:2407.01603
+    why:  [knowledge/wiki/paper-notes/2024-ramos-review-large-language-models.md]
+    added: 2026-10-22
+  - card: source/2024-wang-openhands-open-platform-software.md
+    key:  arxiv:2407.16741
+    why:  [knowledge/wiki/paper-notes/2024-wang-openhands-open-platform-software.md]
+    added: 2026-10-22
+  - card: source/2024-weij-sandbagging-language-models-can.md
+    key:  arxiv:2406.07358
+    why:  [knowledge/wiki/paper-notes/2024-weij-sandbagging-language-models-can.md]
+    added: 2026-10-22
+  - card: source/2024-white-building-living-software-systems.md
+    key:  arxiv:2408.01768
+    why:  [knowledge/wiki/paper-notes/2024-white-building-living-software-systems.md]
+    added: 2026-10-22
+  - card: source/2024-wijk-re-bench-evaluating-frontier-capabilities.md
+    key:  arxiv:2411.15114
+    why:  [knowledge/wiki/paper-notes/2024-wijk-re-bench-evaluating-frontier-capabilities.md]
+    added: 2026-10-22
+  - card: source/2024-xiao-cellagent-llm-driven-multi-agent-framework.md
+    key:  arxiv:2407.09811
+    why:  [knowledge/wiki/paper-notes/2024-xiao-cellagent-llm-driven-multi-agent-framework.md]
+    added: 2026-10-22
+  - card: source/2024-yang-moose-chem-large-language-models.md
+    key:  arxiv:2410.07076
+    why:  [knowledge/wiki/paper-notes/2024-yang-moose-chem-large-language-models.md]
+    added: 2026-10-22
+  - card: source/2024-yang-swe-agent-agent-computer-interfaces-enable.md
+    key:  arxiv:2405.15793
+    why:  [knowledge/wiki/paper-notes/2024-yang-swe-agent-agent-computer-interfaces-enable.md]
+    added: 2026-10-22
+  - card: source/2024-yang-swe-bench-multimodal-systems-generalize.md
+    key:  arxiv:2410.03859
+    why:  [knowledge/wiki/paper-notes/2024-yang-swe-bench-multimodal-systems-generalize.md]
+    added: 2026-10-22
+  - card: source/2024-yao-multi-objective-evolution-heuristic-using.md
+    key:  arxiv:2409.16867
+    why:  [knowledge/wiki/paper-notes/2024-yao-multi-objective-evolution-heuristic-using.md]
+    added: 2026-10-22
+  - card: source/2024-yuan-llamp-large-language-model.md
+    key:  arxiv:2401.17244
+    why:  [knowledge/wiki/paper-notes/2024-yuan-llamp-large-language-model.md]
+    added: 2026-10-22
+  - card: source/2024-yuksekgonul-textgrad-automatic-differentiation-text.md
+    key:  arxiv:2406.07496
+    why:  [knowledge/wiki/paper-notes/2024-yuksekgonul-textgrad-automatic-differentiation-text.md]
+    added: 2026-10-22
+  - card: source/2024-zhang-aflow-automating-agentic-workflow.md
+    key:  arxiv:2410.10762
+    why:  [knowledge/wiki/paper-notes/2024-zhang-aflow-automating-agentic-workflow.md]
+    added: 2026-10-22
+  - card: source/2024-zhang-cybench-framework-evaluating-cybersecurity.md
+    key:  arxiv:2408.08926
+    why:  [knowledge/wiki/paper-notes/2024-zhang-cybench-framework-evaluating-cybersecurity.md]
+    added: 2026-10-22
+  - card: source/2024-zhang-honeycomb-flexible-llm-based-agent.md
+    key:  arxiv:2409.00135
+    why:  [knowledge/wiki/paper-notes/2024-zhang-honeycomb-flexible-llm-based-agent.md]
+    added: 2026-10-22
+  - card: source/2024-zhou-symbolic-learning-enables-self-evolving.md
+    key:  arxiv:2406.18532
+    why:  [knowledge/wiki/paper-notes/2024-zhou-symbolic-learning-enables-self-evolving.md]
+    added: 2026-10-22
+  - card: source/2025-babu-adaptive-domain-modeling-language.md
+    key:  arxiv:2506.19592
+    why:  [knowledge/wiki/paper-notes/2025-babu-adaptive-domain-modeling-language.md]
+    added: 2026-10-22
+  - card: source/2025-cai-nex-n1-agentic-models-trained.md
+    key:  arxiv:2512.04987
+    why:  [knowledge/wiki/paper-notes/2025-cai-nex-n1-agentic-models-trained.md]
+    added: 2026-10-22
+  - card: source/2025-cai-training-free-group-relative-policy.md
+    key:  arxiv:2510.08191
+    why:  [knowledge/wiki/paper-notes/2025-cai-training-free-group-relative-policy.md]
+    added: 2026-10-22
+  - card: source/2025-chai-scimaster-towards-general-purpose-scientific.md
+    key:  arxiv:2507.05241
+    why:  [knowledge/wiki/paper-notes/2025-chai-scimaster-towards-general-purpose-scientific.md]
+    added: 2026-10-22
+  - card: source/2025-deng-interactcomp-evaluating-search-agents.md
+    key:  arxiv:2510.24668
+    why:  [knowledge/wiki/paper-notes/2025-deng-interactcomp-evaluating-search-agents.md]
+    added: 2026-10-22
+  - card: source/2025-deng-swe-bench-pro-can-agents.md
+    key:  arxiv:2509.16941
+    why:  [knowledge/wiki/paper-notes/2025-deng-swe-bench-pro-can-agents.md]
+    added: 2026-10-22
+  - card: source/2025-dong-agentic-reinforced-policy-optimization.md
+    key:  arxiv:2507.19849
+    why:  [knowledge/wiki/paper-notes/2025-dong-agentic-reinforced-policy-optimization.md]
+    added: 2026-10-22
+  - card: source/2025-du-automlgen-navigating-fine-grained-optimization.md
+    key:  arxiv:2510.08511
+    why:  [knowledge/wiki/paper-notes/2025-du-automlgen-navigating-fine-grained-optimization.md]
+    added: 2026-10-22
+  - card: source/2025-du-enabling-agents-communicate-entirely.md
+    key:  arxiv:2511.09149
+    why:  [knowledge/wiki/paper-notes/2025-du-enabling-agents-communicate-entirely.md]
+    added: 2026-10-22
+  - card: source/2025-feng-towards-fluid-scientist-llm-powered.md
+    key:  arxiv:2512.04716
+    why:  [knowledge/wiki/paper-notes/2025-feng-towards-fluid-scientist-llm-powered.md]
+    added: 2026-10-22
+  - card: source/2025-fu-cache-to-cache-direct-semantic-communication.md
+    key:  arxiv:2510.03215
+    why:  [knowledge/wiki/paper-notes/2025-fu-cache-to-cache-direct-semantic-communication.md]
+    added: 2026-10-22
+  - card: source/2025-fu-catarena-evaluating-evolutionary-capabilities.md
+    key:  arxiv:2510.26852
+    why:  [knowledge/wiki/paper-notes/2025-fu-catarena-evaluating-evolutionary-capabilities.md]
+    added: 2026-10-22
+  - card: source/2025-gantumur-chebyshev-sylvester-review.md
+    key:  arxiv:2512.02466
+    why:  [knowledge/wiki/questions/2026-07-04-p7-optimal-2000-key-constant.md]
+    added: 2026-10-22
+  - card: source/2025-georgiev-math-exploration.md
+    key:  arxiv:2511.02864
+    why:  [knowledge/wiki/findings/p4-web-research-frontier-and-methods.md]
+    added: 2026-10-22
+  - card: source/2025-ghareeb-robin-multi-agent-system-automating.md
+    key:  arxiv:2505.13400
+    why:  [knowledge/wiki/paper-notes/2025-ghareeb-robin-multi-agent-system-automating.md]
+    added: 2026-10-22
+  - card: source/2025-gottweis-towards-co-scientist.md
+    key:  arxiv:2502.18864
+    why:  [knowledge/wiki/paper-notes/2025-gottweis-towards-co-scientist.md]
+    added: 2026-10-22
+  - card: source/2025-gridach-agentic-scientific-discovery-survey.md
+    key:  arxiv:2503.08979
+    why:  [knowledge/wiki/paper-notes/2025-gridach-agentic-scientific-discovery-survey.md]
+    added: 2026-10-22
+  - card: source/2025-guo-critiq-mining-data-quality.md
+    key:  arxiv:2502.19279
+    why:  [knowledge/wiki/paper-notes/2025-guo-critiq-mining-data-quality.md]
+    added: 2026-10-22
+  - card: source/2025-hofsttter-elicitation-game-evaluating-capability.md
+    key:  arxiv:2502.02180
+    why:  [knowledge/wiki/paper-notes/2025-hofsttter-elicitation-game-evaluating-capability.md]
+    added: 2026-10-22
+  - card: source/2025-hu-owl-optimized-workforce-learning.md
+    key:  arxiv:2505.23885
+    why:  [knowledge/wiki/paper-notes/2025-hu-owl-optimized-workforce-learning.md]
+    added: 2026-10-22
+  - card: source/2025-hua-researchcodebench-benchmarking-llms-implementing.md
+    key:  arxiv:2506.02314
+    why:  [knowledge/wiki/paper-notes/2025-hua-researchcodebench-benchmarking-llms-implementing.md]
+    added: 2026-10-22
+  - card: source/2025-jaech-autoconvolution.md
+    key:  arxiv:2508.02803
+    why:  [knowledge/wiki/findings/p3-constant-literature-frontier-2026-06.md]
+    added: 2026-10-22
+  - card: source/2025-kumbhar-hypothesis-generation-materials-discovery.md
+    key:  arxiv:2501.13299
+    why:  [knowledge/wiki/paper-notes/2025-kumbhar-hypothesis-generation-materials-discovery.md]
+    added: 2026-10-22
+  - card: source/2025-li-alpha-sql-zero-shot-text-to-sql-using.md
+    key:  arxiv:2502.17248
+    why:  [knowledge/wiki/paper-notes/2025-li-alpha-sql-zero-shot-text-to-sql-using.md]
+    added: 2026-10-22
+  - card: source/2025-li-deepeye-sql-software-engineering-inspired-text-to-sq.md
+    key:  arxiv:2510.17586
+    why:  [knowledge/wiki/paper-notes/2025-li-deepeye-sql-software-engineering-inspired-text-to-sq.md]
+    added: 2026-10-22
+  - card: source/2025-lin-eco-llm-driven-efficient-code.md
+    key:  arxiv:2503.15669
+    why:  [knowledge/wiki/paper-notes/2025-lin-eco-llm-driven-efficient-code.md]
+    added: 2026-10-22
+  - card: source/2025-liu-advances-challenges-foundation-agents.md
+    key:  arxiv:2504.01990
+    why:  [knowledge/wiki/paper-notes/2025-liu-advances-challenges-foundation-agents.md]
+    added: 2026-10-22
+  - card: source/2025-liu-alphago-moment-model-architecture.md
+    key:  arxiv:2507.18074
+    why:  [knowledge/wiki/paper-notes/2025-liu-alphago-moment-model-architecture.md]
+    added: 2026-10-22
+  - card: source/2025-liu-ml-master-towards-ai-for-ai-integration.md
+    key:  arxiv:2506.16499
+    why:  [knowledge/wiki/paper-notes/2025-liu-ml-master-towards-ai-for-ai-integration.md]
+    added: 2026-10-22
+  - card: source/2025-luo-llm4sr-survey-large-language.md
+    key:  arxiv:2501.04306
+    why:  [knowledge/wiki/paper-notes/2025-luo-llm4sr-survey-large-language.md]
+    added: 2026-10-22
+  - card: source/2025-miserendino-swe-lancer-can-frontier-llms.md
+    key:  arxiv:2502.12115
+    why:  [knowledge/wiki/paper-notes/2025-miserendino-swe-lancer-can-frontier-llms.md]
+    added: 2026-10-22
+  - card: source/2025-novikov-alphaevolve.md
+    key:  arxiv:2506.13131
+    why:  [knowledge/wiki/concepts/agentic-harness.md, knowledge/wiki/concepts/heilbronn-type-extremal.md, knowledge/wiki/findings/float64-ceiling.md, knowledge/wiki/findings/frozen-problem-triage.md, knowledge/wiki/findings/packing-techniques.md, knowledge/wiki/findings/research-synthesis-first-run.md, knowledge/wiki/findings/strategic-approach.md, knowledge/wiki/findings/warm-start-recon.md]
+    added: 2026-10-22
+  - card: source/2025-pantiukhin-accelerating-earth-science-discovery.md
+    key:  arxiv:2503.05854
+    why:  [knowledge/wiki/paper-notes/2025-pantiukhin-accelerating-earth-science-discovery.md]
+    added: 2026-10-22
+  - card: source/2025-ren-towards-scientific-intelligence-survey.md
+    key:  arxiv:2503.24047
+    why:  [knowledge/wiki/paper-notes/2025-ren-towards-scientific-intelligence-survey.md]
+    added: 2026-10-22
+  - card: source/2025-schmidgall-agent-laboratory-using-llm.md
+    key:  arxiv:2501.04227
+    why:  [knowledge/wiki/paper-notes/2025-schmidgall-agent-laboratory-using-llm.md]
+    added: 2026-10-22
+  - card: source/2025-shen-optimizing-llm-based-multi-agent-system.md
+    key:  arxiv:2505.16086
+    why:  [knowledge/wiki/paper-notes/2025-shen-optimizing-llm-based-multi-agent-system.md]
+    added: 2026-10-22
+  - card: source/2025-song-llm-feynman-leveraging-large-language.md
+    key:  arxiv:2503.06512
+    why:  [knowledge/wiki/paper-notes/2025-song-llm-feynman-leveraging-large-language.md]
+    added: 2026-10-22
+  - card: source/2025-starace-paperbench-evaluating-ability-replicate.md
+    key:  arxiv:2504.01848
+    why:  [knowledge/wiki/paper-notes/2025-starace-paperbench-evaluating-ability-replicate.md]
+    added: 2026-10-22
+  - card: source/2025-swanson-virtual-lab.md
+    key:  url:https://www.nature.com/articles/s41586-025-09442-9
+    why:  [knowledge/wiki/paper-notes/2025-swanson-virtual-lab.md]
+    added: 2026-10-22
+  - card: source/2025-taylor-auditing-games-sandbagging.md
+    key:  arxiv:2512.07810
+    why:  [knowledge/wiki/paper-notes/2025-taylor-auditing-games-sandbagging.md]
+    added: 2026-10-22
+  - card: source/2025-verma-grail-graph-edit-distance.md
+    key:  arxiv:2505.02124
+    why:  [knowledge/wiki/paper-notes/2025-verma-grail-graph-edit-distance.md]
+    added: 2026-10-22
+  - card: source/2025-wan-loongflow-directed-evolutionary-search.md
+    key:  arxiv:2512.24077
+    why:  [knowledge/wiki/paper-notes/2025-wan-loongflow-directed-evolutionary-search.md]
+    added: 2026-10-22
+  - card: source/2025-wang-huxley-g-del-machine-human-level.md
+    key:  arxiv:2510.21614
+    why:  [knowledge/wiki/findings/recursive-meta-design.md, knowledge/wiki/paper-notes/2025-wang-huxley-g-del-machine-human-level.md]
+    added: 2026-10-22
+  - card: source/2025-xiang-self-supervised-prompt-optimization.md
+    key:  arxiv:2502.06855
+    why:  [knowledge/wiki/paper-notes/2025-xiang-self-supervised-prompt-optimization.md]
+    added: 2026-10-22
+  - card: source/2025-xu-robustflow-towards-robust-agentic.md
+    key:  arxiv:2509.21834
+    why:  [knowledge/wiki/paper-notes/2025-xu-robustflow-towards-robust-agentic.md]
+    added: 2026-10-22
+  - card: source/2025-xu-towards-multi-agent-reasoning-systems.md
+    key:  arxiv:2505.07313
+    why:  [knowledge/wiki/paper-notes/2025-xu-towards-multi-agent-reasoning-systems.md]
+    added: 2026-10-22
+  - card: source/2025-ye-kvcomm-online-cross-context-kv-cache.md
+    key:  arxiv:2510.12872
+    why:  [knowledge/wiki/paper-notes/2025-ye-kvcomm-online-cross-context-kv-cache.md]
+    added: 2026-10-22
+  - card: source/2025-ye-x-mas-towards-building-multi-agent.md
+    key:  arxiv:2505.16997
+    why:  [knowledge/wiki/paper-notes/2025-ye-x-mas-towards-building-multi-agent.md]
+    added: 2026-10-22
+  - card: source/2025-zhang-agentic-context-engineering.md
+    key:  arxiv:2510.04618
+    why:  [knowledge/wiki/paper-notes/2025-zhang-agentic-context-engineering-evolving.md]
+    added: 2026-10-22
+  - card: source/2025-zhang-darwin-godel-machine-open-ended.md
+    key:  arxiv:2505.22954
+    why:  [knowledge/wiki/findings/code-edit-body-writer-design.md, knowledge/wiki/findings/recursive-meta-design.md, knowledge/wiki/findings/recursive-meta-first-run.md, knowledge/wiki/findings/tool-autosynthesis-design.md, knowledge/wiki/paper-notes/2025-zhang-darwin-godel-machine-open-ended.md, knowledge/wiki/questions/2026-05-28-recursive-meta-dgm-node-114-guard.md]
+    added: 2026-10-22
+  - card: source/2025-zhang-position-intelligent-science-laboratory.md
+    key:  arxiv:2506.19613
+    why:  [knowledge/wiki/paper-notes/2025-zhang-position-intelligent-science-laboratory.md]
+    added: 2026-10-22
+  - card: source/2025-zheng-thought-communication-multiagent-collaboration.md
+    key:  arxiv:2510.20733
+    why:  [knowledge/wiki/paper-notes/2025-zheng-thought-communication-multiagent-collaboration.md]
+    added: 2026-10-22
+  - card: source/2026-hans-paper-replication.md
+    key:  arxiv:2607.02134
+    why:  [knowledge/wiki/log.md, knowledge/wiki/paper-notes/2026-hans-paper-replication.md]
+    added: 2026-10-22
+  - card: source/2026-li-deepeye-steerable-self-driving-data.md
+    key:  arxiv:2603.28889
+    why:  [knowledge/wiki/paper-notes/2026-li-deepeye-steerable-self-driving-data.md]
+    added: 2026-10-22
+  - card: source/2026-lin-agentic-harness-engineering.md
+    key:  arxiv:2604.25850
+    why:  [knowledge/wiki/findings/code-edit-body-writer-design.md, knowledge/wiki/findings/meta-loop-design-from-literature.md, knowledge/wiki/findings/recursive-meta-design.md, knowledge/wiki/findings/research-synthesis-design.md, knowledge/wiki/findings/tool-autosynthesis-design.md, knowledge/wiki/paper-notes/2026-lin-agentic-harness-engineering-ahe.md, knowledge/wiki/questions/2026-05-25-regression-foresight-self-evolving-harness.md]
+    added: 2026-10-22
+  - card: source/2026-maheswaran-squeeze-evolve-unified-multi-model.md
+    key:  arxiv:2604.07725
+    why:  [knowledge/wiki/paper-notes/2026-maheswaran-squeeze-evolve-unified-multi-model.md]
+    added: 2026-10-22
+  - card: source/2026-marchand-quantifying-frontier-llm-capabilities.md
+    key:  arxiv:2603.02277
+    why:  [knowledge/wiki/paper-notes/2026-marchand-quantifying-frontier-llm-capabilities.md]
+    added: 2026-10-22
+  - card: source/2026-merrill-terminal-bench-benchmarking-agents-hard.md
+    key:  arxiv:2601.11868
+    why:  [knowledge/wiki/paper-notes/2026-merrill-terminal-bench-benchmarking-agents-hard.md]
+    added: 2026-10-22
+  - card: source/2026-ning-code-as-agent-harness.md
+    key:  arxiv:2605.18747
+    why:  [knowledge/wiki/findings/code-edit-body-writer-design.md, knowledge/wiki/findings/meta-loop-design-from-literature.md, knowledge/wiki/findings/research-synthesis-design.md, knowledge/wiki/findings/tool-autosynthesis-design.md, knowledge/wiki/paper-notes/2026-ning-code-as-agent-harness.md, knowledge/wiki/questions/2026-05-25-regression-foresight-self-evolving-harness.md]
+    added: 2026-10-22
+  - card: source/2026-qu-coral-towards-autonomous-multi-agent.md
+    key:  arxiv:2604.01658
+    why:  [knowledge/wiki/paper-notes/2026-qu-coral-towards-autonomous-multi-agent.md]
+    added: 2026-10-22
+  - card: source/2026-ruan-aorchestra-automating-sub-agent-creation.md
+    key:  arxiv:2602.03786
+    why:  [knowledge/wiki/paper-notes/2026-ruan-aorchestra-automating-sub-agent-creation.md]
+    added: 2026-10-22
+  - card: source/2026-sherwood-alphazero-coding-agents.md
+    key:  arxiv:2604.25067
+    why:  [knowledge/wiki/findings/code-edit-body-writer-design.md, knowledge/wiki/paper-notes/2026-sherwood-alphazero-coding-agents.md]
+    added: 2026-10-22
+  - card: source/2026-wu-autowebworld-synthesizing-infinite-verifiable.md
+    key:  arxiv:2602.14296
+    why:  [knowledge/wiki/paper-notes/2026-wu-autowebworld-synthesizing-infinite-verifiable.md]
+    added: 2026-10-22
+  - card: source/2026-yang-recursive-multi-agent-systems.md
+    key:  arxiv:2604.25917
+    why:  [knowledge/wiki/findings/meta-loop-design-from-literature.md, knowledge/wiki/paper-notes/2026-zou-recursive-multi-agent-systems.md]
+    added: 2026-10-22
+  - card: source/2026-ye-evaluation-driven-scaling-scientific-discovery.md
+    key:  arxiv:2604.19341
+    why:  [knowledge/wiki/paper-notes/2026-ye-evaluation-driven-scaling-scientific-discovery.md]
+    added: 2026-10-22
+  - card: source/2026-yun-graph-of-agents-graph-based-framework-multi-agent.md
+    key:  arxiv:2604.17148
+    why:  [knowledge/wiki/paper-notes/2026-yun-graph-of-agents-graph-based-framework-multi-agent.md]
+    added: 2026-10-22
+  - card: source/2026-zeng-swe-hub-unified-production-system.md
+    key:  arxiv:2603.00575
+    why:  [knowledge/wiki/paper-notes/2026-zeng-swe-hub-unified-production-system.md]
+    added: 2026-10-22
+  - card: source/2026-zhang-aevo-agentic-evolution.md
+    key:  arxiv:2605.13821
+    why:  [knowledge/wiki/findings/meta-loop-design-from-literature.md, knowledge/wiki/paper-notes/2026-zhang-aevo-agentic-evolution.md]
+    added: 2026-10-22
+  - card: source/2026-zhang-hyperagents.md
+    key:  arxiv:2603.19461
+    why:  [knowledge/wiki/findings/meta-loop-design-from-literature.md, knowledge/wiki/findings/recursive-meta-design.md, knowledge/wiki/findings/recursive-meta-first-run.md, knowledge/wiki/findings/research-synthesis-design.md, knowledge/wiki/paper-notes/2026-zhang-hyperagents.md, tests/scripts/test_autonomous_loop.py]
+    added: 2026-10-22
