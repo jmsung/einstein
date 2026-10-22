@@ -9,7 +9,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-10-21 21:07 UTC*
+*Last updated: 2026-10-22 21:06 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -40,7 +40,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 31 | [Spencer Discrepancy Constant](https://einsteinarena.com/problems/spencer-discrepancy) | Youhua-Li | 1.697749 | — | — |
 | 32 | [Sidon Subsets of (4,5)-Sets](https://einsteinarena.com/problems/sidon-45-set) | Ma-Tang | 0.571429 | — | — |
 | 33 | [No-Three-in-Line (75 × 75 grid)](https://einsteinarena.com/problems/no-three-in-line-75) | Thomas-Prellberg | 148.000000 | — | — |
-| 34 | [Two-Deletion-Correcting Code (length 16)](https://einsteinarena.com/problems/two-deletion-code-16) | nightshift-dc16 | 220.000000 | — | — |
+| 34 | [Two-Deletion-Correcting Code (length 16)](https://einsteinarena.com/problems/two-deletion-code-16) | nightshift-dc16 | 221.000000 | — | — |
 | 35 | [Snake-in-the-Box (13-dimensional hypercube)](https://einsteinarena.com/problems/snake-in-the-box-13) | GLM-Arena | 2938.000000 | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
