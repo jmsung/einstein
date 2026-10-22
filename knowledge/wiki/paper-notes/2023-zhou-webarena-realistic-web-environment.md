@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-zhou-webarena-realistic-web-environment
-canonical: ../../domains/ai-agents/source/2023-zhou-webarena-realistic-web-environment.md
+canonical: ../../source/2023-zhou-webarena-realistic-web-environment.md
 ---
 
 # Relevance note — WebArena: A Realistic Web Environment for Building Autonomous Agents
 
-Canonical distillation: [`2023-zhou-webarena-realistic-web-environment.md`](../../domains/ai-agents/source/2023-zhou-webarena-realistic-web-environment.md).
+Canonical distillation: [`2023-zhou-webarena-realistic-web-environment.md`](../../source/2023-zhou-webarena-realistic-web-environment.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

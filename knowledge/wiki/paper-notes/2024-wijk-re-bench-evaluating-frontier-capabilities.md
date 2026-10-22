@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-wijk-re-bench-evaluating-frontier-capabilities
-canonical: ../../domains/ai-agents/source/2024-wijk-re-bench-evaluating-frontier-capabilities.md
+canonical: ../../source/2024-wijk-re-bench-evaluating-frontier-capabilities.md
 ---
 
 # Relevance note — RE-Bench: Evaluating frontier AI R&D capabilities of language model agents against human experts
 
-Canonical distillation: [`2024-wijk-re-bench-evaluating-frontier-capabilities.md`](../../domains/ai-agents/source/2024-wijk-re-bench-evaluating-frontier-capabilities.md).
+Canonical distillation: [`2024-wijk-re-bench-evaluating-frontier-capabilities.md`](../../source/2024-wijk-re-bench-evaluating-frontier-capabilities.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

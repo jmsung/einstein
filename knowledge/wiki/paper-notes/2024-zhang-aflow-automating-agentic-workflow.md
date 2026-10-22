@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-zhang-aflow-automating-agentic-workflow
-canonical: ../../domains/ai-agents/source/2024-zhang-aflow-automating-agentic-workflow.md
+canonical: ../../source/2024-zhang-aflow-automating-agentic-workflow.md
 ---
 
 # Relevance note — AFlow: Automating Agentic Workflow Generation
 
-Canonical distillation: [`2024-zhang-aflow-automating-agentic-workflow.md`](../../domains/ai-agents/source/2024-zhang-aflow-automating-agentic-workflow.md).
+Canonical distillation: [`2024-zhang-aflow-automating-agentic-workflow.md`](../../source/2024-zhang-aflow-automating-agentic-workflow.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

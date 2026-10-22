@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-hu-owl-optimized-workforce-learning
-canonical: ../../domains/ai-agents/source/2025-hu-owl-optimized-workforce-learning.md
+canonical: ../../source/2025-hu-owl-optimized-workforce-learning.md
 ---
 
 # Relevance note — OWL: Optimized Workforce Learning for General Multi-Agent Assistance in Real-World Task Automation
 
-Canonical distillation: [`2025-hu-owl-optimized-workforce-learning.md`](../../domains/ai-agents/source/2025-hu-owl-optimized-workforce-learning.md).
+Canonical distillation: [`2025-hu-owl-optimized-workforce-learning.md`](../../source/2025-hu-owl-optimized-workforce-learning.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

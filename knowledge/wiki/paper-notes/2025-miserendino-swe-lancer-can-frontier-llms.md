@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-miserendino-swe-lancer-can-frontier-llms
-canonical: ../../domains/ai-agents/source/2025-miserendino-swe-lancer-can-frontier-llms.md
+canonical: ../../source/2025-miserendino-swe-lancer-can-frontier-llms.md
 ---
 
 # Relevance note — SWE-Lancer: Can Frontier LLMs Earn $1 Million from Real-World Freelance Software Engineering?
 
-Canonical distillation: [`2025-miserendino-swe-lancer-can-frontier-llms.md`](../../domains/ai-agents/source/2025-miserendino-swe-lancer-can-frontier-llms.md).
+Canonical distillation: [`2025-miserendino-swe-lancer-can-frontier-llms.md`](../../source/2025-miserendino-swe-lancer-can-frontier-llms.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

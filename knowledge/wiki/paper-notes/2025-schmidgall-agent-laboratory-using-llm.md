@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-schmidgall-agent-laboratory-using-llm
-canonical: ../../domains/ai-agents/source/2025-schmidgall-agent-laboratory-using-llm.md
+canonical: ../../source/2025-schmidgall-agent-laboratory-using-llm.md
 ---
 
 # Relevance note — Agent Laboratory: Using LLM Agents as Research Assistants
 
-Canonical distillation: [`2025-schmidgall-agent-laboratory-using-llm.md`](../../domains/ai-agents/source/2025-schmidgall-agent-laboratory-using-llm.md).
+Canonical distillation: [`2025-schmidgall-agent-laboratory-using-llm.md`](../../source/2025-schmidgall-agent-laboratory-using-llm.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

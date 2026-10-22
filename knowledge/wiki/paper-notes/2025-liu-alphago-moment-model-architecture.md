@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-liu-alphago-moment-model-architecture
-canonical: ../../domains/ai-agents/source/2025-liu-alphago-moment-model-architecture.md
+canonical: ../../source/2025-liu-alphago-moment-model-architecture.md
 ---
 
 # Relevance note — AlphaGo Moment for Model Architecture Discovery
 
-Canonical distillation: [`2025-liu-alphago-moment-model-architecture.md`](../../domains/ai-agents/source/2025-liu-alphago-moment-model-architecture.md).
+Canonical distillation: [`2025-liu-alphago-moment-model-architecture.md`](../../source/2025-liu-alphago-moment-model-architecture.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

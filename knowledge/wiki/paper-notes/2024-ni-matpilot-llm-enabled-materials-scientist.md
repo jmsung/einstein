@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-ni-matpilot-llm-enabled-materials-scientist
-canonical: ../../domains/ai-agents/source/2024-ni-matpilot-llm-enabled-materials-scientist.md
+canonical: ../../source/2024-ni-matpilot-llm-enabled-materials-scientist.md
 ---
 
 # Relevance note — MatPilot: an LLM-enabled AI Materials Scientist under the Framework of Human-Machine Collaboration
 
-Canonical distillation: [`2024-ni-matpilot-llm-enabled-materials-scientist.md`](../../domains/ai-agents/source/2024-ni-matpilot-llm-enabled-materials-scientist.md).
+Canonical distillation: [`2024-ni-matpilot-llm-enabled-materials-scientist.md`](../../source/2024-ni-matpilot-llm-enabled-materials-scientist.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

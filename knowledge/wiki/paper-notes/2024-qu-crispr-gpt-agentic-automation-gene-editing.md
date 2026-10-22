@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-qu-crispr-gpt-agentic-automation-gene-editing
-canonical: ../../domains/ai-agents/source/2024-qu-crispr-gpt-agentic-automation-gene-editing.md
+canonical: ../../source/2024-qu-crispr-gpt-agentic-automation-gene-editing.md
 ---
 
 # Relevance note — CRISPR-GPT for agentic automation of gene-editing experiments
 
-Canonical distillation: [`2024-qu-crispr-gpt-agentic-automation-gene-editing.md`](../../domains/ai-agents/source/2024-qu-crispr-gpt-agentic-automation-gene-editing.md).
+Canonical distillation: [`2024-qu-crispr-gpt-agentic-automation-gene-editing.md`](../../source/2024-qu-crispr-gpt-agentic-automation-gene-editing.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

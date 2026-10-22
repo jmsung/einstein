@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-yang-swe-bench-multimodal-systems-generalize
-canonical: ../../domains/ai-agents/source/2024-yang-swe-bench-multimodal-systems-generalize.md
+canonical: ../../source/2024-yang-swe-bench-multimodal-systems-generalize.md
 ---
 
 # Relevance note — SWE-bench Multimodal: Do AI Systems Generalize to Visual Software Domains?
 
-Canonical distillation: [`2024-yang-swe-bench-multimodal-systems-generalize.md`](../../domains/ai-agents/source/2024-yang-swe-bench-multimodal-systems-generalize.md).
+Canonical distillation: [`2024-yang-swe-bench-multimodal-systems-generalize.md`](../../source/2024-yang-swe-bench-multimodal-systems-generalize.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

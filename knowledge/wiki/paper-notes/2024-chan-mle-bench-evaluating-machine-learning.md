@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-chan-mle-bench-evaluating-machine-learning
-canonical: ../../domains/ai-agents/source/2024-chan-mle-bench-evaluating-machine-learning.md
+canonical: ../../source/2024-chan-mle-bench-evaluating-machine-learning.md
 ---
 
 # Relevance note — MLE-bench: Evaluating Machine Learning Agents on Machine Learning Engineering
 
-Canonical distillation: [`2024-chan-mle-bench-evaluating-machine-learning.md`](../../domains/ai-agents/source/2024-chan-mle-bench-evaluating-machine-learning.md).
+Canonical distillation: [`2024-chan-mle-bench-evaluating-machine-learning.md`](../../source/2024-chan-mle-bench-evaluating-machine-learning.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

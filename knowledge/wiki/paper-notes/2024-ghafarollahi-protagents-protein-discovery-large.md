@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-ghafarollahi-protagents-protein-discovery-large
-canonical: ../../domains/ai-agents/source/2024-ghafarollahi-protagents-protein-discovery-large.md
+canonical: ../../source/2024-ghafarollahi-protagents-protein-discovery-large.md
 ---
 
 # Relevance note — ProtAgents: protein discovery via large language model multi-agent collaborations combining physics and machine learning
 
-Canonical distillation: [`2024-ghafarollahi-protagents-protein-discovery-large.md`](../../domains/ai-agents/source/2024-ghafarollahi-protagents-protein-discovery-large.md).
+Canonical distillation: [`2024-ghafarollahi-protagents-protein-discovery-large.md`](../../source/2024-ghafarollahi-protagents-protein-discovery-large.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

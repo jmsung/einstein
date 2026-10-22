@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-li-alpha-sql-zero-shot-text-to-sql-using
-canonical: ../../domains/ai-agents/source/2025-li-alpha-sql-zero-shot-text-to-sql-using.md
+canonical: ../../source/2025-li-alpha-sql-zero-shot-text-to-sql-using.md
 ---
 
 # Relevance note — Alpha-SQL: Zero-Shot Text-to-SQL using Monte Carlo Tree Search
 
-Canonical distillation: [`2025-li-alpha-sql-zero-shot-text-to-sql-using.md`](../../domains/ai-agents/source/2025-li-alpha-sql-zero-shot-text-to-sql-using.md).
+Canonical distillation: [`2025-li-alpha-sql-zero-shot-text-to-sql-using.md`](../../source/2025-li-alpha-sql-zero-shot-text-to-sql-using.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

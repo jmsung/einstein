@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-marchand-quantifying-frontier-llm-capabilities
-canonical: ../../domains/ai-agents/source/2026-marchand-quantifying-frontier-llm-capabilities.md
+canonical: ../../source/2026-marchand-quantifying-frontier-llm-capabilities.md
 ---
 
 # Relevance note — Quantifying Frontier LLM Capabilities for Container Sandbox Escape
 
-Canonical distillation: [`2026-marchand-quantifying-frontier-llm-capabilities.md`](../../domains/ai-agents/source/2026-marchand-quantifying-frontier-llm-capabilities.md).
+Canonical distillation: [`2026-marchand-quantifying-frontier-llm-capabilities.md`](../../source/2026-marchand-quantifying-frontier-llm-capabilities.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

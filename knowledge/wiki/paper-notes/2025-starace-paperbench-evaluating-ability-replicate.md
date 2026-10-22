@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-starace-paperbench-evaluating-ability-replicate
-canonical: ../../domains/ai-agents/source/2025-starace-paperbench-evaluating-ability-replicate.md
+canonical: ../../source/2025-starace-paperbench-evaluating-ability-replicate.md
 ---
 
 # Relevance note — PaperBench: Evaluating AI's Ability to Replicate AI Research
 
-Canonical distillation: [`2025-starace-paperbench-evaluating-ability-replicate.md`](../../domains/ai-agents/source/2025-starace-paperbench-evaluating-ability-replicate.md).
+Canonical distillation: [`2025-starace-paperbench-evaluating-ability-replicate.md`](../../source/2025-starace-paperbench-evaluating-ability-replicate.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

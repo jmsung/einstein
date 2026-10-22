@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-hans-paper-replication
-canonical: ../../domains/ai-agents/source/2026-hans-paper-replication.md
+canonical: ../../source/2026-hans-paper-replication.md
 ---
 
 # Relevance note — Coding-agents can replicate scientific machine learning papers
 
-Canonical distillation: [`2026-hans-paper-replication.md`](../../domains/ai-agents/source/2026-hans-paper-replication.md).
+Canonical distillation: [`2026-hans-paper-replication.md`](../../source/2026-hans-paper-replication.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why interesting for einstein

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-zhang-darwin-godel-machine-open-ended
-canonical: ../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md
+canonical: ../../source/2025-zhang-darwin-godel-machine-open-ended.md
 ---
 
 # Relevance note — Darwin Godel Machine: Open-Ended Evolution of Self-Improving Agents
 
-Canonical distillation: [`2025-zhang-darwin-godel-machine-open-ended.md`](../../domains/ai-agents/source/2025-zhang-darwin-godel-machine-open-ended.md).
+Canonical distillation: [`2025-zhang-darwin-godel-machine-open-ended.md`](../../source/2025-zhang-darwin-godel-machine-open-ended.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card:
 
 ## Why it matters here

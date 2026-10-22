@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-deng-interactcomp-evaluating-search-agents
-canonical: ../../domains/ai-agents/source/2025-deng-interactcomp-evaluating-search-agents.md
+canonical: ../../source/2025-deng-interactcomp-evaluating-search-agents.md
 ---
 
 # Relevance note — InteractComp: Evaluating Search Agents With Ambiguous Queries
 
-Canonical distillation: [`2025-deng-interactcomp-evaluating-search-agents.md`](../../domains/ai-agents/source/2025-deng-interactcomp-evaluating-search-agents.md).
+Canonical distillation: [`2025-deng-interactcomp-evaluating-search-agents.md`](../../source/2025-deng-interactcomp-evaluating-search-agents.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-ye-x-mas-towards-building-multi-agent
-canonical: ../../domains/ai-agents/source/2025-ye-x-mas-towards-building-multi-agent.md
+canonical: ../../source/2025-ye-x-mas-towards-building-multi-agent.md
 ---
 
 # Relevance note — X-MAS: Towards Building Multi-Agent Systems with Heterogeneous LLMs
 
-Canonical distillation: [`2025-ye-x-mas-towards-building-multi-agent.md`](../../domains/ai-agents/source/2025-ye-x-mas-towards-building-multi-agent.md).
+Canonical distillation: [`2025-ye-x-mas-towards-building-multi-agent.md`](../../source/2025-ye-x-mas-towards-building-multi-agent.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

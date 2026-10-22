@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-dong-agentic-reinforced-policy-optimization
-canonical: ../../domains/ai-agents/source/2025-dong-agentic-reinforced-policy-optimization.md
+canonical: ../../source/2025-dong-agentic-reinforced-policy-optimization.md
 ---
 
 # Relevance note — Agentic Reinforced Policy Optimization
 
-Canonical distillation: [`2025-dong-agentic-reinforced-policy-optimization.md`](../../domains/ai-agents/source/2025-dong-agentic-reinforced-policy-optimization.md).
+Canonical distillation: [`2025-dong-agentic-reinforced-policy-optimization.md`](../../source/2025-dong-agentic-reinforced-policy-optimization.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card:
 
 ## Why it matters here

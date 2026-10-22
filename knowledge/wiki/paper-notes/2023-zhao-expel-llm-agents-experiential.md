@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-zhao-expel-llm-agents-experiential
-canonical: ../../domains/ai-agents/source/2023-zhao-expel-llm-agents-experiential.md
+canonical: ../../source/2023-zhao-expel-llm-agents-experiential.md
 ---
 
 # Relevance note — ExpeL: LLM Agents Are Experiential Learners
 
-Canonical distillation: [`2023-zhao-expel-llm-agents-experiential.md`](../../domains/ai-agents/source/2023-zhao-expel-llm-agents-experiential.md).
+Canonical distillation: [`2023-zhao-expel-llm-agents-experiential.md`](../../source/2023-zhao-expel-llm-agents-experiential.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-kang-chatmof-autonomous-system-predicting
-canonical: ../../domains/ai-agents/source/2023-kang-chatmof-autonomous-system-predicting.md
+canonical: ../../source/2023-kang-chatmof-autonomous-system-predicting.md
 ---
 
 # Relevance note — ChatMOF: An Autonomous AI System for Predicting and Generating Metal-Organic Frameworks
 
-Canonical distillation: [`2023-kang-chatmof-autonomous-system-predicting.md`](../../domains/ai-agents/source/2023-kang-chatmof-autonomous-system-predicting.md).
+Canonical distillation: [`2023-kang-chatmof-autonomous-system-predicting.md`](../../source/2023-kang-chatmof-autonomous-system-predicting.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-abbasian-conversational-health-agents-personalized
-canonical: ../../domains/ai-agents/source/2023-abbasian-conversational-health-agents-personalized.md
+canonical: ../../source/2023-abbasian-conversational-health-agents-personalized.md
 ---
 
 # Relevance note — Conversational Health Agents: A Personalized LLM-Powered Agent Framework
 
-Canonical distillation: [`2023-abbasian-conversational-health-agents-personalized.md`](../../domains/ai-agents/source/2023-abbasian-conversational-health-agents-personalized.md).
+Canonical distillation: [`2023-abbasian-conversational-health-agents-personalized.md`](../../source/2023-abbasian-conversational-health-agents-personalized.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

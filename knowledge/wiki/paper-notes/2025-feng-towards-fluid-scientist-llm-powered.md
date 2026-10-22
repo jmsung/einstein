@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-feng-towards-fluid-scientist-llm-powered
-canonical: ../../domains/ai-agents/source/2025-feng-towards-fluid-scientist-llm-powered.md
+canonical: ../../source/2025-feng-towards-fluid-scientist-llm-powered.md
 ---
 
 # Relevance note — Towards an AI Fluid Scientist: LLM-Powered Scientific Discovery in Experimental Fluid Mechanics
 
-Canonical distillation: [`2025-feng-towards-fluid-scientist-llm-powered.md`](../../domains/ai-agents/source/2025-feng-towards-fluid-scientist-llm-powered.md).
+Canonical distillation: [`2025-feng-towards-fluid-scientist-llm-powered.md`](../../source/2025-feng-towards-fluid-scientist-llm-powered.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

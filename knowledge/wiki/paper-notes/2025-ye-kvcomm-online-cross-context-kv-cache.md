@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-ye-kvcomm-online-cross-context-kv-cache
-canonical: ../../domains/ai-agents/source/2025-ye-kvcomm-online-cross-context-kv-cache.md
+canonical: ../../source/2025-ye-kvcomm-online-cross-context-kv-cache.md
 ---
 
 # Relevance note — KVCOMM: Online Cross-context KV-cache Communication for Efficient LLM-based Multi-agent Systems
 
-Canonical distillation: [`2025-ye-kvcomm-online-cross-context-kv-cache.md`](../../domains/ai-agents/source/2025-ye-kvcomm-online-cross-context-kv-cache.md).
+Canonical distillation: [`2025-ye-kvcomm-online-cross-context-kv-cache.md`](../../source/2025-ye-kvcomm-online-cross-context-kv-cache.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

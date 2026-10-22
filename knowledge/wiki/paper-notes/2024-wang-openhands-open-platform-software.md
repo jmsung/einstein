@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-wang-openhands-open-platform-software
-canonical: ../../domains/ai-agents/source/2024-wang-openhands-open-platform-software.md
+canonical: ../../source/2024-wang-openhands-open-platform-software.md
 ---
 
 # Relevance note — OpenHands: An Open Platform for AI Software Developers as Generalist Agents
 
-Canonical distillation: [`2024-wang-openhands-open-platform-software.md`](../../domains/ai-agents/source/2024-wang-openhands-open-platform-software.md).
+Canonical distillation: [`2024-wang-openhands-open-platform-software.md`](../../source/2024-wang-openhands-open-platform-software.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

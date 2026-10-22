@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-xu-robustflow-towards-robust-agentic
-canonical: ../../domains/ai-agents/source/2025-xu-robustflow-towards-robust-agentic.md
+canonical: ../../source/2025-xu-robustflow-towards-robust-agentic.md
 ---
 
 # Relevance note — RobustFlow: Towards Robust Agentic Workflow Generation
 
-Canonical distillation: [`2025-xu-robustflow-towards-robust-agentic.md`](../../domains/ai-agents/source/2025-xu-robustflow-towards-robust-agentic.md).
+Canonical distillation: [`2025-xu-robustflow-towards-robust-agentic.md`](../../source/2025-xu-robustflow-towards-robust-agentic.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

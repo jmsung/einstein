@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-ghafarollahi-sciagents-automating-scientific-discovery
-canonical: ../../domains/ai-agents/source/2024-ghafarollahi-sciagents-automating-scientific-discovery.md
+canonical: ../../source/2024-ghafarollahi-sciagents-automating-scientific-discovery.md
 ---
 
 # Relevance note — SciAgents: Automating scientific discovery through multi-agent intelligent graph reasoning
 
-Canonical distillation: [`2024-ghafarollahi-sciagents-automating-scientific-discovery.md`](../../domains/ai-agents/source/2024-ghafarollahi-sciagents-automating-scientific-discovery.md).
+Canonical distillation: [`2024-ghafarollahi-sciagents-automating-scientific-discovery.md`](../../source/2024-ghafarollahi-sciagents-automating-scientific-discovery.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

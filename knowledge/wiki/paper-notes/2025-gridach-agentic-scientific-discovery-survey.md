@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-gridach-agentic-scientific-discovery-survey
-canonical: ../../domains/ai-agents/source/2025-gridach-agentic-scientific-discovery-survey.md
+canonical: ../../source/2025-gridach-agentic-scientific-discovery-survey.md
 ---
 
 # Relevance note — Agentic AI for Scientific Discovery: A Survey of Progress, Challenges, and Future Directions
 
-Canonical distillation: [`2025-gridach-agentic-scientific-discovery-survey.md`](../../domains/ai-agents/source/2025-gridach-agentic-scientific-discovery-survey.md).
+Canonical distillation: [`2025-gridach-agentic-scientific-discovery-survey.md`](../../source/2025-gridach-agentic-scientific-discovery-survey.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-yang-auto-gpt-online-decision-making
-canonical: ../../domains/ai-agents/source/2023-yang-auto-gpt-online-decision-making.md
+canonical: ../../source/2023-yang-auto-gpt-online-decision-making.md
 ---
 
 # Relevance note — Auto-GPT for Online Decision Making: Benchmarks and Additional Opinions
 
-Canonical distillation: [`2023-yang-auto-gpt-online-decision-making.md`](../../domains/ai-agents/source/2023-yang-auto-gpt-online-decision-making.md).
+Canonical distillation: [`2023-yang-auto-gpt-online-decision-making.md`](../../source/2023-yang-auto-gpt-online-decision-making.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

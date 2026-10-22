@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-yun-graph-of-agents-graph-based-framework-multi-agent
-canonical: ../../domains/ai-agents/source/2026-yun-graph-of-agents-graph-based-framework-multi-agent.md
+canonical: ../../source/2026-yun-graph-of-agents-graph-based-framework-multi-agent.md
 ---
 
 # Relevance note — Graph-of-Agents: A Graph-based Framework for Multi-Agent LLM Collaboration
 
-Canonical distillation: [`2026-yun-graph-of-agents-graph-based-framework-multi-agent.md`](../../domains/ai-agents/source/2026-yun-graph-of-agents-graph-based-framework-multi-agent.md).
+Canonical distillation: [`2026-yun-graph-of-agents-graph-based-framework-multi-agent.md`](../../source/2026-yun-graph-of-agents-graph-based-framework-multi-agent.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

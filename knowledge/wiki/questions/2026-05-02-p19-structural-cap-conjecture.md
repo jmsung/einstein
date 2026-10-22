@@ -45,8 +45,8 @@ For sphere packings, the Cohn–Elkies bound is a Fourier-positive "magic functi
 - `wiki/concepts/lp-duality.md`
 - `wiki/concepts/provable-floor-and-frozen-problems.md`
 - `wiki/techniques/lp-cutting-plane-warmstart.md`
-- `domains/sci-math/source/2010-vinuesa-sidon-thesis.md`
-- `domains/sci-math/source/2007-gyarmati-sums-differences.md`
+- `source/2010-vinuesa-sidon-thesis.md`
+- `source/2007-gyarmati-sums-differences.md`
 
 ## Suggested sources
 
@@ -68,4 +68,3 @@ Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close
 **Authors:** Kristóf Bérczi, Lydia Mirabel Mendoza-Cadena, Kitti Varga
 **URL:** http://arxiv.org/abs/2201.03078v1
 **Abstract:** We introduce a new class of inverse optimization problems in which an input solution is given together with $k$ linear weight functions, and the goal is to modify the weights by the same deviation vector $p$ so that the input solution becomes optimal with respect to each of them,...
-

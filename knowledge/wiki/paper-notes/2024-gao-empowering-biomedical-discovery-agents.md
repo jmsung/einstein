@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-gao-empowering-biomedical-discovery-agents
-canonical: ../../domains/ai-agents/source/2024-gao-empowering-biomedical-discovery-agents.md
+canonical: ../../source/2024-gao-empowering-biomedical-discovery-agents.md
 ---
 
 # Relevance note — Empowering Biomedical Discovery with AI Agents
 
-Canonical distillation: [`2024-gao-empowering-biomedical-discovery-agents.md`](../../domains/ai-agents/source/2024-gao-empowering-biomedical-discovery-agents.md).
+Canonical distillation: [`2024-gao-empowering-biomedical-discovery-agents.md`](../../source/2024-gao-empowering-biomedical-discovery-agents.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

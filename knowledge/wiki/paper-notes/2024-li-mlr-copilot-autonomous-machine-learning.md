@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-li-mlr-copilot-autonomous-machine-learning
-canonical: ../../domains/ai-agents/source/2024-li-mlr-copilot-autonomous-machine-learning.md
+canonical: ../../source/2024-li-mlr-copilot-autonomous-machine-learning.md
 ---
 
 # Relevance note — MLR-Copilot: Autonomous Machine Learning Research based on Large Language Models Agents
 
-Canonical distillation: [`2024-li-mlr-copilot-autonomous-machine-learning.md`](../../domains/ai-agents/source/2024-li-mlr-copilot-autonomous-machine-learning.md).
+Canonical distillation: [`2024-li-mlr-copilot-autonomous-machine-learning.md`](../../source/2024-li-mlr-copilot-autonomous-machine-learning.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

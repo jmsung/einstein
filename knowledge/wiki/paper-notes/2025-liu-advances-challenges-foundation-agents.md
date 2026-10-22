@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-liu-advances-challenges-foundation-agents
-canonical: ../../domains/ai-agents/source/2025-liu-advances-challenges-foundation-agents.md
+canonical: ../../source/2025-liu-advances-challenges-foundation-agents.md
 ---
 
 # Relevance note — Advances and Challenges in Foundation Agents: From Brain-Inspired Intelligence to Evolutionary, Collaborative, and Safe Systems
 
-Canonical distillation: [`2025-liu-advances-challenges-foundation-agents.md`](../../domains/ai-agents/source/2025-liu-advances-challenges-foundation-agents.md).
+Canonical distillation: [`2025-liu-advances-challenges-foundation-agents.md`](../../source/2025-liu-advances-challenges-foundation-agents.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

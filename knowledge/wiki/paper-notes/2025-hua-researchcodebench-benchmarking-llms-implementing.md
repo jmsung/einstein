@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-hua-researchcodebench-benchmarking-llms-implementing
-canonical: ../../domains/ai-agents/source/2025-hua-researchcodebench-benchmarking-llms-implementing.md
+canonical: ../../source/2025-hua-researchcodebench-benchmarking-llms-implementing.md
 ---
 
 # Relevance note — ResearchCodeBench: Benchmarking LLMs on Implementing Novel Machine Learning Research Code
 
-Canonical distillation: [`2025-hua-researchcodebench-benchmarking-llms-implementing.md`](../../domains/ai-agents/source/2025-hua-researchcodebench-benchmarking-llms-implementing.md).
+Canonical distillation: [`2025-hua-researchcodebench-benchmarking-llms-implementing.md`](../../source/2025-hua-researchcodebench-benchmarking-llms-implementing.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

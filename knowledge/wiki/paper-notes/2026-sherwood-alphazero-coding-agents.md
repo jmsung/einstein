@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-sherwood-alphazero-coding-agents
-canonical: ../../domains/ai-agents/source/2026-sherwood-alphazero-coding-agents.md
+canonical: ../../source/2026-sherwood-alphazero-coding-agents.md
 ---
 
 # Relevance note — Frontier Coding Agents Implement an AlphaZero Self-Play Pipeline for Connect Four
 
-Canonical distillation: [`2026-sherwood-alphazero-coding-agents.md`](../../domains/ai-agents/source/2026-sherwood-alphazero-coding-agents.md).
+Canonical distillation: [`2026-sherwood-alphazero-coding-agents.md`](../../source/2026-sherwood-alphazero-coding-agents.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

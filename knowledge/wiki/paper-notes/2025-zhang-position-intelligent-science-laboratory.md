@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-zhang-position-intelligent-science-laboratory
-canonical: ../../domains/ai-agents/source/2025-zhang-position-intelligent-science-laboratory.md
+canonical: ../../source/2025-zhang-position-intelligent-science-laboratory.md
 ---
 
 # Relevance note — Position: Intelligent Science Laboratory Requires the Integration of Cognitive and Embodied AI
 
-Canonical distillation: [`2025-zhang-position-intelligent-science-laboratory.md`](../../domains/ai-agents/source/2025-zhang-position-intelligent-science-laboratory.md).
+Canonical distillation: [`2025-zhang-position-intelligent-science-laboratory.md`](../../source/2025-zhang-position-intelligent-science-laboratory.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

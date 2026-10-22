@@ -10,10 +10,6 @@ pins:
     key:  arxiv:1009.0571
     why:  [knowledge/wiki/paper-notes/2010-agarwal-information-theoretic-lower-bounds-oracle.md]
     added: 2026-10-22
-  - card: source/2010-matolcsi-autoconvolution.md
-    key:  arxiv:0907.1379
-    why:  [knowledge/wiki/findings/p4-web-research-frontier-and-methods.md]
-    added: 2026-10-22
   - card: source/2012-vindas-beurling-chebyshev.md
     key:  arxiv:1201.1405
     why:  [knowledge/wiki/questions/2026-07-04-p7-optimal-2000-key-constant.md]
@@ -290,10 +286,6 @@ pins:
     key:  arxiv:2512.02466
     why:  [knowledge/wiki/questions/2026-07-04-p7-optimal-2000-key-constant.md]
     added: 2026-10-22
-  - card: source/2025-georgiev-math-exploration.md
-    key:  arxiv:2511.02864
-    why:  [knowledge/wiki/findings/p4-web-research-frontier-and-methods.md]
-    added: 2026-10-22
   - card: source/2025-ghareeb-robin-multi-agent-system-automating.md
     key:  arxiv:2505.13400
     why:  [knowledge/wiki/paper-notes/2025-ghareeb-robin-multi-agent-system-automating.md]
@@ -321,10 +313,6 @@ pins:
   - card: source/2025-hua-researchcodebench-benchmarking-llms-implementing.md
     key:  arxiv:2506.02314
     why:  [knowledge/wiki/paper-notes/2025-hua-researchcodebench-benchmarking-llms-implementing.md]
-    added: 2026-10-22
-  - card: source/2025-jaech-autoconvolution.md
-    key:  arxiv:2508.02803
-    why:  [knowledge/wiki/findings/p3-constant-literature-frontier-2026-06.md]
     added: 2026-10-22
   - card: source/2025-kumbhar-hypothesis-generation-materials-discovery.md
     key:  arxiv:2501.13299

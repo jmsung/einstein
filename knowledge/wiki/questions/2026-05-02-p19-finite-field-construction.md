@@ -44,8 +44,8 @@ Hidden algebraic structure (modular forms / Ramanujan graphs / character sums) h
 - `wiki/concepts/modular-forms-magic-function.md`
 - `wiki/personas/ramanujan.md`
 - `wiki/personas/gauss.md`
-- `domains/sci-math/source/2010-vinuesa-sidon-thesis.md`
-- `domains/sci-math/source/2022-ganzhinov-symmetric-lines.md` (Lubotzky-Phillips-Sarnak Ramanujan graphs)
+- `source/2010-vinuesa-sidon-thesis.md`
+- `source/2022-ganzhinov-symmetric-lines.md` (Lubotzky-Phillips-Sarnak Ramanujan graphs)
 
 ## Suggested sources
 
@@ -67,4 +67,3 @@ Review and `/wiki-ingest <arxiv-url>` any that look relevant. If none fit, close
 **Authors:** Greg Martin, Kevin O'Bryant
 **URL:** http://arxiv.org/abs/math/0408081v2
 **Abstract:** We give explicit constructions of sets S with the property that for each integer k, there are at most g solutions to k=s_1+s_2, s_i\in S; such sets are called Sidon sets if g=2 and generalized Sidon sets if g\ge 3. We extend to generalized Sidon sets the Sidon-set constructions o...
-

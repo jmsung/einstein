@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-ning-code-as-agent-harness
-canonical: ../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md
+canonical: ../../source/2026-ning-code-as-agent-harness.md
 ---
 
 # Relevance note — Code as Agent Harness
 
-Canonical distillation: [`2026-ning-code-as-agent-harness.md`](../../domains/ai-agents/source/2026-ning-code-as-agent-harness.md).
+Canonical distillation: [`2026-ning-code-as-agent-harness.md`](../../source/2026-ning-code-as-agent-harness.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

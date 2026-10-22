@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-furuta-multimodal-web-navigation-instruction-finetuned
-canonical: ../../domains/ai-agents/source/2023-furuta-multimodal-web-navigation-instruction-finetuned.md
+canonical: ../../source/2023-furuta-multimodal-web-navigation-instruction-finetuned.md
 ---
 
 # Relevance note — Multimodal Web Navigation with Instruction-Finetuned Foundation Models
 
-Canonical distillation: [`2023-furuta-multimodal-web-navigation-instruction-finetuned.md`](../../domains/ai-agents/source/2023-furuta-multimodal-web-navigation-instruction-finetuned.md).
+Canonical distillation: [`2023-furuta-multimodal-web-navigation-instruction-finetuned.md`](../../source/2023-furuta-multimodal-web-navigation-instruction-finetuned.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

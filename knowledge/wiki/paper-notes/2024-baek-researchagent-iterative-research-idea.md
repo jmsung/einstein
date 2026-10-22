@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-baek-researchagent-iterative-research-idea
-canonical: ../../domains/ai-agents/source/2024-baek-researchagent-iterative-research-idea.md
+canonical: ../../source/2024-baek-researchagent-iterative-research-idea.md
 ---
 
 # Relevance note — ResearchAgent: Iterative Research Idea Generation over Scientific Literature with Large Language Models
 
-Canonical distillation: [`2024-baek-researchagent-iterative-research-idea.md`](../../domains/ai-agents/source/2024-baek-researchagent-iterative-research-idea.md).
+Canonical distillation: [`2024-baek-researchagent-iterative-research-idea.md`](../../source/2024-baek-researchagent-iterative-research-idea.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

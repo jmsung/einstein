@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-maheswaran-squeeze-evolve-unified-multi-model
-canonical: ../../domains/ai-agents/source/2026-maheswaran-squeeze-evolve-unified-multi-model.md
+canonical: ../../source/2026-maheswaran-squeeze-evolve-unified-multi-model.md
 ---
 
 # Relevance note — Squeeze Evolve: Unified Multi-Model Orchestration for Verifier-Free Evolution
 
-Canonical distillation: [`2026-maheswaran-squeeze-evolve-unified-multi-model.md`](../../domains/ai-agents/source/2026-maheswaran-squeeze-evolve-unified-multi-model.md).
+Canonical distillation: [`2026-maheswaran-squeeze-evolve-unified-multi-model.md`](../../source/2026-maheswaran-squeeze-evolve-unified-multi-model.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card:
 
 ## Why it matters here

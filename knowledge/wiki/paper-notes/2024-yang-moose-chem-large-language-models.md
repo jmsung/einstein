@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-yang-moose-chem-large-language-models
-canonical: ../../domains/ai-agents/source/2024-yang-moose-chem-large-language-models.md
+canonical: ../../source/2024-yang-moose-chem-large-language-models.md
 ---
 
 # Relevance note — MOOSE-Chem: Large Language Models for Rediscovering Unseen Chemistry Scientific Hypotheses
 
-Canonical distillation: [`2024-yang-moose-chem-large-language-models.md`](../../domains/ai-agents/source/2024-yang-moose-chem-large-language-models.md).
+Canonical distillation: [`2024-yang-moose-chem-large-language-models.md`](../../source/2024-yang-moose-chem-large-language-models.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

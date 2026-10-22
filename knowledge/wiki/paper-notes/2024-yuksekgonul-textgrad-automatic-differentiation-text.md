@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-yuksekgonul-textgrad-automatic-differentiation-text
-canonical: ../../domains/ai-agents/source/2024-yuksekgonul-textgrad-automatic-differentiation-text.md
+canonical: ../../source/2024-yuksekgonul-textgrad-automatic-differentiation-text.md
 ---
 
 # Relevance note — TextGrad: Automatic \"Differentiation\" via Text
 
-Canonical distillation: [`2024-yuksekgonul-textgrad-automatic-differentiation-text.md`](../../domains/ai-agents/source/2024-yuksekgonul-textgrad-automatic-differentiation-text.md).
+Canonical distillation: [`2024-yuksekgonul-textgrad-automatic-differentiation-text.md`](../../source/2024-yuksekgonul-textgrad-automatic-differentiation-text.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

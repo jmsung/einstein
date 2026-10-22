@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2010-agarwal-information-theoretic-lower-bounds-oracle
-canonical: ../../domains/sci-math/source/2010-agarwal-information-theoretic-lower-bounds-oracle.md
+canonical: ../../source/2010-agarwal-information-theoretic-lower-bounds-oracle.md
 ---
 
 # Relevance note — Information-Theoretic Lower Bounds on the Oracle Complexity of Stochastic Convex Optimization
 
-Canonical distillation: [`2010-agarwal-information-theoretic-lower-bounds-oracle.md`](../../domains/sci-math/source/2010-agarwal-information-theoretic-lower-bounds-oracle.md).
+Canonical distillation: [`2010-agarwal-information-theoretic-lower-bounds-oracle.md`](../../source/2010-agarwal-information-theoretic-lower-bounds-oracle.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-verma-grail-graph-edit-distance
-canonical: ../../domains/ai-agents/source/2025-verma-grail-graph-edit-distance.md
+canonical: ../../source/2025-verma-grail-graph-edit-distance.md
 ---
 
 # Relevance note — GRAIL: Graph Edit Distance and Node Alignment Using LLM-Generated Code
 
-Canonical distillation: [`2025-verma-grail-graph-edit-distance.md`](../../domains/ai-agents/source/2025-verma-grail-graph-edit-distance.md).
+Canonical distillation: [`2025-verma-grail-graph-edit-distance.md`](../../source/2025-verma-grail-graph-edit-distance.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-zheng-thought-communication-multiagent-collaboration
-canonical: ../../domains/ai-agents/source/2025-zheng-thought-communication-multiagent-collaboration.md
+canonical: ../../source/2025-zheng-thought-communication-multiagent-collaboration.md
 ---
 
 # Relevance note — Thought Communication in Multiagent Collaboration
 
-Canonical distillation: [`2025-zheng-thought-communication-multiagent-collaboration.md`](../../domains/ai-agents/source/2025-zheng-thought-communication-multiagent-collaboration.md).
+Canonical distillation: [`2025-zheng-thought-communication-multiagent-collaboration.md`](../../source/2025-zheng-thought-communication-multiagent-collaboration.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

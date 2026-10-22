@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-khattab-dspy-compiling-declarative-language
-canonical: ../../domains/ai-agents/source/2023-khattab-dspy-compiling-declarative-language.md
+canonical: ../../source/2023-khattab-dspy-compiling-declarative-language.md
 ---
 
 # Relevance note — DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines
 
-Canonical distillation: [`2023-khattab-dspy-compiling-declarative-language.md`](../../domains/ai-agents/source/2023-khattab-dspy-compiling-declarative-language.md).
+Canonical distillation: [`2023-khattab-dspy-compiling-declarative-language.md`](../../source/2023-khattab-dspy-compiling-declarative-language.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

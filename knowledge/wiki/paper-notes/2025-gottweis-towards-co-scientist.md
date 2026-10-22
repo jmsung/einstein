@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-gottweis-towards-co-scientist
-canonical: ../../domains/ai-agents/source/2025-gottweis-towards-co-scientist.md
+canonical: ../../source/2025-gottweis-towards-co-scientist.md
 ---
 
 # Relevance note — Towards an AI co-scientist
 
-Canonical distillation: [`2025-gottweis-towards-co-scientist.md`](../../domains/ai-agents/source/2025-gottweis-towards-co-scientist.md).
+Canonical distillation: [`2025-gottweis-towards-co-scientist.md`](../../source/2025-gottweis-towards-co-scientist.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

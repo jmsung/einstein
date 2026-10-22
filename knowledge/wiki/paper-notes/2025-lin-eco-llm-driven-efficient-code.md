@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-lin-eco-llm-driven-efficient-code
-canonical: ../../domains/ai-agents/source/2025-lin-eco-llm-driven-efficient-code.md
+canonical: ../../source/2025-lin-eco-llm-driven-efficient-code.md
 ---
 
 # Relevance note — ECO: An LLM-Driven Efficient Code Optimizer for Warehouse Scale Computers
 
-Canonical distillation: [`2025-lin-eco-llm-driven-efficient-code.md`](../../domains/ai-agents/source/2025-lin-eco-llm-driven-efficient-code.md).
+Canonical distillation: [`2025-lin-eco-llm-driven-efficient-code.md`](../../source/2025-lin-eco-llm-driven-efficient-code.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

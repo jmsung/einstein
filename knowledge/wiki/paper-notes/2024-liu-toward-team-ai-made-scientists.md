@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-liu-toward-team-ai-made-scientists
-canonical: ../../domains/ai-agents/source/2024-liu-toward-team-ai-made-scientists.md
+canonical: ../../source/2024-liu-toward-team-ai-made-scientists.md
 ---
 
 # Relevance note — Toward a Team of AI-made Scientists for Scientific Discovery from Gene Expression Data
 
-Canonical distillation: [`2024-liu-toward-team-ai-made-scientists.md`](../../domains/ai-agents/source/2024-liu-toward-team-ai-made-scientists.md).
+Canonical distillation: [`2024-liu-toward-team-ai-made-scientists.md`](../../source/2024-liu-toward-team-ai-made-scientists.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here
