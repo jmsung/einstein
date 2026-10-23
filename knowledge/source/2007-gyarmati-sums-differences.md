@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Gyarmati, Hennecart & Ruzsa — Sums and Differences of Finite Sets"

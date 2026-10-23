@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: SkillClaw: Let Skills Evolve Collectively with Agentic Evolver

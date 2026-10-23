@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Bernshteyn & Tait — Improved Lower Bound for Difference Bases"

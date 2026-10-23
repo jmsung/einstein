@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Angdinata et al. — ABC Implies That Ramanujan's Tau Function Misses Almost All Primes"

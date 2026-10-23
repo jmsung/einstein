@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: Quality Gain Analysis of the Weighted Recombination Evolution Strategy on General Convex Quadratic Functions

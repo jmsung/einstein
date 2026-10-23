@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: Meta-Harness: End-to-End Optimization of Model Harnesses

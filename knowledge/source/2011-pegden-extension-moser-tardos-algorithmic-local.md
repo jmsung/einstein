@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: An Extension of the Moser-Tardos Algorithmic Local Lemma

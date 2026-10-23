@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Jaech & Joseph (2025) — Further Improvements to the Lower Bound for an Autoconvolution Inequality"

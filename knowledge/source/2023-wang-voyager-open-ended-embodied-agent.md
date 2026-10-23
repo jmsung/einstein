@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: Voyager: An Open-Ended Embodied Agent with Large Language Models

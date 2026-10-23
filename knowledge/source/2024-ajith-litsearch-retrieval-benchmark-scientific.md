@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "LitSearch: A Retrieval Benchmark for Scientific Literature Search"

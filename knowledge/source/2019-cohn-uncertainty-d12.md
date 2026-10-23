@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Cohn & Gonçalves — An Optimal Uncertainty Principle in Twelve Dimensions via Modular Forms"

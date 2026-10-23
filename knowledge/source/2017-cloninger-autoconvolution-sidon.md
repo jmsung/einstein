@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Cloninger & Steinerberger — On Suprema of Autoconvolutions with an Application to Sidon Sets"

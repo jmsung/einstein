@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "de Laat & Leijenhorst — Solving Clustered Low-Rank Semidefinite Programs Arising from Polynomial Optimization"

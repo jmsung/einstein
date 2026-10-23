@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Fawzi et al. — Discovering Faster Matrix Multiplication Algorithms with Reinforcement Learning (AlphaTensor)"

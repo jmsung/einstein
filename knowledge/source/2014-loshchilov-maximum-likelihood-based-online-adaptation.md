@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: Maximum Likelihood-Based Online Adaptation of Hyper-Parameters in CMA-ES

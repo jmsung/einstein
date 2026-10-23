@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: repo
 title: "Sung — JSAgent: An AI Agent for Hard Mathematical Optimization"

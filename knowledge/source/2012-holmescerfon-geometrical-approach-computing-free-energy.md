@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: A geometrical approach to computing free-energy landscapes from short-ranged potentials

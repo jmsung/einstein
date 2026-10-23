@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: Certified ceilings for a finitary Mertens-type extremal problem (EinsteinArena PNT benchmark)

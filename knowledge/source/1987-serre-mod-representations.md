@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Serre — Sur les représentations modulaires de degré 2 de Gal(Q̄/Q)"

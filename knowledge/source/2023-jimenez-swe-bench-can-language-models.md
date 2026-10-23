@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "SWE-bench: Can Language Models Resolve Real-World GitHub Issues?"

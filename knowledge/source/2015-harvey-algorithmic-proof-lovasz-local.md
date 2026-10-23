@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: An Algorithmic Proof of the Lovasz Local Lemma via Resampling Oracles

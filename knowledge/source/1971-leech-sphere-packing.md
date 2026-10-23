@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Leech & Sloane — Sphere Packings and Error-Correcting Codes"

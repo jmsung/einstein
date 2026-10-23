@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Balister, Bollobás, Morris, Sahasrabudhe & Tiba — Flat Littlewood Polynomials Exist"

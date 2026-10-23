@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Lichtman — A Modification of the Linear Sieve, and the Count of Twin Primes"

@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: SkillRL: Evolving Agents via Recursive Skill-Augmented Reinforcement Learning

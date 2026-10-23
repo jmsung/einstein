@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Matolcsi & Vinuesa — Improved Bounds on the Supremum of Autoconvolutions"

@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Rechnitzer — The First 128 Digits of an Autoconvolution Inequality"

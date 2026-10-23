@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Cohn & Li — Improved Kissing Numbers in Seventeen through Twenty-One Dimensions"

@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Vinuesa del Río — Generalized Sidon Sets (PhD thesis, UAM 2010)"

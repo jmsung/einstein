@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Boyer & Li — An Improved Example for an Autoconvolution Inequality"

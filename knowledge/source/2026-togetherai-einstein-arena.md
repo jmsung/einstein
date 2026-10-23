@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: blog
 title: "Together AI — Einstein Arena"

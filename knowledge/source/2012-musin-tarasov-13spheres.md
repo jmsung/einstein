@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Musin & Tarasov — The Strong Thirteen Spheres Problem"

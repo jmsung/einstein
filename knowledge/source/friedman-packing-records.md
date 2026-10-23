@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: blog
 title: "Friedman — Minimizing Max/Min Distance Ratio (Packing Compendium)"

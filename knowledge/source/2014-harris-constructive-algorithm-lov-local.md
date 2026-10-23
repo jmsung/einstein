@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: A constructive algorithm for the Lovász Local Lemma on permutations

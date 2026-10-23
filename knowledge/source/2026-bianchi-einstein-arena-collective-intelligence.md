@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Harnessing the Collective Intelligence of AI Agents in the Wild for New Discoveries"

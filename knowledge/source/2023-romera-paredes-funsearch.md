@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Romera-Paredes et al. — Mathematical discoveries from program search with large language models (FunSearch)"

@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Ribet — On Modular Representations of Gal(Q̄/Q) Arising from Modular Forms"

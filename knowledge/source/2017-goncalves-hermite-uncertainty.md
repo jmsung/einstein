@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Gonçalves, Oliveira e Silva & Steinerberger — Hermite Polynomials, Linear Flows on the Torus, and an Uncertainty Principle for Roots"

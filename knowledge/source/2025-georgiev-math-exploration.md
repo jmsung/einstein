@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Georgiev, Gómez-Serrano, Tao & Wagner — Mathematical Exploration and Discovery at Scale"

@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Wiles — Modular Elliptic Curves and Fermat's Last Theorem"

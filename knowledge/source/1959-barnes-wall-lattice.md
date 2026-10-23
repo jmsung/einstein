@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: "Barnes & Wall — Some Extreme Forms Defined in Terms of Abelian Groups"

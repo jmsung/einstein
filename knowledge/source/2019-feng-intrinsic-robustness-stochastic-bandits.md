@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: The Intrinsic Robustness of Stochastic Bandits to Strategic Manipulation

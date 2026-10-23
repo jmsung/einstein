@@ -1,4 +1,6 @@
 ---
+visibility: local
+owner_repo: einstein
 type: source
 kind: paper
 title: SiriuS: Self-improving Multi-agent Systems via Bootstrapped Reasoning
