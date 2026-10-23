@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-hu-nova-iterative-planning-search
-canonical: ../../domains/ai-agents/source/2024-hu-nova-iterative-planning-search.md
+canonical: ../../source/2024-hu-nova-iterative-planning-search.md
 ---
 
 # Relevance note — Nova: An Iterative Planning and Search Approach to Enhance Novelty and Diversity of LLM Generated Ideas
 
-Canonical distillation: [`2024-hu-nova-iterative-planning-search.md`](../../domains/ai-agents/source/2024-hu-nova-iterative-planning-search.md).
+Canonical distillation: [`2024-hu-nova-iterative-planning-search.md`](../../source/2024-hu-nova-iterative-planning-search.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

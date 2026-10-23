@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-cai-training-free-group-relative-policy
-canonical: ../../domains/ai-agents/source/2025-cai-training-free-group-relative-policy.md
+canonical: ../../source/2025-cai-training-free-group-relative-policy.md
 ---
 
 # Relevance note — Training-Free Group Relative Policy Optimization
 
-Canonical distillation: [`2025-cai-training-free-group-relative-policy.md`](../../domains/ai-agents/source/2025-cai-training-free-group-relative-policy.md).
+Canonical distillation: [`2025-cai-training-free-group-relative-policy.md`](../../source/2025-cai-training-free-group-relative-policy.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

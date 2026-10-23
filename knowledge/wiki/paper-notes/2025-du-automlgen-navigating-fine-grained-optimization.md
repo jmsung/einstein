@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-du-automlgen-navigating-fine-grained-optimization
-canonical: ../../domains/ai-agents/source/2025-du-automlgen-navigating-fine-grained-optimization.md
+canonical: ../../source/2025-du-automlgen-navigating-fine-grained-optimization.md
 ---
 
 # Relevance note — AutoMLGen: Navigating Fine-Grained Optimization for Coding Agents
 
-Canonical distillation: [`2025-du-automlgen-navigating-fine-grained-optimization.md`](../../domains/ai-agents/source/2025-du-automlgen-navigating-fine-grained-optimization.md).
+Canonical distillation: [`2025-du-automlgen-navigating-fine-grained-optimization.md`](../../source/2025-du-automlgen-navigating-fine-grained-optimization.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

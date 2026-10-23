@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-zeng-swe-hub-unified-production-system
-canonical: ../../domains/ai-agents/source/2026-zeng-swe-hub-unified-production-system.md
+canonical: ../../source/2026-zeng-swe-hub-unified-production-system.md
 ---
 
 # Relevance note — SWE-Hub: A Unified Production System for Scalable, Executable Software Engineering Tasks
 
-Canonical distillation: [`2026-zeng-swe-hub-unified-production-system.md`](../../domains/ai-agents/source/2026-zeng-swe-hub-unified-production-system.md).
+Canonical distillation: [`2026-zeng-swe-hub-unified-production-system.md`](../../source/2026-zeng-swe-hub-unified-production-system.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

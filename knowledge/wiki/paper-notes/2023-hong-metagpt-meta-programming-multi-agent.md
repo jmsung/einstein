@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-hong-metagpt-meta-programming-multi-agent
-canonical: ../../domains/ai-agents/source/2023-hong-metagpt-meta-programming-multi-agent.md
+canonical: ../../source/2023-hong-metagpt-meta-programming-multi-agent.md
 ---
 
 # Relevance note — MetaGPT: Meta Programming for Multi-Agent Collaborative Framework
 
-Canonical distillation: [`2023-hong-metagpt-meta-programming-multi-agent.md`](../../domains/ai-agents/source/2023-hong-metagpt-meta-programming-multi-agent.md).
+Canonical distillation: [`2023-hong-metagpt-meta-programming-multi-agent.md`](../../source/2023-hong-metagpt-meta-programming-multi-agent.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

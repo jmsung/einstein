@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-song-llm-feynman-leveraging-large-language
-canonical: ../../domains/ai-agents/source/2025-song-llm-feynman-leveraging-large-language.md
+canonical: ../../source/2025-song-llm-feynman-leveraging-large-language.md
 ---
 
 # Relevance note — LLM-Feynman: Leveraging Large Language Models for Universal Scientific Formula and Theory Discovery
 
-Canonical distillation: [`2025-song-llm-feynman-leveraging-large-language.md`](../../domains/ai-agents/source/2025-song-llm-feynman-leveraging-large-language.md).
+Canonical distillation: [`2025-song-llm-feynman-leveraging-large-language.md`](../../source/2025-song-llm-feynman-leveraging-large-language.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-jia-llmatdesign-autonomous-materials-discovery
-canonical: ../../domains/ai-agents/source/2024-jia-llmatdesign-autonomous-materials-discovery.md
+canonical: ../../source/2024-jia-llmatdesign-autonomous-materials-discovery.md
 ---
 
 # Relevance note — LLMatDesign: Autonomous Materials Discovery with Large Language Models
 
-Canonical distillation: [`2024-jia-llmatdesign-autonomous-materials-discovery.md`](../../domains/ai-agents/source/2024-jia-llmatdesign-autonomous-materials-discovery.md).
+Canonical distillation: [`2024-jia-llmatdesign-autonomous-materials-discovery.md`](../../source/2024-jia-llmatdesign-autonomous-materials-discovery.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -1,13 +1,13 @@
 ---
 type: note
 kind: paper-relevance
-about: 2026-lin-agentic-harness-engineering-ahe
-canonical: ../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md
+about: 2026-lin-agentic-harness-engineering
+canonical: ../../source/2026-lin-agentic-harness-engineering.md
 ---
 
 # Relevance note — Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses
 
-Canonical distillation: [`2026-lin-agentic-harness-engineering-ahe.md`](../../domains/ai-agents/source/2026-lin-agentic-harness-engineering-ahe.md).
+Canonical distillation: [`2026-lin-agentic-harness-engineering.md`](../../source/2026-lin-agentic-harness-engineering.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-wan-loongflow-directed-evolutionary-search
-canonical: ../../domains/ai-agents/source/2025-wan-loongflow-directed-evolutionary-search.md
+canonical: ../../source/2025-wan-loongflow-directed-evolutionary-search.md
 ---
 
 # Relevance note — LoongFlow: Directed Evolutionary Search via a Cognitive Plan-Execute-Summarize Paradigm
 
-Canonical distillation: [`2025-wan-loongflow-directed-evolutionary-search.md`](../../domains/ai-agents/source/2025-wan-loongflow-directed-evolutionary-search.md).
+Canonical distillation: [`2025-wan-loongflow-directed-evolutionary-search.md`](../../source/2025-wan-loongflow-directed-evolutionary-search.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

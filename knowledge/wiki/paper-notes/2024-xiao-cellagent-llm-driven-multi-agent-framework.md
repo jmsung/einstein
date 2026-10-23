@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-xiao-cellagent-llm-driven-multi-agent-framework
-canonical: ../../domains/ai-agents/source/2024-xiao-cellagent-llm-driven-multi-agent-framework.md
+canonical: ../../source/2024-xiao-cellagent-llm-driven-multi-agent-framework.md
 ---
 
 # Relevance note — CellAgent: An LLM-driven Multi-Agent Framework for Automated Single-cell Data Analysis
 
-Canonical distillation: [`2024-xiao-cellagent-llm-driven-multi-agent-framework.md`](../../domains/ai-agents/source/2024-xiao-cellagent-llm-driven-multi-agent-framework.md).
+Canonical distillation: [`2024-xiao-cellagent-llm-driven-multi-agent-framework.md`](../../source/2024-xiao-cellagent-llm-driven-multi-agent-framework.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

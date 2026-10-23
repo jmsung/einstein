@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-darvish-organa-robotic-assistant-automated
-canonical: ../../domains/ai-agents/source/2024-darvish-organa-robotic-assistant-automated.md
+canonical: ../../source/2024-darvish-organa-robotic-assistant-automated.md
 ---
 
 # Relevance note — ORGANA: A Robotic Assistant for Automated Chemistry Experimentation and Characterization
 
-Canonical distillation: [`2024-darvish-organa-robotic-assistant-automated.md`](../../domains/ai-agents/source/2024-darvish-organa-robotic-assistant-automated.md).
+Canonical distillation: [`2024-darvish-organa-robotic-assistant-automated.md`](../../source/2024-darvish-organa-robotic-assistant-automated.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -119,7 +119,9 @@ class BrokenCite:
 
 
 def check_broken_cites(wiki: Path) -> list[BrokenCite]:
-    """For every cites: entry pointing inside wiki/, verify the target exists."""
+    """For every cites: entry pointing inside knowledge/ (wiki/ + its sibling
+    source/ cards), verify the target exists."""
+    knowledge = wiki.resolve().parent
     broken: list[BrokenCite] = []
     for p in _wiki_pages(wiki):
         text = p.read_text()
@@ -131,12 +133,12 @@ def check_broken_cites(wiki: Path) -> list[BrokenCite]:
             if "*" in c:
                 continue
             target = (p.parent / c).resolve()
-            # Only count as broken if the target *would* be inside wiki/
+            # Only count as broken if the target *would* be inside knowledge/.
+            # Source cards are pinned, so a cite to a pruned card must surface.
             try:
-                target.relative_to(wiki.resolve())
+                target.relative_to(knowledge)
             except ValueError:
-                # Outside wiki/ — e.g. ../../source/foo.md or ../scripts/x.py;
-                # tolerated since wiki_lint scope is wiki-internal hygiene.
+                # Outside knowledge/ — e.g. ../../../src/x.py; tolerated.
                 continue
             if not target.is_file():
                 broken.append(
@@ -368,7 +370,8 @@ def report(wiki: Path, *, ttl_days: int = DEFAULT_TTL_DAYS, today: str | None = 
         lines.append("Broken cites:")
         for b in broken[:10]:
             lines.append(
-                f"  - {b.source_page.relative_to(wiki)} → {b.cited_target.relative_to(wiki)}"
+                f"  - {b.source_page.relative_to(wiki)} → "
+                f"{b.cited_target.relative_to(wiki.resolve().parent)}"
             )
         if len(broken) > 10:
             lines.append(f"  ... and {len(broken) - 10} more")

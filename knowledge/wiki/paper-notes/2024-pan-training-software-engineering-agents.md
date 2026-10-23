@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-pan-training-software-engineering-agents
-canonical: ../../domains/ai-agents/source/2024-pan-training-software-engineering-agents.md
+canonical: ../../source/2024-pan-training-software-engineering-agents.md
 ---
 
 # Relevance note — Training Software Engineering Agents and Verifiers with SWE-Gym
 
-Canonical distillation: [`2024-pan-training-software-engineering-agents.md`](../../domains/ai-agents/source/2024-pan-training-software-engineering-agents.md).
+Canonical distillation: [`2024-pan-training-software-engineering-agents.md`](../../source/2024-pan-training-software-engineering-agents.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

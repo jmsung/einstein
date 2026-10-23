@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-merrill-terminal-bench-benchmarking-agents-hard
-canonical: ../../domains/ai-agents/source/2026-merrill-terminal-bench-benchmarking-agents-hard.md
+canonical: ../../source/2026-merrill-terminal-bench-benchmarking-agents-hard.md
 ---
 
 # Relevance note — Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Command Line Interfaces
 
-Canonical distillation: [`2026-merrill-terminal-bench-benchmarking-agents-hard.md`](../../domains/ai-agents/source/2026-merrill-terminal-bench-benchmarking-agents-hard.md).
+Canonical distillation: [`2026-merrill-terminal-bench-benchmarking-agents-hard.md`](../../source/2026-merrill-terminal-bench-benchmarking-agents-hard.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card:
 
 ## Why it matters here

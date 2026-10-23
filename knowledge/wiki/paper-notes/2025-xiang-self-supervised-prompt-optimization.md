@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-xiang-self-supervised-prompt-optimization
-canonical: ../../domains/ai-agents/source/2025-xiang-self-supervised-prompt-optimization.md
+canonical: ../../source/2025-xiang-self-supervised-prompt-optimization.md
 ---
 
 # Relevance note — Self-Supervised Prompt Optimization
 
-Canonical distillation: [`2025-xiang-self-supervised-prompt-optimization.md`](../../domains/ai-agents/source/2025-xiang-self-supervised-prompt-optimization.md).
+Canonical distillation: [`2025-xiang-self-supervised-prompt-optimization.md`](../../source/2025-xiang-self-supervised-prompt-optimization.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card:
 
 ## Why it matters here

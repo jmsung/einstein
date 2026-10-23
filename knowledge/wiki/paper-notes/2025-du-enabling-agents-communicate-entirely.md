@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-du-enabling-agents-communicate-entirely
-canonical: ../../domains/ai-agents/source/2025-du-enabling-agents-communicate-entirely.md
+canonical: ../../source/2025-du-enabling-agents-communicate-entirely.md
 ---
 
 # Relevance note — Enabling Agents to Communicate Entirely in Latent Space
 
-Canonical distillation: [`2025-du-enabling-agents-communicate-entirely.md`](../../domains/ai-agents/source/2025-du-enabling-agents-communicate-entirely.md).
+Canonical distillation: [`2025-du-enabling-agents-communicate-entirely.md`](../../source/2025-du-enabling-agents-communicate-entirely.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

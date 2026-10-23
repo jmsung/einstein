@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-zhang-honeycomb-flexible-llm-based-agent
-canonical: ../../domains/ai-agents/source/2024-zhang-honeycomb-flexible-llm-based-agent.md
+canonical: ../../source/2024-zhang-honeycomb-flexible-llm-based-agent.md
 ---
 
 # Relevance note — HoneyComb: A Flexible LLM-Based Agent System for Materials Science
 
-Canonical distillation: [`2024-zhang-honeycomb-flexible-llm-based-agent.md`](../../domains/ai-agents/source/2024-zhang-honeycomb-flexible-llm-based-agent.md).
+Canonical distillation: [`2024-zhang-honeycomb-flexible-llm-based-agent.md`](../../source/2024-zhang-honeycomb-flexible-llm-based-agent.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

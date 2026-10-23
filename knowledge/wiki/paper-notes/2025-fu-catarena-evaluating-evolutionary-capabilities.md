@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-fu-catarena-evaluating-evolutionary-capabilities
-canonical: ../../domains/ai-agents/source/2025-fu-catarena-evaluating-evolutionary-capabilities.md
+canonical: ../../source/2025-fu-catarena-evaluating-evolutionary-capabilities.md
 ---
 
 # Relevance note — CATArena: Evaluating Evolutionary Capabilities of Code Agents via Iterative Tournaments
 
-Canonical distillation: [`2025-fu-catarena-evaluating-evolutionary-capabilities.md`](../../domains/ai-agents/source/2025-fu-catarena-evaluating-evolutionary-capabilities.md).
+Canonical distillation: [`2025-fu-catarena-evaluating-evolutionary-capabilities.md`](../../source/2025-fu-catarena-evaluating-evolutionary-capabilities.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

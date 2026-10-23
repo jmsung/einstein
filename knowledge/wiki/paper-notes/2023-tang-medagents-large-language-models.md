@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-tang-medagents-large-language-models
-canonical: ../../domains/ai-agents/source/2023-tang-medagents-large-language-models.md
+canonical: ../../source/2023-tang-medagents-large-language-models.md
 ---
 
 # Relevance note — MedAgents: Large Language Models as Collaborators for Zero-shot Medical Reasoning
 
-Canonical distillation: [`2023-tang-medagents-large-language-models.md`](../../domains/ai-agents/source/2023-tang-medagents-large-language-models.md).
+Canonical distillation: [`2023-tang-medagents-large-language-models.md`](../../source/2023-tang-medagents-large-language-models.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

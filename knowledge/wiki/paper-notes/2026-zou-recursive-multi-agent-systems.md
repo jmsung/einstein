@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-zou-recursive-multi-agent-systems
-canonical: ../../domains/ai-agents/source/2026-yang-recursive-multi-agent-systems.md
+canonical: ../../source/2026-yang-recursive-multi-agent-systems.md
 ---
 
 # Relevance note — Recursive Multi-Agent Systems (RecursiveMAS)
 
-Canonical distillation: [`2026-yang-recursive-multi-agent-systems.md`](../../domains/ai-agents/source/2026-yang-recursive-multi-agent-systems.md).
+Canonical distillation: [`2026-yang-recursive-multi-agent-systems.md`](../../source/2026-yang-recursive-multi-agent-systems.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

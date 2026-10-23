@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-li-deepeye-sql-software-engineering-inspired-text-to-sq
-canonical: ../../domains/ai-agents/source/2025-li-deepeye-sql-software-engineering-inspired-text-to-sq.md
+canonical: ../../source/2025-li-deepeye-sql-software-engineering-inspired-text-to-sq.md
 ---
 
 # Relevance note — DeepEye-SQL: A Software-Engineering-Inspired Text-to-SQL Framework
 
-Canonical distillation: [`2025-li-deepeye-sql-software-engineering-inspired-text-to-sq.md`](../../domains/ai-agents/source/2025-li-deepeye-sql-software-engineering-inspired-text-to-sq.md).
+Canonical distillation: [`2025-li-deepeye-sql-software-engineering-inspired-text-to-sq.md`](../../source/2025-li-deepeye-sql-software-engineering-inspired-text-to-sq.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

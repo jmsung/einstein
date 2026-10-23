@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-deng-mind2web-towards-generalist-agent
-canonical: ../../domains/ai-agents/source/2023-deng-mind2web-towards-generalist-agent.md
+canonical: ../../source/2023-deng-mind2web-towards-generalist-agent.md
 ---
 
 # Relevance note — Mind2Web: Towards a Generalist Agent for the Web
 
-Canonical distillation: [`2023-deng-mind2web-towards-generalist-agent.md`](../../domains/ai-agents/source/2023-deng-mind2web-towards-generalist-agent.md).
+Canonical distillation: [`2023-deng-mind2web-towards-generalist-agent.md`](../../source/2023-deng-mind2web-towards-generalist-agent.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

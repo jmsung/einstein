@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-qian-chatdev-communicative-agents-software
-canonical: ../../domains/ai-agents/source/2023-qian-chatdev-communicative-agents-software.md
+canonical: ../../source/2023-qian-chatdev-communicative-agents-software.md
 ---
 
 # Relevance note — ChatDev: Communicative Agents for Software Development
 
-Canonical distillation: [`2023-qian-chatdev-communicative-agents-software.md`](../../domains/ai-agents/source/2023-qian-chatdev-communicative-agents-software.md).
+Canonical distillation: [`2023-qian-chatdev-communicative-agents-software.md`](../../source/2023-qian-chatdev-communicative-agents-software.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

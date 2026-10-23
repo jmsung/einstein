@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-taylor-auditing-games-sandbagging
-canonical: ../../domains/ai-agents/source/2025-taylor-auditing-games-sandbagging.md
+canonical: ../../source/2025-taylor-auditing-games-sandbagging.md
 ---
 
 # Relevance note — Auditing Games for Sandbagging
 
-Canonical distillation: [`2025-taylor-auditing-games-sandbagging.md`](../../domains/ai-agents/source/2025-taylor-auditing-games-sandbagging.md).
+Canonical distillation: [`2025-taylor-auditing-games-sandbagging.md`](../../source/2025-taylor-auditing-games-sandbagging.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

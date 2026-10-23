@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-ghareeb-robin-multi-agent-system-automating
-canonical: ../../domains/ai-agents/source/2025-ghareeb-robin-multi-agent-system-automating.md
+canonical: ../../source/2025-ghareeb-robin-multi-agent-system-automating.md
 ---
 
 # Relevance note — Robin: A multi-agent system for automating scientific discovery
 
-Canonical distillation: [`2025-ghareeb-robin-multi-agent-system-automating.md`](../../domains/ai-agents/source/2025-ghareeb-robin-multi-agent-system-automating.md).
+Canonical distillation: [`2025-ghareeb-robin-multi-agent-system-automating.md`](../../source/2025-ghareeb-robin-multi-agent-system-automating.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

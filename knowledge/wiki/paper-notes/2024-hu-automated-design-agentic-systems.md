@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-hu-automated-design-agentic-systems
-canonical: ../../domains/ai-agents/source/2024-hu-automated-design-agentic-systems.md
+canonical: ../../source/2024-hu-automated-design-agentic-systems.md
 ---
 
 # Relevance note — Automated Design of Agentic Systems
 
-Canonical distillation: [`2024-hu-automated-design-agentic-systems.md`](../../domains/ai-agents/source/2024-hu-automated-design-agentic-systems.md).
+Canonical distillation: [`2024-hu-automated-design-agentic-systems.md`](../../source/2024-hu-automated-design-agentic-systems.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

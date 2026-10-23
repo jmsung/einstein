@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-nottingham-embodied-agents-dream-pixelated
-canonical: ../../domains/ai-agents/source/2023-nottingham-embodied-agents-dream-pixelated.md
+canonical: ../../source/2023-nottingham-embodied-agents-dream-pixelated.md
 ---
 
 # Relevance note — Do Embodied Agents Dream of Pixelated Sheep?: Embodied Decision Making using Language Guided World Modelling
 
-Canonical distillation: [`2023-nottingham-embodied-agents-dream-pixelated.md`](../../domains/ai-agents/source/2023-nottingham-embodied-agents-dream-pixelated.md).
+Canonical distillation: [`2023-nottingham-embodied-agents-dream-pixelated.md`](../../source/2023-nottingham-embodied-agents-dream-pixelated.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

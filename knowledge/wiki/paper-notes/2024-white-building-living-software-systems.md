@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-white-building-living-software-systems
-canonical: ../../domains/ai-agents/source/2024-white-building-living-software-systems.md
+canonical: ../../source/2024-white-building-living-software-systems.md
 ---
 
 # Relevance note — Building Living Software Systems with Generative & Agentic AI
 
-Canonical distillation: [`2024-white-building-living-software-systems.md`](../../domains/ai-agents/source/2024-white-building-living-software-systems.md).
+Canonical distillation: [`2024-white-building-living-software-systems.md`](../../source/2024-white-building-living-software-systems.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

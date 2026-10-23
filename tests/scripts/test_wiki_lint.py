@@ -89,9 +89,28 @@ def test_check_broken_cites_ignores_external_paths(tmp_path: Path) -> None:
     targets = [str(b.cited_target) for b in broken]
     assert not any("example.com" in t for t in targets)
     assert not any("5-*.md" in t for t in targets)
-    # source/ cites with no matching file: tolerated (outside wiki/)
     # missing.md in wiki/findings/: flagged
     assert any("missing.md" in t for t in targets)
+
+
+def test_check_broken_cites_checks_sibling_source_cards(tmp_path: Path) -> None:
+    # Cards live beside the wiki in knowledge/source/; a cite to a pruned card is broken.
+    wiki = _make_wiki(tmp_path)
+    (tmp_path / "source").mkdir()
+    (tmp_path / "source" / "kept.md").write_text("# kept")
+    (wiki / "concepts" / "foo.md").write_text(
+        "---\n"
+        "type: concept\n"
+        "cites:\n"
+        "  - ../../source/kept.md\n"
+        "  - ../../source/pruned.md\n"
+        "  - ../../../src/einstein/x.py\n"
+        "---\n"
+    )
+    targets = [str(b.cited_target) for b in wiki_lint.check_broken_cites(wiki)]
+    assert any("pruned.md" in t for t in targets)
+    assert not any("kept.md" in t for t in targets)
+    assert not any("x.py" in t for t in targets)  # outside knowledge/: tolerated
 
 
 def test_check_body_link_gaps_finds_uncited_wiki_links(tmp_path: Path) -> None:

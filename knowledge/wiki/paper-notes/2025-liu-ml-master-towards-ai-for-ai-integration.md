@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-liu-ml-master-towards-ai-for-ai-integration
-canonical: ../../domains/ai-agents/source/2025-liu-ml-master-towards-ai-for-ai-integration.md
+canonical: ../../source/2025-liu-ml-master-towards-ai-for-ai-integration.md
 ---
 
 # Relevance note — ML-Master: Towards AI-for-AI via Integration of Exploration and Reasoning
 
-Canonical distillation: [`2025-liu-ml-master-towards-ai-for-ai-integration.md`](../../domains/ai-agents/source/2025-liu-ml-master-towards-ai-for-ai-integration.md).
+Canonical distillation: [`2025-liu-ml-master-towards-ai-for-ai-integration.md`](../../source/2025-liu-ml-master-towards-ai-for-ai-integration.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

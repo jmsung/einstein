@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-weij-sandbagging-language-models-can
-canonical: ../../domains/ai-agents/source/2024-weij-sandbagging-language-models-can.md
+canonical: ../../source/2024-weij-sandbagging-language-models-can.md
 ---
 
 # Relevance note — AI Sandbagging: Language Models can Strategically Underperform on Evaluations
 
-Canonical distillation: [`2024-weij-sandbagging-language-models-can.md`](../../domains/ai-agents/source/2024-weij-sandbagging-language-models-can.md).
+Canonical distillation: [`2024-weij-sandbagging-language-models-can.md`](../../source/2024-weij-sandbagging-language-models-can.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

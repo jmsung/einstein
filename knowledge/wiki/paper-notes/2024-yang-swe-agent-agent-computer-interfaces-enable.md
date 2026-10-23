@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-yang-swe-agent-agent-computer-interfaces-enable
-canonical: ../../domains/ai-agents/source/2024-yang-swe-agent-agent-computer-interfaces-enable.md
+canonical: ../../source/2024-yang-swe-agent-agent-computer-interfaces-enable.md
 ---
 
 # Relevance note — SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering
 
-Canonical distillation: [`2024-yang-swe-agent-agent-computer-interfaces-enable.md`](../../domains/ai-agents/source/2024-yang-swe-agent-agent-computer-interfaces-enable.md).
+Canonical distillation: [`2024-yang-swe-agent-agent-computer-interfaces-enable.md`](../../source/2024-yang-swe-agent-agent-computer-interfaces-enable.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

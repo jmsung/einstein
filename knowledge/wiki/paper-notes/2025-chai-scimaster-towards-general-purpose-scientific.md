@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-chai-scimaster-towards-general-purpose-scientific
-canonical: ../../domains/ai-agents/source/2025-chai-scimaster-towards-general-purpose-scientific.md
+canonical: ../../source/2025-chai-scimaster-towards-general-purpose-scientific.md
 ---
 
 # Relevance note — SciMaster: Towards General-Purpose Scientific AI Agents, Part I. X-Master as Foundation: Can We Lead on Humanity's Last Exam?
 
-Canonical distillation: [`2025-chai-scimaster-towards-general-purpose-scientific.md`](../../domains/ai-agents/source/2025-chai-scimaster-towards-general-purpose-scientific.md).
+Canonical distillation: [`2025-chai-scimaster-towards-general-purpose-scientific.md`](../../source/2025-chai-scimaster-towards-general-purpose-scientific.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-zhang-aevo-agentic-evolution
-canonical: ../../domains/ai-agents/source/2026-zhang-aevo-agentic-evolution.md
+canonical: ../../source/2026-zhang-aevo-agentic-evolution.md
 ---
 
 # Relevance note — Harnessing Agentic Evolution
 
-Canonical distillation: [`2026-zhang-aevo-agentic-evolution.md`](../../domains/ai-agents/source/2026-zhang-aevo-agentic-evolution.md).
+Canonical distillation: [`2026-zhang-aevo-agentic-evolution.md`](../../source/2026-zhang-aevo-agentic-evolution.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

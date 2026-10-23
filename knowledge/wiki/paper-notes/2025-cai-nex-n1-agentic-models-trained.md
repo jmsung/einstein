@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-cai-nex-n1-agentic-models-trained
-canonical: ../../domains/ai-agents/source/2025-cai-nex-n1-agentic-models-trained.md
+canonical: ../../source/2025-cai-nex-n1-agentic-models-trained.md
 ---
 
 # Relevance note — Nex-N1: Agentic Models Trained via a Unified Ecosystem for Large-Scale Environment Construction
 
-Canonical distillation: [`2025-cai-nex-n1-agentic-models-trained.md`](../../domains/ai-agents/source/2025-cai-nex-n1-agentic-models-trained.md).
+Canonical distillation: [`2025-cai-nex-n1-agentic-models-trained.md`](../../source/2025-cai-nex-n1-agentic-models-trained.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

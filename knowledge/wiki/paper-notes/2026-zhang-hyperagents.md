@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-zhang-hyperagents
-canonical: ../../domains/ai-agents/source/2026-zhang-hyperagents.md
+canonical: ../../source/2026-zhang-hyperagents.md
 ---
 
 # Relevance note — Hyperagents
 
-Canonical distillation: [`2026-zhang-hyperagents.md`](../../domains/ai-agents/source/2026-zhang-hyperagents.md).
+Canonical distillation: [`2026-zhang-hyperagents.md`](../../source/2026-zhang-hyperagents.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card:
 
 ## Why it matters here

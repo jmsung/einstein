@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-guo-suspicion-agent-playing-imperfect-information
-canonical: ../../domains/ai-agents/source/2023-guo-suspicion-agent-playing-imperfect-information.md
+canonical: ../../source/2023-guo-suspicion-agent-playing-imperfect-information.md
 ---
 
 # Relevance note — Suspicion-Agent: Playing Imperfect Information Games with Theory of Mind Aware GPT-4
 
-Canonical distillation: [`2023-guo-suspicion-agent-playing-imperfect-information.md`](../../domains/ai-agents/source/2023-guo-suspicion-agent-playing-imperfect-information.md).
+Canonical distillation: [`2023-guo-suspicion-agent-playing-imperfect-information.md`](../../source/2023-guo-suspicion-agent-playing-imperfect-information.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-yang-large-language-models-automated
-canonical: ../../domains/ai-agents/source/2023-yang-large-language-models-automated.md
+canonical: ../../source/2023-yang-large-language-models-automated.md
 ---
 
 # Relevance note — Large Language Models for Automated Open-domain Scientific Hypotheses Discovery
 
-Canonical distillation: [`2023-yang-large-language-models-automated.md`](../../domains/ai-agents/source/2023-yang-large-language-models-automated.md).
+Canonical distillation: [`2023-yang-large-language-models-automated.md`](../../source/2023-yang-large-language-models-automated.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

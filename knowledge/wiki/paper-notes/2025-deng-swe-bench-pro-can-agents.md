@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-deng-swe-bench-pro-can-agents
-canonical: ../../domains/ai-agents/source/2025-deng-swe-bench-pro-can-agents.md
+canonical: ../../source/2025-deng-swe-bench-pro-can-agents.md
 ---
 
 # Relevance note — SWE-Bench Pro: Can AI Agents Solve Long-Horizon Software Engineering Tasks?
 
-Canonical distillation: [`2025-deng-swe-bench-pro-can-agents.md`](../../domains/ai-agents/source/2025-deng-swe-bench-pro-can-agents.md).
+Canonical distillation: [`2025-deng-swe-bench-pro-can-agents.md`](../../source/2025-deng-swe-bench-pro-can-agents.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

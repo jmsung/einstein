@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-ren-towards-scientific-intelligence-survey
-canonical: ../../domains/ai-agents/source/2025-ren-towards-scientific-intelligence-survey.md
+canonical: ../../source/2025-ren-towards-scientific-intelligence-survey.md
 ---
 
 # Relevance note — Towards Scientific Intelligence: A Survey of LLM-based Scientific Agents
 
-Canonical distillation: [`2025-ren-towards-scientific-intelligence-survey.md`](../../domains/ai-agents/source/2025-ren-towards-scientific-intelligence-survey.md).
+Canonical distillation: [`2025-ren-towards-scientific-intelligence-survey.md`](../../source/2025-ren-towards-scientific-intelligence-survey.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2026-qu-coral-towards-autonomous-multi-agent
-canonical: ../../domains/ai-agents/source/2026-qu-coral-towards-autonomous-multi-agent.md
+canonical: ../../source/2026-qu-coral-towards-autonomous-multi-agent.md
 ---
 
 # Relevance note — CORAL: Towards Autonomous Multi-Agent Evolution for Open-Ended Discovery
 
-Canonical distillation: [`2026-qu-coral-towards-autonomous-multi-agent.md`](../../domains/ai-agents/source/2026-qu-coral-towards-autonomous-multi-agent.md).
+Canonical distillation: [`2026-qu-coral-towards-autonomous-multi-agent.md`](../../source/2026-qu-coral-towards-autonomous-multi-agent.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

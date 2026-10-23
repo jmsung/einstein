@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2023-li-camel-communicative-agents-mind
-canonical: ../../domains/ai-agents/source/2023-li-camel-communicative-agents-mind.md
+canonical: ../../source/2023-li-camel-communicative-agents-mind.md
 ---
 
 # Relevance note — CAMEL: Communicative Agents for \"Mind\" Exploration of Large Language Model Society
 
-Canonical distillation: [`2023-li-camel-communicative-agents-mind.md`](../../domains/ai-agents/source/2023-li-camel-communicative-agents-mind.md).
+Canonical distillation: [`2023-li-camel-communicative-agents-mind.md`](../../source/2023-li-camel-communicative-agents-mind.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

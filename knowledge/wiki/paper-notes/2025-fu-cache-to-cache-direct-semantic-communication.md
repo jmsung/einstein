@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-fu-cache-to-cache-direct-semantic-communication
-canonical: ../../domains/ai-agents/source/2025-fu-cache-to-cache-direct-semantic-communication.md
+canonical: ../../source/2025-fu-cache-to-cache-direct-semantic-communication.md
 ---
 
 # Relevance note — Cache-to-Cache: Direct Semantic Communication Between Large Language Models
 
-Canonical distillation: [`2025-fu-cache-to-cache-direct-semantic-communication.md`](../../domains/ai-agents/source/2025-fu-cache-to-cache-direct-semantic-communication.md).
+Canonical distillation: [`2025-fu-cache-to-cache-direct-semantic-communication.md`](../../source/2025-fu-cache-to-cache-direct-semantic-communication.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

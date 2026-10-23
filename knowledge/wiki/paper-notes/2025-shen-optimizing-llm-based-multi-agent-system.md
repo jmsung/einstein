@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-shen-optimizing-llm-based-multi-agent-system
-canonical: ../../domains/ai-agents/source/2025-shen-optimizing-llm-based-multi-agent-system.md
+canonical: ../../source/2025-shen-optimizing-llm-based-multi-agent-system.md
 ---
 
 # Relevance note — Optimizing LLM-Based Multi-Agent System with Textual Feedback: A Case Study on Software Development
 
-Canonical distillation: [`2025-shen-optimizing-llm-based-multi-agent-system.md`](../../domains/ai-agents/source/2025-shen-optimizing-llm-based-multi-agent-system.md).
+Canonical distillation: [`2025-shen-optimizing-llm-based-multi-agent-system.md`](../../source/2025-shen-optimizing-llm-based-multi-agent-system.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

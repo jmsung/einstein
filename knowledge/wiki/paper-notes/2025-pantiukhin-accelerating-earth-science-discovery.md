@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-pantiukhin-accelerating-earth-science-discovery
-canonical: ../../domains/ai-agents/source/2025-pantiukhin-accelerating-earth-science-discovery.md
+canonical: ../../source/2025-pantiukhin-accelerating-earth-science-discovery.md
 ---
 
 # Relevance note — Accelerating earth science discovery via multi-agent LLM systems
 
-Canonical distillation: [`2025-pantiukhin-accelerating-earth-science-discovery.md`](../../domains/ai-agents/source/2025-pantiukhin-accelerating-earth-science-discovery.md).
+Canonical distillation: [`2025-pantiukhin-accelerating-earth-science-discovery.md`](../../source/2025-pantiukhin-accelerating-earth-science-discovery.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

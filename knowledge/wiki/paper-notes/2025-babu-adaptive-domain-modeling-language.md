@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-babu-adaptive-domain-modeling-language
-canonical: ../../domains/ai-agents/source/2025-babu-adaptive-domain-modeling-language.md
+canonical: ../../source/2025-babu-adaptive-domain-modeling-language.md
 ---
 
 # Relevance note — Adaptive Domain Modeling with Language Models: A Multi-Agent Approach to Task Planning
 
-Canonical distillation: [`2025-babu-adaptive-domain-modeling-language.md`](../../domains/ai-agents/source/2025-babu-adaptive-domain-modeling-language.md).
+Canonical distillation: [`2025-babu-adaptive-domain-modeling-language.md`](../../source/2025-babu-adaptive-domain-modeling-language.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

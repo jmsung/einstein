@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-costarelli-gamebench-evaluating-strategic-reasoning
-canonical: ../../domains/ai-agents/source/2024-costarelli-gamebench-evaluating-strategic-reasoning.md
+canonical: ../../source/2024-costarelli-gamebench-evaluating-strategic-reasoning.md
 ---
 
 # Relevance note — GameBench: Evaluating Strategic Reasoning Abilities of LLM Agents
 
-Canonical distillation: [`2024-costarelli-gamebench-evaluating-strategic-reasoning.md`](../../domains/ai-agents/source/2024-costarelli-gamebench-evaluating-strategic-reasoning.md).
+Canonical distillation: [`2024-costarelli-gamebench-evaluating-strategic-reasoning.md`](../../source/2024-costarelli-gamebench-evaluating-strategic-reasoning.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

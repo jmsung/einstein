@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2024-yao-multi-objective-evolution-heuristic-using
-canonical: ../../domains/ai-agents/source/2024-yao-multi-objective-evolution-heuristic-using.md
+canonical: ../../source/2024-yao-multi-objective-evolution-heuristic-using.md
 ---
 
 # Relevance note — Multi-objective Evolution of Heuristic Using Large Language Model
 
-Canonical distillation: [`2024-yao-multi-objective-evolution-heuristic-using.md`](../../domains/ai-agents/source/2024-yao-multi-objective-evolution-heuristic-using.md).
+Canonical distillation: [`2024-yao-multi-objective-evolution-heuristic-using.md`](../../source/2024-yao-multi-objective-evolution-heuristic-using.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here

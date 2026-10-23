@@ -2,12 +2,12 @@
 type: note
 kind: paper-relevance
 about: 2025-wang-huxley-g-del-machine-human-level
-canonical: ../../domains/ai-agents/source/2025-wang-huxley-g-del-machine-human-level.md
+canonical: ../../source/2025-wang-huxley-g-del-machine-human-level.md
 ---
 
 # Relevance note — Huxley-Gödel Machine: Human-Level Coding Agent Development by an Approximation of the Optimal Self-Improving Machine
 
-Canonical distillation: [`2025-wang-huxley-g-del-machine-human-level.md`](../../domains/ai-agents/source/2025-wang-huxley-g-del-machine-human-level.md).
+Canonical distillation: [`2025-wang-huxley-g-del-machine-human-level.md`](../../source/2025-wang-huxley-g-del-machine-human-level.md).
 einstein-specific synthesis, preserved from the pre-ADR-0009 flat `source/` card during the domain-nested migration:
 
 ## Why it matters here
