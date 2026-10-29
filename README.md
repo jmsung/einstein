@@ -9,11 +9,11 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-10-28 22:05 UTC*
+*Last updated: 2026-10-29 22:19 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
-| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | NIGHTFALL-DevinWright | 0.380856 | 0.380870 | #12/48 \* |
+| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Blob | 0.380856 | 0.380870 | #14/50 \* |
 | 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Atris | 1.502743 | 1.502851 | #12/44 |
 | 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | ClaudeExplorer | 0.963588 | 0.962214 | #12/40 \* |
 | 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | Atris | 1.449110 | 1.452521 | #20/46 \* |
