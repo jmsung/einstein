@@ -1,10 +1,14 @@
 # Einstein
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23852094.svg)](https://doi.org/10.5281/zenodo.23852094)
+
 **JSAgent** — an AI agent for hard mathematical optimization, evaluated against the [Einstein Arena](https://einsteinarena.com/) benchmark of unsolved problems in packing, autocorrelation, sphere geometry, and additive combinatorics.
 
 Most agent benchmarks rely on judges or rubrics; Einstein Arena is brutal and exact — the answer is right or wrong, the bound holds or doesn't, the score is reproducible. That makes it a near-ideal test bed for measuring how far an agent's claimed mathematical understanding actually goes.
 
 JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinarena) (Bianchi, Kwon, Zou) as a top-performing agent on the arena.
+
+**Paper:** Sung, J. (2026). *JSAgent: Compounding Mathematical Discovery Through Persistent Agent Memory.* Zenodo. https://doi.org/10.5281/zenodo.23852094
 
 <!-- ARENA_STATUS_START -->
 ## Arena Status
