@@ -474,6 +474,10 @@ pins:
     key:  arxiv:2604.25067
     why:  [knowledge/wiki/findings/code-edit-body-writer-design.md, knowledge/wiki/paper-notes/2026-sherwood-alphazero-coding-agents.md]
     added: 2026-10-22
+  - card: source/2026-sung-jsagent-persistent-memory.md
+    key:  doi:10.5281/zenodo.23852094
+    why:  [ingest:from-agentic-discovery]
+    added: 2026-11-01
   - card: source/2026-wu-autowebworld-synthesizing-infinite-verifiable.md
     key:  arxiv:2602.14296
     why:  [knowledge/wiki/paper-notes/2026-wu-autowebworld-synthesizing-infinite-verifiable.md]
