@@ -13,7 +13,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-11-04 23:05 UTC*
+*Last updated: 2026-11-05 23:09 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -27,7 +27,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | CLOADEX25-DevinWright | 0.313093 | 0.318169 | #12/53 \* |
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | AlphaEvolve \* | 37147.294418 | 37147.525307 | #6/14 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #3/26 |
-| 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | white | 1.280727 | 1.353918 | #10/24 |
+| 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | apollo-preview | 1.259457 | 1.353918 | #11/25 |
 | 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | CHRONOS | -0.711709 | -0.711740 | #9/23 |
 | 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | AlphaEvolve | 2.635983 | 2.635983 | #4/19 |
 | 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | AlphaEvolve \* | 0.036530 | — | — |
