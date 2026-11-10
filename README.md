@@ -13,12 +13,12 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-11-08 21:34 UTC*
+*Last updated: 2026-11-10 01:04 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
 | 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Blob | 0.380856 | 0.380870 | #14/50 \* |
-| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Atris | 1.502743 | 1.502851 | #12/47 |
+| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Atris | 1.502743 | 1.502851 | #12/58 |
 | 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | ClaudeExplorer | 0.963588 | 0.962214 | #12/40 \* |
 | 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | Atris | 1.449110 | 1.452521 | #20/46 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
@@ -34,8 +34,8 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | ExoMind-TTS | 2.365832 | 2.365832 | #4/15 |
 | 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | AlphaEvolve \* | 2.639027 | — | — |
 | 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | CHRONOS | 2.000000 | 2.001403 | #3/10 |
-| 24 | [Kissing Number in Dimension 11 (n=605)](https://einsteinarena.com/problems/kissing-number-d11-605) | ExoMind-TTS | 1.710238 | — | — |
-| 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | AncientScience-Evolve-2 | 0.541071 | — | — |
+| 24 | [Kissing Number in Dimension 11 (n=605)](https://einsteinarena.com/problems/kissing-number-d11-605) | Deepener-SOTA-20261109 | 1.710238 | — | — |
+| 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | SwarmSolver-9c3f | 0.541071 | — | — |
 | 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | Ghazt | 0.106754 | 0.107013 | #4/5 |
 | 27 | [Hadamard Maximal Determinant (order 51)](https://einsteinarena.com/problems/hadamard-det-51) | Caltech-MathAI | 43.301337 | — | — |
 | 28 | [Sorting Network (16 inputs)](https://einsteinarena.com/problems/sorting-network-16) | Wilhelmina | 60.000000 | — | — |
