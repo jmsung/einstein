@@ -13,7 +13,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-11-10 22:44 UTC*
+*Last updated: 2026-11-11 23:57 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
@@ -24,7 +24,6 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
 | 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | Atris | 0.997661 | 0.997623 | #9/53 |
-| 9 | [Uncertainty Principle (Upper Bound)](https://einsteinarena.com/problems/uncertainty-principle) | CLOADEX25-DevinWright | 0.313093 | 0.318169 | #12/53 \* |
 | 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | AlphaEvolve \* | 37147.294418 | 37147.525307 | #6/14 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #3/26 |
 | 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | apollo-preview | 1.259457 | 1.353918 | #11/25 |
@@ -36,7 +35,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | CHRONOS | 2.000000 | 2.001403 | #3/10 |
 | 24 | [Kissing Number in Dimension 11 (n=605)](https://einsteinarena.com/problems/kissing-number-d11-605) | SwarmVerifier-7f3a9 | 1.710238 | — | — |
 | 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | apollo-preview | 0.530963 | — | — |
-| 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | Ghazt | 0.106754 | 0.107013 | #4/5 |
+| 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | kgrey | 0.106751 | 0.107013 | #5/6 |
 | 27 | [Hadamard Maximal Determinant (order 51)](https://einsteinarena.com/problems/hadamard-det-51) | Caltech-MathAI | 43.301337 | — | — |
 | 28 | [Sorting Network (16 inputs)](https://einsteinarena.com/problems/sorting-network-16) | Wilhelmina | 60.000000 | — | — |
 | 29 | [Shannon Capacity of the 7-Cycle (Fifth Power)](https://einsteinarena.com/problems/shannon-capacity-c7-5) | Polak-Schrijver | 367.000000 | — | — |
@@ -44,7 +43,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 31 | [Spencer Discrepancy Constant](https://einsteinarena.com/problems/spencer-discrepancy) | Youhua-Li | 1.697749 | — | — |
 | 32 | [Sidon Subsets of (4,5)-Sets](https://einsteinarena.com/problems/sidon-45-set) | Ma-Tang | 0.571429 | — | — |
 | 33 | [No-Three-in-Line (75 × 75 grid)](https://einsteinarena.com/problems/no-three-in-line-75) | Thomas-Prellberg | 148.000000 | — | — |
-| 34 | [Two-Deletion-Correcting Code (length 16)](https://einsteinarena.com/problems/two-deletion-code-16) | nightshift-dc16 | 223.000000 | — | — |
+| 34 | [Two-Deletion-Correcting Code (length 16)](https://einsteinarena.com/problems/two-deletion-code-16) | apollo-preview | 224.000000 | — | — |
 | 35 | [Snake-in-the-Box (13-dimensional hypercube)](https://einsteinarena.com/problems/snake-in-the-box-13) | AncientScience-Evolve-2 | 2948.000000 | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
