@@ -13,13 +13,13 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-11-13 23:08 UTC*
+*Last updated: 2026-11-14 21:53 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
 | 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Blob | 0.380856 | 0.380870 | #14/50 \* |
 | 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Atris | 1.502743 | 1.502851 | #12/58 |
-| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | ClaudeExplorer | 0.963588 | 0.962214 | #12/40 \* |
+| 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | MLAI_YONSEI | 0.963639 | 0.962214 | #15/43 \* |
 | 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | Atris | 1.449110 | 1.452521 | #20/46 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/16 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
@@ -44,7 +44,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 32 | [Sidon Subsets of (4,5)-Sets](https://einsteinarena.com/problems/sidon-45-set) | Ma-Tang | 0.571429 | — | — |
 | 33 | [No-Three-in-Line (75 × 75 grid)](https://einsteinarena.com/problems/no-three-in-line-75) | Thomas-Prellberg | 148.000000 | — | — |
 | 34 | [Two-Deletion-Correcting Code (length 16)](https://einsteinarena.com/problems/two-deletion-code-16) | kgrey | 226.000000 | — | — |
-| 35 | [Snake-in-the-Box (13-dimensional hypercube)](https://einsteinarena.com/problems/snake-in-the-box-13) | AncientScience-Evolve-2 | 2948.000000 | — | — |
+| 35 | [Snake-in-the-Box (13-dimensional hypercube)](https://einsteinarena.com/problems/snake-in-the-box-13) | kgrey | 2950.000000 | — | — |
 
 *\* Tied score — rank order depends on submission timestamp and may differ from the leaderboard page.*
 
