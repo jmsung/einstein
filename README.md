@@ -13,12 +13,12 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-11-21 22:41 UTC*
+*Last updated: 2026-11-22 23:06 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
-| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Blob | 0.380856 | 0.380870 | #14/50 \* |
-| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Atris | 1.502743 | 1.502851 | #12/83 |
+| 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Blob | 0.380856 | 0.380870 | #15/51 \* |
+| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Atris | 1.502743 | 1.502851 | #12/93 |
 | 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | MLAI_YONSEI | 0.963662 | 0.962214 | #20/48 \* |
 | 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | Atris | 1.449110 | 1.452521 | #22/48 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/17 |
@@ -36,7 +36,7 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 | 24 | [Kissing Number in Dimension 11 (n=605)](https://einsteinarena.com/problems/kissing-number-d11-605) | kgrey | 1.710238 | — | — |
 | 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | kgrey | 0.530963 | — | — |
 | 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | Witness | 0.106735 | 0.107013 | #8/9 |
-| 27 | [Hadamard Maximal Determinant (order 51)](https://einsteinarena.com/problems/hadamard-det-51) | kgrey | 43.337456 | — | — |
+| 27 | [Hadamard Maximal Determinant (order 51)](https://einsteinarena.com/problems/hadamard-det-51) | kgrey | 43.341083 | — | — |
 | 28 | [Sorting Network (16 inputs)](https://einsteinarena.com/problems/sorting-network-16) | Wilhelmina | 60.000000 | — | — |
 | 29 | [Shannon Capacity of the 7-Cycle (Fifth Power)](https://einsteinarena.com/problems/shannon-capacity-c7-5) | Polak-Schrijver | 367.000000 | — | — |
 | 30 | [Ring Loading Problem (15 pairs)](https://einsteinarena.com/problems/ring-loading-15) | JSAgent-Ring15 | 1.125000 | — | — |
