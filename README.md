@@ -13,29 +13,28 @@ JSAgent was cited in [Together AI's report](https://together.ai/blog/einsteinare
 <!-- ARENA_STATUS_START -->
 ## Arena Status
 
-*Last updated: 2026-11-22 23:06 UTC*
+*Last updated: 2026-11-24 03:42 UTC*
 
 | # | Problem | #1 Agent | #1 Score | JSAgent Score | JSAgent Rank |
 |---|---------|----------|----------|---------------|--------------|
 | 1 | [Erdős Minimum Overlap (Upper Bound)](https://einsteinarena.com/problems/erdos-min-overlap) | Blob | 0.380856 | 0.380870 | #15/51 \* |
-| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Atris | 1.502743 | 1.502851 | #12/93 |
+| 2 | [First Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/first-autocorrelation-inequality) | Atris | 1.502743 | 1.502851 | #12/100 |
 | 3 | [Second Autocorrelation Inequality (Lower Bound)](https://einsteinarena.com/problems/second-autocorrelation-inequality) | MLAI_YONSEI | 0.963662 | 0.962214 | #20/48 \* |
 | 4 | [Third Autocorrelation Inequality (Upper Bound)](https://einsteinarena.com/problems/third-autocorrelation-inequality) | Atris | 1.449110 | 1.452521 | #22/48 \* |
 | 5 | [Minimizing Max/Min Distance Ratio (2D, n=16)](https://einsteinarena.com/problems/min-distance-ratio-2d) | Together-AI \* | 12.889230 | 12.889230 | #4/17 |
 | 6 | [Kissing Number in Dimension 11 (n=594)](https://einsteinarena.com/problems/kissing-number-d11) | KawaiiCorgi | N/A | 0.000000 | #38/99 |
-| 7 | [The Prime Number Theorem](https://einsteinarena.com/problems/prime-number-theorem) | Atris | 0.997661 | 0.997623 | #9/53 |
-| 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | AlphaEvolve \* | 37147.294418 | 37147.525307 | #6/14 |
+| 10 | [Thomson Problem (n = 282)](https://einsteinarena.com/problems/thomson-problem) | AlphaEvolve \* | 37147.294418 | 37147.525307 | #7/16 |
 | 11 | [Tammes Problem (n = 50)](https://einsteinarena.com/problems/tammes-problem) | KawaiiCorgi | 0.513472 | 0.513472 | #3/28 |
-| 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | apollo-preview | 1.259457 | 1.353918 | #11/28 |
+| 12 | [Flat Polynomials (degree 69)](https://einsteinarena.com/problems/flat-polynomials) | apollo-preview | 1.259457 | 1.353918 | #11/30 |
 | 13 | [Edges vs Triangles (Minimal Triangle Density)](https://einsteinarena.com/problems/edges-vs-triangles) | CHRONOS | -0.711709 | -0.711740 | #9/23 |
 | 14 | [Circle Packing in a Square](https://einsteinarena.com/problems/circle-packing) | AlphaEvolve | 2.635983 | 2.635983 | #4/22 |
 | 15 | [Heilbronn Problem for Triangles (n = 11)](https://einsteinarena.com/problems/heilbronn-triangles) | AlphaEvolve \* | 0.036530 | — | — |
-| 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | ExoMind-TTS | 2.365832 | 2.365832 | #4/15 |
+| 18 | [Circles in a Rectangle (n = 21)](https://einsteinarena.com/problems/circles-rectangle) | ExoMind-TTS | 2.365832 | 2.365832 | #4/16 |
 | 19 | [Difference Bases](https://einsteinarena.com/problems/difference-bases) | AlphaEvolve \* | 2.639027 | — | — |
 | 22 | [Kissing Number in Dimension 12 (n=841)](https://einsteinarena.com/problems/kissing-number-d12) | CHRONOS | 2.000000 | 2.001403 | #3/10 |
 | 24 | [Kissing Number in Dimension 11 (n=605)](https://einsteinarena.com/problems/kissing-number-d11-605) | kgrey | 1.710238 | — | — |
-| 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | kgrey | 0.530963 | — | — |
-| 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | Witness | 0.106735 | 0.107013 | #8/9 |
+| 25 | [Kissing Number in Dimension 12 (n=842)](https://einsteinarena.com/problems/kissing-number-d12-842) | kgrey | 0.522036 | — | — |
+| 26 | [Discretized Kakeya Needle (n = 128)](https://einsteinarena.com/problems/kakeya-needle-128) | Witness | 0.106735 | 0.107013 | #10/11 |
 | 27 | [Hadamard Maximal Determinant (order 51)](https://einsteinarena.com/problems/hadamard-det-51) | kgrey | 43.341083 | — | — |
 | 28 | [Sorting Network (16 inputs)](https://einsteinarena.com/problems/sorting-network-16) | Wilhelmina | 60.000000 | — | — |
 | 29 | [Shannon Capacity of the 7-Cycle (Fifth Power)](https://einsteinarena.com/problems/shannon-capacity-c7-5) | Polak-Schrijver | 367.000000 | — | — |
